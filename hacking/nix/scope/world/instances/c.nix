@@ -6,7 +6,7 @@
 
 , crates
 , mkTask
-, defaultRustTargetInfo
+, seL4RustTargetInfoWithConfig
 
 , mkInstance
 }:
@@ -39,11 +39,19 @@ let
     exec strace -f -e trace=file ${stdenvWithLld.cc.targetPrefix}cc $@
   '';
 
+  rustTargetInfo = seL4RustTargetInfoWithConfig { minimal = true; };
+
   instance = mkInstance {
     rootTask = mkTask rec {
-      rootCrate = crates.tests-root-task-c;
-      release = false;
+
       stdenv = stdenvWithLld;
+
+      rootCrate = crates.tests-root-task-c;
+
+      release = false;
+
+      inherit rustTargetInfo;
+
       lastLayerModifications = {
         modifyDerivation = drv: drv.overrideAttrs (self: super: {
           # NIX_DEBUG = 3;
@@ -53,33 +61,35 @@ let
           ];
         });
         modifyConfig = old: lib.recursiveUpdate old {
-          target.${defaultRustTargetInfo.name} = {
+          target.${rustTargetInfo.name} = {
 
-            linker = "${stdenv.cc.targetPrefix}ld.lld";
-            rustflags = (old.target.${defaultRustTargetInfo.name}.rustflags or []) ++ [
-              "-C" "linker-flavor=ld"
-              "-C" "link-arg=-lc"
-            ];
+            # linker = "${stdenv.cc.targetPrefix}ld.lld";
+            # rustflags = (old.target.${rustTargetInfo.name}.rustflags or []) ++ [
+            #   "-C" "linker-flavor=ld"
+            #   "-C" "link-arg=-lc"
+            # ];
 
             # NOTE
             # This should work, but it doesn't.
             # TODO
             # Investigate
-            # linker = "${stdenv.cc.targetPrefix}cc";
-            # # linker = ccWrapper;
-            # rustflags = (old.target.${defaultRustTargetInfo.name}.rustflags or []) ++ [
-            #   "-C" "linker-flavor=gcc"
-            #   "-C" "link-arg=-nostartfiles"
-            #   "-C" "default-linker-libraries=on"
-            #   "-Z" "gcc-ld=lld"
-            #   # "-C" "link-arg=-fuse-ld=lld"
-            # ];
+            linker = "${stdenv.cc.targetPrefix}cc";
+            # linker = ccWrapper;
+            rustflags = (old.target.${rustTargetInfo.name}.rustflags or []) ++ [
+              "-C" "linker-flavor=gcc"
+              "-C" "link-arg=-nostartfiles"
+              "-C" "default-linker-libraries=on"
+              "-Z" "gcc-ld=lld"
+              # "-C" "link-arg=-fuse-ld=lld"
+            ];
           };
         };
       };
     };
+
     isSupported = false;
     canAutomate = true;
+
   };
 
 in {
