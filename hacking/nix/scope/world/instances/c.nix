@@ -40,8 +40,8 @@ let
   '';
 
   rustTargetInfo = seL4RustTargetInfoWithConfig {
-    minimal = true;
-    # minimal = false;
+    # minimal = true;
+    minimal = false;
   };
 
   instance = mkInstance {
@@ -79,7 +79,8 @@ let
             linker = "${stdenv.cc.targetPrefix}cc";
             # linker = ccWrapper;
             rustflags = (old.target.${rustTargetInfo.name}.rustflags or []) ++ [
-              "-C" "linker-flavor=gcc"
+              # "-C" "linker-flavor=gcc"  
+              "-C" "linker-flavor=gcc-lld"
               "-C" "link-arg=-nostartfiles"
               "-C" "default-linker-libraries=on"
               "-Z" "gcc-ld=lld"
