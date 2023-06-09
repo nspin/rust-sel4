@@ -65,9 +65,6 @@ let
           ];
 
           NIX_DEBUG = 1;
-          NIX_LDFLAGS = [
-            "fdjsklfjldsaf"
-          ];
 
           passthru = (super.passthru or {}) // {
             xxx = stdenvWithLibc;
