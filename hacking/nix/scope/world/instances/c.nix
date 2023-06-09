@@ -65,6 +65,13 @@ let
           ];
 
           NIX_DEBUG = 1;
+          NIX_LDFLAGS = [
+            "fdjsklfjldsaf"
+          ];
+
+          passthru = (super.passthru or {}) // {
+            xxx = stdenvWithLibc;
+          };
         });
         modifyConfig = old: lib.recursiveUpdate old {
           target.${rustTargetInfo.name} = {
@@ -79,15 +86,19 @@ let
             # This should work, but it doesn't.
             # TODO
             # Investigate
-            linker = "${stdenv.cc.targetPrefix}cc";
-            # linker = ccWrapper;
+            # linker = "${stdenv.cc.targetPrefix}cc";
+            linker = ccWrapper;
             rustflags = (old.target.${rustTargetInfo.name}.rustflags or []) ++ [
               "-C" "linker-flavor=gcc"
               # "-C" "linker-flavor=gcc-lld"
               "-C" "link-arg=-nostartfiles"
               "-C" "default-linker-libraries=on"
-              "-Z" "gcc-ld=lld"
+
+              # "-Z" "gcc-ld=lld"
+              "-C" "link-arg=--verbose"
               # "-C" "link-arg=-fuse-ld=lld"
+              "-C" "link-arg=-fuse-ld=gold"
+              # "-C" "link-arg=-fuse-ld=mold"
             ];
           };
         };
