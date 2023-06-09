@@ -47,7 +47,8 @@ let
   instance = mkInstance {
     rootTask = mkTask rec {
 
-      stdenv = stdenvWithLld;
+      # stdenv = stdenvWithLld;
+      stdenv = stdenvWithLibc;
 
       rootCrate = crates.tests-root-task-c;
 
@@ -62,6 +63,8 @@ let
             which
             strace
           ];
+
+          NIX_DEBUG = 1;
         });
         modifyConfig = old: lib.recursiveUpdate old {
           target.${rustTargetInfo.name} = {
@@ -79,8 +82,8 @@ let
             linker = "${stdenv.cc.targetPrefix}cc";
             # linker = ccWrapper;
             rustflags = (old.target.${rustTargetInfo.name}.rustflags or []) ++ [
-              # "-C" "linker-flavor=gcc"  
-              "-C" "linker-flavor=gcc-lld"
+              "-C" "linker-flavor=gcc"
+              # "-C" "linker-flavor=gcc-lld"
               "-C" "link-arg=-nostartfiles"
               "-C" "default-linker-libraries=on"
               "-Z" "gcc-ld=lld"

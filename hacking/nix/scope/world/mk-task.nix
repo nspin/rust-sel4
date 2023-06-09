@@ -59,6 +59,7 @@ let
   theseLastLayerModifications = crateUtils.elaborateModifications {
     modifyDerivation = drv: drv.overrideAttrs (self: super: seL4RustEnvVars // {
       passthru = (super.passthru or {}) // rec {
+        inherit sysroot;
         elf = "${self.finalPackage}/bin/${args.rootCrate.name}.elf";
         # HACK
         split = {

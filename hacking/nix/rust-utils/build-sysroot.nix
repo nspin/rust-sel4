@@ -62,26 +62,34 @@ let
     extraConfig
   ]);
 
+  buildStdSysroot = runCommand "sysroot" {
+    depsBuildBuild = [ buildPackages.stdenv.cc ];
+    nativeBuildInputs = [ rustToolchain ];
+
+    RUST_TARGET_PATH = rustTargetInfo.path;
+  } ''
+    cargo build \
+      -Z unstable-options \
+      --offline \
+      --frozen \
+      --config ${config} \
+      ${lib.optionalString release "--release"} \
+      --target ${rustTargetInfo.name} \
+      -Z build-std=core,alloc,compiler_builtins \
+      -Z build-std-features=compiler-builtins-mem \
+      --manifest-path ${workspace}/Cargo.toml \
+      --target-dir $(pwd)/target
+
+    d=$out/lib/rustlib/${rustTargetInfo.name}/lib
+    mkdir -p $d
+    mv target/${rustTargetInfo.name}/${if release then "release" else "debug"}/deps/* $d
+  '';
+
 in
-runCommand "sysroot" {
-  depsBuildBuild = [ buildPackages.stdenv.cc ];
-  nativeBuildInputs = [ rustToolchain ];
-
-  RUST_TARGET_PATH = rustTargetInfo.path;
-} ''
-  cargo build \
-    -Z unstable-options \
-    --offline \
-    --frozen \
-    --config ${config} \
-    ${lib.optionalString release "--release"} \
-    --target ${rustTargetInfo.name} \
-    -Z build-std=core,alloc,compiler_builtins \
-    -Z build-std-features=compiler-builtins-mem \
-    --manifest-path ${workspace}/Cargo.toml \
-    --target-dir $(pwd)/target
-
-  d=$out/lib/rustlib/${rustTargetInfo.name}/lib
+runCommand "sysroot" {} ''
+  rel=lib/rustlib
+  d=$out/$rel
   mkdir -p $d
-  mv target/${rustTargetInfo.name}/${if release then "release" else "debug"}/deps/* $d
+  cp -r ${rustToolchain}/$rel/* $d
+  cp -r ${buildStdSysroot}/$rel/* $d
 ''
