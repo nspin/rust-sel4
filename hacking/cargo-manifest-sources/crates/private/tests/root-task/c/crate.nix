@@ -10,7 +10,7 @@ mk {
     #   default-features = false;
     #   features = [ "no_std_deps" ];
     # };
-    sel4-root-task.features = [ "single-threaded" ];
+    sel4-root-task = { default-features = false; features = [ "single-threaded" ]; };
   };
   build-dependencies = {
     cc = "1.0.76";

@@ -39,7 +39,10 @@ let
     exec strace -f -e trace=file ${stdenvWithLld.cc.targetPrefix}cc $@
   '';
 
-  rustTargetInfo = seL4RustTargetInfoWithConfig { minimal = true; };
+  rustTargetInfo = seL4RustTargetInfoWithConfig {
+    minimal = true;
+    # minimal = false;
+  };
 
   instance = mkInstance {
     rootTask = mkTask rec {
