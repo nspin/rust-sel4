@@ -65,10 +65,6 @@ let
           ];
 
           NIX_DEBUG = 1;
-
-          passthru = (super.passthru or {}) // {
-            xxx = stdenvWithLibc;
-          };
         });
         modifyConfig = old: lib.recursiveUpdate old {
           target.${rustTargetInfo.name} = {
