@@ -9,6 +9,6 @@ license = "BSD-2-Clause"
 deflate = ["capdl-initializer-with-embedded-spec-embedded-spec/deflate"]
 
 [dependencies]
-capdl-initializer-types = { path = "../../../types" }
-capdl-initializer-with-embedded-spec-build-env = { path = "../../build-env" }
-capdl-initializer-with-embedded-spec-embedded-spec = { path = ".." }
+capdl-initializer-types = { path = "../../../types", version = "0.1.0" }
+capdl-initializer-with-embedded-spec-build-env = { path = "../../build-env", version = "0.1.0" }
+capdl-initializer-with-embedded-spec-embedded-spec = { path = "..", version = "0.1.0" }

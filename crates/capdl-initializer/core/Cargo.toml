@@ -6,6 +6,6 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
-capdl-initializer-types = { path = "../types", features = ["sel4"] }
+capdl-initializer-types = { path = "../types", version = "0.1.0", features = ["sel4"] }
 log = "0.4.17"
-sel4 = { path = "../../sel4" }
+sel4 = { path = "../../sel4", version = "0.1.0" }

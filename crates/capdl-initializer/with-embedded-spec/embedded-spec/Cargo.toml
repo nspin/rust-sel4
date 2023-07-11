@@ -9,11 +9,15 @@ license = "BSD-2-Clause"
 deflate = ["capdl-initializer-types/deflate"]
 
 [dependencies]
-capdl-initializer-types = { path = "../../types", features = ["borrowed-indirect"] }
+
+[dependencies.capdl-initializer-types]
+path = "../../types"
+version = "0.1.0"
+features = ["borrowed-indirect"]
 
 [build-dependencies]
-capdl-initializer-embed-spec = { path = "../../embed-spec" }
-capdl-initializer-types = { path = "../../types" }
-capdl-initializer-with-embedded-spec-build-env = { path = "../build-env" }
-sel4-rustfmt-helper = { path = "../../../sel4-rustfmt-helper" }
+capdl-initializer-embed-spec = { path = "../../embed-spec", version = "0.1.0" }
+capdl-initializer-types = { path = "../../types", version = "0.1.0" }
+capdl-initializer-with-embedded-spec-build-env = { path = "../build-env", version = "0.1.0" }
+sel4-rustfmt-helper = { path = "../../../sel4-rustfmt-helper", version = "0.1.0" }
 serde_json = "1.0.87"

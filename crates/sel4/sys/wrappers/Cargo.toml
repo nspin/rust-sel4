@@ -9,4 +9,4 @@ license = "BSD-2-Clause"
 crate-type = ["staticlib"]
 
 [dependencies]
-sel4-sys = { path = "..", features = ["wrappers"] }
+sel4-sys = { path = "..", version = "0.1.0", features = ["wrappers"] }

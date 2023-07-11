@@ -6,5 +6,9 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
-sel4-simple-task-runtime-config-types = { path = "../types", features = ["serde", "alloc"] }
 serde_json = "1.0.87"
+
+[dependencies.sel4-simple-task-runtime-config-types]
+path = "../types"
+version = "0.1.0"
+features = ["serde", "alloc"]

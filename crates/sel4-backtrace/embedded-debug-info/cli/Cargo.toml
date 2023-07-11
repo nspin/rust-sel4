@@ -7,4 +7,4 @@ license = "BSD-2-Clause"
 
 [dependencies]
 clap = "3.2.23"
-sel4-render-elf-with-data = { path = "../../../sel4-render-elf-with-data" }
+sel4-render-elf-with-data = { path = "../../../sel4-render-elf-with-data", version = "0.1.0" }

@@ -7,8 +7,8 @@ license = "BSD-2-Clause"
 
 [dependencies]
 mbedtls = { version = "0.9.1", default-features = false, features = ["no_std_deps"] }
-sel4 = { path = "../../../../sel4" }
-sel4-root-task = { path = "../../../../sel4-root-task" }
+sel4 = { path = "../../../../sel4", version = "0.1.0" }
+sel4-root-task = { path = "../../../../sel4-root-task", version = "0.1.0" }
 
 [build-dependencies]
 cc = "1.0.76"

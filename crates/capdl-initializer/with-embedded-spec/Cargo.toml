@@ -12,16 +12,20 @@ deflate = [
 ]
 
 [dependencies]
-capdl-initializer-core = { path = "../core" }
-capdl-initializer-types = { path = "../types" }
-capdl-initializer-with-embedded-spec-embedded-spec = { path = "./embedded-spec" }
-sel4 = { path = "../../sel4" }
-sel4-logging = { path = "../../sel4-logging" }
+capdl-initializer-core = { path = "../core", version = "0.1.0" }
+capdl-initializer-types = { path = "../types", version = "0.1.0" }
+capdl-initializer-with-embedded-spec-embedded-spec = { path = "./embedded-spec", version = "0.1.0" }
+sel4 = { path = "../../sel4", version = "0.1.0" }
+sel4-logging = { path = "../../sel4-logging", version = "0.1.0" }
 
 [dependencies.sel4-root-task]
 path = "../../sel4-root-task"
+version = "0.1.0"
 default-features = false
 features = ["single-threaded"]
 
 [build-dependencies]
-capdl-initializer-with-embedded-spec-embedded-spec-validate = { path = "./embedded-spec/validate" }
+
+[build-dependencies.capdl-initializer-with-embedded-spec-embedded-spec-validate]
+path = "./embedded-spec/validate"
+version = "0.1.0"

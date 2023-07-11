@@ -9,5 +9,5 @@ license = "BSD-2-Clause"
 proc-macro = true
 
 [dependencies]
-sel4-config-data = { path = "../data" }
-sel4-config-generic-macro-impls = { path = "../generic/macro-impls" }
+sel4-config-data = { path = "../data", version = "0.1.0" }
+sel4-config-generic-macro-impls = { path = "../generic/macro-impls", version = "0.1.0" }

@@ -12,23 +12,31 @@ sel4cp = ["dep:sel4cp", "sel4cp-postcard"]
 [dependencies]
 cfg-if = "1.0.0"
 log = "0.4.17"
-sel4 = { path = "../../sel4" }
-sel4-async-network = { path = "../../sel4-async/network" }
-sel4-async-request-statuses = { path = "../../sel4-async/request-statuses" }
-sel4-async-single-threaded-executor = { path = "../../sel4-async/single-threaded-executor" }
-sel4-bounce-buffer-allocator = { path = "../../sel4-bounce-buffer-allocator" }
-sel4-config = { path = "../../sel4/config" }
-sel4-externally-shared = { path = "../../sel4-externally-shared" }
-sel4-logging = { path = "../../sel4-logging" }
-sel4-root-task = { path = "../../sel4-root-task", features = ["full"], optional = true }
-sel4-shared-ring-buffer = { path = "../../sel4-shared-ring-buffer" }
-sel4-sync = { path = "../../sel4-sync" }
-sel4-sys = { path = "../../sel4/sys" }
-sel4cp = { path = "../../sel4cp", features = ["full"], optional = true }
-sel4cp-postcard = { path = "../../sel4cp/postcard", optional = true }
+sel4 = { path = "../../sel4", version = "0.1.0" }
+sel4-async-network = { path = "../../sel4-async/network", version = "0.1.0" }
+sel4-async-request-statuses = { path = "../../sel4-async/request-statuses", version = "0.1.0" }
+sel4-bounce-buffer-allocator = { path = "../../sel4-bounce-buffer-allocator", version = "0.1.0" }
+sel4-config = { path = "../../sel4/config", version = "0.1.0" }
+sel4-externally-shared = { path = "../../sel4-externally-shared", version = "0.1.0" }
+sel4-logging = { path = "../../sel4-logging", version = "0.1.0" }
+sel4-shared-ring-buffer = { path = "../../sel4-shared-ring-buffer", version = "0.1.0" }
+sel4-sync = { path = "../../sel4-sync", version = "0.1.0" }
+sel4-sys = { path = "../../sel4/sys", version = "0.1.0" }
+sel4cp = { path = "../../sel4cp", version = "0.1.0", features = ["full"], optional = true }
+sel4cp-postcard = { path = "../../sel4cp/postcard", version = "0.1.0", optional = true }
+
+[dependencies.sel4-async-single-threaded-executor]
+path = "../../sel4-async/single-threaded-executor"
+version = "0.1.0"
+
+[dependencies.sel4-root-task]
+path = "../../sel4-root-task"
+version = "0.1.0"
+features = ["full"]
+optional = true
 
 [target."cfg(not(target_arch = \"x86_64\"))".dependencies]
-sel4-platform-info = { path = "../../sel4-platform-info", optional = true }
+sel4-platform-info = { path = "../../sel4-platform-info", version = "0.1.0", optional = true }
 
 [target."cfg(not(target_thread_local))".dependencies]
-sel4 = { path = "../../sel4", features = ["single-threaded"] }
+sel4 = { path = "../../sel4", version = "0.1.0", features = ["single-threaded"] }

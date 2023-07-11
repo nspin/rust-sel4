@@ -6,13 +6,19 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
-banscii-artist-interface-types = { path = "./interface-types" }
+banscii-artist-interface-types = { path = "./interface-types", version = "0.1.0" }
 rsa = { version = "0.8.1", default-features = false, features = ["pem", "sha2"] }
-sel4cp = { path = "../../../../../sel4cp", default-features = false, features = ["alloc"] }
 
 [dependencies.sel4-externally-shared]
 path = "../../../../../sel4-externally-shared"
+version = "0.1.0"
 features = ["unstable", "alloc"]
+
+[dependencies.sel4cp]
+path = "../../../../../sel4cp"
+version = "0.1.0"
+default-features = false
+features = ["alloc"]
 
 [build-dependencies]
 rsa = "0.8.1"

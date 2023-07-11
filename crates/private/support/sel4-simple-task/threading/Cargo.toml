@@ -9,5 +9,5 @@ license = "BSD-2-Clause"
 alloc = []
 
 [dependencies]
-sel4 = { path = "../../../../sel4" }
-sel4-panicking = { path = "../../../../sel4-panicking" }
+sel4 = { path = "../../../../sel4", version = "0.1.0" }
+sel4-panicking = { path = "../../../../sel4-panicking", version = "0.1.0" }

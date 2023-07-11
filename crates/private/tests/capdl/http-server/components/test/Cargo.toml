@@ -9,29 +9,45 @@ license = "BSD-2-Clause"
 async-unsync = { version = "0.2.2", default-features = false }
 futures = { version = "0.3.28", default-features = false, features = ["async-await", "alloc"] }
 log = "0.4.17"
-sel4 = { path = "../../../../../../sel4" }
-sel4-async-network = { path = "../../../../../../sel4-async/network" }
-sel4-async-request-statuses = { path = "../../../../../../sel4-async/request-statuses" }
-sel4-async-timers = { path = "../../../../../../sel4-async/timers" }
-sel4-bounce-buffer-allocator = { path = "../../../../../../sel4-bounce-buffer-allocator" }
-sel4-immediate-sync-once-cell = { path = "../../../../../../sel4-immediate-sync-once-cell" }
-sel4-logging = { path = "../../../../../../sel4-logging" }
-sel4-simple-task-config-types = { path = "../../../../../support/sel4-simple-task/config-types" }
-sel4-simple-task-runtime = { path = "../../../../../support/sel4-simple-task/runtime" }
-sel4-sync = { path = "../../../../../../sel4-sync" }
+sel4 = { path = "../../../../../../sel4", version = "0.1.0" }
+sel4-async-network = { path = "../../../../../../sel4-async/network", version = "0.1.0" }
+sel4-async-timers = { path = "../../../../../../sel4-async/timers", version = "0.1.0" }
+sel4-logging = { path = "../../../../../../sel4-logging", version = "0.1.0" }
+sel4-sync = { path = "../../../../../../sel4-sync", version = "0.1.0" }
 serde = { version = "1.0.147", default-features = false, features = ["alloc", "derive"] }
-tests-capdl-http-server-components-test-cpiofs = { path = "./cpiofs" }
-tests-capdl-http-server-components-test-server-core = { path = "./server-core" }
-tests-capdl-http-server-components-test-sp804-driver = { path = "./sp804-driver" }
+tests-capdl-http-server-components-test-cpiofs = { path = "./cpiofs", version = "0.1.0" }
+tests-capdl-http-server-components-test-server-core = { path = "./server-core", version = "0.1.0" }
 tock-registers = "0.8.1"
 virtio-drivers = { version = "0.5.0" }
 
+[dependencies.sel4-async-request-statuses]
+path = "../../../../../../sel4-async/request-statuses"
+version = "0.1.0"
+
 [dependencies.sel4-async-single-threaded-executor]
 path = "../../../../../../sel4-async/single-threaded-executor"
+version = "0.1.0"
+
+[dependencies.sel4-bounce-buffer-allocator]
+path = "../../../../../../sel4-bounce-buffer-allocator"
+version = "0.1.0"
 
 [dependencies.sel4-externally-shared]
 path = "../../../../../../sel4-externally-shared"
+version = "0.1.0"
 features = ["unstable"]
+
+[dependencies.sel4-immediate-sync-once-cell]
+path = "../../../../../../sel4-immediate-sync-once-cell"
+version = "0.1.0"
+
+[dependencies.sel4-simple-task-config-types]
+path = "../../../../../support/sel4-simple-task/config-types"
+version = "0.1.0"
+
+[dependencies.sel4-simple-task-runtime]
+path = "../../../../../support/sel4-simple-task/runtime"
+version = "0.1.0"
 
 [dependencies.smoltcp]
 version = "0.9.1"
@@ -58,3 +74,7 @@ features = [
     "socket-mdns",
     "log"
 ]
+
+[dependencies.tests-capdl-http-server-components-test-sp804-driver]
+path = "./sp804-driver"
+version = "0.1.0"

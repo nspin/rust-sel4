@@ -6,11 +6,11 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
-sel4-platform-info-types = { path = "./types" }
+sel4-platform-info-types = { path = "./types", version = "0.1.0" }
 
 [build-dependencies]
 proc-macro2 = "1.0.50"
 quote = "1.0.23"
-sel4-build-env = { path = "../sel4/build-env" }
+sel4-build-env = { path = "../sel4/build-env", version = "0.1.0" }
 serde = { version = "1.0.147", features = ["derive"] }
 serde_yaml = "0.9.14"

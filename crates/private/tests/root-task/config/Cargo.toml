@@ -6,5 +6,5 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
-sel4 = { path = "../../../../sel4" }
-sel4-root-task = { path = "../../../../sel4-root-task" }
+sel4 = { path = "../../../../sel4", version = "0.1.0" }
+sel4-root-task = { path = "../../../../sel4-root-task", version = "0.1.0" }

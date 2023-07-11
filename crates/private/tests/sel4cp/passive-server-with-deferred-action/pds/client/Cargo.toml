@@ -6,4 +6,4 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
-sel4cp = { path = "../../../../../../sel4cp" }
+sel4cp = { path = "../../../../../../sel4cp", version = "0.1.0" }

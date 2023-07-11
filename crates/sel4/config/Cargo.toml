@@ -6,4 +6,4 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
-sel4-config-macros = { path = "./macros" }
+sel4-config-macros = { path = "./macros", version = "0.1.0" }

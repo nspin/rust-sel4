@@ -9,8 +9,9 @@ license = "BSD-2-Clause"
 futures = { version = "0.3.28", default-features = false, features = ["async-await", "alloc"] }
 httparse = { version = "1.8.0", default-features = false }
 log = "0.4.17"
-sel4-async-network = { path = "../../../../../../../sel4-async/network" }
-tests-capdl-http-server-components-test-cpiofs = { path = "../cpiofs" }
+sel4-async-network = { path = "../../../../../../../sel4-async/network", version = "0.1.0" }
+tests-capdl-http-server-components-test-cpiofs = { path = "../cpiofs", version = "0.1.0" }
 
 [dependencies.sel4-async-single-threaded-executor]
 path = "../../../../../../../sel4-async/single-threaded-executor"
+version = "0.1.0"

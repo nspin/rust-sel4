@@ -12,5 +12,5 @@ state = []
 
 [dependencies]
 cfg-if = "1.0.0"
-sel4-config = { path = "./config" }
-sel4-sys = { path = "./sys" }
+sel4-config = { path = "./config", version = "0.1.0" }
+sel4-sys = { path = "./sys", version = "0.1.0" }

@@ -14,14 +14,15 @@ unwinding = ["sel4-panicking/unwinding"]
 [dependencies]
 cfg-if = "1.0.0"
 num_enum = { version = "0.5.9", default-features = false }
-sel4 = { path = "../sel4", features = ["single-threaded"] }
-sel4-externally-shared = { path = "../sel4-externally-shared" }
-sel4-immediate-sync-once-cell = { path = "../sel4-immediate-sync-once-cell" }
-sel4-panicking = { path = "../sel4-panicking" }
-sel4-panicking-env = { path = "../sel4-panicking/env" }
-sel4cp-macros = { path = "./macros" }
+sel4 = { path = "../sel4", version = "0.1.0", features = ["single-threaded"] }
+sel4-externally-shared = { path = "../sel4-externally-shared", version = "0.1.0" }
+sel4-immediate-sync-once-cell = { path = "../sel4-immediate-sync-once-cell", version = "0.1.0" }
+sel4-panicking = { path = "../sel4-panicking", version = "0.1.0" }
+sel4-panicking-env = { path = "../sel4-panicking/env", version = "0.1.0" }
+sel4cp-macros = { path = "./macros", version = "0.1.0" }
 zerocopy = "0.6.1"
 
 [dependencies.sel4-runtime-common]
 path = "../sel4-runtime-common"
+version = "0.1.0"
 features = ["tls", "unwinding", "start", "static-heap"]

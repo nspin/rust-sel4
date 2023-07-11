@@ -9,5 +9,5 @@ license = "BSD-2-Clause"
 alloc = ["sel4-backtrace/alloc"]
 
 [dependencies]
-sel4-backtrace = { path = "..", features = ["postcard", "unwinding"] }
-sel4-panicking-env = { path = "../../sel4-panicking/env" }
+sel4-backtrace = { path = "..", version = "0.1.0", features = ["postcard", "unwinding"] }
+sel4-panicking-env = { path = "../../sel4-panicking/env", version = "0.1.0" }

@@ -6,6 +6,6 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
-banscii-assistant-core = { path = ".." }
+banscii-assistant-core = { path = "..", version = "0.1.0" }
 env_logger = "0.10.0"
 log = "0.4.17"

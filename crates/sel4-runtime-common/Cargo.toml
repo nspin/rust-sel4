@@ -12,9 +12,13 @@ tls = ["dep:sel4-reserve-tls-on-stack"]
 
 [dependencies]
 cfg-if = "1.0.0"
-sel4-dlmalloc = { path = "../sel4-dlmalloc", optional = true }
-sel4-reserve-tls-on-stack = { path = "../sel4-reserve-tls-on-stack", optional = true }
-sel4-sync = { path = "../sel4-sync", optional = true }
+sel4-dlmalloc = { path = "../sel4-dlmalloc", version = "0.1.0", optional = true }
+sel4-sync = { path = "../sel4-sync", version = "0.1.0", optional = true }
+
+[dependencies.sel4-reserve-tls-on-stack]
+path = "../sel4-reserve-tls-on-stack"
+version = "0.1.0"
+optional = true
 
 [dependencies.unwinding]
 version = "0.1.6"
