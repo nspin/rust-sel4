@@ -59,6 +59,7 @@ rec {
 
         paths = lib.flip lib.mapAttrsRecursive elaboratedNix.local (_: v:
           if !lib.isList v then v else lib.listToAttrs (map (otherCrate: lib.nameValuePair otherCrate.name {
+            version = otherCrate.version;
             path = ensureDot (pathBetween
               (toString elaboratedNix.path)
               (toString otherCrate.path));

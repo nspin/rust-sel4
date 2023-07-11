@@ -40,15 +40,21 @@ let
       value = crate;
     }));
 
-  localCratePathAttrs = lib.mapAttrs (_: crate: crate.path) crates;
+  localCratePathAttrs = lib.mapAttrs (_: crate: {
+    inherit (crate) path;
+    version = crate.manifest.package.version;
+  }) crates;
 
   externalCratePathAttrs = {
-    # "virtio-drivers" = "tmp/virtio-drivers";
+    # "virtio-drivers" = {
+    #   path = "tmp/virtio-drivers";
+    #   version = "0.0.0";
+    # };
   };
 
   cratePathAttrs = localCratePathAttrs // externalCratePathAttrs;
 
-  cratePaths = lib.mapAttrs (name: path: { inherit name path; }) cratePathAttrs;
+  cratePaths = lib.mapAttrs (name: { path, version }: { inherit name path version; }) cratePathAttrs;
 
   callCrate = { relativePath }:
 
@@ -135,7 +141,7 @@ let
     manifest = {
       workspace = {
         resolver = "2";
-        members = lib.naturalSort (lib.attrValues cratePathAttrs);
+        members = lib.naturalSort (lib.mapAttrsToList (_: crate: crate.path) cratePaths);
       };
     };
   };
