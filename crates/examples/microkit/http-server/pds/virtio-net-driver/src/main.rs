@@ -80,8 +80,8 @@ fn init() -> PhyDeviceHandler<PhyDeviceImpl> {
         client_client_dma_region_paddr,
         rx_ring_buffers,
         tx_ring_buffers,
-        CLIENT,
         DEVICE,
+        CLIENT,
     )
 }
 

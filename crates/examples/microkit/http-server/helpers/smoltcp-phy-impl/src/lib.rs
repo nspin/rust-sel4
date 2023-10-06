@@ -1,6 +1,6 @@
 #![no_std]
 
-//! A smoltcp::phy::Driver impl for VirtIONet.
+//! A smoltcp::phy::Device impl for VirtIONet.
 
 extern crate alloc;
 use alloc::rc::Rc;

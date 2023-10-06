@@ -2451,6 +2451,7 @@ dependencies = [
  "sel4-bounce-buffer-allocator",
  "sel4-config",
  "sel4-externally-shared",
+ "sel4-hal-adapters",
  "sel4-immediate-sync-once-cell",
  "sel4-immutable-cell",
  "sel4-logging",
@@ -2485,7 +2486,6 @@ dependencies = [
  "microkit-http-server-example-server-core",
  "microkit-http-server-example-sp804-driver-interface-types",
  "microkit-http-server-example-virtio-blk-driver-interface-types",
- "microkit-http-server-example-virtio-net-driver-interface-types",
  "rcgen",
  "sel4",
  "sel4-async-block-io",
@@ -2496,6 +2496,7 @@ dependencies = [
  "sel4-async-timers",
  "sel4-bounce-buffer-allocator",
  "sel4-externally-shared",
+ "sel4-hal-adapters",
  "sel4-immediate-sync-once-cell",
  "sel4-logging",
  "sel4-microkit",
@@ -2504,7 +2505,6 @@ dependencies = [
  "sel4-shared-ring-buffer",
  "sel4-shared-ring-buffer-block-io",
  "sel4-shared-ring-buffer-block-io-types",
- "sel4-shared-ring-buffer-smoltcp",
  "sel4-sync",
  "smoltcp",
 ]
@@ -2536,6 +2536,7 @@ dependencies = [
  "sel4",
  "sel4-bounce-buffer-allocator",
  "sel4-externally-shared",
+ "sel4-hal-adapters",
  "sel4-immediate-sync-once-cell",
  "sel4-logging",
  "sel4-microkit",
@@ -2620,22 +2621,15 @@ dependencies = [
  "sel4",
  "sel4-bounce-buffer-allocator",
  "sel4-externally-shared",
+ "sel4-hal-adapters",
  "sel4-immediate-sync-once-cell",
  "sel4-logging",
  "sel4-microkit",
  "sel4-microkit-message",
  "sel4-shared-ring-buffer",
  "sel4-sync",
- "serde",
  "smoltcp",
  "virtio-drivers",
-]
-
-[[package]]
-name = "microkit-http-server-example-virtio-net-driver-interface-types"
-version = "0.1.0"
-dependencies = [
- "serde",
 ]
 
 [[package]]
@@ -3846,6 +3840,20 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "serde_json",
+]
+
+[[package]]
+name = "sel4-hal-adapters"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "sel4-bounce-buffer-allocator",
+ "sel4-externally-shared",
+ "sel4-microkit",
+ "sel4-microkit-message",
+ "sel4-shared-ring-buffer",
+ "serde",
+ "smoltcp",
 ]
 
 [[package]]

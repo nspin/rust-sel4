@@ -48,6 +48,7 @@ let
     # "mbedtls-sys-auto" = "tmp/rust-mbedtls/mbedtls-sys";
     # "mbedtls-platform-support" = "tmp/rust-mbedtls/mbedtls-platform-support";
     # "embedded-fat" = "tmp/rust-embedded-fat";
+    "sel4-hal-adapters" = "crates/sel4-hal-adapters";
   };
 
   cratePathAttrs = localCratePathAttrs // externalCratePathAttrs;

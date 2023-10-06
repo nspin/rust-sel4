@@ -125,8 +125,8 @@ impl<Device: phy::Device + IrqAck + HasMac> Handler for PhyDeviceHandler<Device>
             self.dev.irq_ack();
             self.device_channel.irq_ack().unwrap();
         } else {
-                unreachable!()
-            }
+            unreachable!()
+        }
 
         Ok(())
     }

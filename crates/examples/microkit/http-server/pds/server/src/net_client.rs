@@ -1,7 +1,7 @@
 use sel4_microkit::MessageInfo;
 use sel4_microkit_message::MessageInfoExt as _;
 
-use microkit_http_server_example_virtio_net_driver_interface_types::*;
+use sel4_hal_adapters::smoltcp::phy::{MacAddress, Request, GetMacAddressResponse};
 
 pub struct NetClient {
     channel: sel4_microkit::Channel,

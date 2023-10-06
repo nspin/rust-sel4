@@ -12,7 +12,7 @@ microkit-http-server-example-smoltcp-phy-impl = { path = "../../helpers/smoltcp-
 sel4 = { path = "../../../../../sel4" }
 sel4-bounce-buffer-allocator = { path = "../../../../../sel4-bounce-buffer-allocator" }
 sel4-externally-shared = { path = "../../../../../sel4-externally-shared", features = ["unstable"] }
-sel4-hal-adapters = { path = "../../../../../sel4-hal-adapters/smoltcp" }
+sel4-hal-adapters = { path = "../../../../../sel4-hal-adapters" }
 sel4-immediate-sync-once-cell = { path = "../../../../../sel4-immediate-sync-once-cell" }
 sel4-logging = { path = "../../../../../sel4-logging" }
 sel4-microkit = { path = "../../../../../sel4-microkit", default-features = false }
