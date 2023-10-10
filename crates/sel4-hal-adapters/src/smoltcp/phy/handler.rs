@@ -1,8 +1,11 @@
 //! A generic microkit handler for implementors of smoltcp::phy::Device.
 
-use smoltcp::{phy::{self, RxToken, TxToken}, time::Instant};
+use smoltcp::{
+    phy::{self, RxToken, TxToken},
+    time::Instant,
+};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use sel4_externally_shared::ExternallySharedRef;
 use sel4_microkit::{Channel, Handler, MessageInfo};

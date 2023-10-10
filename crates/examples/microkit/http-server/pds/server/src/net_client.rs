@@ -1,7 +1,7 @@
 use sel4_microkit::MessageInfo;
 use sel4_microkit_message::MessageInfoExt as _;
 
-use sel4_hal_adapters::smoltcp::phy::{MacAddress, Request, GetMacAddressResponse};
+use sel4_hal_adapters::smoltcp::phy::{GetMacAddressResponse, MacAddress, Request};
 
 pub struct NetClient {
     channel: sel4_microkit::Channel,

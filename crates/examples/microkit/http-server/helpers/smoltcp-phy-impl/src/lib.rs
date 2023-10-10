@@ -10,7 +10,7 @@ use core::cell::RefCell;
 use virtio_drivers::device::net::{self, RxBuffer};
 use virtio_drivers::transport::mmio::MmioTransport;
 
-use sel4_hal_adapters::smoltcp::phy::{IrqAck, HasMac};
+use sel4_hal_adapters::smoltcp::phy::{HasMac, IrqAck};
 
 use microkit_http_server_example_virtio_hal_impl::HalImpl;
 
@@ -20,7 +20,7 @@ use smoltcp::time::Instant;
 pub const NET_QUEUE_SIZE: usize = 16;
 pub const NET_BUFFER_LEN: usize = 2048;
 
-pub type VirtIONet = net::VirtIONet<HalImpl, MmioTransport, {NET_QUEUE_SIZE}>;
+pub type VirtIONet = net::VirtIONet<HalImpl, MmioTransport, { NET_QUEUE_SIZE }>;
 
 pub struct RxToken {
     dev_inner: Rc<RefCell<VirtIONet>>,
@@ -40,7 +40,10 @@ impl phy::RxToken for RxToken {
 
 impl Drop for RxToken {
     fn drop(&mut self) {
-        let _ = self.dev_inner.borrow_mut().recycle_rx_buffer(self.buf.take().unwrap());
+        let _ = self
+            .dev_inner
+            .borrow_mut()
+            .recycle_rx_buffer(self.buf.take().unwrap());
     }
 }
 
@@ -78,10 +81,7 @@ impl phy::Device for Device {
     type RxToken<'a> = RxToken;
     type TxToken<'a> = TxToken;
 
-    fn receive(
-        &mut self,
-        _timestamp: Instant,
-    ) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
+    fn receive(&mut self, _timestamp: Instant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
         let mut dev = self.dev_inner.borrow_mut();
 
         if !dev.can_recv() || !dev.can_send() {
@@ -101,10 +101,7 @@ impl phy::Device for Device {
         ))
     }
 
-    fn transmit(
-        &mut self,
-        _timestamp: Instant,
-    ) -> Option<Self::TxToken<'_>> {
+    fn transmit(&mut self, _timestamp: Instant) -> Option<Self::TxToken<'_>> {
         if !self.dev_inner.borrow().can_send() {
             return None;
         }

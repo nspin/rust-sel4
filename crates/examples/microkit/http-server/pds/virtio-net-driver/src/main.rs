@@ -14,12 +14,14 @@ use virtio_drivers::{
 };
 
 use sel4_externally_shared::ExternallySharedRef;
+use sel4_hal_adapters::smoltcp::phy::{IrqAck, PhyDeviceHandler};
 use sel4_microkit::{memory_region_symbol, protection_domain, var, Channel};
 use sel4_shared_ring_buffer::{RingBuffer, RingBuffers};
-use sel4_hal_adapters::smoltcp::phy::{PhyDeviceHandler, IrqAck};
 
+use microkit_http_server_example_smoltcp_phy_impl::{
+    Device as PhyDeviceImpl, NET_BUFFER_LEN, NET_QUEUE_SIZE,
+};
 use microkit_http_server_example_virtio_hal_impl::HalImpl;
-use microkit_http_server_example_smoltcp_phy_impl::{Device as PhyDeviceImpl, NET_QUEUE_SIZE, NET_BUFFER_LEN};
 
 const DEVICE: Channel = Channel::new(0);
 const CLIENT: Channel = Channel::new(1);
