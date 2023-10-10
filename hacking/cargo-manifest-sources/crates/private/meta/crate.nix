@@ -32,6 +32,7 @@ mk {
     sel4-shared-ring-buffer-block-io-types
     sel4-shared-ring-buffer-smoltcp
     sel4-sync
+    sel4-hal-adapters
   ];
   dependencies = {
     inherit (versions) cfg-if log;
@@ -40,6 +41,7 @@ mk {
     sel4-microkit = { features = [ "full" ]; optional = true; };
     sel4-microkit-message = { optional = true; };
     sel4-microkit-message-types = { optional = true; };
+    sel4-hal-adapters = { optional = true; };
   };
   nix.local.target."cfg(not(target_thread_local))".dependencies = with localCrates; [
     sel4
@@ -61,6 +63,7 @@ mk {
       "dep:sel4-microkit"
       "sel4-microkit-message"
       "sel4-microkit-message-types"
+      "sel4-hal-adapters"
     ];
   };
 }
