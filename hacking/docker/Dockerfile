@@ -4,37 +4,66 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-FROM debian:bookworm
+FROM nixos/nix
 
-RUN apt-get update && apt-get install -y \
-    curl xz-utils \
-    && rm -rf /var/lib/apt/lists/*
+RUN nix-channel --update
 
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers # for convenience
+RUN nix-env -i -A nixpkgs.shadow -A nixpkgs.getent
+
+RUN set -eux; \
+    for f in passwd shadow group; do \
+        dst=/etc/$f; \
+        src=$(readlink --canonicalize-existing $dst); \
+        rm $dst; \
+        cp $src $dst; \
+    done
 
 ARG UID
 ARG GID
 
 RUN set -eux; \
-    if ! getent group $GID; then \
+    if ! getent passwd $UID && ! getent group $GID; then \
+        groupadd sudo; \
         groupadd -g $GID x; \
-    fi; \
-    if ! getent passwd $UID; then \
         useradd -u $UID -g $GID -G sudo -m -p x x; \
-    fi;
+    else \
+        [ $UID = 0 -a $GID = 0 ]; \
+    fi
 
-ENV RUSTUP_HOME=/opt/rustup
-ENV CARGO_HOME=/opt/cargo
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers # for convenience
 
-RUN mkdir -p -m 0755 /nix $RUSTUP_HOME $CARGO_HOME && chown $UID:$GID /nix $RUSTUP_HOME $CARGO_HOME
+RUN nix-env -iA nixpkgs.sudo
+
+# RUN chown -R $UID:$GID /nix
 
 USER $UID
 
-COPY nix.conf /etc/nix/
+ENV USER=x
 
-RUN echo 'f=~/.nix-profile/etc/profile.d/nix-daemon.sh && [ -f $f ] && . $f && unset f ' >> ~/.bashrc
+RUN [ $(whoami) = $USER ]
 
-WORKDIR /work
+# FROM debian:bookworm
+
+# RUN apt-get update && apt-get install -y \
+#     curl xz-utils \
+#     && rm -rf /var/lib/apt/lists/*
+
+# RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers # for convenience
+
+# ENV RUSTUP_HOME=/opt/rustup
+# ENV CARGO_HOME=/opt/cargo
+
+# RUN mkdir -p -m 0755 /nix $RUSTUP_HOME $CARGO_HOME && chown $UID:$GID /nix $RUSTUP_HOME $CARGO_HOME
+
+# USER $UID
+
+# COPY nix.conf /etc/nix/
+
+# RUN echo 'f=~/.nix-profile/etc/profile.d/nix-daemon.sh && [ -f $f ] && . $f && unset f ' >> ~/.bashrc
+
+# WORKDIR /work
+
+# ---
 
 # # Convenient shell completion and aliases
 # RUN curl -sSL -o /etc/bash_completion.d/nix \
