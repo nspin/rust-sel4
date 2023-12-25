@@ -30,11 +30,10 @@ RUN set -eux; \
         [ $UID = 0 -a $GID = 0 ]; \
     fi
 
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers # for convenience
+# no setuid
+# RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers # for convenience
 
-RUN nix-env -iA nixpkgs.sudo
-
-# RUN chown -R $UID:$GID /nix
+RUN chown -R $UID:$GID /nix
 
 USER $UID
 
