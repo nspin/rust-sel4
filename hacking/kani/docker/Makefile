@@ -25,17 +25,17 @@ build:
 		--build-arg UID=$(uid) --build-arg GID=$(gid) \
 		-t $(image_tag) .
 
+.PHONY: runi
+runi: build
+	docker run --rm -it \
+		--mount $(mount_params) \
+		$(image_tag) bash
+
 .PHONY: run
 run: build
 	docker run -d --name $(container_name) \
 		--mount $(mount_params) \
 		$(image_tag) sleep inf
-
-.PHONY: runi
-runi: build
-	docker run --rm \
-		--mount $(mount_params) \
-		-it $(image_tag) bash
 
 .PHONY: exec
 exec:
@@ -49,7 +49,7 @@ rm-container:
 
 .PHONY: check
 check: build
-	docker run --rm \
+	docker run --rm -it \
 		--mount $(mount_params),readonly \
-		-i $(image_tag) \
+		$(image_tag) \
 		make -C $(here_relative) check BUILD=/tmp/build
