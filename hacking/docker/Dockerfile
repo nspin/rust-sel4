@@ -33,8 +33,9 @@ RUN set -eux; \
 # no setuid
 # RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers # for convenience
 
-RUN chown -R $UID:$GID /nix/var
-RUN chown $UID:$GID /nix/store /nix/store/*
+RUN chown -R $UID:$GID /nix
+# RUN chown -R $UID:$GID /nix/var
+# RUN chown $UID:$GID /nix/store /nix/store/*
 
 USER $UID
 
