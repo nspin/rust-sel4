@@ -14,6 +14,9 @@ image_tag := $(id)
 container_name := $(id)
 volume_name := $(id)-nix-root
 
+bootstrap_image_tag := $(image_tag)-bootstrap
+bootstrap_container_name := $(container_name)-bootstrap
+
 uid := $(shell id -u)
 gid := $(shell id -g)
 
@@ -24,6 +27,28 @@ endif
 
 .PHONY: none
 none:
+
+.PHONY: bootstrap-build
+bootstrap-build:
+	docker build \
+		--label $(label) -t $(bootstrap_image_tag) -f Dockerfile.bootstrap .
+
+.PHONY: bootstrap-run
+bootstrap-run: bootstrap-build
+	docker run --privileged -d --name $(bootstrap_container_name) \
+		--mount type=bind,src=$(abspath $(work_root)),dst=/work \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		$(bootstrap_image_tag) sleep inf
+
+.PHONY: bootstrap-exec
+bootstrap-exec:
+	docker exec -it $(bootstrap_container_name) bash
+
+.PHONY: bootstrap-rm-container
+bootstrap-rm-container:
+	for id in $$(docker ps -aq -f "name=^$(bootstrap_container_name)$$"); do \
+		docker rm -f $$id; \
+	done
 
 .PHONY: build
 build:

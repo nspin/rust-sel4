@@ -1,0 +1,12 @@
+FROM nixos/nix:latest
+# FROM nixos/nix:2.19.0
+
+RUN nix-env -iA nixpkgs.bash-completion
+RUN nix-env -iA nixpkgs.nix-bash-completions
+
+RUN set -eux; \
+    echo ". ~/.nix-profile/etc/profile.d/nix.sh" >> ~/.bashrc ; \
+    echo ". ~/.nix-profile/etc/profile.d/bash_completion.sh" >> ~/.bashrc; \
+    true
+
+WORKDIR /work
