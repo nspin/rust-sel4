@@ -11,4 +11,6 @@ FROM nixos/nix:latest
 #     echo ". ~/.nix-profile/etc/profile.d/bash_completion.sh" >> ~/.bashrc; \
 #     true
 
+RUN rm -r /etc/nix /etc/ssl
+
 WORKDIR /work/hacking/docker

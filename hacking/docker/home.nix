@@ -24,6 +24,28 @@
 
   programs.bash.enable = true;
 
+  nix.enable = true;
+  nix.package = pkgs.nix;
+  nix.settings = {
+    sandbox-fallback = false;
+
+    keep-outputs = true;
+    keep-derivations = true;
+
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+
+    substituters = [
+      "https://coliasgroup.cachix.org"
+    ];
+
+    trusted-public-keys = [
+      "coliasgroup.cachix.org-1:vYRVaHS5FCjsGmVVXlzF5LaIWjeEK17W+MHxK886zIE="
+    ];
+  };
+
   home.packages = with pkgs; [
     nix
     bashInteractive
