@@ -72,11 +72,11 @@ run: build $(statefulness_run_prerequisites)
 		--mount type=bind,src=$(abspath $(work_root)),dst=/work \
 		--publish 8080:8080/tcp \
 		--publish 8443:8443/tcp \
-		$(image_tag) sleep inf
+		$(image_tag) /sleep inf
 
 .PHONY: exec
 exec:
-	docker exec -it $(container_name) bash
+	docker exec -it $(container_name) /bin/sh
 
 .PHONY: show-nix-root
 show-nix-root:

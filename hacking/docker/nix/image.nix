@@ -1,14 +1,9 @@
 { pkgs ? import <nixpkgs> { }
 , lib ? pkgs.lib
-, name ? "nix"
+, name ? "mininix"
 , tag ? "latest"
-, bundleNixpkgs ? true
-, channelName ? "nixpkgs"
-, channelURL ? "https://nixos.org/channels/nixpkgs-unstable"
 , extraPkgs ? []
 , maxLayers ? 100
-, nixConf ? {}
-, flake-registry ? null
 }:
 let
   defaultPkgs = with pkgs; [
@@ -138,83 +133,37 @@ let
       (lib.attrValues (lib.mapAttrs groupToGroup groups))
   );
 
-  defaultNixConf = {
-    sandbox = "false";
-    build-users-group = "nixbld";
-    trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
+  setup = with pkgs; writeShellApplication {
+    name = "setup";
+    runtimeInputs = defaultPkgs;
+    text = ''
+      export NIX_SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt
+
+      nix-env -i ${initialEnv}
+    '';
   };
 
-  nixConfContents = (lib.concatStringsSep "\n" (lib.mapAttrsFlatten (n: v:
-    let
-      vStr = if builtins.isList v then lib.concatStringsSep " " v else v;
-    in
-      "${n} = ${vStr}") (defaultNixConf // nixConf))) + "\n";
+  initialEnv = pkgs.buildEnv {
+    name = "env";
+    paths = defaultPkgs;
+  };
 
   baseSystem =
     let
-      nixpkgs = pkgs.path;
-      channel = pkgs.runCommand "channel-nixos" { inherit bundleNixpkgs; } ''
-        mkdir $out
-        if [ "$bundleNixpkgs" ]; then
-          ln -s ${nixpkgs} $out/nixpkgs
-          echo "[]" > $out/manifest.nix
-        fi
-      '';
-      rootEnv = pkgs.buildPackages.buildEnv {
-        name = "root-profile-env";
-        paths = defaultPkgs;
-      };
-      manifest = pkgs.buildPackages.runCommand "manifest.nix" { } ''
-        cat > $out <<EOF
-        [
-        ${lib.concatStringsSep "\n" (builtins.map (drv: let
-          outputs = drv.outputsToInstall or [ "out" ];
-        in ''
-          {
-            ${lib.concatStringsSep "\n" (builtins.map (output: ''
-              ${output} = { outPath = "${lib.getOutput output drv}"; };
-            '') outputs)}
-            outputs = [ ${lib.concatStringsSep " " (builtins.map (x: "\"${x}\"") outputs)} ];
-            name = "${drv.name}";
-            outPath = "${drv}";
-            system = "${drv.system}";
-            type = "derivation";
-            meta = { };
-          }
-        '') defaultPkgs)}
-        ]
-        EOF
-      '';
-      profile = pkgs.buildPackages.runCommand "user-environment" { } ''
-        mkdir $out
-        cp -a ${rootEnv}/* $out/
-        ln -s ${manifest} $out/manifest.nix
-      '';
-      flake-registry-path = if (flake-registry == null) then
-        null
-      else if (builtins.readFileType (toString flake-registry)) == "directory" then
-        "${flake-registry}/flake-registry.json"
-      else
-        flake-registry;
     in
-    pkgs.runCommand "base-system"
-      {
-        inherit passwdContents groupContents shadowContents nixConfContents;
-        passAsFile = [
-          "passwdContents"
-          "groupContents"
-          "shadowContents"
-          "nixConfContents"
-        ];
-        allowSubstitutes = false;
-        preferLocalBuild = true;
-      } (''
+    pkgs.runCommand "base-system" {
+      inherit passwdContents groupContents shadowContents;
+      passAsFile = [
+        "passwdContents"
+        "groupContents"
+        "shadowContents"
+      ];
+      allowSubstitutes = false;
+      preferLocalBuild = true;
+    } ''
       env
       set -x
       mkdir -p $out/etc
-
-      mkdir -p $out/etc/ssl/certs
-      ln -s /nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt $out/etc/ssl/certs
 
       cat $passwdContentsPath > $out/etc/passwd
       echo "" >> $out/etc/passwd
@@ -225,45 +174,19 @@ let
       cat $shadowContentsPath > $out/etc/shadow
       echo "" >> $out/etc/shadow
 
-      mkdir -p $out/usr
-      ln -s /nix/var/nix/profiles/share $out/usr/
-
-      mkdir -p $out/nix/var/nix/gcroots
-
       mkdir $out/tmp
 
       mkdir -p $out/var/tmp
 
-      mkdir -p $out/etc/nix
-      cat $nixConfContentsPath > $out/etc/nix/nix.conf
-
       mkdir -p $out/root
-      mkdir -p $out/nix/var/nix/profiles/per-user/root
-
-      ln -s ${profile} $out/nix/var/nix/profiles/default-1-link
-      ln -s $out/nix/var/nix/profiles/default-1-link $out/nix/var/nix/profiles/default
-      ln -s /nix/var/nix/profiles/default $out/root/.nix-profile
-
-      ln -s ${channel} $out/nix/var/nix/profiles/per-user/root/channels-1-link
-      ln -s $out/nix/var/nix/profiles/per-user/root/channels-1-link $out/nix/var/nix/profiles/per-user/root/channels
-
-      mkdir -p $out/root/.nix-defexpr
-      ln -s $out/nix/var/nix/profiles/per-user/root/channels $out/root/.nix-defexpr/channels
-      echo "${channelURL} ${channelName}" > $out/root/.nix-channels
 
       mkdir -p $out/bin $out/usr/bin
       ln -s ${pkgs.coreutils}/bin/env $out/usr/bin/env
       ln -s ${pkgs.bashInteractive}/bin/bash $out/bin/sh
 
-    '' + (lib.optionalString (flake-registry-path != null) ''
-      nixCacheDir="/root/.cache/nix"
-      mkdir -p $out$nixCacheDir
-      globalFlakeRegistryPath="$nixCacheDir/flake-registry.json"
-      ln -s ${flake-registry-path} $out$globalFlakeRegistryPath
-      mkdir -p $out/nix/var/nix/gcroots/auto
-      rootName=$(${pkgs.nix}/bin/nix --extra-experimental-features nix-command hash file --type sha1 --base32 <(echo -n $globalFlakeRegistryPath))
-      ln -s $globalFlakeRegistryPath $out/nix/var/nix/gcroots/auto/$rootName
-    ''));
+      ln -s ${setup} $out/setup
+      ln -s ${pkgs.coreutils}/bin/sleep $out/sleep
+    '';
 
 in
 pkgs.dockerTools.buildLayeredImageWithNixDb {
@@ -272,32 +195,31 @@ pkgs.dockerTools.buildLayeredImageWithNixDb {
 
   contents = [ baseSystem ];
 
-  extraCommands = ''
-    rm -rf nix-support
-    ln -s /nix/var/nix/profiles nix/var/nix/gcroots/profiles
-  '';
+  # extraCommands = ''
+  #   rm -rf nix-support
+  #   ln -s /nix/var/nix/profiles nix/var/nix/gcroots/profiles
+  # '';
   fakeRootCommands = ''
     chmod 1777 tmp
     chmod 1777 var/tmp
   '';
 
   config = {
-    Cmd = [ "/root/.nix-profile/bin/bash" ];
+    Cmd = [ "/bin/sh" ];
     Env = [
       "USER=root"
-      "PATH=${lib.concatStringsSep ":" [
-        "/root/.nix-profile/bin"
-        "/nix/var/nix/profiles/default/bin"
-        "/nix/var/nix/profiles/default/sbin"
-      ]}"
-      "MANPATH=${lib.concatStringsSep ":" [
-        "/root/.nix-profile/share/man"
-        "/nix/var/nix/profiles/default/share/man"
-      ]}"
-      "SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
-      "GIT_SSL_CAINFO=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
-      "NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
-      "NIX_PATH=/nix/var/nix/profiles/per-user/root/channels:/root/.nix-defexpr/channels"
+      # "PATH=${lib.concatStringsSep ":" [
+      #   "/root/.nix-profile/bin"
+      #   "/nix/var/nix/profiles/default/bin"
+      #   "/nix/var/nix/profiles/default/sbin"
+      # ]}"
+      # "MANPATH=${lib.concatStringsSep ":" [
+      #   "/root/.nix-profile/share/man"
+      #   "/nix/var/nix/profiles/default/share/man"
+      # ]}"
+      # "SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
+      # "GIT_SSL_CAINFO=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt"
+      # "NIX_SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt"
     ];
   };
 
