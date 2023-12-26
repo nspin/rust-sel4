@@ -6,10 +6,11 @@
 
 set -eu -o pipefail
 
-if [ ! -f /nix/.installed ]; then
-    curl -L https://nixos.org/nix/install | \
-        sh -s -- --yes --no-channel-add --no-modify-profile
-    # ln -s $(readlink --canonicalize-existing $HOME/.nix-profile) /nix/var/nix/env
-    # rm -r $HOME/.nix-profile $HOME/.nix-defexpr $HOME/.local/state/nix
-    touch /nix/.installed
-fi
+. ~/.nix-profile/etc/profile.d/nix.sh
+
+activationPackage=$(nix-build -A home.activationPackage --no-out-link)
+path=$(nix-build -A home.config.home.path --no-out-link)
+
+nix-env -ir $path
+
+$activationPackage/activate
