@@ -133,6 +133,8 @@ let
       (lib.attrValues (lib.mapAttrs groupToGroup groups))
   );
 
+  # TODO SSL_CERT_FILE=$NIX_SSL_CERT_FILE
+
   setup = with pkgs; writeShellApplication {
     name = "setup";
     runtimeInputs = defaultPkgs;
