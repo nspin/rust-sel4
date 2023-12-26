@@ -12,6 +12,14 @@
     in
       if username == "root" then "/root" else "/home/${username}";
 
+  home.sessionPath = [
+    "$HOME/.cargo/bin"
+  ];
+
+  # Is this a hack?
+  targets.genericLinux.enable = true;
+
+  # HACK
   manual.manpages.enable = false;
 
   programs.bash.enable = true;
@@ -33,6 +41,8 @@
     iana-etc
     git
     openssh
+
+    rustup
   ];
 
   home.file = {

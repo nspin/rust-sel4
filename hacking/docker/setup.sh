@@ -6,8 +6,10 @@
 
 set -eu -o pipefail
 
-. ~/.nix-profile/etc/profile.d/nix.sh
+# . ~/.nix-profile/etc/profile.d/nix.sh
 
-nix-env -ir $(nix-build -A path --no-out-link)
+path=$(nix-build -A path --no-out-link)
+activationPackage=$(nix-build -A activationPackage --no-out-link)
 
-$(nix-build -A activationPackage --no-out-link)/activate
+nix-env -ir $path
+$activationPackage/activate
