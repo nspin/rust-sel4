@@ -64,6 +64,33 @@
     git
     openssh
 
+    # acl
+    # attr
+    # bzip2
+    # cpio
+    diffutils
+    # gawk
+    # stdenv.cc.libc
+    # getent
+    # getconf
+    # gnugrep
+    gnupatch
+    gnused
+    # gnutar
+    # gzip
+    # xz
+    # less
+    # libcap
+    # ncurses
+    # netcat
+    # mkpasswd
+    # procps
+    # su
+    # time
+    # util-linux
+    which
+    # zstd
+
     rustup
   ];
 
