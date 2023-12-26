@@ -24,8 +24,12 @@ let
     configuration = ./config;
   };
 
+  image = pkgs.callPackage ./image.nix {};
+
 in {
   inherit home;
   inherit (home) activationPackage;
   inherit (home.config.home) path;
+
+  inherit image;
 }
