@@ -13,4 +13,12 @@ FROM nixos/nix:latest
 
 RUN rm -r /etc/nix /etc/ssl
 
+# ENV PATH=
+
+# ENV MANPATH=
+# ENV SSL_CERT_FILE=
+# ENV GIT_SSL_CAINFO=
+# ENV NIX_SSL_CERT_FILE=
+# ENV NIX_PATH=
+
 WORKDIR /work/hacking/docker
