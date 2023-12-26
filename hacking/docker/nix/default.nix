@@ -7,7 +7,7 @@ let
       sha256 = "sha256:16ab1k33aivqc5ighi95nh28pssbds5glz3bb371gb06qpiydihl";
     };
 
-  pkgs = (import ../../hacking/nix {}).pkgs.build;
+  pkgs = (import ../../../hacking/nix {}).pkgs.build;
 
   # nixpkgsPath =
   #   let
@@ -21,7 +21,7 @@ let
 
   home = import (homeManagerPath + "/modules") {
     inherit pkgs;
-    configuration = ./home.nix;
+    configuration = ./config;
   };
 
 in {

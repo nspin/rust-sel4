@@ -1,6 +1,10 @@
 { pkgs, lib, config, ... }:
 
 {
+  imports = [
+    ./vscode-server.nix
+  ];
+
   home.stateVersion = "23.11";
 
   # home.username = "x";
