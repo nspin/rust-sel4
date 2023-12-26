@@ -95,6 +95,7 @@
     strace
     gnumake
     nix-bash-completions
+    gcc
   ];
 
   home.file = {
