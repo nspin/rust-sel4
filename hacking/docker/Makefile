@@ -4,7 +4,8 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-STATEFUL ?= $(if $(findstring Linux,$(shell uname -s)),0,1)
+# STATEFUL ?= $(if $(findstring Linux,$(shell uname -s)),0,1)
+STATEFUL ?= 0
 
 work_root := ../..
 
@@ -34,7 +35,7 @@ build:
 .PHONY: initialize-volume
 initialize-volume: build
 	if [ -z "$$(docker volume ls -q -f "name=^$(volume_name)$$")" ]; then \
-		docker volume create --label $(label) $(volume_name) && \
+		docker volume create --label $(label) $(volume_name); \
 	fi
 
 .PHONY: run
