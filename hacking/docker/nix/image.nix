@@ -137,10 +137,7 @@ let
 
   setup = with pkgs; writeShellApplication {
     name = "setup";
-    runtimeInputs = defaultPkgs;
     text = ''
-      export NIX_SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt
-
       nix-env -i ${initialEnv}
     '';
   };

@@ -20,6 +20,11 @@
     "$HOME/.cargo/bin"
   ];
 
+  home.sessionVariablesExtra = lib.mkAfter ''
+    # must be after nix.sh is sourced
+    export SSL_CERT_FILE=$NIX_SSL_CERT_FILE
+  '';
+
   # Is this a hack?
   targets.genericLinux.enable = true;
 
