@@ -29,7 +29,8 @@ COPY env/ /tmp/env/
 # TODO do this with docker run because otherwise docker run using this image can be slow
 RUN d=/tmp/env && bash $d/setup.sh && rm -r $d
 
-VOLUME /nix
+# TODO combines with above to make slow
+# VOLUME /nix
 
 WORKDIR /work
 
