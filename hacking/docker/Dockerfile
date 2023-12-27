@@ -14,6 +14,7 @@ RUN /nix-support/setup
 
 # HACK
 ENV USER=root
+
 # HACK
 ENV PATH=/root/.nix-profile/bin
 
