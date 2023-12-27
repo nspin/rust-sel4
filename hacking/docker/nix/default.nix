@@ -7,7 +7,9 @@ let
       sha256 = "sha256:16ab1k33aivqc5ighi95nh28pssbds5glz3bb371gb06qpiydihl";
     };
 
-  pkgs = (import ../../../hacking/nix {}).pkgs.build;
+  pkgs = import <nixpkgs> {};
+
+  # pkgs = (import ../../../hacking/nix {}).pkgs.build;
 
   # nixpkgsPath =
   #   let

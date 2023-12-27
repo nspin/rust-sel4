@@ -19,6 +19,12 @@ RUN rm -r /nix-support
 
 RUN chmod 1777 /tmp /var/tmp
 
+RUN nix-channel --add https://nixos.org/channels/nixos-23.11 nixpkgs && nix-channel --update
+
+COPY nix /tmp/home-env
+
+RUN f=/tmp/home-env/setup.sh && bash $f && rm $f
+
 VOLUME /nix
 
 WORKDIR /work/hacking/docker

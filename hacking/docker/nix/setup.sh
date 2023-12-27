@@ -8,8 +8,10 @@ set -eu -o pipefail
 
 # . ~/.nix-profile/etc/profile.d/nix.sh
 
-path=$(nix-build nix -A path --no-out-link)
-activationPackage=$(nix-build nix -A activationPackage --no-out-link)
+here=$(dirname $0)
+
+path=$(nix-build $here -A path --no-out-link)
+activationPackage=$(nix-build $here -A activationPackage --no-out-link)
 
 nix-env -ir $path
 $activationPackage/activate
