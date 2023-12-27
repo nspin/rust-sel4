@@ -1,24 +1,6 @@
 FROM nixos/nix:latest
 # FROM nixos/nix:2.19.0
 
-# COPY setup.sh /tmp
-
-# RUN nix-env -iA nixpkgs.bash-completion
-# RUN nix-env -iA nixpkgs.nix-bash-completions
-
-# RUN set -eux; \
-#     echo ". ~/.nix-profile/etc/profile.d/nix.sh" >> ~/.bashrc ; \
-#     echo ". ~/.nix-profile/etc/profile.d/bash_completion.sh" >> ~/.bashrc; \
-#     true
-
 RUN rm -r /etc/nix /etc/ssl
-
-# ENV PATH=
-
-# ENV MANPATH=
-# ENV SSL_CERT_FILE=
-# ENV GIT_SSL_CAINFO=
-# ENV NIX_SSL_CERT_FILE=
-# ENV NIX_PATH=
 
 WORKDIR /work/hacking/docker

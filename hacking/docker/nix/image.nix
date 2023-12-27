@@ -1,6 +1,6 @@
 { pkgs ? import <nixpkgs> { }
 , lib ? pkgs.lib
-, name ? "mininix"
+, name ? "this-mininix"
 , tag ? "latest"
 , extraPkgs ? []
 , maxLayers ? 100
@@ -133,18 +133,16 @@ let
       (lib.attrValues (lib.mapAttrs groupToGroup groups))
   );
 
-  # TODO SSL_CERT_FILE=$NIX_SSL_CERT_FILE
+  initialEnv = pkgs.buildEnv {
+    name = "env";
+    paths = defaultPkgs;
+  };
 
   setup = with pkgs; writeShellApplication {
     name = "setup";
     text = ''
-      nix-env -i ${initialEnv}
+      ${pkgs.nix}/bin/nix-env -i ${initialEnv}
     '';
-  };
-
-  initialEnv = pkgs.buildEnv {
-    name = "env";
-    paths = defaultPkgs;
   };
 
   baseSystem =
@@ -174,6 +172,7 @@ let
       echo "" >> $out/etc/shadow
 
       mkdir $out/tmp
+      ln -s ${setup}/bin/setup $out/tmp
 
       mkdir -p $out/var/tmp
 
@@ -182,29 +181,29 @@ let
       mkdir -p $out/bin $out/usr/bin
       ln -s ${pkgs.coreutils}/bin/env $out/usr/bin/env
       ln -s ${pkgs.bashInteractive}/bin/bash $out/bin/sh
-
-      ln -s ${setup} $out/setup
-      ln -s ${pkgs.coreutils}/bin/sleep $out/sleep
     '';
 
 in
 pkgs.dockerTools.buildLayeredImageWithNixDb {
-
   inherit name tag maxLayers;
 
   contents = [ baseSystem ];
+
+  # enableFakechroot = true;
 
   # extraCommands = ''
   #   rm -rf nix-support
   #   ln -s /nix/var/nix/profiles nix/var/nix/gcroots/profiles
   # '';
+
   fakeRootCommands = ''
     chmod 1777 tmp
     chmod 1777 var/tmp
   '';
+    # ${pkgs.nix}/bin/nix-env --verbose -i ${initialEnv} --option build-users-group "" --option sandbox false
 
   config = {
-    Cmd = [ "/bin/sh" ];
+    Cmd = [ "bash" ];
     Env = [
       "USER=root"
       # "PATH=${lib.concatStringsSep ":" [

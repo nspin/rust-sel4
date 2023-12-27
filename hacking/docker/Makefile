@@ -44,6 +44,10 @@ bootstrap-run: bootstrap-build
 bootstrap-exec:
 	docker exec -it $(bootstrap_container_name) bash
 
+.PHONY: bootstrap-create-image
+bootstrap-create-image:
+	docker exec -it $(bootstrap_container_name) bash -c 'i=$$(nix-build -A image) && echo $$i && docker load -i $$i'
+
 .PHONY: bootstrap-rm-container
 bootstrap-rm-container:
 	for id in $$(docker ps -aq -f "name=^$(bootstrap_container_name)$$"); do \
@@ -72,11 +76,11 @@ run: build $(statefulness_run_prerequisites)
 		--mount type=bind,src=$(abspath $(work_root)),dst=/work \
 		--publish 8080:8080/tcp \
 		--publish 8443:8443/tcp \
-		$(image_tag) /sleep inf
+		$(image_tag) sleep inf
 
 .PHONY: exec
 exec:
-	docker exec -it $(container_name) /bin/sh
+	docker exec -it $(container_name) bash
 
 .PHONY: show-nix-root
 show-nix-root:
