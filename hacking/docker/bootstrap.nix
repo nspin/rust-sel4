@@ -4,15 +4,22 @@
 
 let
 
-  defaultPkgs = with pkgs; [
-    bashInteractive
-    coreutils
-    nix
-    cacert
-    iana-etc
-  ];
-
   users = {
+
+    # root = {
+    #   uid = 0;
+    #   shell = "${pkgs.bashInteractive}/bin/bash";
+    #   home = "/root";
+    #   gid = globalGroups.root.gid;
+    #   groups = [ "root" ];
+    #   description = "System administrator";
+    # };
+
+    # nobody = {
+    #   uid = 65534;
+    #   groups = [ "nobody" ];
+    #   description = "Unprivileged account (don't use!)";
+    # };
 
     root = {
       uid = 0;
@@ -32,21 +39,21 @@ let
       description = "Unprivileged account (don't use!)";
     };
 
-  } // lib.listToAttrs (
-    map
-      (
-        n: {
-          name = "nixbld${toString n}";
-          value = {
-            uid = 30000 + n;
-            gid = 30000;
-            groups = [ "nixbld" ];
-            description = "Nix build user ${toString n}";
-          };
-        }
-      )
-      (lib.lists.range 1 32)
-  );
+ } // lib.listToAttrs (
+   map
+     (
+       n: {
+         name = "nixbld${toString n}";
+         value = {
+           uid = 30000 + n;
+           gid = 30000;
+           groups = [ "nixbld" ];
+           description = "Nix build user ${toString n}";
+         };
+       }
+     )
+     (lib.lists.range 1 32)
+ );
 
   groups = {
     root.gid = 0;
@@ -54,75 +61,53 @@ let
     nobody.gid = 65534;
   };
 
-  userToPasswd = (
+  groupMembers = lib.flip lib.mapAttrs groups (group: _:
+    lib.flip lib.filter (lib.attrNames users) (user: lib.elem group (users.${user}.groups or []))
+  );
+
+  globalGroups = groups;
+
+  formatPasswdEntry =
     k:
     { uid
-    , gid ? 65534
-    , home ? "/var/empty"
+    , gid ? globalGroups.nobody.gid
     , description ? ""
+    , home ? "/var/empty"
     , shell ? "/bin/false"
-    , groups ? [ ]
-    }: "${k}:x:${toString uid}:${toString gid}:${description}:${home}:${shell}\n"
-  );
+    , groups ? []
+    }:
+    "${k}:x:${toString uid}:${toString gid}:${description}:${home}:${shell}\n";
+
+  formatShadowEntry = k: { ... }:
+    "${k}:!:1::::::\n";
+
+  formatGroupEntry = k: members:
+    "${k}:x:${toString groups.${k}.gid}:${lib.concatStringsSep "," members}\n";
+
   passwdFile = pkgs.writeText "passwd" (
     lib.concatStrings
-      (lib.attrValues (lib.mapAttrs userToPasswd users))
+      (lib.attrValues (lib.mapAttrs formatPasswdEntry users))
   );
 
-  userToShadow = k: { ... }: "${k}:!:1::::::\n";
   shadowFile = pkgs.writeText "shadow" (
     lib.concatStrings
-      (lib.attrValues (lib.mapAttrs userToShadow users))
+      (lib.attrValues (lib.mapAttrs formatShadowEntry users))
   );
 
-  # Map groups to members
-  # {
-  #   group = [ "user1" "user2" ];
-  # }
-  groupMemberMap = (
-    let
-      # Create a flat list of user/group mappings
-      mappings = (
-        builtins.foldl'
-          (
-            acc: user:
-              let
-                groups = users.${user}.groups or [ ];
-              in
-              acc ++ map
-                (group: {
-                  inherit user group;
-                })
-                groups
-          )
-          [ ]
-          (lib.attrNames users)
-      );
-    in
-    (
-      builtins.foldl'
-        (
-          acc: v: acc // {
-            ${v.group} = acc.${v.group} or [ ] ++ [ v.user ];
-          }
-        )
-        { }
-        mappings)
-  );
-
-  groupToGroup = k: { gid }:
-    let
-      members = groupMemberMap.${k} or [ ];
-    in
-    "${k}:x:${toString gid}:${lib.concatStringsSep "," members}\n";
   groupFile = pkgs.writeText "group" (
     lib.concatStrings
-      (lib.attrValues (lib.mapAttrs groupToGroup groups))
+      (lib.attrValues (lib.mapAttrs formatGroupEntry groupMembers))
   );
 
   initialEnv = pkgs.buildEnv {
     name = "env";
-    paths = defaultPkgs;
+    paths = with pkgs; [
+      bashInteractive
+      coreutils
+      nix
+      cacert
+      iana-etc
+    ];
   };
 
   setup = pkgs.writeScript "setup" ''
