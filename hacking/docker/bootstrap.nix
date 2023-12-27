@@ -17,7 +17,15 @@ let
       uid = 65534;
       groups = [ "nobody" ];
     };
-  };
+
+  } // lib.listToAttrs (lib.forEach (lib.lists.range 1 32) (n:
+    lib.nameValuePair "nixbld${toString n}" {
+      uid = 30000 + n;
+      gid = 30000;
+      groups = [ "nixbld" ];
+      description = "Nix build user ${toString n}";
+    }
+  ));
 
   groups = {
     root.gid = 0;
@@ -70,7 +78,6 @@ let
       coreutils
       nix
       cacert
-      iana-etc
     ];
   };
 
@@ -88,13 +95,14 @@ let
   '';
 
   baseSystem = pkgs.runCommand "base-system" {} ''
-    mkdir -p $out/etc
-    mkdir -p $out/bin
-    mkdir -p $out/usr/bin
-    mkdir -p $out/tmp
-    mkdir -p $out/var/tmp
-    mkdir -p $out/root
-    mkdir -p $out/nix-support
+    mkdir -p \
+      $out/etc \
+      $out/bin \
+      $out/usr/bin \
+      $out/tmp \
+      $out/var/tmp \
+      $out/root \
+      $out/nix-support
 
     ln -s ${passwdFile} $out/etc/passwd
     ln -s ${groupFile} $out/etc/group
