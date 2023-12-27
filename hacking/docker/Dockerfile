@@ -27,7 +27,7 @@ RUN f=/tmp/home-env/setup.sh && bash $f && rm $f
 
 VOLUME /nix
 
-WORKDIR /work/hacking/docker
+WORKDIR /work
 
 # FROM bootstrap
 # WORKDIR /work/hacking/docker
