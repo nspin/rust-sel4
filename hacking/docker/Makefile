@@ -5,7 +5,7 @@
 #
 
 # STATEFUL ?= $(if $(findstring Linux,$(shell uname -s)),0,1)
-STATEFUL ?= 0
+STATEFUL ?= 1
 
 work_root := ../..
 
