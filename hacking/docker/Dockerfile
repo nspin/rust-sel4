@@ -1,10 +1,24 @@
-FROM this-mininix:latest
+FROM nixos/nix:2.19.0 as bootstrap
 
-# RUN f=/tmp/setup && $f && rm $f
-RUN /tmp/setup
+RUN nix-channel --add https://nixos.org/channels/nixos-23.11 nixpkgs && nix-channel --update
 
+COPY bootstrap.nix .
+
+RUN nix-build bootstrap.nix --out-link /tmp/bootstrap-system
+
+FROM scratch
+
+COPY --from=bootstrap --link /tmp/bootstrap-system/root/ /
+
+RUN /nix-support/setup
+
+ENV USER=root
 ENV PATH=/root/.nix-profile/bin
 
-WORKDIR /work
+RUN rm -r /nix-support
 
-# RUN ls / && false
+RUN chmod 1777 /tmp /var/tmp
+
+VOLUME /nix
+
+WORKDIR /work/hacking/docker

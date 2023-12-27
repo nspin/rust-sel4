@@ -12,10 +12,7 @@ id := rust-sel4
 label := $(id)
 image_tag := $(id)
 container_name := $(id)
-volume_name := $(id)-nix-root
-
-bootstrap_image_tag := $(image_tag)-bootstrap
-bootstrap_container_name := $(container_name)-bootstrap
+volume_name := $(id)-volume
 
 uid := $(shell id -u)
 gid := $(shell id -g)
@@ -28,45 +25,16 @@ endif
 .PHONY: none
 none:
 
-.PHONY: bootstrap-build
-bootstrap-build:
-	docker build \
-		--label $(label) -t $(bootstrap_image_tag) -f Dockerfile.bootstrap .
-
-.PHONY: bootstrap-run
-bootstrap-run: bootstrap-build
-	docker run --privileged -d --name $(bootstrap_container_name) \
-		--mount type=bind,src=$(abspath $(work_root)),dst=/work \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		$(bootstrap_image_tag) sleep inf
-
-.PHONY: bootstrap-exec
-bootstrap-exec:
-	docker exec -it $(bootstrap_container_name) bash
-
-.PHONY: bootstrap-create-image
-bootstrap-create-image:
-	docker exec -it $(bootstrap_container_name) bash -c 'i=$$(nix-build -A image) && echo $$i && docker load -i $$i'
-
-.PHONY: bootstrap-rm-container
-bootstrap-rm-container:
-	for id in $$(docker ps -aq -f "name=^$(bootstrap_container_name)$$"); do \
-		docker rm -f $$id; \
-	done
-
 .PHONY: build
 build:
-	docker build \
+	docker build --label $(label) \
 		--build-arg UID=$(uid) --build-arg GID=$(gid) --build-arg STATEFUL=$(STATEFUL) \
-		--label $(label) -t $(image_tag) .
+		-t $(image_tag) .
 
 .PHONY: initialize-volume
 initialize-volume: build
 	if [ -z "$$(docker volume ls -q -f "name=^$(volume_name)$$")" ]; then \
 		docker volume create --label $(label) $(volume_name) && \
-		docker run --privileged --rm --label $(label) -w /tmp \
-			$(statefulness_docker_run_args) \
-			$(image_tag) flock /nix/.installed.lock bash setup.sh; \
 	fi
 
 .PHONY: run
