@@ -105,7 +105,6 @@
     gnumake
     nix-bash-completions
     gcc
-    docker
   ];
 
   home.file = {
