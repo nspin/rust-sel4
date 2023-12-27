@@ -79,9 +79,11 @@ let
 
     set -eu -o pipefail
 
+    registration=/nix-support/registration
+
     ${pkgs.nix}/bin/nix-store --init
-    ${pkgs.nix}/bin/nix-store --load-db < /nix-support/registration
-    ${pkgs.coreutils}/bin/rm /nix-support/registration
+    ${pkgs.nix}/bin/nix-store --load-db < $registration
+    ${pkgs.coreutils}/bin/rm $registration
     ${pkgs.nix}/bin/nix-env -i ${initialEnv}
   '';
 
@@ -110,7 +112,7 @@ let
     root=$out/root
 
     mkdir -p $root
-    
+
     cp -r ${baseSystem}/* $root
     chmod +w $root/nix-support
     cp ${baseSystemClosureInfo}/registration $root/nix-support

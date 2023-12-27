@@ -23,6 +23,5 @@ VOLUME /nix
 
 WORKDIR /work/hacking/docker
 
-FROM bootstrap
-
-WORKDIR /work/hacking/docker
+# FROM bootstrap
+# WORKDIR /work/hacking/docker
