@@ -6,54 +6,18 @@ let
 
   users = {
 
-    # root = {
-    #   uid = 0;
-    #   shell = "${pkgs.bashInteractive}/bin/bash";
-    #   home = "/root";
-    #   gid = globalGroups.root.gid;
-    #   groups = [ "root" ];
-    #   description = "System administrator";
-    # };
-
-    # nobody = {
-    #   uid = 65534;
-    #   groups = [ "nobody" ];
-    #   description = "Unprivileged account (don't use!)";
-    # };
-
     root = {
       uid = 0;
-      shell = "${pkgs.bashInteractive}/bin/bash";
+      gid = globalGroups.root.gid;
       home = "/root";
-      gid = 0;
       groups = [ "root" ];
-      description = "System administrator";
     };
 
     nobody = {
       uid = 65534;
-      shell = "${pkgs.shadow}/bin/nologin";
-      home = "/var/empty";
-      gid = 65534;
       groups = [ "nobody" ];
-      description = "Unprivileged account (don't use!)";
     };
-
- } // lib.listToAttrs (
-   map
-     (
-       n: {
-         name = "nixbld${toString n}";
-         value = {
-           uid = 30000 + n;
-           gid = 30000;
-           groups = [ "nixbld" ];
-           description = "Nix build user ${toString n}";
-         };
-       }
-     )
-     (lib.lists.range 1 32)
- );
+  };
 
   groups = {
     root.gid = 0;
