@@ -22,3 +22,7 @@ RUN chmod 1777 /tmp /var/tmp
 VOLUME /nix
 
 WORKDIR /work/hacking/docker
+
+FROM bootstrap
+
+WORKDIR /work/hacking/docker
