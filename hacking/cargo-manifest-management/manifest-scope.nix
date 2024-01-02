@@ -181,6 +181,25 @@ in rec {
     tag = "keep/e1465a43c9f550ef58701a275b313310"; # branch sel4
   };
 
+  ringWith = features: {
+    version = "0.17.7";
+    features = [ "less-safe-getrandom-custom-or-rdrand" ] ++ features;
+  };
+
+  rustlsSource = {
+    git = "https://github.com/coliasgroup/rustls.git";
+    rev = "c315801aa0c1e9c765b27106b3969dd458995cc7";
+  };
+
+  rustlsWith = features: rustlsSource // {
+    default-features = false;
+    features = [
+      "logging"
+      "ring"
+      "tls12"
+    ] ++ features;
+  };
+
   mbedtlsSource = {
     git = "https://github.com/coliasgroup/rust-mbedtls";
     tag = "keep/30d001b63baea36135b2590c4fd05e95"; # branch sel4

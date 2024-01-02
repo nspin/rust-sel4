@@ -15,6 +15,7 @@
 , sources
 
 , crates
+, globalPatchSection
 , crateUtils
 
 , mkTask, mkSeL4KernelLoaderWithPayload
@@ -183,6 +184,26 @@ in rec {
               ];
             });
           };
+        };
+        extraPlatformArgs = lib.optionalAttrs canSimulate {
+          canAutomateSimply = true;
+        };
+      });
+
+      rustls = maybe haveFullRuntime (mkInstance {
+        rootTask = lib.makeOverridable mkTask {
+          rootCrate = crates.tests-root-task-rustls;
+          # release = true;
+          commonModifications.modifyManifest = lib.flip lib.recursiveUpdate {
+            patch.crates-io = {
+              inherit (globalPatchSection.crates-io) ring;
+            };
+          };
+          commonModifications.modifyDerivation = drv: drv.overrideAttrs (attrs: {
+            nativeBuildInputs = (attrs.nativeBuildInputs or []) ++ [
+              perl
+            ];
+          });
         };
         extraPlatformArgs = lib.optionalAttrs canSimulate {
           canAutomateSimply = true;
