@@ -44,7 +44,6 @@ impl TcpConnector {
     }
 }
 
-#[cfg(any())]
 impl From<Arc<ClientConfig>> for TcpConnector {
     fn from(config: Arc<ClientConfig>) -> Self {
         Self { config }
