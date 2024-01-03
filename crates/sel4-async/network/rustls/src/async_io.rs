@@ -2,17 +2,13 @@ use core::pin::Pin;
 use core::result::Result as CoreResult;
 use core::task::Poll;
 use core::{mem, task};
-// use std::error::Error as StdError;
-// use std::io;
-// use std::io::ErrorKind;
-// use std::sync::Arc;
 
 use alloc::{
     boxed::Box,
+    sync::Arc,
     vec::Vec,
 };
 
-// use futures::io::{AsyncRead, AsyncWrite};
 use futures::Future;
 use rustls::pki_types::ServerName;
 use rustls::client::UnbufferedClientConnection;
@@ -22,16 +18,16 @@ use rustls::unbuffered::{
 };
 use rustls::ClientConfig;
 
+use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
+
 // FIXME use an enum
 pub type Error = rustls::Error;
 type Result<T> = CoreResult<T, Error>;
 
-#[cfg(any())]
 pub struct TcpConnector {
     config: Arc<ClientConfig>,
 }
 
-#[cfg(any())]
 impl TcpConnector {
     pub fn connect<IO>(
         &self,
@@ -40,7 +36,7 @@ impl TcpConnector {
         // FIXME should not return an error but instead hoist it into a `Connect` variant
     ) -> Result<Connect<IO>>
     where
-        IO: AsyncRead + AsyncWrite,
+        IO: AsyncIo,
     {
         let conn = UnbufferedClientConnection::new(self.config.clone(), domain)?;
 
