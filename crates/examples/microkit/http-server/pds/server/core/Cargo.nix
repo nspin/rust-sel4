@@ -22,6 +22,8 @@ mk {
 
     httparse = { version = "1.8.0"; default-features = false; };
 
+    smoltcp = smoltcpWith [];
+
     mbedtls = mbedtlsWith [];
 
     inherit (localCrates)

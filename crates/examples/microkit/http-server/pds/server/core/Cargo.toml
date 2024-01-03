@@ -39,3 +39,8 @@ features = ["no_std_deps"]
 
 [dependencies.sel4-async-single-threaded-executor]
 path = "../../../../../../sel4-async/single-threaded-executor"
+
+[dependencies.smoltcp]
+version = "0.10.0"
+default-features = false
+features = ["proto-ipv4", "proto-dhcpv4", "proto-dns", "socket-dhcpv4", "socket-dns", "socket-tcp"]

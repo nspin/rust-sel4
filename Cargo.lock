@@ -1231,6 +1231,7 @@ dependencies = [
  "sel4-async-time",
  "sel4-async-unsync",
  "sel4-panicking-env",
+ "smoltcp",
 ]
 
 [[package]]
