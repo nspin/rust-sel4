@@ -1,10 +1,8 @@
 use core::pin::Pin;
-use core::result::Result as CoreResult;
 use core::task::Poll;
 use core::{mem, task};
 
 use alloc::{
-    boxed::Box,
     sync::Arc,
     vec::Vec,
 };
@@ -105,12 +103,11 @@ impl<IO> ConnectInner<IO> {
     }
 }
 
-#[cfg(any())]
 impl<IO> Future for Connect<IO>
 where
-    IO: Unpin + AsyncRead + AsyncWrite,
+    IO: Unpin + AsyncIo,
 {
-    type Output = Result<TlsStream<IO>>;
+    type Output = Result<TlsStream<IO>, Error<IO::Error>>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         let mut inner = self
@@ -430,10 +427,6 @@ impl<'a> WriteCursor<'a> {
     fn remaining_capacity(&self) -> usize {
         self.buf.len() - self.used
     }
-}
-
-fn map_err<E>(err: E) -> Error<E> {
-    Error::TransitError(err)
 }
 
 #[derive(Default)]
