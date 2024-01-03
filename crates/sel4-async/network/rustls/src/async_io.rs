@@ -23,6 +23,7 @@ use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 
 pub enum Error<E> {
     TransitError(E),
+    ConnectionAborted,
     TlsError(TlsError),
     EncodeError(EncodeError),
     EncryptError(EncryptError),
@@ -260,7 +261,7 @@ impl<IO: AsyncIo> ConnectInner<IO> {
 
             ConnectionState::BlockedHandshake { .. } => Action::Read,
 
-            ConnectionState::ReadTraffic(_) | ConnectionState::WriteTraffic(_) => Action::Break,
+            ConnectionState::WriteTraffic(_) => Action::Break,
 
             state => unreachable!("{state:?}"), // due to type state
         };
@@ -289,24 +290,22 @@ impl<IO> AsyncIo for TlsStream<IO>
 where
     IO: AsyncIo + Unpin,
 {
-    type Error = IO::Error;
+    type Error = Error<IO::Error>;
 
-    #[cfg(any())]
     fn poll_send(
         &mut self,
         cx: &mut task::Context<'_>,
         buf: &[u8],
-    ) -> Poll<io::Result<usize>> {
+    ) -> Poll<Result<usize, Self::Error>> {
         let mut outgoing = mem::take(&mut self.outgoing);
 
         // no IO here; just in-memory writes
         match self
             .conn
             .process_tls_records(&mut [])
-            .map_err(map_err)?
-            .state
+            .state?
         {
-            ConnectionState::TrafficTransit(mut state) => {
+            ConnectionState::WriteTraffic(mut state) => {
                 try_or_resize_and_retry(
                     |out_buffer| state.encrypt(buf, out_buffer),
                     |e| {
@@ -317,15 +316,11 @@ where
                         }
                     },
                     &mut outgoing,
-                )
-                .map_err(map_err)?;
+                )?;
             }
 
-            ConnectionState::ConnectionClosed => {
-                return Poll::Ready(Err(io::Error::new(
-                    ErrorKind::ConnectionAborted,
-                    "connection closed by the peer",
-                )));
+            ConnectionState::Closed => {
+                return Poll::Ready(Err(Error::ConnectionAborted));
             }
 
             state => unreachable!("{state:?}"),
@@ -345,12 +340,11 @@ where
         Poll::Ready(Ok(buf.len()))
     }
 
-    #[cfg(any())]
     fn poll_recv(
         &mut self,
         cx: &mut task::Context<'_>,
         buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
+    ) -> Poll<Result<usize, Self::Error>> {
         let mut incoming = mem::take(&mut self.incoming);
         let mut cursor = WriteCursor::new(buf);
 
@@ -359,16 +353,15 @@ where
 
             let UnbufferedStatus { mut discard, state } = self
                 .conn
-                .process_tls_records(incoming.filled_mut())
-                .map_err(map_err)?;
+                .process_tls_records(incoming.filled_mut());
 
-            match state {
-                ConnectionState::AppDataAvailable(mut state) => {
+            match state? {
+                ConnectionState::ReadTraffic(mut state) => {
                     while let Some(res) = state.next_record() {
                         let AppDataRecord {
                             discard: new_discard,
                             payload,
-                        } = res.map_err(map_err)?;
+                        } = res?;
                         discard += new_discard;
 
                         let remainder = cursor.append(payload);
@@ -380,7 +373,7 @@ where
                     }
                 }
 
-                ConnectionState::TrafficTransit(_) => {
+                ConnectionState::WriteTraffic(_) => {
                     let would_block = poll_read(&mut self.io, &mut incoming, cx)?;
 
                     if would_block {
@@ -389,7 +382,7 @@ where
                     }
                 }
 
-                ConnectionState::ConnectionClosed => break,
+                ConnectionState::Closed => break,
 
                 state => unreachable!("{state:?}"),
             }
