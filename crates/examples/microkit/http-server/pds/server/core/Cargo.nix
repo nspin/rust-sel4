@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, localCrates, versions, smoltcpWith, mbedtlsWith }:
+{ mk, localCrates, versions, smoltcpWith, mbedtlsWith, rustlsWith }:
 
 mk {
   package.name = "microkit-http-server-example-server-core";
@@ -26,17 +26,18 @@ mk {
 
     mbedtls = mbedtlsWith [];
 
+    rustls = rustlsWith [];
+
     inherit (localCrates)
       sel4-async-single-threaded-executor
       sel4-async-unsync
       sel4-async-time
       sel4-async-network
       sel4-async-network-mbedtls
-      sel4-async-time
+      sel4-async-network-rustls
       sel4-panicking-env
       sel4-async-block-io
       sel4-async-block-io-fat
-      # mbedtls
     ;
   };
 
