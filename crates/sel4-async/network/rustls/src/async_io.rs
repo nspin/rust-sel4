@@ -2,20 +2,17 @@ use core::pin::Pin;
 use core::task::Poll;
 use core::{mem, task};
 
-use alloc::{
-    sync::Arc,
-    vec::Vec,
-};
+use alloc::{sync::Arc, vec::Vec};
 
 use futures::Future;
-use rustls::Error as TlsError;
-use rustls::pki_types::ServerName;
 use rustls::client::UnbufferedClientConnection;
+use rustls::pki_types::ServerName;
 use rustls::unbuffered::{
     AppDataRecord, ConnectionState, EncodeError, EncryptError, InsufficientSizeError,
     UnbufferedStatus,
 };
 use rustls::ClientConfig;
+use rustls::Error as TlsError;
 
 use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 
@@ -110,10 +107,7 @@ where
     type Output = Result<TlsStream<IO>, Error<IO::Error>>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
-        let mut inner = self
-            .inner
-            .take()
-            .expect("polled after completion");
+        let mut inner = self.inner.take().expect("polled after completion");
 
         let mut updates = Updates::default();
         let poll = loop {
@@ -173,7 +167,11 @@ where
 }
 
 /// returns `true` if the operation would block
-fn poll_read<IO>(io: &mut IO, incoming: &mut Buffer, cx: &mut task::Context) -> Result<bool, Error<IO::Error>>
+fn poll_read<IO>(
+    io: &mut IO,
+    incoming: &mut Buffer,
+    cx: &mut task::Context,
+) -> Result<bool, Error<IO::Error>>
 where
     IO: AsyncIo + Unpin,
 {
@@ -197,7 +195,11 @@ where
 }
 
 /// returns `true` if the operation would block
-fn poll_write<IO>(io: &mut IO, outgoing: &mut Buffer, cx: &mut task::Context) -> Result<bool, Error<IO::Error>>
+fn poll_write<IO>(
+    io: &mut IO,
+    outgoing: &mut Buffer,
+    cx: &mut task::Context,
+) -> Result<bool, Error<IO::Error>>
 where
     IO: AsyncIo + Unpin,
 {
@@ -224,9 +226,8 @@ impl<IO: AsyncIo> ConnectInner<IO> {
     fn advance(&mut self, updates: &mut Updates) -> Result<Action, Error<IO::Error>> {
         log::trace!("incoming buffer has {}B of data", self.incoming.len());
 
-        let UnbufferedStatus { discard, state } = self
-            .conn
-            .process_tls_records(self.incoming.filled_mut());
+        let UnbufferedStatus { discard, state } =
+            self.conn.process_tls_records(self.incoming.filled_mut());
 
         log::trace!("state: {state:?}");
         let next = match state? {
@@ -297,11 +298,7 @@ where
         let mut outgoing = mem::take(&mut self.outgoing);
 
         // no IO here; just in-memory writes
-        match self
-            .conn
-            .process_tls_records(&mut [])
-            .state?
-        {
+        match self.conn.process_tls_records(&mut []).state? {
             ConnectionState::WriteTraffic(mut state) => {
                 try_or_resize_and_retry(
                     |out_buffer| state.encrypt(buf, out_buffer),
@@ -348,9 +345,8 @@ where
         while !cursor.is_full() {
             log::trace!("incoming buffer has {}B of data", incoming.len());
 
-            let UnbufferedStatus { mut discard, state } = self
-                .conn
-                .process_tls_records(incoming.filled_mut());
+            let UnbufferedStatus { mut discard, state } =
+                self.conn.process_tls_records(incoming.filled_mut());
 
             match state? {
                 ConnectionState::ReadTraffic(mut state) => {
@@ -406,9 +402,7 @@ impl<'a> WriteCursor<'a> {
     }
 
     fn append<'b>(&mut self, data: &'b [u8]) -> &'b [u8] {
-        let len = self
-            .remaining_capacity()
-            .min(data.len());
+        let len = self.remaining_capacity().min(data.len());
 
         self.unfilled()[..len].copy_from_slice(&data[..len]);
         self.used += len;
@@ -447,8 +441,7 @@ impl Buffer {
 
         debug_assert!(num_bytes <= self.used);
 
-        self.inner
-            .copy_within(num_bytes..self.used, 0);
+        self.inner.copy_within(num_bytes..self.used, 0);
         self.used -= num_bytes;
 
         log::trace!("discarded {num_bytes}B");
