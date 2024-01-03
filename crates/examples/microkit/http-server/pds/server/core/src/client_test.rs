@@ -1,8 +1,8 @@
+use core::time::Duration;
 use alloc::sync::Arc;
 use alloc::vec;
 use core::str;
 
-use smoltcp::time::Duration;
 use smoltcp::wire::DnsQueryType;
 
 use mbedtls::rng::CtrDrbg;
@@ -10,14 +10,15 @@ use mbedtls::ssl::async_io::AsyncIoExt;
 use mbedtls::ssl::config::{Endpoint, Preset, Transport};
 use mbedtls::ssl::{Config, Context};
 
+use sel4_async_time::Instant;
 use sel4_async_network::{ManagedInterface, TcpSocketError};
 use sel4_async_network_mbedtls::{
     get_mozilla_ca_list, insecure_dummy_rng, DbgCallbackBuilder, TcpSocketWrapper,
 };
 use sel4_async_time::TimerManager;
 
-pub async fn run(network_ctx: ManagedInterface, timers_ctx: TimerManager) {
-    // timers_ctx.sleep(Duration::from_secs(1)).await;
+pub async fn run(now_fn: impl Fn() -> Instant, network_ctx: ManagedInterface, timers_ctx: TimerManager) {
+    timers_ctx.sleep_until((now_fn()) + Duration::from_secs(1)).await;
 
     let query = network_ctx
         .dns_query("example.com", DnsQueryType::A)

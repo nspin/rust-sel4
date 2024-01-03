@@ -18,6 +18,7 @@ use futures::task::LocalSpawnExt;
 
 use mbedtls::ssl::async_io::ClosedError;
 
+use sel4_async_time::Instant;
 use sel4_async_block_io::{access::ReadOnly, constant_block_sizes, BlockIO};
 use sel4_async_block_io_fat as fat;
 use sel4_async_network::{ManagedInterface, TcpSocketError};
@@ -39,6 +40,7 @@ const HTTPS_PORT: u16 = 443;
 pub async fn run_server<
     T: BlockIO<ReadOnly, BlockSize = constant_block_sizes::BlockSize512> + Clone,
 >(
+    now_fn: impl Fn() -> Instant,
     timers_ctx: TimerManager,
     network_ctx: ManagedInterface,
     fs_block_io: T,
@@ -54,7 +56,7 @@ pub async fn run_server<
 
     seed_insecure_dummy_rng(0);
 
-    client_test::run(network_ctx.clone(), timers_ctx.clone()).await;
+    client_test::run(now_fn, network_ctx.clone(), timers_ctx.clone()).await;
 
     let use_socket_for_http_closure: SocketUser<T> = Box::new({
         move |server, socket| {

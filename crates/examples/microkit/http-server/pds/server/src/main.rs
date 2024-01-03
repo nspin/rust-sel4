@@ -17,6 +17,7 @@
 
 extern crate alloc;
 
+use core::time::Duration;
 use alloc::rc::Rc;
 
 use smoltcp::iface::Config;
@@ -33,6 +34,7 @@ use sel4_microkit::{memory_region_symbol, protection_domain, Handler};
 use sel4_shared_ring_buffer::RingBuffers;
 use sel4_shared_ring_buffer_block_io::SharedRingBufferBlockIO;
 use sel4_shared_ring_buffer_smoltcp::DeviceImpl;
+use sel4_async_time::Instant;
 
 use microkit_http_server_example_server_core::run_server;
 
@@ -79,6 +81,8 @@ fn init() -> impl Handler {
     let timer_client = TimerClient::new(channels::TIMER_DRIVER);
     let net_client = NetClient::new(channels::NET_DRIVER);
     let block_client = BlockClient::new(channels::BLOCK_DRIVER);
+
+    let timer_client = Rc::new(timer_client);
 
     let notify_net: fn() = || channels::NET_DRIVER.notify();
     let notify_block: fn() = || channels::BLOCK_DRIVER.notify();
@@ -155,6 +159,13 @@ fn init() -> impl Handler {
         )
     };
 
+    let now_fn = {
+        let timer_client = timer_client.clone();
+        move || {
+            Instant::ZERO + Duration::from_micros(timer_client.now())
+        }
+    };
+
     HandlerImpl::new(
         channels::TIMER_DRIVER,
         channels::NET_DRIVER,
@@ -171,6 +182,7 @@ fn init() -> impl Handler {
             let fs_block_io = disk.partition_using_mbr(&entry);
             let fs_block_io = Rc::new(fs_block_io);
             run_server(
+                now_fn,
                 timers_ctx,
                 network_ctx,
                 fs_block_io,

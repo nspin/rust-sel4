@@ -29,6 +29,7 @@ mk {
     inherit (localCrates)
       sel4-async-single-threaded-executor
       sel4-async-unsync
+      sel4-async-time
       sel4-async-network
       sel4-async-network-mbedtls
       sel4-async-time
