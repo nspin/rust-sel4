@@ -1,8 +1,8 @@
 use alloc::sync::Arc;
 use alloc::vec;
+use core::fmt;
 use core::str;
 use core::time::Duration;
-use core::fmt;
 
 use smoltcp::wire::DnsQueryType;
 
@@ -18,9 +18,9 @@ use sel4_async_time::TimerManager;
 use rustls::version::{TLS12, TLS13};
 use rustls::{
     pki_types::{ServerName, UnixTime},
+    time_provider::GetCurrentTime,
     AppDataRecord, ClientConfig, ConnectionState, EncodeError, EncryptError, InsufficientSizeError,
     RootCertStore, UnbufferedStatus,
-    time_provider::GetCurrentTime,
 };
 
 const NOW: u64 = 1704284617;
@@ -55,7 +55,10 @@ pub async fn run(
     let config = Arc::new(config);
     let connector = sel4_async_network_rustls::TcpConnector::from(config);
     let mut conn = connector
-        .connect(ServerName::DnsName("example.com".try_into().unwrap()), TcpSocketWrapper::new(socket))
+        .connect(
+            ServerName::DnsName("example.com".try_into().unwrap()),
+            TcpSocketWrapper::new(socket),
+        )
         .unwrap()
         .await
         .unwrap();
@@ -106,7 +109,7 @@ impl<F: Send + Sync + Fn() -> Instant> GetCurrentTimeImpl<F> {
 impl<F: Send + Sync + Fn() -> Instant> GetCurrentTime for GetCurrentTimeImpl<F> {
     fn get_current_time(&self) -> Option<UnixTime> {
         Some(UnixTime::since_unix_epoch(
-            Duration::from_secs(self.start_global.as_secs()) + ((self.now_fn)() - self.start_local)
+            Duration::from_secs(self.start_global.as_secs()) + ((self.now_fn)() - self.start_local),
         ))
     }
 }

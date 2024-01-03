@@ -6,10 +6,10 @@
 
 use alloc::boxed::Box;
 use alloc::rc::Rc;
+use alloc::sync::Arc;
 use core::future::Future;
 use core::pin::Pin;
 use core::time::Duration;
-use alloc::sync::Arc;
 
 use futures::future::LocalBoxFuture;
 
