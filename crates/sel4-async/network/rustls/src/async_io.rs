@@ -80,10 +80,9 @@ impl<IO> ConnectInner<IO> {
     }
 }
 
-#[cfg(any())]
 impl<IO> Future for Connect<IO>
 where
-    IO: Unpin + AsyncRead + AsyncWrite,
+    IO: Unpin + AsyncIo<Error = Error>,
 {
     type Output = Result<TlsStream<IO>>;
 
@@ -150,18 +149,17 @@ where
     }
 }
 
-#[cfg(any())]
 /// returns `true` if the operation would block
-fn poll_read<IO>(io: &mut IO, incoming: &mut Buffer, cx: &mut task::Context) -> io::Result<bool>
+fn poll_read<IO>(io: &mut IO, incoming: &mut Buffer, cx: &mut task::Context) -> Result<bool>
 where
-    IO: AsyncRead + Unpin,
+    IO: AsyncIo<Error = Error> + Unpin,
 {
     if incoming.unfilled().is_empty() {
         // XXX should this be user configurable?
         incoming.reserve(1024);
     }
 
-    let would_block = match Pin::new(io).poll_read(cx, incoming.unfilled()) {
+    let would_block = match Pin::new(io).poll_recv(cx, incoming.unfilled()) {
         Poll::Ready(res) => {
             let read = res?;
             log::trace!("read {read}B from socket");
@@ -175,13 +173,12 @@ where
     Ok(would_block)
 }
 
-#[cfg(any())]
 /// returns `true` if the operation would block
-fn poll_write<IO>(io: &mut IO, outgoing: &mut Buffer, cx: &mut task::Context) -> io::Result<bool>
+fn poll_write<IO>(io: &mut IO, outgoing: &mut Buffer, cx: &mut task::Context) -> Result<bool>
 where
-    IO: AsyncWrite + Unpin,
+    IO: AsyncIo<Error = Error> + Unpin,
 {
-    let pending = match Pin::new(io).poll_write(cx, outgoing.filled()) {
+    let pending = match Pin::new(io).poll_send(cx, outgoing.filled()) {
         Poll::Ready(res) => {
             let written = res?;
             log::trace!("wrote {written}B into socket");
@@ -200,25 +197,25 @@ struct Updates {
     transmit_complete: bool,
 }
 
-#[cfg(any())]
 impl<IO> ConnectInner<IO> {
     fn advance(&mut self, updates: &mut Updates) -> Result<Action> {
         log::trace!("incoming buffer has {}B of data", self.incoming.len());
 
         let UnbufferedStatus { discard, state } = self
             .conn
-            .process_tls_records(self.incoming.filled_mut())?;
+            .process_tls_records(self.incoming.filled_mut()); // TODO was ?
 
         log::trace!("state: {state:?}");
-        let next = match state {
-            ConnectionState::MustEncodeTlsData(mut state) => {
+        let next = match state? {
+            ConnectionState::EncodeTlsData(mut state) => {
                 try_or_resize_and_retry(
                     |out_buffer| state.encode(out_buffer),
                     |e| {
                         if let EncodeError::InsufficientSize(is) = &e {
                             Ok(*is)
                         } else {
-                            Err(e.into())
+                            // Err(e.into())
+                            panic!()
                         }
                     },
                     &mut self.outgoing,
@@ -227,7 +224,7 @@ impl<IO> ConnectInner<IO> {
                 Action::Continue
             }
 
-            ConnectionState::MustTransmitTlsData(state) => {
+            ConnectionState::TransmitTlsData(state) => {
                 if updates.transmit_complete {
                     updates.transmit_complete = false;
                     state.done();
@@ -237,9 +234,9 @@ impl<IO> ConnectInner<IO> {
                 }
             }
 
-            ConnectionState::NeedsMoreTlsData { .. } => Action::Read,
+            ConnectionState::BlockedHandshake { .. } => Action::Read,
 
-            ConnectionState::TrafficTransit(_) => Action::Break,
+            ConnectionState::ReadTraffic(_) | ConnectionState::WriteTraffic(_)  => Action::Break,
 
             state => unreachable!("{state:?}"), // due to type state
         };
@@ -504,11 +501,12 @@ impl Buffer {
 }
 
 fn try_or_resize_and_retry<E>(
-    mut f: impl FnMut(&mut [u8]) -> CoreResult<usize, Error>,
-    map_err: impl FnOnce(Error) -> Result<InsufficientSizeError>,
+    mut f: impl FnMut(&mut [u8]) -> CoreResult<usize, E>,
+    map_err: impl FnOnce(E) -> Result<InsufficientSizeError>,
     outgoing: &mut Buffer,
 ) -> Result<usize>
 where
+    // E: Into<Error>
 {
     let written = match f(outgoing.unfilled()) {
         Ok(written) => written,
@@ -518,7 +516,8 @@ where
             outgoing.reserve(required_size);
             log::trace!("resized `outgoing_tls` buffer to {}B", outgoing.capacity());
 
-            f(outgoing.unfilled())?
+            // f(outgoing.unfilled())?
+            f(outgoing.unfilled()).ok().unwrap()
         }
     };
 
