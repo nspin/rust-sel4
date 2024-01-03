@@ -41,11 +41,7 @@ pub async fn run(
     socket.connect((query[0], 443), 44445).await.unwrap();
 
     let mut root_store = rustls::RootCertStore::empty();
-    root_store.extend(
-        webpki_roots::TLS_SERVER_ROOTS
-            .iter()
-            .cloned(),
-    );
+    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     let mut config = rustls::ClientConfig::builder()
         .with_root_certificates(root_store)
         .with_no_client_auth();
@@ -53,7 +49,11 @@ pub async fn run(
     config.time_provider = rustls::time_provider::TimeProvider::none();
     let config = Arc::new(config);
     let connector = sel4_async_network_rustls::TcpConnector::from(config);
-    let conn = connector.connect(panic!(), TcpSocketWrapper::new(socket)).unwrap().await.unwrap();
+    let conn = connector
+        .connect(panic!(), TcpSocketWrapper::new(socket))
+        .unwrap()
+        .await
+        .unwrap();
 
     conn.send_all(b"GET / HTTP/1.1\r\n").await.unwrap();
     conn.send_all(b"Host: example.com\r\n").await.unwrap();
