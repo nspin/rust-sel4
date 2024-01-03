@@ -11,6 +11,7 @@ mk {
   dependencies = {
     inherit (localCrates)
       sel4-async-network
+      sel4-async-network-mbedtls # TODO
     ;
     inherit (versions) log;
     rustls = (localCrates.rustls or {}) // rustlsWith [];

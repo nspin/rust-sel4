@@ -2022,6 +2022,7 @@ dependencies = [
  "rand",
  "rustls",
  "sel4-async-network",
+ "sel4-async-network-mbedtls",
 ]
 
 [[package]]
