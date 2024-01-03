@@ -7,12 +7,14 @@
 #![no_std]
 #![no_main]
 #![feature(async_fn_in_trait)]
+#![feature(cfg_target_thread_local)]
 #![feature(int_roundings)]
 #![feature(never_type)]
 #![feature(pattern)]
 #![feature(ptr_metadata)]
 #![feature(slice_ptr_get)]
 #![feature(strict_provenance)]
+#![feature(thread_local)]
 #![feature(try_blocks)]
 
 extern crate alloc;
@@ -207,4 +209,41 @@ fn setup_newlib() {
         _write: Some(write_with_debug_put_char),
         ..Default::default()
     })
+}
+
+mod rand_env {
+    use core::cell::RefCell;
+
+    use rand::rngs::SmallRng;
+    use rand::{RngCore, SeedableRng};
+
+    #[cfg(not(target_thread_local))]
+    compile_error!("");
+
+    #[thread_local]
+    static RNG: RefCell<Option<SmallRng>> = RefCell::new(None);
+
+    pub fn seed_insecure_dummy_rng(seed: u64) {
+        assert!(RNG.replace(Some(SmallRng::seed_from_u64(seed))).is_none());
+    }
+
+    pub fn insecure_dummy_rng(buf: &mut [u8]) -> Result<(), getrandom::Error> {
+        // HACK
+        if RNG.borrow().is_none() {
+            seed_insecure_dummy_rng(0);
+        }
+        RNG.borrow_mut().as_mut().unwrap().fill_bytes(buf);
+        Ok(())
+    }
+
+    getrandom::register_custom_getrandom!(insecure_dummy_rng);
+
+    // https://github.com/rust-lang/compiler-builtins/pull/563
+    #[no_mangle]
+    pub extern "C" fn __bswapsi2(u: u32) -> u32 {
+        ((u & 0xff000000) >> 24)
+            | ((u & 0x00ff0000) >> 8)
+            | ((u & 0x0000ff00) << 8)
+            | ((u & 0x000000ff) << 24)
+    }
 }

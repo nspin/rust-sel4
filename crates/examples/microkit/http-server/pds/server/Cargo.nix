@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, localCrates, versions, serdeWith, smoltcpWith }:
+{ mk, localCrates, versions, serdeWith, smoltcpWith, ringWith }:
 
 mk {
   package.name = "microkit-http-server-example-server";
@@ -24,6 +24,21 @@ mk {
     smoltcp = smoltcpWith [];
 
     async-unsync = { version = versions.async-unsync; default-features = false; };
+
+    ring = ringWith [];
+
+    getrandom = {
+      version = versions.getrandom;
+      features = [ "custom" ];
+    };
+
+    rand = {
+      version = versions.rand;
+      default-features = false;
+      features = [
+        "small_rng"
+      ];
+    };
 
     inherit (localCrates)
       sel4

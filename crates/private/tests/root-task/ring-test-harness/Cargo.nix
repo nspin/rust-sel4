@@ -22,7 +22,7 @@ mk rec {
       ];
     };
     getrandom = {
-      version = "0.2.10";
+      version = versions.getrandom;
       features = [ "custom" ];
     };
     rand = {

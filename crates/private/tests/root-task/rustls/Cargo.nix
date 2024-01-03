@@ -12,11 +12,11 @@ mk {
     rustls = (localCrates.rustls or {}) // rustlsWith [];
     ring = (localCrates.ring or {}) // ringWith [];
     getrandom = {
-      version = "0.2.10";
+      version = versions.getrandom;
       features = [ "custom" ];
     };
     rand = {
-      version = "0.8.5";
+      version = versions.rand;
       default-features = false;
       features = [
         "small_rng"

@@ -19,8 +19,11 @@ license = "BSD-2-Clause"
 [dependencies]
 async-unsync = { version = "0.2.2", default-features = false }
 futures = { version = "0.3.28", default-features = false, features = ["async-await", "alloc"] }
+getrandom = { version = "0.2.10", features = ["custom"] }
 log = "0.4.17"
 microkit-http-server-example-server-core = { path = "core", features = [] }
+rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
+ring = { version = "0.17.7", features = ["less-safe-getrandom-custom-or-rdrand"] }
 sel4 = { path = "../../../../../sel4" }
 sel4-async-block-io = { path = "../../../../../sel4-async/block-io" }
 sel4-async-block-io-fat = { path = "../../../../../sel4-async/block-io/fat" }
