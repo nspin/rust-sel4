@@ -222,18 +222,17 @@ struct Updates {
     transmit_complete: bool,
 }
 
-#[cfg(any())]
-impl<IO> ConnectInner<IO> {
-    fn advance(&mut self, updates: &mut Updates) -> Result<Action> {
+impl<IO: AsyncIo> ConnectInner<IO> {
+    fn advance(&mut self, updates: &mut Updates) -> Result<Action, Error<IO::Error>> {
         log::trace!("incoming buffer has {}B of data", self.incoming.len());
 
         let UnbufferedStatus { discard, state } = self
             .conn
-            .process_tls_records(self.incoming.filled_mut())?;
+            .process_tls_records(self.incoming.filled_mut());
 
         log::trace!("state: {state:?}");
-        let next = match state {
-            ConnectionState::MustEncodeTlsData(mut state) => {
+        let next = match state? {
+            ConnectionState::EncodeTlsData(mut state) => {
                 try_or_resize_and_retry(
                     |out_buffer| state.encode(out_buffer),
                     |e| {
@@ -249,7 +248,7 @@ impl<IO> ConnectInner<IO> {
                 Action::Continue
             }
 
-            ConnectionState::MustTransmitTlsData(state) => {
+            ConnectionState::TransmitTlsData(state) => {
                 if updates.transmit_complete {
                     updates.transmit_complete = false;
                     state.done();
@@ -259,9 +258,9 @@ impl<IO> ConnectInner<IO> {
                 }
             }
 
-            ConnectionState::NeedsMoreTlsData { .. } => Action::Read,
+            ConnectionState::BlockedHandshake { .. } => Action::Read,
 
-            ConnectionState::TrafficTransit(_) => Action::Break,
+            ConnectionState::ReadTraffic(_) | ConnectionState::WriteTraffic(_) => Action::Break,
 
             state => unreachable!("{state:?}"), // due to type state
         };
