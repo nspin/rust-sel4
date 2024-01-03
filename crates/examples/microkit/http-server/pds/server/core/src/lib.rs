@@ -40,7 +40,7 @@ const HTTPS_PORT: u16 = 443;
 pub async fn run_server<
     T: BlockIO<ReadOnly, BlockSize = constant_block_sizes::BlockSize512> + Clone,
 >(
-    now_fn: impl Fn() -> Instant,
+    now_fn: impl 'static + Send + Sync + Fn() -> Instant,
     timers_ctx: TimerManager,
     network_ctx: ManagedInterface,
     fs_block_io: T,

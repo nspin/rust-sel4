@@ -9,6 +9,7 @@ use alloc::rc::Rc;
 use core::future::Future;
 use core::pin::Pin;
 use core::time::Duration;
+use alloc::sync::Arc;
 
 use futures::future::LocalBoxFuture;
 
@@ -28,7 +29,7 @@ pub(crate) struct HandlerImpl {
     timer_driver_channel: sel4_microkit::Channel,
     net_driver_channel: sel4_microkit::Channel,
     block_driver_channel: sel4_microkit::Channel,
-    timer: Rc<TimerClient>,
+    timer: Arc<TimerClient>,
     net_device: DeviceImpl<Basic>,
     shared_block_io: SharedRingBufferBlockIO<BlockSize512, ReadOnly, Basic, fn()>,
     shared_timers: TimerManager,
@@ -43,7 +44,7 @@ impl HandlerImpl {
         timer_driver_channel: sel4_microkit::Channel,
         net_driver_channel: sel4_microkit::Channel,
         block_driver_channel: sel4_microkit::Channel,
-        timer: Rc<TimerClient>,
+        timer: Arc<TimerClient>,
         mut net_device: DeviceImpl<Basic>,
         net_config: Config,
         shared_block_io: SharedRingBufferBlockIO<BlockSize512, ReadOnly, Basic, fn()>,

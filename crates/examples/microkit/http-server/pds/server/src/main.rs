@@ -20,6 +20,7 @@
 extern crate alloc;
 
 use alloc::rc::Rc;
+use alloc::sync::Arc;
 use core::time::Duration;
 
 use smoltcp::iface::Config;
@@ -84,7 +85,7 @@ fn init() -> impl Handler {
     let net_client = NetClient::new(channels::NET_DRIVER);
     let block_client = BlockClient::new(channels::BLOCK_DRIVER);
 
-    let timer_client = Rc::new(timer_client);
+    let timer_client = Arc::new(timer_client);
 
     let notify_net: fn() = || channels::NET_DRIVER.notify();
     let notify_block: fn() = || channels::BLOCK_DRIVER.notify();

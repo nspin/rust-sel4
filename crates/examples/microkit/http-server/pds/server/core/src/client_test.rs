@@ -2,13 +2,11 @@ use alloc::sync::Arc;
 use alloc::vec;
 use core::str;
 use core::time::Duration;
+use core::fmt;
 
 use smoltcp::wire::DnsQueryType;
 
-use mbedtls::rng::CtrDrbg;
 use mbedtls::ssl::async_io::AsyncIoExt;
-use mbedtls::ssl::config::{Endpoint, Preset, Transport};
-use mbedtls::ssl::{Config, Context};
 
 use sel4_async_network::{ManagedInterface, TcpSocketError};
 use sel4_async_network_mbedtls::{
@@ -19,13 +17,16 @@ use sel4_async_time::TimerManager;
 
 use rustls::version::{TLS12, TLS13};
 use rustls::{
-    pki_types::ServerName,
+    pki_types::{ServerName, UnixTime},
     AppDataRecord, ClientConfig, ConnectionState, EncodeError, EncryptError, InsufficientSizeError,
     RootCertStore, UnbufferedStatus,
+    time_provider::GetCurrentTime,
 };
 
+const NOW: u64 = 1704284350;
+
 pub async fn run(
-    now_fn: impl Fn() -> Instant,
+    now_fn: impl 'static + Send + Sync + Fn() -> Instant,
     network_ctx: ManagedInterface,
     timers_ctx: TimerManager,
 ) {
@@ -47,7 +48,10 @@ pub async fn run(
         .with_root_certificates(root_store)
         .with_no_client_auth();
     config.enable_early_data = false;
-    config.time_provider = rustls::time_provider::TimeProvider::none();
+    config.time_provider = rustls::time_provider::TimeProvider::new(GetCurrentTimeImpl::new(
+        UnixTime::since_unix_epoch(Duration::from_secs(NOW)),
+        now_fn,
+    ));
     let config = Arc::new(config);
     let connector = sel4_async_network_rustls::TcpConnector::from(config);
     let mut conn = connector
@@ -74,4 +78,35 @@ pub async fn run(
     // drop(ctx);
 
     log::info!("client test complete");
+}
+
+struct GetCurrentTimeImpl<F> {
+    start_global: UnixTime,
+    start_local: Instant,
+    now_fn: F,
+}
+
+impl<F> fmt::Debug for GetCurrentTimeImpl<F> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("GetCurrentTimeImpl").finish()
+    }
+}
+
+impl<F: Send + Sync + Fn() -> Instant> GetCurrentTimeImpl<F> {
+    fn new(now_global: UnixTime, now_fn: F) -> Self {
+        let start_local = (now_fn)();
+        Self {
+            start_global: now_global,
+            start_local,
+            now_fn,
+        }
+    }
+}
+
+impl<F: Send + Sync + Fn() -> Instant> GetCurrentTime for GetCurrentTimeImpl<F> {
+    fn get_current_time(&self) -> Option<UnixTime> {
+        Some(UnixTime::since_unix_epoch(
+            (self.now_fn)() - self.start_local
+        ))
+    }
 }
