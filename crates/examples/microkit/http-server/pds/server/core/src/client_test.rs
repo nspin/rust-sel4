@@ -53,7 +53,6 @@ pub async fn run(
 
     ctx.send_all(b"GET / HTTP/1.1\r\n").await.unwrap();
     ctx.send_all(b"Host: example.com\r\n").await.unwrap();
-    ctx.send_all(b"Accept: */*\r\n").await.unwrap();
     ctx.send_all(b"\r\n").await.unwrap();
 
     let mut buf = vec![0; 4096];
