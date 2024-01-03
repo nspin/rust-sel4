@@ -19,6 +19,7 @@ use sel4_async_time::TimerManager;
 
 use rustls::version::{TLS12, TLS13};
 use rustls::{
+    pki_types::ServerName,
     AppDataRecord, ClientConfig, ConnectionState, EncodeError, EncryptError, InsufficientSizeError,
     RootCertStore, UnbufferedStatus,
 };
@@ -49,8 +50,8 @@ pub async fn run(
     config.time_provider = rustls::time_provider::TimeProvider::none();
     let config = Arc::new(config);
     let connector = sel4_async_network_rustls::TcpConnector::from(config);
-    let conn = connector
-        .connect(panic!(), TcpSocketWrapper::new(socket))
+    let mut conn = connector
+        .connect(ServerName::DnsName("example.com".try_into().unwrap()), TcpSocketWrapper::new(socket))
         .unwrap()
         .await
         .unwrap();
