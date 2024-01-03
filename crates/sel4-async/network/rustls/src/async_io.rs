@@ -24,6 +24,24 @@ use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 pub type Error = rustls::Error;
 type Result<T> = CoreResult<T, Error>;
 
+pub enum ConnectionError<E> {
+    TransitError(E),
+    TlsError(rustls::Error),
+    InsufficientSizeError(InsufficientSizeError),
+}
+
+impl<E> From<rustls::Error> for ConnectionError<E> {
+    fn from(err: rustls::Error) -> Self {
+        Self::TlsError(err)
+    }
+}
+
+impl<E> From<InsufficientSizeError> for ConnectionError<E> {
+    fn from(err: InsufficientSizeError) -> Self {
+        Self::InsufficientSizeError(err)
+    }
+}
+
 pub struct TcpConnector {
     config: Arc<ClientConfig>,
 }
@@ -262,12 +280,14 @@ pub struct TlsStream<IO> {
 }
 
 #[cfg(any())]
-impl<IO> AsyncWrite for TlsStream<IO>
+impl<IO> AsyncIo for TlsStream<IO>
 where
-    IO: AsyncWrite + Unpin,
+    IO: AsyncIo + Unpin,
 {
-    fn poll_write(
-        mut self: Pin<&mut Self>,
+    type Error = IO::Error;
+
+    fn poll_send(
+        &mut self,
         cx: &mut task::Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
@@ -319,37 +339,31 @@ where
         Poll::Ready(Ok(buf.len()))
     }
 
-    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
-        let mut outgoing = mem::take(&mut self.outgoing);
+    // fn poll_flush(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
+    //     let mut outgoing = mem::take(&mut self.outgoing);
 
-        // write buffered TLS data into socket
-        while !outgoing.is_empty() {
-            let would_block = poll_write(&mut self.io, &mut outgoing, cx)?;
+    //     // write buffered TLS data into socket
+    //     while !outgoing.is_empty() {
+    //         let would_block = poll_write(&mut self.io, &mut outgoing, cx)?;
 
-            if would_block {
-                self.outgoing = outgoing;
-                return Poll::Pending;
-            }
-        }
+    //         if would_block {
+    //             self.outgoing = outgoing;
+    //             return Poll::Pending;
+    //         }
+    //     }
 
-        self.outgoing = outgoing;
+    //     self.outgoing = outgoing;
 
-        Pin::new(&mut self.io).poll_flush(cx)
-    }
+    //     Pin::new(&mut self.io).poll_flush(cx)
+    // }
 
-    fn poll_close(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
-        // XXX send out close_notify here?
-        Pin::new(&mut self.io).poll_close(cx)
-    }
-}
+    // fn poll_close(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
+    //     // XXX send out close_notify here?
+    //     Pin::new(&mut self.io).poll_close(cx)
+    // }
 
-#[cfg(any())]
-impl<IO> AsyncRead for TlsStream<IO>
-where
-    IO: AsyncRead + Unpin,
-{
-    fn poll_read(
-        mut self: Pin<&mut Self>,
+    fn poll_recv(
+        &mut self,
         cx: &mut task::Context<'_>,
         buf: &mut [u8],
     ) -> Poll<io::Result<usize>> {
