@@ -445,12 +445,8 @@ impl<'a> WriteCursor<'a> {
     }
 }
 
-#[cfg(any())]
-fn map_err<E>(err: E) -> io::Error
-where
-    E: Into<Box<dyn StdError + Send + Sync>>,
-{
-    io::Error::new(ErrorKind::Other, err)
+fn map_err(err: Error) -> Error {
+    err
 }
 
 #[derive(Default)]
@@ -508,14 +504,12 @@ impl Buffer {
     }
 }
 
-#[cfg(any())]
 fn try_or_resize_and_retry<E>(
-    mut f: impl FnMut(&mut [u8]) -> CoreResult<usize, E>,
-    map_err: impl FnOnce(E) -> Result<InsufficientSizeError>,
+    mut f: impl FnMut(&mut [u8]) -> CoreResult<usize, Error>,
+    map_err: impl FnOnce(Error) -> Result<InsufficientSizeError>,
     outgoing: &mut Buffer,
 ) -> Result<usize>
 where
-    E: StdError + Send + Sync + 'static,
 {
     let written = match f(outgoing.unfilled()) {
         Ok(written) => written,
