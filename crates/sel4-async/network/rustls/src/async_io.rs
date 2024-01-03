@@ -16,6 +16,7 @@ use rustls::Error as TlsError;
 
 use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 
+#[derive(Debug)]
 pub enum Error<E> {
     TransitError(E),
     ConnectionAborted,

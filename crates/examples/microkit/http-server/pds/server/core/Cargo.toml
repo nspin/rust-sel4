@@ -31,6 +31,7 @@ sel4-async-network-rustls = { path = "../../../../../../sel4-async/network/rustl
 sel4-async-time = { path = "../../../../../../sel4-async/time" }
 sel4-async-unsync = { path = "../../../../../../sel4-async/unsync" }
 sel4-panicking-env = { path = "../../../../../../sel4-panicking/env" }
+webpki-roots = "0.26"
 
 [dependencies.mbedtls]
 git = "https://github.com/coliasgroup/rust-mbedtls"

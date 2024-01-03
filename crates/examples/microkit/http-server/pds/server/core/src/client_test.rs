@@ -17,6 +17,12 @@ use sel4_async_network_mbedtls::{
 use sel4_async_time::Instant;
 use sel4_async_time::TimerManager;
 
+use rustls::version::{TLS12, TLS13};
+use rustls::{
+    AppDataRecord, ClientConfig, ConnectionState, EncodeError, EncryptError, InsufficientSizeError,
+    RootCertStore, UnbufferedStatus,
+};
+
 pub async fn run(
     now_fn: impl Fn() -> Instant,
     network_ctx: ManagedInterface,
@@ -34,39 +40,37 @@ pub async fn run(
     let mut socket = network_ctx.new_tcp_socket();
     socket.connect((query[0], 443), 44445).await.unwrap();
 
-    let entropy = Arc::new(insecure_dummy_rng());
-    let rng = Arc::new(CtrDrbg::new(entropy, None).unwrap());
-    let mut config = Config::new(Endpoint::Client, Transport::Stream, Preset::Default);
-    config.set_rng(rng);
-    config.set_dbg_callback(
-        DbgCallbackBuilder::default()
-            .forward_log_level(log::Level::Warn)
-            .build(),
+    let mut root_store = rustls::RootCertStore::empty();
+    root_store.extend(
+        webpki_roots::TLS_SERVER_ROOTS
+            .iter()
+            .cloned(),
     );
-    config.set_ca_list(Arc::new(get_mozilla_ca_list()), None);
+    let mut config = rustls::ClientConfig::builder()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
+    config.enable_early_data = false;
+    config.time_provider = rustls::time_provider::TimeProvider::none();
+    let config = Arc::new(config);
+    let connector = sel4_async_network_rustls::TcpConnector::from(config);
+    let conn = connector.connect(panic!(), TcpSocketWrapper::new(socket)).unwrap().await.unwrap();
 
-    let mut ctx = Context::new(Arc::new(config));
-
-    ctx.establish_async(TcpSocketWrapper::new(socket), None)
-        .await
-        .unwrap();
-
-    ctx.send_all(b"GET / HTTP/1.1\r\n").await.unwrap();
-    ctx.send_all(b"Host: example.com\r\n").await.unwrap();
-    ctx.send_all(b"\r\n").await.unwrap();
+    conn.send_all(b"GET / HTTP/1.1\r\n").await.unwrap();
+    conn.send_all(b"Host: example.com\r\n").await.unwrap();
+    conn.send_all(b"\r\n").await.unwrap();
 
     let mut buf = vec![0; 4096];
     loop {
-        let n = ctx.recv(&mut buf).await.unwrap();
+        let n = conn.recv(&mut buf).await.unwrap();
         if n == 0 {
             break;
         }
         log::info!("{}", str::from_utf8(&buf[..n]).unwrap());
     }
 
-    ctx.close_async().await.unwrap();
-    ctx.take_io().unwrap().inner_mut().close().await.unwrap();
-    drop(ctx);
+    // ctx.close_async().await.unwrap();
+    // ctx.take_io().unwrap().inner_mut().close().await.unwrap();
+    // drop(ctx);
 
     log::info!("client test complete");
 }

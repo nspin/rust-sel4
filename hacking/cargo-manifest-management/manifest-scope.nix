@@ -115,6 +115,7 @@ in rec {
     tock-registers = "0.8.1";
     unwinding = "0.1.6";
     virtio-drivers = "0.5.0";
+    webpki-roots = "0.26";
     zerocopy = "0.7.32";
   };
 

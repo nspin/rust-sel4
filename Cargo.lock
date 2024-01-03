@@ -1237,6 +1237,7 @@ dependencies = [
  "sel4-async-unsync",
  "sel4-panicking-env",
  "smoltcp",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -3386,6 +3387,15 @@ checksum = "9b85cbef8c220a6abc02aefd892dfc0fc23afb1c6a426316ec33253a3877249b"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webpki-roots"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0de2cfda980f21be5a7ed2eadb3e6fe074d56022bea2cdeb1a62eb220fc04188"
+dependencies = [
+ "rustls-pki-types",
 ]
 
 [[package]]
