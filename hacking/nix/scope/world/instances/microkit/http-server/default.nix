@@ -12,6 +12,7 @@
 , microkit
 
 , crates
+, globalPatchSection
 , crateUtils
 , sources
 
@@ -139,6 +140,11 @@ let
       # ];
       inherit rustTargetInfo;
       commonModifications = {
+        modifyManifest = lib.flip lib.recursiveUpdate {
+          patch.crates-io = {
+            inherit (globalPatchSection.crates-io) ring;
+          };
+        };
         modifyDerivation = drv: drv.overrideAttrs (self: super: {
           HOST_CC = "${buildPackages.stdenv.cc.targetPrefix}gcc";
           "BINDGEN_EXTRA_CLANG_ARGS_${rustTargetInfo.name}" = [ "-I${libcDir}/include" ];
