@@ -10,6 +10,7 @@ use alloc::{
 };
 
 use futures::Future;
+use rustls::Error as TlsError;
 use rustls::pki_types::ServerName;
 use rustls::client::UnbufferedClientConnection;
 use rustls::unbuffered::{
@@ -20,27 +21,25 @@ use rustls::ClientConfig;
 
 use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 
-// FIXME use an enum
-pub type Error = rustls::Error;
-type Result<T> = CoreResult<T, Error>;
-
-pub enum ConnectionError<E> {
+pub enum Error<E> {
     TransitError(E),
-    TlsError(rustls::Error),
+    TlsError(TlsError),
     InsufficientSizeError(InsufficientSizeError),
 }
 
-impl<E> From<rustls::Error> for ConnectionError<E> {
-    fn from(err: rustls::Error) -> Self {
+impl<E> From<TlsError> for Error<E> {
+    fn from(err: TlsError) -> Self {
         Self::TlsError(err)
     }
 }
 
-impl<E> From<InsufficientSizeError> for ConnectionError<E> {
+impl<E> From<InsufficientSizeError> for Error<E> {
     fn from(err: InsufficientSizeError) -> Self {
         Self::InsufficientSizeError(err)
     }
 }
+
+// // //
 
 pub struct TcpConnector {
     config: Arc<ClientConfig>,
@@ -52,7 +51,7 @@ impl TcpConnector {
         domain: ServerName<'static>,
         stream: IO,
         // FIXME should not return an error but instead hoist it into a `Connect` variant
-    ) -> Result<Connect<IO>>
+    ) -> Result<Connect<IO>, Error<IO::Error>>
     where
         IO: AsyncIo,
     {
@@ -98,9 +97,10 @@ impl<IO> ConnectInner<IO> {
     }
 }
 
+#[cfg(any())]
 impl<IO> Future for Connect<IO>
 where
-    IO: Unpin + AsyncIo<Error = Error>,
+    IO: Unpin + AsyncRead + AsyncWrite,
 {
     type Output = Result<TlsStream<IO>>;
 
@@ -168,16 +168,17 @@ where
 }
 
 /// returns `true` if the operation would block
-fn poll_read<IO>(io: &mut IO, incoming: &mut Buffer, cx: &mut task::Context) -> Result<bool>
+#[cfg(any())]
+fn poll_read<IO>(io: &mut IO, incoming: &mut Buffer, cx: &mut task::Context) -> io::Result<bool>
 where
-    IO: AsyncIo<Error = Error> + Unpin,
+    IO: AsyncRead + Unpin,
 {
     if incoming.unfilled().is_empty() {
         // XXX should this be user configurable?
         incoming.reserve(1024);
     }
 
-    let would_block = match Pin::new(io).poll_recv(cx, incoming.unfilled()) {
+    let would_block = match Pin::new(io).poll_read(cx, incoming.unfilled()) {
         Poll::Ready(res) => {
             let read = res?;
             log::trace!("read {read}B from socket");
@@ -192,11 +193,12 @@ where
 }
 
 /// returns `true` if the operation would block
-fn poll_write<IO>(io: &mut IO, outgoing: &mut Buffer, cx: &mut task::Context) -> Result<bool>
+#[cfg(any())]
+fn poll_write<IO>(io: &mut IO, outgoing: &mut Buffer, cx: &mut task::Context) -> io::Result<bool>
 where
-    IO: AsyncIo<Error = Error> + Unpin,
+    IO: AsyncWrite + Unpin,
 {
-    let pending = match Pin::new(io).poll_send(cx, outgoing.filled()) {
+    let pending = match Pin::new(io).poll_write(cx, outgoing.filled()) {
         Poll::Ready(res) => {
             let written = res?;
             log::trace!("wrote {written}B into socket");
@@ -215,25 +217,25 @@ struct Updates {
     transmit_complete: bool,
 }
 
+#[cfg(any())]
 impl<IO> ConnectInner<IO> {
     fn advance(&mut self, updates: &mut Updates) -> Result<Action> {
         log::trace!("incoming buffer has {}B of data", self.incoming.len());
 
         let UnbufferedStatus { discard, state } = self
             .conn
-            .process_tls_records(self.incoming.filled_mut()); // TODO was ?
+            .process_tls_records(self.incoming.filled_mut())?;
 
         log::trace!("state: {state:?}");
-        let next = match state? {
-            ConnectionState::EncodeTlsData(mut state) => {
+        let next = match state {
+            ConnectionState::MustEncodeTlsData(mut state) => {
                 try_or_resize_and_retry(
                     |out_buffer| state.encode(out_buffer),
                     |e| {
                         if let EncodeError::InsufficientSize(is) = &e {
                             Ok(*is)
                         } else {
-                            // Err(e.into())
-                            panic!()
+                            Err(e.into())
                         }
                     },
                     &mut self.outgoing,
@@ -242,7 +244,7 @@ impl<IO> ConnectInner<IO> {
                 Action::Continue
             }
 
-            ConnectionState::TransmitTlsData(state) => {
+            ConnectionState::MustTransmitTlsData(state) => {
                 if updates.transmit_complete {
                     updates.transmit_complete = false;
                     state.done();
@@ -252,9 +254,9 @@ impl<IO> ConnectInner<IO> {
                 }
             }
 
-            ConnectionState::BlockedHandshake { .. } => Action::Read,
+            ConnectionState::NeedsMoreTlsData { .. } => Action::Read,
 
-            ConnectionState::ReadTraffic(_) | ConnectionState::WriteTraffic(_)  => Action::Break,
+            ConnectionState::TrafficTransit(_) => Action::Break,
 
             state => unreachable!("{state:?}"), // due to type state
         };
@@ -280,14 +282,12 @@ pub struct TlsStream<IO> {
 }
 
 #[cfg(any())]
-impl<IO> AsyncIo for TlsStream<IO>
+impl<IO> AsyncWrite for TlsStream<IO>
 where
-    IO: AsyncIo + Unpin,
+    IO: AsyncWrite + Unpin,
 {
-    type Error = IO::Error;
-
-    fn poll_send(
-        &mut self,
+    fn poll_write(
+        mut self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
@@ -339,31 +339,37 @@ where
         Poll::Ready(Ok(buf.len()))
     }
 
-    // fn poll_flush(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
-    //     let mut outgoing = mem::take(&mut self.outgoing);
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
+        let mut outgoing = mem::take(&mut self.outgoing);
 
-    //     // write buffered TLS data into socket
-    //     while !outgoing.is_empty() {
-    //         let would_block = poll_write(&mut self.io, &mut outgoing, cx)?;
+        // write buffered TLS data into socket
+        while !outgoing.is_empty() {
+            let would_block = poll_write(&mut self.io, &mut outgoing, cx)?;
 
-    //         if would_block {
-    //             self.outgoing = outgoing;
-    //             return Poll::Pending;
-    //         }
-    //     }
+            if would_block {
+                self.outgoing = outgoing;
+                return Poll::Pending;
+            }
+        }
 
-    //     self.outgoing = outgoing;
+        self.outgoing = outgoing;
 
-    //     Pin::new(&mut self.io).poll_flush(cx)
-    // }
+        Pin::new(&mut self.io).poll_flush(cx)
+    }
 
-    // fn poll_close(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
-    //     // XXX send out close_notify here?
-    //     Pin::new(&mut self.io).poll_close(cx)
-    // }
+    fn poll_close(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<io::Result<()>> {
+        // XXX send out close_notify here?
+        Pin::new(&mut self.io).poll_close(cx)
+    }
+}
 
-    fn poll_recv(
-        &mut self,
+#[cfg(any())]
+impl<IO> AsyncRead for TlsStream<IO>
+where
+    IO: AsyncRead + Unpin,
+{
+    fn poll_read(
+        mut self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,
         buf: &mut [u8],
     ) -> Poll<io::Result<usize>> {
@@ -455,8 +461,12 @@ impl<'a> WriteCursor<'a> {
     }
 }
 
-fn map_err(err: Error) -> Error {
-    err
+#[cfg(any())]
+fn map_err<E>(err: E) -> io::Error
+where
+    E: Into<Box<dyn StdError + Send + Sync>>,
+{
+    io::Error::new(ErrorKind::Other, err)
 }
 
 #[derive(Default)]
@@ -514,13 +524,14 @@ impl Buffer {
     }
 }
 
+#[cfg(any())]
 fn try_or_resize_and_retry<E>(
     mut f: impl FnMut(&mut [u8]) -> CoreResult<usize, E>,
     map_err: impl FnOnce(E) -> Result<InsufficientSizeError>,
     outgoing: &mut Buffer,
 ) -> Result<usize>
 where
-    // E: Into<Error>
+    E: StdError + Send + Sync + 'static,
 {
     let written = match f(outgoing.unfilled()) {
         Ok(written) => written,
@@ -530,8 +541,7 @@ where
             outgoing.reserve(required_size);
             log::trace!("resized `outgoing_tls` buffer to {}B", outgoing.capacity());
 
-            // f(outgoing.unfilled())?
-            f(outgoing.unfilled()).ok().unwrap()
+            f(outgoing.unfilled())?
         }
     };
 
