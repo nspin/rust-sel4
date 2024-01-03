@@ -17,8 +17,8 @@
 
 extern crate alloc;
 
-use core::time::Duration;
 use alloc::rc::Rc;
+use core::time::Duration;
 
 use smoltcp::iface::Config;
 use smoltcp::phy::{Device, Medium};
@@ -27,6 +27,7 @@ use smoltcp::wire::{EthernetAddress, HardwareAddress};
 use sel4_async_block_io::{
     constant_block_sizes::BlockSize512, disk::Disk, CachedBlockIO, ConstantBlockSize,
 };
+use sel4_async_time::Instant;
 use sel4_bounce_buffer_allocator::{Basic, BounceBufferAllocator};
 use sel4_externally_shared::{ExternallySharedRef, ExternallySharedRefExt};
 use sel4_logging::{LevelFilter, Logger, LoggerBuilder};
@@ -34,7 +35,6 @@ use sel4_microkit::{memory_region_symbol, protection_domain, Handler};
 use sel4_shared_ring_buffer::RingBuffers;
 use sel4_shared_ring_buffer_block_io::SharedRingBufferBlockIO;
 use sel4_shared_ring_buffer_smoltcp::DeviceImpl;
-use sel4_async_time::Instant;
 
 use microkit_http_server_example_server_core::run_server;
 
@@ -161,9 +161,7 @@ fn init() -> impl Handler {
 
     let now_fn = {
         let timer_client = timer_client.clone();
-        move || {
-            Instant::ZERO + Duration::from_micros(timer_client.now())
-        }
+        move || Instant::ZERO + Duration::from_micros(timer_client.now())
     };
 
     HandlerImpl::new(

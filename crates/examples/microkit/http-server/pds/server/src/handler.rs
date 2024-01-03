@@ -5,9 +5,9 @@
 //
 
 use alloc::boxed::Box;
+use alloc::rc::Rc;
 use core::future::Future;
 use core::pin::Pin;
-use alloc::rc::Rc;
 use core::time::Duration;
 
 use futures::future::LocalBoxFuture;

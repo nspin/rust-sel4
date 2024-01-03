@@ -18,7 +18,6 @@ use futures::task::LocalSpawnExt;
 
 use mbedtls::ssl::async_io::ClosedError;
 
-use sel4_async_time::Instant;
 use sel4_async_block_io::{access::ReadOnly, constant_block_sizes, BlockIO};
 use sel4_async_block_io_fat as fat;
 use sel4_async_network::{ManagedInterface, TcpSocketError};
@@ -26,11 +25,12 @@ use sel4_async_network_mbedtls::{
     insecure_dummy_rng, mbedtls, seed_insecure_dummy_rng, DbgCallbackBuilder, TcpSocketWrapper,
 };
 use sel4_async_single_threaded_executor::LocalSpawner;
+use sel4_async_time::Instant;
 use sel4_async_time::TimerManager;
 
+mod client_test;
 mod mime;
 mod server;
-mod client_test;
 
 use server::Server;
 
