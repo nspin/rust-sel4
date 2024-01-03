@@ -9,3 +9,10 @@
 extern crate alloc;
 
 mod async_io;
+
+pub use async_io::{
+    Error,
+    TlsStream,
+    TcpConnector,
+    Connect,
+};
