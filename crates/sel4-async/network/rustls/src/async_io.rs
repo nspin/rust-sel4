@@ -23,9 +23,7 @@ use rustls::unbuffered::{
 use rustls::ClientConfig;
 
 // FIXME use an enum
-#[cfg(any())]
-pub type Error = Box<dyn StdError + Send + Sync>;
-#[cfg(any())]
+pub type Error = rustls::Error;
 type Result<T> = CoreResult<T, Error>;
 
 #[cfg(any())]
