@@ -175,19 +175,18 @@ where
 }
 
 /// returns `true` if the operation would block
-#[cfg(any())]
-fn poll_read<IO>(io: &mut IO, incoming: &mut Buffer, cx: &mut task::Context) -> io::Result<bool>
+fn poll_read<IO>(io: &mut IO, incoming: &mut Buffer, cx: &mut task::Context) -> Result<bool, Error<IO::Error>>
 where
-    IO: AsyncRead + Unpin,
+    IO: AsyncIo + Unpin,
 {
     if incoming.unfilled().is_empty() {
         // XXX should this be user configurable?
         incoming.reserve(1024);
     }
 
-    let would_block = match Pin::new(io).poll_read(cx, incoming.unfilled()) {
+    let would_block = match Pin::new(io).poll_recv(cx, incoming.unfilled()) {
         Poll::Ready(res) => {
-            let read = res?;
+            let read = res.map_err(Error::TransitError)?;
             log::trace!("read {read}B from socket");
             incoming.advance(read);
             false
@@ -200,14 +199,13 @@ where
 }
 
 /// returns `true` if the operation would block
-#[cfg(any())]
-fn poll_write<IO>(io: &mut IO, outgoing: &mut Buffer, cx: &mut task::Context) -> io::Result<bool>
+fn poll_write<IO>(io: &mut IO, outgoing: &mut Buffer, cx: &mut task::Context) -> Result<bool, Error<IO::Error>>
 where
-    IO: AsyncWrite + Unpin,
+    IO: AsyncIo + Unpin,
 {
-    let pending = match Pin::new(io).poll_write(cx, outgoing.filled()) {
+    let pending = match Pin::new(io).poll_send(cx, outgoing.filled()) {
         Poll::Ready(res) => {
-            let written = res?;
+            let written = res.map_err(Error::TransitError)?;
             log::trace!("wrote {written}B into socket");
             outgoing.discard(written);
             log::trace!("{}B remain in the outgoing buffer", outgoing.len());
