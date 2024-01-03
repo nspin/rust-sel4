@@ -24,7 +24,8 @@ use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 pub enum Error<E> {
     TransitError(E),
     TlsError(TlsError),
-    InsufficientSizeError(InsufficientSizeError),
+    EncodeError(EncodeError),
+    EncryptError(EncryptError),
 }
 
 impl<E> From<TlsError> for Error<E> {
@@ -33,9 +34,15 @@ impl<E> From<TlsError> for Error<E> {
     }
 }
 
-impl<E> From<InsufficientSizeError> for Error<E> {
-    fn from(err: InsufficientSizeError) -> Self {
-        Self::InsufficientSizeError(err)
+impl<E> From<EncodeError> for Error<E> {
+    fn from(err: EncodeError) -> Self {
+        Self::EncodeError(err)
+    }
+}
+
+impl<E> From<EncryptError> for Error<E> {
+    fn from(err: EncryptError) -> Self {
+        Self::EncryptError(err)
     }
 }
 
@@ -461,12 +468,8 @@ impl<'a> WriteCursor<'a> {
     }
 }
 
-#[cfg(any())]
-fn map_err<E>(err: E) -> io::Error
-where
-    E: Into<Box<dyn StdError + Send + Sync>>,
-{
-    io::Error::new(ErrorKind::Other, err)
+fn map_err<E>(err: E) -> Error<E> {
+    Error::TransitError(err)
 }
 
 #[derive(Default)]
@@ -524,14 +527,13 @@ impl Buffer {
     }
 }
 
-#[cfg(any())]
-fn try_or_resize_and_retry<E>(
-    mut f: impl FnMut(&mut [u8]) -> CoreResult<usize, E>,
-    map_err: impl FnOnce(E) -> Result<InsufficientSizeError>,
+fn try_or_resize_and_retry<E1, E2>(
+    mut f: impl FnMut(&mut [u8]) -> Result<usize, E1>,
+    map_err: impl FnOnce(E1) -> Result<InsufficientSizeError, Error<E2>>,
     outgoing: &mut Buffer,
-) -> Result<usize>
+) -> Result<usize, Error<E2>>
 where
-    E: StdError + Send + Sync + 'static,
+    Error<E2>: From<E1>,
 {
     let written = match f(outgoing.unfilled()) {
         Ok(written) => written,
