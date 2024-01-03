@@ -57,12 +57,10 @@ impl From<Arc<ClientConfig>> for TcpConnector {
     }
 }
 
-#[cfg(any())]
 pub struct Connect<IO> {
     inner: Option<ConnectInner<IO>>,
 }
 
-#[cfg(any())]
 impl<IO> Connect<IO> {
     fn new(conn: UnbufferedClientConnection, io: IO) -> Self {
         Self {
@@ -71,7 +69,6 @@ impl<IO> Connect<IO> {
     }
 }
 
-#[cfg(any())]
 struct ConnectInner<IO> {
     conn: UnbufferedClientConnection,
     incoming: Buffer,
@@ -79,7 +76,6 @@ struct ConnectInner<IO> {
     outgoing: Buffer,
 }
 
-#[cfg(any())]
 impl<IO> ConnectInner<IO> {
     fn new(conn: UnbufferedClientConnection, io: IO) -> Self {
         Self {
