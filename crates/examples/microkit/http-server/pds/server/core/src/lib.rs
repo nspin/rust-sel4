@@ -29,6 +29,7 @@ use sel4_async_time::TimerManager;
 
 mod mime;
 mod server;
+mod client_test;
 
 use server::Server;
 
@@ -38,7 +39,7 @@ const HTTPS_PORT: u16 = 443;
 pub async fn run_server<
     T: BlockIO<ReadOnly, BlockSize = constant_block_sizes::BlockSize512> + Clone,
 >(
-    _timers_ctx: TimerManager,
+    timers_ctx: TimerManager,
     network_ctx: ManagedInterface,
     fs_block_io: T,
     spawner: LocalSpawner,
@@ -52,6 +53,8 @@ pub async fn run_server<
     }
 
     seed_insecure_dummy_rng(0);
+
+    client_test::run(network_ctx.clone(), timers_ctx.clone()).await;
 
     let use_socket_for_http_closure: SocketUser<T> = Box::new({
         move |server, socket| {
