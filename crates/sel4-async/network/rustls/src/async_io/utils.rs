@@ -4,7 +4,7 @@ use core::task::{self, Poll};
 
 use rustls::unbuffered::InsufficientSizeError;
 
-use super::{Error, AsyncIo};
+use super::{AsyncIo, Error};
 
 pub(crate) struct WriteCursor<'a> {
     buf: &'a mut [u8],

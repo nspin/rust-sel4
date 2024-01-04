@@ -15,8 +15,7 @@ use rustls::ClientConfig;
 
 use super::{
     utils::{poll_read, poll_write, try_or_resize_and_retry, Buffer, WriteCursor},
-    Error,
-    AsyncIo,
+    AsyncIo, Error,
 };
 
 pub struct TcpConnector {

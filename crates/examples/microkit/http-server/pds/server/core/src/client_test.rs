@@ -7,11 +7,11 @@ use rustls::pki_types::{ServerName, UnixTime};
 use rustls::time_provider::TimeProvider;
 use rustls::version::TLS12;
 use rustls::{ClientConfig, RootCertStore};
-use smoltcp::wire::DnsQueryType;
+use smoltcp::wire::{DnsQueryType, IpAddress};
 
 use sel4_async_network::ManagedInterface;
 use sel4_async_network_rustls::async_io::client::TcpConnector;
-use sel4_async_network_rustls::async_io::{TcpSocketWrapper, AsyncIoExt};
+use sel4_async_network_rustls::async_io::{AsyncIoExt, TcpSocketWrapper};
 use sel4_async_network_rustls::{GetCurrentTimeImpl, NoServerCertVerifier};
 use sel4_async_time::{Instant, TimerManager};
 
@@ -32,37 +32,42 @@ pub async fn run(
         .sleep_until(now_fn() + Duration::from_secs(1))
         .await;
 
-    let query = if DOMAIN == "localhost" {
-        vec![smoltcp::wire::IpAddress::v4(127, 0, 0, 1)]
-    } else {
-        network_ctx
-            .dns_query(DOMAIN, DnsQueryType::A)
-            .await
-            .unwrap()
+    let addr = {
+        if DOMAIN == "localhost" {
+            IpAddress::v4(127, 0, 0, 1)
+        } else {
+            network_ctx
+                .dns_query(DOMAIN, DnsQueryType::A)
+                .await
+                .unwrap()[0]
+        }
     };
 
     let mut socket = network_ctx.new_tcp_socket();
-    socket.connect((query[0], PORT), 44445).await.unwrap();
+    socket.connect((addr, PORT), 44445).await.unwrap();
 
-    let mut root_store = RootCertStore::empty();
-    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let mut config = ClientConfig::builder_with_protocol_versions(&[&TLS12])
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-    config.enable_early_data = false;
-    config.time_provider = TimeProvider::new(GetCurrentTimeImpl::new(
-        UnixTime::since_unix_epoch(Duration::from_secs(NOW)),
-        now_fn,
-    ));
+    let config = {
+        let mut root_store = RootCertStore::empty();
+        root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
 
-    if DOMAIN == "localhost" {
-        let mut dangerous_config = ClientConfig::dangerous(&mut config);
-        dangerous_config.set_certificate_verifier(Arc::new(NoServerCertVerifier));
-    }
+        let mut this = ClientConfig::builder_with_protocol_versions(&[&TLS12])
+            .with_root_certificates(root_store)
+            .with_no_client_auth();
+        this.enable_early_data = false;
+        this.time_provider = TimeProvider::new(GetCurrentTimeImpl::new(
+            UnixTime::since_unix_epoch(Duration::from_secs(NOW)),
+            now_fn,
+        ));
 
-    let config = Arc::new(config);
-    let connector = TcpConnector::from(config);
-    let mut conn = connector
+        if DOMAIN == "localhost" {
+            let mut dangerous_config = ClientConfig::dangerous(&mut this);
+            dangerous_config.set_certificate_verifier(Arc::new(NoServerCertVerifier));
+        }
+
+        this
+    };
+
+    let mut conn = TcpConnector::from(Arc::new(config))
         .connect(
             ServerName::DnsName(DOMAIN.try_into().unwrap()),
             TcpSocketWrapper::new(socket),
