@@ -10,8 +10,7 @@ use rustls::{ClientConfig, RootCertStore};
 use smoltcp::wire::{DnsQueryType, IpAddress};
 
 use sel4_async_network::ManagedInterface;
-use sel4_async_network_rustls::async_io::client::TcpConnector;
-use sel4_async_network_rustls::async_io::{AsyncIOExt, TcpSocketWrapper};
+use sel4_async_network_rustls::async_io::{ClientConnector, AsyncIOExt, TcpSocketWrapper};
 use sel4_async_network_rustls::{GetCurrentTimeImpl, NoServerCertVerifier};
 use sel4_async_time::{Instant, TimerManager};
 
@@ -67,7 +66,7 @@ pub async fn run(
         this
     };
 
-    let mut conn = TcpConnector::from(Arc::new(config))
+    let mut conn = ClientConnector::from(Arc::new(config))
         .connect(
             ServerName::DnsName(DOMAIN.try_into().unwrap()),
             TcpSocketWrapper::new(socket),

@@ -6,24 +6,24 @@ use core::task::{self, Poll};
 use alloc::sync::Arc;
 
 use futures::Future;
-use rustls::client::ClientConnectionData;
-use rustls::client::UnbufferedClientConnection;
+use rustls::client::{ClientConnectionData, UnbufferedClientConnection};
+use rustls::server::{ServerConnectionData, UnbufferedServerConnection};
 use rustls::pki_types::ServerName;
 use rustls::unbuffered::{
     AppDataRecord, ConnectionState, EncodeError, EncryptError, UnbufferedStatus,
 };
-use rustls::{ClientConfig, UnbufferedConnectionCommon};
+use rustls::{ClientConfig, ServerConfig, UnbufferedConnectionCommon};
 
 use super::{
     utils::{poll_read, poll_write, try_or_resize_and_retry, Buffer, WriteCursor},
     AsyncIO, Error,
 };
 
-pub struct TcpConnector {
+pub struct ClientConnector {
     config: Arc<ClientConfig>,
 }
 
-impl TcpConnector {
+impl ClientConnector {
     pub fn connect<IO>(
         &self,
         domain: ServerName<'static>,
@@ -39,8 +39,33 @@ impl TcpConnector {
     }
 }
 
-impl From<Arc<ClientConfig>> for TcpConnector {
+impl From<Arc<ClientConfig>> for ClientConnector {
     fn from(config: Arc<ClientConfig>) -> Self {
+        Self { config }
+    }
+}
+
+pub struct ServerConnector {
+    config: Arc<ServerConfig>,
+}
+
+// impl ServerConnector {
+//     pub fn connect<IO>(
+//         &self,
+//         stream: IO,
+//         // FIXME should not return an error but instead hoist it into a `Connect` variant
+//     ) -> Result<Connect<UnbufferedServerConnection, IO>, Error<IO::Error>>
+//     where
+//         IO: AsyncIO,
+//     {
+//         let conn = UnbufferedServerConnection::new(self.config.clone())?;
+
+//         Ok(Connect::new(conn, stream))
+//     }
+// }
+
+impl From<Arc<ServerConfig>> for ServerConnector {
+    fn from(config: Arc<ServerConfig>) -> Self {
         Self { config }
     }
 }
