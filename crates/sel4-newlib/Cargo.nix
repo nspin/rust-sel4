@@ -13,21 +13,17 @@ mk {
     detect-libc = [];
     nosys = [];
     _exit = [];
-    __trunctfdf2 = [];
     _sbrk = [];
     _write = [];
     all-symbols = [
       "_exit"
       "_sbrk"
       "_write"
-      "__trunctfdf2"
     ];
   };
   dependencies = {
     inherit (versions) log;
-    inherit (localCrates)
-      sel4-immediate-sync-once-cell
-    ;
+    inherit (localCrates) sel4-immediate-sync-once-cell;
     sel4-panicking-env = localCrates.sel4-panicking-env // { optional = true; };
   };
   build-dependencies = {

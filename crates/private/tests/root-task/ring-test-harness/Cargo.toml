@@ -25,4 +25,4 @@ sel4-test-harness = { path = "../../../../sel4-test-harness" }
 
 [dependencies.sel4-newlib]
 path = "../../../../sel4-newlib"
-features = ["nosys", "all-symbols", "sel4-panicking-env"]
+features = ["nosys", "_write", "sel4-panicking-env"]

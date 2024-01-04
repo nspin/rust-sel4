@@ -167,21 +167,6 @@ mod impl_write {
     }
 }
 
-#[cfg(feature = "__trunctfdf2")]
-pub use impl__trunctfdf2::*;
-
-#[cfg(feature = "__trunctfdf2")]
-#[allow(non_snake_case)]
-mod impl__trunctfdf2 {
-    #[repr(C, align(16))]
-    pub struct LongDoublePlaceholder(pub [u8; 16]);
-
-    #[no_mangle]
-    extern "C" fn __trunctfdf2(a: LongDoublePlaceholder) -> f64 {
-        get_impl!(__trunctfdf2)(a)
-    }
-}
-
 extern "C" {
     #[link_name = "srand"]
     fn newlib_srand(seed: c_uint);

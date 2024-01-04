@@ -17,11 +17,10 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [features]
-__trunctfdf2 = []
 _exit = []
 _sbrk = []
 _write = []
-all-symbols = ["_exit", "_sbrk", "_write", "__trunctfdf2"]
+all-symbols = ["_exit", "_sbrk", "_write"]
 default = ["detect-libc"]
 detect-libc = []
 nosys = []

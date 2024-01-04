@@ -17,7 +17,7 @@ mk rec {
     sel4-newlib = localCrates.sel4-newlib // {
       features = [
         "nosys"
-        "all-symbols"
+        "_write"
         "sel4-panicking-env"
       ];
     };
@@ -26,7 +26,7 @@ mk rec {
       features = [ "custom" ];
     };
     rand = {
-      version = "0.8.5";
+      version = versions.rand;
       default-features = false;
       features = [ "small_rng" ];
     };
