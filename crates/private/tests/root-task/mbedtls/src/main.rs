@@ -112,3 +112,15 @@ const TESTS: &[(&str, Test)] = tests! {
     ecp,
     ecjpake,
 };
+
+#[allow(non_snake_case)]
+mod hack {
+    #[repr(C, align(16))]
+    #[derive(Debug)]
+    pub struct LongDoublePlaceholder(pub [u8; 16]);
+
+    #[no_mangle]
+    extern "C" fn __trunctfdf2(a: LongDoublePlaceholder) -> f64 {
+        sel4_root_task::abort!("__trunctfdf2({:?})", a)
+    }
+}
