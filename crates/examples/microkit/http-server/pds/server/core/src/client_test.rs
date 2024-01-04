@@ -31,13 +31,13 @@ pub async fn run(
         .sleep_until((now_fn()) + Duration::from_secs(1))
         .await;
 
-    let query = if DOMAIN != "localhost" {
+    let query = if DOMAIN == "localhost" {
+        vec![smoltcp::wire::IpAddress::v4(127, 0, 0, 1)]
+    } else {
         network_ctx
             .dns_query(DOMAIN, DnsQueryType::A)
             .await
             .unwrap()
-    } else {
-        vec![smoltcp::wire::IpAddress::v4(127, 0, 0, 1)]
     };
 
     let mut socket = network_ctx.new_tcp_socket();
@@ -54,8 +54,10 @@ pub async fn run(
         now_fn,
     ));
 
-    let mut dangerous_config = ClientConfig::dangerous(&mut config);
-    dangerous_config.set_certificate_verifier(Arc::new(NoServerCertVerifier));
+    if DOMAIN == "localhost" {
+        let mut dangerous_config = ClientConfig::dangerous(&mut config);
+        dangerous_config.set_certificate_verifier(Arc::new(NoServerCertVerifier));
+    }
 
     let config = Arc::new(config);
     let connector = sel4_async_network_rustls::async_io::client::TcpConnector::from(config);
@@ -68,16 +70,10 @@ pub async fn run(
         .await
         .unwrap();
 
-    log::debug!("XXXXX handshake done");
-
     conn.send_all(b"GET / HTTP/1.1\r\n").await.unwrap();
-    log::debug!("XXXXX a1");
     conn.send_all(b"Host: example.com\r\n").await.unwrap();
-    log::debug!("XXXXX a2");
     conn.send_all(b"\r\n").await.unwrap();
-    log::debug!("XXXXX a3");
     conn.flush().await.unwrap();
-    log::debug!("XXXXX b");
 
     const BUF_SIZE: usize = 1024 * 64;
     // const BUF_SIZE: usize = 4096;
@@ -85,7 +81,6 @@ pub async fn run(
     let mut buf = vec![0; BUF_SIZE];
     loop {
         let n = conn.recv(&mut buf).await.unwrap();
-        log::debug!("XXXXX c1 {}", n);
         if n == 0 {
             break;
         }
