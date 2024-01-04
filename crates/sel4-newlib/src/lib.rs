@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+// TODO feature for defaulting to write_with_debug_put_char?
+
 #![no_std]
 #![feature(const_slice_from_raw_parts_mut)]
 #![feature(slice_ptr_get)]
