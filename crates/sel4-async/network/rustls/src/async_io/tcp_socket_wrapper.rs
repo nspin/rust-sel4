@@ -25,7 +25,7 @@ impl TcpSocketWrapper {
 impl AsyncIO for TcpSocketWrapper {
     type Error = TcpSocketError;
 
-    fn poll_recv(
+    fn poll_read(
         &mut self,
         cx: &mut Context<'_>,
         buf: &mut [u8],
@@ -33,7 +33,7 @@ impl AsyncIO for TcpSocketWrapper {
         self.inner_mut().poll_recv(cx, buf)
     }
 
-    fn poll_send(&mut self, cx: &mut Context<'_>, buf: &[u8]) -> Poll<Result<usize, Self::Error>> {
+    fn poll_write(&mut self, cx: &mut Context<'_>, buf: &[u8]) -> Poll<Result<usize, Self::Error>> {
         self.inner_mut().poll_send(cx, buf)
     }
 }

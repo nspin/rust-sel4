@@ -76,9 +76,9 @@ pub async fn run(
         .await
         .unwrap();
 
-    conn.send_all(b"GET / HTTP/1.1\r\n").await.unwrap();
-    conn.send_all(b"Host: example.com\r\n").await.unwrap();
-    conn.send_all(b"\r\n").await.unwrap();
+    conn.write_all(b"GET / HTTP/1.1\r\n").await.unwrap();
+    conn.write_all(b"Host: example.com\r\n").await.unwrap();
+    conn.write_all(b"\r\n").await.unwrap();
     conn.flush().await.unwrap();
 
     const BUF_SIZE: usize = 1024 * 64;
@@ -86,7 +86,7 @@ pub async fn run(
 
     let mut buf = vec![0; BUF_SIZE];
     loop {
-        let n = conn.recv(&mut buf).await.unwrap();
+        let n = conn.read(&mut buf).await.unwrap();
         if n == 0 {
             break;
         }

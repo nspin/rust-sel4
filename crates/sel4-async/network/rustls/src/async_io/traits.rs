@@ -9,13 +9,13 @@ use async_trait::async_trait;
 pub trait AsyncIO {
     type Error;
 
-    fn poll_recv(
+    fn poll_read(
         &mut self,
         cx: &mut TaskContext<'_>,
         buf: &mut [u8],
     ) -> Poll<Result<usize, Self::Error>>;
 
-    fn poll_send(
+    fn poll_write(
         &mut self,
         cx: &mut TaskContext<'_>,
         buf: &[u8],
@@ -36,14 +36,14 @@ impl<E> From<E> for ClosedError<E> {
 
 #[async_trait(?Send)]
 pub trait AsyncIOExt: AsyncIO {
-    async fn recv(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
-        future::poll_fn(|cx| self.poll_recv(cx, buf)).await
+    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+        future::poll_fn(|cx| self.poll_read(cx, buf)).await
     }
 
-    async fn recv_exact(&mut self, buf: &mut [u8]) -> Result<(), ClosedError<Self::Error>> {
+    async fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), ClosedError<Self::Error>> {
         let mut pos = 0;
         while pos < buf.len() {
-            let n = self.recv(&mut buf[pos..]).await?;
+            let n = self.read(&mut buf[pos..]).await?;
             if n == 0 {
                 return Err(ClosedError::Closed);
             }
@@ -53,14 +53,14 @@ pub trait AsyncIOExt: AsyncIO {
         Ok(())
     }
 
-    async fn send(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
-        future::poll_fn(|cx| self.poll_send(cx, buf)).await
+    async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+        future::poll_fn(|cx| self.poll_write(cx, buf)).await
     }
 
-    async fn send_all(&mut self, buf: &[u8]) -> Result<(), ClosedError<Self::Error>> {
+    async fn write_all(&mut self, buf: &[u8]) -> Result<(), ClosedError<Self::Error>> {
         let mut pos = 0;
         while pos < buf.len() {
-            let n = self.send(&buf[pos..]).await?;
+            let n = self.write(&buf[pos..]).await?;
             if n == 0 {
                 return Err(ClosedError::Closed);
             }

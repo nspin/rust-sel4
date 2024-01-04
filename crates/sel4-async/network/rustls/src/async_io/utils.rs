@@ -141,7 +141,7 @@ where
         incoming.reserve(1024 * 256);
     }
 
-    let would_block = match Pin::new(io).poll_recv(cx, incoming.unfilled()) {
+    let would_block = match Pin::new(io).poll_read(cx, incoming.unfilled()) {
         Poll::Ready(res) => {
             let read = res.map_err(Error::TransitError)?;
             log::trace!("read {read}B from socket");
@@ -164,7 +164,7 @@ pub(crate) fn poll_write<IO>(
 where
     IO: AsyncIO + Unpin,
 {
-    let pending = match Pin::new(io).poll_send(cx, outgoing.filled()) {
+    let pending = match Pin::new(io).poll_write(cx, outgoing.filled()) {
         Poll::Ready(res) => {
             let written = res.map_err(Error::TransitError)?;
             log::trace!("wrote {written}B into socket");

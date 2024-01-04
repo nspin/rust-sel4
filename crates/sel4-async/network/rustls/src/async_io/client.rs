@@ -212,7 +212,7 @@ where
 {
     type Error = Error<IO::Error>;
 
-    fn poll_send(
+    fn poll_write(
         &mut self,
         cx: &mut task::Context<'_>,
         buf: &[u8],
@@ -256,7 +256,7 @@ where
         Poll::Ready(Ok(buf.len()))
     }
 
-    fn poll_recv(
+    fn poll_read(
         &mut self,
         cx: &mut task::Context<'_>,
         buf: &mut [u8],
@@ -353,7 +353,7 @@ where
         mut self: Pin<&mut Self>,
         _cx: &mut task::Context<'_>,
     ) -> Poll<Result<(), Error<IO::Error>>> {
-        // XXX send out close_notify here?
+        // XXX write out close_notify here?
         // Pin::new(&mut self.io).poll_close(cx)
         Poll::Ready(Ok(()))
     }
