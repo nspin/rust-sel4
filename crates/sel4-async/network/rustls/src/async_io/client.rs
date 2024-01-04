@@ -1,4 +1,3 @@
-use core::future;
 use core::mem;
 use core::pin::Pin;
 use core::task::{self, Poll};
@@ -319,17 +318,8 @@ where
         log::debug!("XXX d Read");
         Poll::Ready(Ok(cursor.into_used()))
     }
-}
 
-impl<IO> TlsStream<IO>
-where
-    IO: AsyncIO + Unpin,
-{
-    pub async fn flush(&mut self) -> Result<(), Error<IO::Error>> {
-        future::poll_fn(|cx| self.poll_flush(cx)).await
-    }
-
-    pub fn poll_flush(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Error<IO::Error>>> {
+    fn poll_flush(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Error<IO::Error>>> {
         let mut outgoing = mem::take(&mut self.outgoing);
 
         // write buffered TLS data into socket
@@ -349,10 +339,7 @@ where
     }
 
     #[allow(unused_mut)]
-    pub fn poll_close(
-        mut self: Pin<&mut Self>,
-        _cx: &mut task::Context<'_>,
-    ) -> Poll<Result<(), Error<IO::Error>>> {
+    fn poll_close(&mut self, _cx: &mut task::Context<'_>) -> Poll<Result<(), Error<IO::Error>>> {
         // XXX write out close_notify here?
         // Pin::new(&mut self.io).poll_close(cx)
         Poll::Ready(Ok(()))

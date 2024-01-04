@@ -1,5 +1,7 @@
+// TODO use Pin
+
 use alloc::boxed::Box;
-use core::task::{Context as TaskContext, Poll};
+use core::task::{Context, Poll};
 
 use futures::future;
 
@@ -11,15 +13,15 @@ pub trait AsyncIO {
 
     fn poll_read(
         &mut self,
-        cx: &mut TaskContext<'_>,
+        cx: &mut Context<'_>,
         buf: &mut [u8],
     ) -> Poll<Result<usize, Self::Error>>;
 
-    fn poll_write(
-        &mut self,
-        cx: &mut TaskContext<'_>,
-        buf: &[u8],
-    ) -> Poll<Result<usize, Self::Error>>;
+    fn poll_write(&mut self, cx: &mut Context<'_>, buf: &[u8]) -> Poll<Result<usize, Self::Error>>;
+
+    fn poll_flush(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>>;
+
+    fn poll_close(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>>;
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -68,6 +70,10 @@ pub trait AsyncIOExt: AsyncIO {
         }
         assert_eq!(pos, buf.len());
         Ok(())
+    }
+
+    async fn flush(&mut self) -> Result<(), Self::Error> {
+        future::poll_fn(|cx| self.poll_flush(cx)).await
     }
 }
 

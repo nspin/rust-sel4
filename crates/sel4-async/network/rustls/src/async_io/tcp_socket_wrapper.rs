@@ -36,4 +36,14 @@ impl AsyncIO for TcpSocketWrapper {
     fn poll_write(&mut self, cx: &mut Context<'_>, buf: &[u8]) -> Poll<Result<usize, Self::Error>> {
         self.inner_mut().poll_send(cx, buf)
     }
+
+    fn poll_flush(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn poll_close(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        // TODO
+        // self.inner_mut().poll_close(cx)
+        Poll::Ready(Ok(()))
+    }
 }
