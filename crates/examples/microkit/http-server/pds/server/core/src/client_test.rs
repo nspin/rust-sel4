@@ -3,20 +3,16 @@ use alloc::vec;
 use core::str;
 use core::time::Duration;
 
-use smoltcp::wire::DnsQueryType;
-
 use mbedtls::ssl::async_io::AsyncIoExt;
+use rustls::pki_types::{ServerName, UnixTime};
+use rustls::version::TLS12;
+use rustls::ClientConfig;
+use smoltcp::wire::DnsQueryType;
 
 use sel4_async_network::ManagedInterface;
 use sel4_async_network_mbedtls::TcpSocketWrapper;
 use sel4_async_network_rustls::{GetCurrentTimeImpl, NoServerCertVerifier};
 use sel4_async_time::{Instant, TimerManager};
-
-use rustls::version::TLS12;
-use rustls::{
-    pki_types::{ServerName, UnixTime},
-    ClientConfig,
-};
 
 const NOW: u64 = 1704284617;
 
