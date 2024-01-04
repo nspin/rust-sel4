@@ -2025,8 +2025,10 @@ name = "sel4-async-network-rustls"
 version = "0.1.0"
 dependencies = [
  "futures",
+ "getrandom",
  "log",
  "rand",
+ "ring 0.17.7",
  "rustls",
  "sel4-async-network",
  "sel4-async-network-mbedtls",

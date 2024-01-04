@@ -13,38 +13,10 @@ use rustls::unbuffered::{
     UnbufferedStatus,
 };
 use rustls::ClientConfig;
-use rustls::Error as TlsError;
 
 use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 
-#[derive(Debug)]
-pub enum Error<E> {
-    TransitError(E),
-    ConnectionAborted,
-    TlsError(TlsError),
-    EncodeError(EncodeError),
-    EncryptError(EncryptError),
-}
-
-impl<E> From<TlsError> for Error<E> {
-    fn from(err: TlsError) -> Self {
-        Self::TlsError(err)
-    }
-}
-
-impl<E> From<EncodeError> for Error<E> {
-    fn from(err: EncodeError) -> Self {
-        Self::EncodeError(err)
-    }
-}
-
-impl<E> From<EncryptError> for Error<E> {
-    fn from(err: EncryptError) -> Self {
-        Self::EncryptError(err)
-    }
-}
-
-// // //
+use crate::Error;
 
 pub struct TcpConnector {
     config: Arc<ClientConfig>,
@@ -428,9 +400,10 @@ where
         Poll::Ready(Ok(()))
     }
 
+    #[allow(unused_mut)]
     pub fn poll_close(
         mut self: Pin<&mut Self>,
-        cx: &mut task::Context<'_>,
+        _cx: &mut task::Context<'_>,
     ) -> Poll<Result<(), Error<IO::Error>>> {
         // XXX send out close_notify here?
         // Pin::new(&mut self.io).poll_close(cx)

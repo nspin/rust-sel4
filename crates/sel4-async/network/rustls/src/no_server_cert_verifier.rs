@@ -1,10 +1,8 @@
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
-use rustls::client::WebPkiServerVerifier;
 use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
-use rustls::{DigitallySignedStruct, Error, RootCertStore, SignatureScheme};
+use rustls::{DigitallySignedStruct, Error, SignatureScheme};
 
 #[derive(Debug)]
 pub struct NoServerCertVerifier;

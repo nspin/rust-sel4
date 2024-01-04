@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, localCrates, versions, rustlsWith }:
+{ mk, localCrates, versions, ringWith, rustlsWith }:
 
 mk {
   package.name = "sel4-async-network-rustls";
@@ -14,19 +14,24 @@ mk {
       sel4-async-network-mbedtls # TODO
     ;
     inherit (versions) log;
-    rustls = (localCrates.rustls or {}) // rustlsWith [];
+    rustls = rustlsWith [] // (localCrates.rustls or {});
+    ring = ringWith [] // (localCrates.ring or {}); # just to force "less-safe-getrandom-custom-or-rdrand" feature
+    getrandom = {
+      version = versions.getrandom;
+      features = [ "custom" ];
+    };
+    rand = {
+      version = versions.rand;
+      default-features = false;
+      features = [
+        "small_rng"
+      ];
+    };
     futures = {
       version = versions.futures;
       default-features = false;
       features = [
         "alloc"
-      ];
-    };
-    rand = {
-      version = "0.8.5";
-      default-features = false;
-      features = [
-        "small_rng"
       ];
     };
   };
