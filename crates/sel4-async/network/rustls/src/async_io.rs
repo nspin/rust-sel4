@@ -1,22 +1,24 @@
 use core::future;
+use core::mem;
 use core::pin::Pin;
-use core::task::Poll;
-use core::{mem, task};
+use core::task::{self, Poll};
 
-use alloc::{sync::Arc, vec::Vec};
+use alloc::sync::Arc;
 
 use futures::Future;
 use rustls::client::UnbufferedClientConnection;
 use rustls::pki_types::ServerName;
 use rustls::unbuffered::{
-    AppDataRecord, ConnectionState, EncodeError, EncryptError, InsufficientSizeError,
-    UnbufferedStatus,
+    AppDataRecord, ConnectionState, EncodeError, EncryptError, UnbufferedStatus,
 };
 use rustls::ClientConfig;
 
 use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 
-use crate::Error;
+use crate::{
+    utils::{try_or_resize_and_retry, Buffer, WriteCursor},
+    Error,
+};
 
 pub struct TcpConnector {
     config: Arc<ClientConfig>,
@@ -409,124 +411,4 @@ where
         // Pin::new(&mut self.io).poll_close(cx)
         Poll::Ready(Ok(()))
     }
-}
-
-struct WriteCursor<'a> {
-    buf: &'a mut [u8],
-    used: usize,
-}
-
-impl<'a> WriteCursor<'a> {
-    fn new(buf: &'a mut [u8]) -> Self {
-        Self { buf, used: 0 }
-    }
-
-    // HACK
-    fn used(&self) -> usize {
-        self.used
-    }
-
-    fn into_used(self) -> usize {
-        self.used
-    }
-
-    fn append<'b>(&mut self, data: &'b [u8]) -> &'b [u8] {
-        let len = self.remaining_capacity().min(data.len());
-
-        self.unfilled()[..len].copy_from_slice(&data[..len]);
-        self.used += len;
-
-        data.split_at(len).1
-    }
-
-    fn unfilled(&mut self) -> &mut [u8] {
-        &mut self.buf[self.used..]
-    }
-
-    fn is_full(&self) -> bool {
-        self.remaining_capacity() == 0
-    }
-
-    fn remaining_capacity(&self) -> usize {
-        self.buf.len() - self.used
-    }
-}
-
-#[derive(Default)]
-struct Buffer {
-    inner: Vec<u8>,
-    used: usize,
-}
-
-impl Buffer {
-    fn advance(&mut self, num_bytes: usize) {
-        self.used += num_bytes;
-    }
-
-    fn discard(&mut self, num_bytes: usize) {
-        if num_bytes == 0 {
-            return;
-        }
-
-        debug_assert!(num_bytes <= self.used);
-
-        self.inner.copy_within(num_bytes..self.used, 0);
-        self.used -= num_bytes;
-
-        log::trace!("discarded {num_bytes}B");
-    }
-
-    fn reserve(&mut self, additional_bytes: usize) {
-        let new_len = self.used + additional_bytes;
-        self.inner.resize(new_len, 0);
-    }
-
-    fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    fn len(&self) -> usize {
-        self.filled().len()
-    }
-
-    fn filled(&self) -> &[u8] {
-        &self.inner[..self.used]
-    }
-
-    fn filled_mut(&mut self) -> &mut [u8] {
-        &mut self.inner[..self.used]
-    }
-
-    fn unfilled(&mut self) -> &mut [u8] {
-        &mut self.inner[self.used..]
-    }
-
-    fn capacity(&self) -> usize {
-        self.inner.len()
-    }
-}
-
-fn try_or_resize_and_retry<E1, E2>(
-    mut f: impl FnMut(&mut [u8]) -> Result<usize, E1>,
-    map_err: impl FnOnce(E1) -> Result<InsufficientSizeError, Error<E2>>,
-    outgoing: &mut Buffer,
-) -> Result<usize, Error<E2>>
-where
-    Error<E2>: From<E1>,
-{
-    let written = match f(outgoing.unfilled()) {
-        Ok(written) => written,
-
-        Err(e) => {
-            let InsufficientSizeError { required_size } = map_err(e)?;
-            outgoing.reserve(required_size);
-            log::trace!("resized `outgoing_tls` buffer to {}B", outgoing.capacity());
-
-            f(outgoing.unfilled())?
-        }
-    };
-
-    outgoing.advance(written);
-
-    Ok(written)
 }
