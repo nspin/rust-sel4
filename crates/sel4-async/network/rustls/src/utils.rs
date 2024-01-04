@@ -14,7 +14,7 @@ impl<'a> WriteCursor<'a> {
         Self { buf, used: 0 }
     }
 
-    // HACK
+    // TODO new
     pub(crate) fn used(&self) -> usize {
         self.used
     }
