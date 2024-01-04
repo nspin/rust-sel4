@@ -1,16 +1,18 @@
 use core::mem;
+use core::ops::DerefMut;
 use core::pin::Pin;
 use core::task::{self, Poll};
 
 use alloc::sync::Arc;
 
 use futures::Future;
+use rustls::client::ClientConnectionData;
 use rustls::client::UnbufferedClientConnection;
 use rustls::pki_types::ServerName;
 use rustls::unbuffered::{
     AppDataRecord, ConnectionState, EncodeError, EncryptError, UnbufferedStatus,
 };
-use rustls::ClientConfig;
+use rustls::{ClientConfig, UnbufferedConnectionCommon};
 
 use super::{
     utils::{poll_read, poll_write, try_or_resize_and_retry, Buffer, WriteCursor},
@@ -77,7 +79,7 @@ impl<IO> Future for Connect<IO>
 where
     IO: Unpin + AsyncIO,
 {
-    type Output = Result<TlsStream<IO>, Error<IO::Error>>;
+    type Output = Result<TlsStream<UnbufferedClientConnection, IO>, Error<IO::Error>>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         let mut inner = self.inner.take().expect("polled after completion");
@@ -198,15 +200,16 @@ enum Action {
     Write,
 }
 
-pub struct TlsStream<IO> {
-    conn: UnbufferedClientConnection,
+pub struct TlsStream<T, IO> {
+    conn: T,
     incoming: Buffer,
     io: IO,
     outgoing: Buffer,
 }
 
-impl<IO> AsyncIO for TlsStream<IO>
+impl<T, IO> AsyncIO for TlsStream<T, IO>
 where
+    T: DerefMut<Target = UnbufferedConnectionCommon<ClientConnectionData>>,
     IO: AsyncIO + Unpin,
 {
     type Error = Error<IO::Error>;
