@@ -10,7 +10,6 @@
 use core::ffi::{c_char, c_int, CStr};
 
 use sel4_logging::{LevelFilter, Logger, LoggerBuilder};
-use sel4_newlib as _;
 use sel4_root_task::{debug_print, debug_println, root_task};
 
 const LOG_LEVEL: LevelFilter = LevelFilter::Debug;

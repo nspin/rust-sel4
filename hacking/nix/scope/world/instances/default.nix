@@ -190,26 +190,6 @@ in rec {
         };
       });
 
-      rustls = maybe haveFullRuntime (mkInstance {
-        rootTask = lib.makeOverridable mkTask {
-          rootCrate = crates.tests-root-task-rustls;
-          # release = true;
-          commonModifications.modifyManifest = lib.flip lib.recursiveUpdate {
-            patch.crates-io = {
-              inherit (globalPatchSection.crates-io) ring;
-            };
-          };
-          commonModifications.modifyDerivation = drv: drv.overrideAttrs (attrs: {
-            nativeBuildInputs = (attrs.nativeBuildInputs or []) ++ [
-              perl
-            ];
-          });
-        };
-        extraPlatformArgs = lib.optionalAttrs canSimulate {
-          canAutomateSimply = true;
-        };
-      });
-
       c = maybe (haveFullRuntime && hostPlatform.isAarch64) (callPackage ./c.nix {
         inherit canSimulate;
       });

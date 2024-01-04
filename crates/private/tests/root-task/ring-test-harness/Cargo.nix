@@ -17,8 +17,7 @@ mk rec {
     sel4-newlib = localCrates.sel4-newlib // {
       features = [
         "nosys"
-        "_write"
-        "sel4-panicking-env"
+        "all-symbols"
       ];
     };
     getrandom = {

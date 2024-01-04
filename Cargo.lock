@@ -3100,21 +3100,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tests-root-task-rustls"
-version = "0.1.0"
-dependencies = [
- "getrandom",
- "rand",
- "ring 0.17.7",
- "rustls",
- "sel4",
- "sel4-async-network-rustls",
- "sel4-logging",
- "sel4-newlib",
- "sel4-root-task",
-]
-
-[[package]]
 name = "tests-root-task-tls"
 version = "0.1.0"
 dependencies = [

@@ -195,17 +195,5 @@ fn init() -> impl Handler {
     )
 }
 
-fn setup_newlib() {
-    use sel4_newlib::*;
-
-    set_static_heap_for_sbrk({
-        static HEAP: StaticHeap<{ 1024 * 1024 }> = StaticHeap::new();
-        &HEAP
-    });
-
-    set_implementations(Implementations {
-        _sbrk: Some(sbrk_with_static_heap),
-        _write: Some(write_with_debug_put_char),
-        ..Default::default()
-    })
-}
+// TODO remove
+sel4_newlib::declare_sbrk_with_static_heap!(1024 * 1024);
