@@ -1,0 +1,65 @@
+use super::*;
+
+use core::cell::SyncUnsafeCell;
+use core::ptr;
+use core::sync::atomic::{AtomicIsize, Ordering};
+
+use sel4_immediate_sync_once_cell::ImmediateSyncOnceCell;
+
+pub struct StaticHeap<const N: usize>(SyncUnsafeCell<[u8; N]>);
+
+impl<const N: usize> StaticHeap<N> {
+    pub const fn new() -> Self {
+        Self(SyncUnsafeCell::new([0; N]))
+    }
+
+    const fn bounds(&self) -> *mut [u8] {
+        ptr::slice_from_raw_parts_mut(self.0.get().cast(), N)
+    }
+}
+
+struct StaticHeapState {
+    watermark: AtomicIsize,
+    ptr: *mut [u8],
+}
+
+unsafe impl Sync for StaticHeapState {}
+
+impl StaticHeapState {
+    const fn new<const N: usize>(heap: &StaticHeap<N>) -> Self {
+        Self {
+            watermark: AtomicIsize::new(0),
+            ptr: heap.bounds(),
+        }
+    }
+
+    fn sbrk(&self, incr: isize) -> *mut u8 {
+        let old = self.watermark.fetch_add(incr, Ordering::SeqCst);
+        let new = old + incr;
+        assert!(new >= 0);
+        assert!(new <= self.ptr.len().try_into().unwrap());
+        unsafe { self.ptr.as_mut_ptr().offset(old).cast() }
+    }
+}
+
+static STATIC_HEAP_STATE: ImmediateSyncOnceCell<StaticHeapState> = ImmediateSyncOnceCell::new();
+
+pub fn sbrk_with_static_heap(incr: c_int) -> *mut c_void {
+    STATIC_HEAP_STATE
+        .get()
+        .expect("set_static_heap_for_sbrk() has not yet been called, or has not yet been completed")
+        .sbrk(incr.try_into().unwrap())
+        .cast()
+}
+
+pub fn set_static_heap_for_sbrk<const N: usize>(static_heap: &StaticHeap<N>) {
+    STATIC_HEAP_STATE
+        .set(StaticHeapState::new(static_heap))
+        .ok()
+        .expect("set_static_heap_for_sbrk() has already been called")
+}
+
+#[no_mangle]
+extern "C" fn _sbrk(incr: c_int) -> *mut c_void {
+    get_impl!(_sbrk)(incr)
+}

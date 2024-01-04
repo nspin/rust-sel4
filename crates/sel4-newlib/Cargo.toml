@@ -17,17 +17,15 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [features]
-_exit = []
-_sbrk = []
-_write = []
-all-symbols = ["_exit", "_sbrk", "_write"]
+_exit = ["sel4-panicking-env"]
+_write = ["sel4-panicking-env"]
+all-symbols = ["_exit", "_write"]
 default = ["detect-libc"]
 detect-libc = []
 nosys = []
 
 [dependencies]
-log = "0.4.17"
-sel4-immediate-sync-once-cell = { path = "../sel4-immediate-sync-once-cell" }
+log = { version = "0.4.17", optional = true }
 sel4-panicking-env = { path = "../sel4-panicking/env", optional = true }
 
 [build-dependencies]

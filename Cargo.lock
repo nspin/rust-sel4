@@ -2507,7 +2507,6 @@ version = "0.1.0"
 dependencies = [
  "cc",
  "log",
- "sel4-immediate-sync-once-cell",
  "sel4-panicking-env",
 ]
 

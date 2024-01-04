@@ -12,18 +12,15 @@ mk {
     default = [ "detect-libc" ];
     detect-libc = [];
     nosys = [];
-    _exit = [];
-    _sbrk = [];
-    _write = [];
+    _exit = [ "sel4-panicking-env" ];
+    _write = [ "sel4-panicking-env" ];
     all-symbols = [
       "_exit"
-      "_sbrk"
       "_write"
     ];
   };
   dependencies = {
-    inherit (versions) log;
-    inherit (localCrates) sel4-immediate-sync-once-cell;
+    log = { version = versions.log; optional = true; };
     sel4-panicking-env = localCrates.sel4-panicking-env // { optional = true; };
   };
   build-dependencies = {
