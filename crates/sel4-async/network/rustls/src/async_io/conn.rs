@@ -1,5 +1,6 @@
 use core::mem;
 use core::ops::DerefMut;
+use core::marker::PhantomData;
 use core::pin::Pin;
 use core::task::{self, Poll};
 
@@ -12,7 +13,7 @@ use rustls::pki_types::ServerName;
 use rustls::unbuffered::{
     AppDataRecord, ConnectionState, EncodeError, EncryptError, UnbufferedStatus,
 };
-use rustls::{ClientConfig, ServerConfig, UnbufferedConnectionCommon};
+use rustls::{ClientConfig, ServerConfig, UnbufferedConnectionCommon, SideData};
 
 use super::{
     utils::{poll_read, poll_write, try_or_resize_and_retry, Buffer, WriteCursor},
@@ -29,7 +30,7 @@ impl ClientConnector {
         domain: ServerName<'static>,
         stream: IO,
         // FIXME should not return an error but instead hoist it into a `Connect` variant
-    ) -> Result<Connect<UnbufferedClientConnection, IO>, Error<IO::Error>>
+    ) -> Result<Connect<UnbufferedClientConnection, ClientConnectionData, IO>, Error<IO::Error>>
     where
         IO: AsyncIO,
     {
@@ -70,11 +71,11 @@ impl From<Arc<ServerConfig>> for ServerConnector {
     }
 }
 
-pub struct Connect<T, IO> {
-    inner: Option<ConnectInner<T, IO>>,
+pub struct Connect<T, D, IO> {
+    inner: Option<ConnectInner<T, D, IO>>,
 }
 
-impl<T, IO> Connect<T, IO> {
+impl<T, D, IO> Connect<T, D, IO> {
     fn new(conn: T, io: IO) -> Self {
         Self {
             inner: Some(ConnectInner::new(conn, io)),
@@ -82,17 +83,19 @@ impl<T, IO> Connect<T, IO> {
     }
 }
 
-struct ConnectInner<T, IO> {
+struct ConnectInner<T, D, IO> {
     conn: T,
+    _phantom: PhantomData<D>,
     incoming: Buffer,
     io: IO,
     outgoing: Buffer,
 }
 
-impl<T, IO> ConnectInner<T, IO> {
+impl<T, D, IO> ConnectInner<T, D, IO> {
     fn new(conn: T, io: IO) -> Self {
         Self {
             conn,
+            _phantom: PhantomData,
             incoming: Buffer::default(),
             io,
             outgoing: Buffer::default(),
@@ -100,12 +103,13 @@ impl<T, IO> ConnectInner<T, IO> {
     }
 }
 
-impl<T, IO> Future for Connect<T, IO>
+impl<T, D, IO> Future for Connect<T, D, IO>
 where
-    T: Unpin + DerefMut<Target = UnbufferedConnectionCommon<ClientConnectionData>>,
+    D: SideData,
+    T: Unpin + DerefMut<Target = UnbufferedConnectionCommon<D>>,
     IO: Unpin + AsyncIO,
 {
-    type Output = Result<TlsStream<T, IO>, Error<IO::Error>>;
+    type Output = Result<TlsStream<T, D, IO>, Error<IO::Error>>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         let mut inner = self.inner.take().expect("polled after completion");
@@ -145,6 +149,7 @@ where
                     // application data? that would reduce the number of round-trips
                     let ConnectInner {
                         conn,
+                        _phantom: PhantomData,
                         incoming,
                         io,
                         outgoing,
@@ -152,6 +157,7 @@ where
 
                     return Poll::Ready(Ok(TlsStream {
                         conn,
+                        _phantom: PhantomData,
                         incoming,
                         io,
                         outgoing,
@@ -171,8 +177,11 @@ struct Updates {
     transmit_complete: bool,
 }
 
-impl<T: DerefMut<Target = UnbufferedConnectionCommon<ClientConnectionData>>, IO: AsyncIO>
-    ConnectInner<T, IO>
+impl<T, D, IO> ConnectInner<T, D, IO>
+where
+    T: DerefMut<Target = UnbufferedConnectionCommon<D>>,
+    IO: AsyncIO,
+    D: SideData,
 {
     fn advance(&mut self, updates: &mut Updates) -> Result<Action, Error<IO::Error>> {
         log::trace!("incoming buffer has {}B of data", self.incoming.len());
@@ -228,17 +237,19 @@ enum Action {
     Write,
 }
 
-pub struct TlsStream<T, IO> {
+pub struct TlsStream<T, D, IO> {
     conn: T,
+    _phantom: PhantomData<D>,
     incoming: Buffer,
     io: IO,
     outgoing: Buffer,
 }
 
-impl<T, IO> AsyncIO for TlsStream<T, IO>
+impl<T, D, IO> AsyncIO for TlsStream<T, D, IO>
 where
-    T: DerefMut<Target = UnbufferedConnectionCommon<ClientConnectionData>>,
+    T: DerefMut<Target = UnbufferedConnectionCommon<D>>,
     IO: AsyncIO + Unpin,
+    D: SideData,
 {
     type Error = Error<IO::Error>;
 
