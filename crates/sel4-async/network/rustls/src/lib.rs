@@ -15,9 +15,9 @@ mod error;
 mod no_server_cert_verifier;
 mod utils;
 mod compiler_builtins_supplement;
-mod dummy_getrandom;
+mod dummy_custom_getrandom;
 
 pub use async_io::{Connect, TcpConnector, TlsStream};
 pub use error::Error;
 pub use no_server_cert_verifier::NoServerCertVerifier;
-pub use dummy_getrandom::seed_dummy_custom_getrandom;
+pub use dummy_custom_getrandom::seed_dummy_custom_getrandom;
