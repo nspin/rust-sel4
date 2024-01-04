@@ -16,7 +16,7 @@ use rustls::ClientConfig;
 use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 
 use super::{
-    utils::{try_or_resize_and_retry, Buffer, WriteCursor},
+    utils::{poll_read, poll_write, try_or_resize_and_retry, Buffer, WriteCursor},
     Error,
 };
 
@@ -139,58 +139,6 @@ where
 
         poll
     }
-}
-
-/// returns `true` if the operation would block
-fn poll_read<IO>(
-    io: &mut IO,
-    incoming: &mut Buffer,
-    cx: &mut task::Context,
-) -> Result<bool, Error<IO::Error>>
-where
-    IO: AsyncIo + Unpin,
-{
-    if incoming.unfilled().is_empty() {
-        // XXX should this be user configurable?
-        // incoming.reserve(1024);
-        incoming.reserve(1024 * 256);
-    }
-
-    let would_block = match Pin::new(io).poll_recv(cx, incoming.unfilled()) {
-        Poll::Ready(res) => {
-            let read = res.map_err(Error::TransitError)?;
-            log::trace!("read {read}B from socket");
-            incoming.advance(read);
-            false
-        }
-
-        Poll::Pending => true,
-    };
-
-    Ok(would_block)
-}
-
-/// returns `true` if the operation would block
-fn poll_write<IO>(
-    io: &mut IO,
-    outgoing: &mut Buffer,
-    cx: &mut task::Context,
-) -> Result<bool, Error<IO::Error>>
-where
-    IO: AsyncIo + Unpin,
-{
-    let pending = match Pin::new(io).poll_send(cx, outgoing.filled()) {
-        Poll::Ready(res) => {
-            let written = res.map_err(Error::TransitError)?;
-            log::trace!("wrote {written}B into socket");
-            outgoing.discard(written);
-            log::trace!("{}B remain in the outgoing buffer", outgoing.len());
-            false
-        }
-
-        Poll::Pending => true,
-    };
-    Ok(pending)
 }
 
 #[derive(Default)]
