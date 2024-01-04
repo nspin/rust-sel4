@@ -10,6 +10,7 @@ mk {
   package.name = "sel4-async-network-rustls";
   dependencies = {
     inherit (localCrates)
+      sel4-async-time
       sel4-async-network
       sel4-async-network-mbedtls # TODO
     ;
