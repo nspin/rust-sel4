@@ -13,11 +13,10 @@ use rustls::unbuffered::{
 };
 use rustls::ClientConfig;
 
-use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
-
 use super::{
     utils::{poll_read, poll_write, try_or_resize_and_retry, Buffer, WriteCursor},
     Error,
+    AsyncIo,
 };
 
 pub struct TcpConnector {

@@ -2029,7 +2029,6 @@ dependencies = [
  "ring 0.17.7",
  "rustls",
  "sel4-async-network",
- "sel4-async-network-mbedtls",
  "sel4-async-time",
  "sel4-newlib",
 ]
