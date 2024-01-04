@@ -88,7 +88,8 @@ pub async fn run(
     conn.flush().await.unwrap();
     log::debug!("XXXXX b");
 
-    const BUF_SIZE: usize = 1024 * 64;
+    // const BUF_SIZE: usize = 1024 * 64;
+    const BUF_SIZE: usize = 4096;
 
     let mut buf = vec![0; BUF_SIZE];
     loop {
