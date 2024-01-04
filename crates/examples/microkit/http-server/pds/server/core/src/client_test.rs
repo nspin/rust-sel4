@@ -8,20 +8,17 @@ use smoltcp::wire::DnsQueryType;
 
 use mbedtls::ssl::async_io::AsyncIoExt;
 
-use sel4_async_network::{ManagedInterface, TcpSocketError};
-use sel4_async_network_mbedtls::{
-    get_mozilla_ca_list, insecure_dummy_rng, DbgCallbackBuilder, TcpSocketWrapper,
-};
+use sel4_async_network::ManagedInterface;
+use sel4_async_network_mbedtls::TcpSocketWrapper;
 use sel4_async_network_rustls::NoServerCertVerifier;
 use sel4_async_time::Instant;
 use sel4_async_time::TimerManager;
 
-use rustls::version::{TLS12, TLS13};
+use rustls::version::TLS12;
 use rustls::{
     pki_types::{ServerName, UnixTime},
     time_provider::GetCurrentTime,
-    AppDataRecord, ClientConfig, ConnectionState, EncodeError, EncryptError, InsufficientSizeError,
-    RootCertStore, UnbufferedStatus,
+    ClientConfig,
 };
 
 const NOW: u64 = 1704284617;

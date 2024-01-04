@@ -5,7 +5,6 @@
 //
 
 use alloc::boxed::Box;
-use alloc::rc::Rc;
 use alloc::sync::Arc;
 use core::future::Future;
 use core::pin::Pin;
