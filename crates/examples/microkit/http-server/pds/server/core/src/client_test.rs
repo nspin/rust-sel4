@@ -40,7 +40,7 @@ pub async fn run(
         .sleep_until((now_fn()) + Duration::from_secs(1))
         .await;
 
-    let query = if DOMAIN == "localhost" {
+    let query = if DOMAIN != "localhost" {
         network_ctx
             .dns_query(DOMAIN, DnsQueryType::A)
             .await
