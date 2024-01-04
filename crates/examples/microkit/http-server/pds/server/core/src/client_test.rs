@@ -25,10 +25,11 @@ use rustls::{
 
 const NOW: u64 = 1704284617;
 
-// const DOMAIN: &str = "example.com";
-const DOMAIN: &str = "localhost";
-const PORT: u16 = 44330;
-// const PORT: u16 = 443;
+const DOMAIN: &str = "example.com";
+const PORT: u16 = 443;
+
+// const DOMAIN: &str = "localhost";
+// const PORT: u16 = 44330;
 
 pub async fn run(
     now_fn: impl 'static + Send + Sync + Fn() -> Instant,
@@ -39,12 +40,14 @@ pub async fn run(
         .sleep_until((now_fn()) + Duration::from_secs(1))
         .await;
 
-    let query = network_ctx
-        .dns_query(DOMAIN, DnsQueryType::A)
-        .await
-        .unwrap();
-
-    let query = &[smoltcp::wire::IpAddress::v4(127, 0, 0, 1)];
+    let query = if DOMAIN == "localhost" {
+        network_ctx
+            .dns_query(DOMAIN, DnsQueryType::A)
+            .await
+            .unwrap()
+    } else {
+        vec![smoltcp::wire::IpAddress::v4(127, 0, 0, 1)]
+    };
 
     let mut socket = network_ctx.new_tcp_socket();
     socket.connect((query[0], PORT), 44445).await.unwrap();
