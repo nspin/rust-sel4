@@ -9,5 +9,8 @@
 extern crate alloc;
 
 mod async_io;
+mod no_server_cert_verifier;
 
 pub use async_io::{Connect, Error, TcpConnector, TlsStream};
+
+pub use no_server_cert_verifier::NoServerCertVerifier;

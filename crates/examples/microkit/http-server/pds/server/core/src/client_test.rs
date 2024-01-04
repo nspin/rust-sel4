@@ -14,6 +14,7 @@ use sel4_async_network_mbedtls::{
 };
 use sel4_async_time::Instant;
 use sel4_async_time::TimerManager;
+use sel4_async_network_rustls::NoServerCertVerifier;
 
 use rustls::version::{TLS12, TLS13};
 use rustls::{
@@ -64,7 +65,7 @@ pub async fn run(
     ));
 
     let mut dangerous_config = ClientConfig::dangerous(&mut config);
-    dangerous_config.set_certificate_verifier(Arc::new(NoCertificateVerification));
+    dangerous_config.set_certificate_verifier(Arc::new(NoServerCertVerifier));
     
     let config = Arc::new(config);
     let connector = sel4_async_network_rustls::TcpConnector::from(config);
@@ -106,79 +107,6 @@ pub async fn run(
     // drop(ctx);
 
     log::info!("client test complete");
-}
-
-// impl rustls::client::danger::ServerCertVerifier for NoCertificateVerification {
-//     fn verify_server_cert(
-//         &self,
-//         _end_entity: &rustls::Certificate,
-//         _intermediates: &[rustls::Certificate],
-//         _server_name: &rustls::ServerName,
-//         _scts: &mut dyn Iterator<Item = &[u8]>,
-//         _ocsp: &[u8],
-//         _now: UnixTime,
-//     ) -> Result<rustls::client::danger::ServerCertVerified, rustls::Error> {
-//         Ok(rustls::client::danger::ServerCertVerified::assertion())
-//     }
-// }
-
-use ver::NoCertificateVerification;
-
-mod ver {
-    use alloc::vec::Vec;
-    use alloc::sync::Arc;
-
-    use rustls::Error;
-    use rustls::client::danger::ServerCertVerifier;
-    use rustls::client::danger::HandshakeSignatureValid;
-    use rustls::SignatureScheme;
-    use rustls::DigitallySignedStruct;
-    use rustls::pki_types::CertificateDer;
-    use rustls::pki_types::ServerName;
-    use rustls::client::danger::ServerCertVerified;
-    use rustls::client::WebPkiServerVerifier;
-    use rustls::RootCertStore;
-    use rustls::pki_types::UnixTime;
-
-    #[derive(Debug)]
-    pub struct NoCertificateVerification;
-
-    impl ServerCertVerifier for NoCertificateVerification {
-        fn verify_server_cert(
-            &self,
-            end_entity: &CertificateDer<'_>,
-            intermediates: &[CertificateDer<'_>],
-            server_name: &ServerName<'_>,
-            ocsp_response: &[u8],
-            now: UnixTime
-        ) -> Result<ServerCertVerified, Error> {
-            Ok(ServerCertVerified::assertion())
-        }
-
-        fn verify_tls12_signature(
-            &self,
-            message: &[u8],
-            cert: &CertificateDer<'_>,
-            dss: &DigitallySignedStruct
-        ) -> Result<HandshakeSignatureValid, Error> {
-            Ok(HandshakeSignatureValid::assertion())
-        }
-
-        fn verify_tls13_signature(
-            &self,
-            message: &[u8],
-            cert: &CertificateDer<'_>,
-            dss: &DigitallySignedStruct
-        ) -> Result<HandshakeSignatureValid, Error> {
-            Ok(HandshakeSignatureValid::assertion())
-        }
-
-        fn supported_verify_schemes(&self) -> Vec<SignatureScheme> {
-            let mut root_store = rustls::RootCertStore::empty();
-            root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-            WebPkiServerVerifier::builder(Arc::new(root_store)).build().unwrap().supported_verify_schemes()
-        }
-    }
 }
 
 struct GetCurrentTimeImpl<F> {
