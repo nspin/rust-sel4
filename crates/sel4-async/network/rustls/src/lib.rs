@@ -10,16 +10,13 @@
 
 extern crate alloc;
 
-mod async_io;
 mod compiler_builtins_supplement;
 mod dummy_custom_getrandom;
-mod error;
 mod get_current_time_impl;
 mod no_server_cert_verifier;
-mod utils;
 
-pub use async_io::{Connect, TcpConnector, TlsStream};
+pub mod async_io;
+
 pub use dummy_custom_getrandom::seed_dummy_custom_getrandom;
-pub use error::Error;
 pub use get_current_time_impl::GetCurrentTimeImpl;
 pub use no_server_cert_verifier::NoServerCertVerifier;

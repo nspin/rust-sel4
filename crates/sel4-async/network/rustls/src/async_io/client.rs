@@ -15,7 +15,7 @@ use rustls::ClientConfig;
 
 use sel4_async_network_mbedtls::mbedtls::ssl::async_io::AsyncIo;
 
-use crate::{
+use super::{
     utils::{try_or_resize_and_retry, Buffer, WriteCursor},
     Error,
 };

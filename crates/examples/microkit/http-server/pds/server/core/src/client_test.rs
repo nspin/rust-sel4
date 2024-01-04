@@ -58,7 +58,7 @@ pub async fn run(
     dangerous_config.set_certificate_verifier(Arc::new(NoServerCertVerifier));
 
     let config = Arc::new(config);
-    let connector = sel4_async_network_rustls::TcpConnector::from(config);
+    let connector = sel4_async_network_rustls::async_io::client::TcpConnector::from(config);
     let mut conn = connector
         .connect(
             ServerName::DnsName(DOMAIN.try_into().unwrap()),

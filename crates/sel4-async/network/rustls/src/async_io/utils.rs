@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 
 use rustls::unbuffered::InsufficientSizeError;
 
-use crate::Error;
+use super::Error;
 
 pub(crate) struct WriteCursor<'a> {
     buf: &'a mut [u8],
