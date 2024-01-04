@@ -47,19 +47,19 @@ mod dummy_custom_getrandom {
 
     #[cfg(not(target_thread_local))]
     compile_error!("");
-    
+
     #[thread_local]
     static RNG: RefCell<Option<SmallRng>> = RefCell::new(None);
-    
+
     pub(crate) fn seed_dummy_custom_getrandom(seed: u64) {
         assert!(RNG.replace(Some(SmallRng::seed_from_u64(seed))).is_none());
     }
-    
+
     fn dummy_custom_getrandom(buf: &mut [u8]) -> Result<(), getrandom::Error> {
         RNG.borrow_mut().as_mut().unwrap().fill_bytes(buf);
         Ok(())
     }
-    
+
     getrandom::register_custom_getrandom!(dummy_custom_getrandom);
 }
 
