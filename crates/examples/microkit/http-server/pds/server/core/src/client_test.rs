@@ -5,12 +5,14 @@ use core::time::Duration;
 
 use mbedtls::ssl::async_io::AsyncIoExt;
 use rustls::pki_types::{ServerName, UnixTime};
+use rustls::time_provider::TimeProvider;
 use rustls::version::TLS12;
-use rustls::ClientConfig;
+use rustls::{ClientConfig, RootCertStore};
 use smoltcp::wire::DnsQueryType;
 
 use sel4_async_network::ManagedInterface;
 use sel4_async_network_mbedtls::TcpSocketWrapper;
+use sel4_async_network_rustls::async_io::client::TcpConnector;
 use sel4_async_network_rustls::{GetCurrentTimeImpl, NoServerCertVerifier};
 use sel4_async_time::{Instant, TimerManager};
 
@@ -43,13 +45,13 @@ pub async fn run(
     let mut socket = network_ctx.new_tcp_socket();
     socket.connect((query[0], PORT), 44445).await.unwrap();
 
-    let mut root_store = rustls::RootCertStore::empty();
+    let mut root_store = RootCertStore::empty();
     root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let mut config = rustls::ClientConfig::builder_with_protocol_versions(&[&TLS12])
+    let mut config = ClientConfig::builder_with_protocol_versions(&[&TLS12])
         .with_root_certificates(root_store)
         .with_no_client_auth();
     config.enable_early_data = false;
-    config.time_provider = rustls::time_provider::TimeProvider::new(GetCurrentTimeImpl::new(
+    config.time_provider = TimeProvider::new(GetCurrentTimeImpl::new(
         UnixTime::since_unix_epoch(Duration::from_secs(NOW)),
         now_fn,
     ));
@@ -60,7 +62,7 @@ pub async fn run(
     }
 
     let config = Arc::new(config);
-    let connector = sel4_async_network_rustls::async_io::client::TcpConnector::from(config);
+    let connector = TcpConnector::from(config);
     let mut conn = connector
         .connect(
             ServerName::DnsName(DOMAIN.try_into().unwrap()),
