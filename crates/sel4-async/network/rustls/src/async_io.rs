@@ -369,6 +369,7 @@ where
                 }
 
                 ConnectionState::WriteTraffic(_) => {
+                    // panic!("XXX");
                     let would_block = poll_read(&mut self.io, &mut incoming, cx)?;
 
                     if would_block {
