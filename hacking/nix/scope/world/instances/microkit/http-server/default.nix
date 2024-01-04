@@ -161,14 +161,17 @@ let
     };
     sp804-driver = mkPD {
       rootCrate = crates.microkit-http-server-example-sp804-driver;
+      release = true;
       inherit rustTargetInfo;
     };
     virtio-net-driver = mkPD {
       rootCrate = crates.microkit-http-server-example-virtio-net-driver;
+      release = true;
       inherit rustTargetInfo;
     };
     virtio-blk-driver = mkPD {
       rootCrate = crates.microkit-http-server-example-virtio-blk-driver;
+      release = true;
       inherit rustTargetInfo;
     };
   };
