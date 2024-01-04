@@ -44,5 +44,7 @@ mk {
         "alloc"
       ];
     };
+    # TODO remove after bumping rust toolchain
+    async-trait = "0.1.73";
   };
 }

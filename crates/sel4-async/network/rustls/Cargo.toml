@@ -17,6 +17,7 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
+async-trait = "0.1.73"
 futures = { version = "0.3.28", default-features = false, features = ["alloc"] }
 getrandom = { version = "0.2.10", features = ["custom"] }
 log = "0.4.17"

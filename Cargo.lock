@@ -2021,6 +2021,7 @@ version = "0.1.0"
 name = "sel4-async-network-rustls"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "futures",
  "getrandom",
  "log",

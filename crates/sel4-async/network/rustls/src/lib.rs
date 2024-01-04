@@ -5,6 +5,7 @@
 //
 
 #![no_std]
+#![feature(async_fn_in_trait)]
 #![feature(cfg_target_thread_local)]
 #![feature(thread_local)]
 
