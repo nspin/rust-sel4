@@ -77,8 +77,6 @@ static LOGGER: Logger = LoggerBuilder::const_default()
 fn init() -> impl Handler {
     LOGGER.set().unwrap();
 
-    setup_newlib();
-
     let timer_client = TimerClient::new(channels::TIMER_DRIVER);
     let net_client = NetClient::new(channels::NET_DRIVER);
     let block_client = BlockClient::new(channels::BLOCK_DRIVER);
