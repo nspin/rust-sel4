@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-// TODO address thread safety and reentrancy
+// TODO address thread safety and reentrancy (init reentrancy structs and figure out what's up with errno)
 
 #![no_std]
 #![feature(const_slice_from_raw_parts_mut)]
