@@ -61,9 +61,9 @@ const CERT_PEM: &str = concat!(include_str!(concat!(env!("OUT_DIR"), "/cert.pem"
 const PRIV_PEM: &str = concat!(include_str!(concat!(env!("OUT_DIR"), "/priv.pem")), "\0");
 
 const LOG_LEVEL: LevelFilter = {
-    // LevelFilter::Trace
+    LevelFilter::Trace
     // LevelFilter::Debug
-    LevelFilter::Info
+    // LevelFilter::Info
     // LevelFilter::Warn
 };
 
