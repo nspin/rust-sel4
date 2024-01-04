@@ -1,6 +1,6 @@
+use core::marker::PhantomData;
 use core::mem;
 use core::ops::DerefMut;
-use core::marker::PhantomData;
 use core::pin::Pin;
 use core::task::{self, Poll};
 
@@ -8,12 +8,12 @@ use alloc::sync::Arc;
 
 use futures::Future;
 use rustls::client::{ClientConnectionData, UnbufferedClientConnection};
-use rustls::server::{ServerConnectionData, UnbufferedServerConnection};
 use rustls::pki_types::ServerName;
+use rustls::server::{ServerConnectionData, UnbufferedServerConnection};
 use rustls::unbuffered::{
     AppDataRecord, ConnectionState, EncodeError, EncryptError, UnbufferedStatus,
 };
-use rustls::{ClientConfig, ServerConfig, UnbufferedConnectionCommon, SideData};
+use rustls::{ClientConfig, ServerConfig, SideData, UnbufferedConnectionCommon};
 
 use super::{
     utils::{poll_read, poll_write, try_or_resize_and_retry, Buffer, WriteCursor},
@@ -50,20 +50,20 @@ pub struct ServerConnector {
     config: Arc<ServerConfig>,
 }
 
-// impl ServerConnector {
-//     pub fn connect<IO>(
-//         &self,
-//         stream: IO,
-//         // FIXME should not return an error but instead hoist it into a `Connect` variant
-//     ) -> Result<Connect<UnbufferedServerConnection, IO>, Error<IO::Error>>
-//     where
-//         IO: AsyncIO,
-//     {
-//         let conn = UnbufferedServerConnection::new(self.config.clone())?;
+impl ServerConnector {
+    pub fn connect<IO>(
+        &self,
+        stream: IO,
+        // FIXME should not return an error but instead hoist it into a `Connect` variant
+    ) -> Result<Connect<UnbufferedServerConnection, ServerConnectionData, IO>, Error<IO::Error>>
+    where
+        IO: AsyncIO,
+    {
+        let conn = UnbufferedServerConnection::new(self.config.clone())?;
 
-//         Ok(Connect::new(conn, stream))
-//     }
-// }
+        Ok(Connect::new(conn, stream))
+    }
+}
 
 impl From<Arc<ServerConfig>> for ServerConnector {
     fn from(config: Arc<ServerConfig>) -> Self {
@@ -105,7 +105,7 @@ impl<T, D, IO> ConnectInner<T, D, IO> {
 
 impl<T, D, IO> Future for Connect<T, D, IO>
 where
-    D: SideData,
+    D: Unpin + SideDataAugmented,
     T: Unpin + DerefMut<Target = UnbufferedConnectionCommon<D>>,
     IO: Unpin + AsyncIO,
 {
@@ -177,17 +177,44 @@ struct Updates {
     transmit_complete: bool,
 }
 
+trait SideDataAugmented: SideData + Sized {
+    fn process_tls_records_generic<'c, 'i>(
+        this: &'c mut UnbufferedConnectionCommon<Self>,
+        incoming_tls: &'i mut [u8],
+    ) -> UnbufferedStatus<'c, 'i, Self>;
+}
+
+impl SideDataAugmented for ClientConnectionData {
+    fn process_tls_records_generic<'c, 'i>(
+        this: &'c mut UnbufferedConnectionCommon<Self>,
+        incoming_tls: &'i mut [u8],
+    ) -> UnbufferedStatus<'c, 'i, Self> {
+        this.process_tls_records(incoming_tls)
+    }
+}
+
+impl SideDataAugmented for ServerConnectionData {
+    fn process_tls_records_generic<'c, 'i>(
+        this: &'c mut UnbufferedConnectionCommon<Self>,
+        incoming_tls: &'i mut [u8],
+    ) -> UnbufferedStatus<'c, 'i, Self> {
+        this.process_tls_records(incoming_tls)
+    }
+}
+
 impl<T, D, IO> ConnectInner<T, D, IO>
 where
     T: DerefMut<Target = UnbufferedConnectionCommon<D>>,
     IO: AsyncIO,
-    D: SideData,
+    D: SideDataAugmented,
 {
     fn advance(&mut self, updates: &mut Updates) -> Result<Action, Error<IO::Error>> {
         log::trace!("incoming buffer has {}B of data", self.incoming.len());
 
-        let UnbufferedStatus { discard, state } =
-            self.conn.process_tls_records(self.incoming.filled_mut());
+        let UnbufferedStatus { discard, state } = SideDataAugmented::process_tls_records_generic(
+            &mut self.conn,
+            self.incoming.filled_mut(),
+        );
 
         log::trace!("state: {state:?}");
         let next = match state? {
@@ -249,7 +276,7 @@ impl<T, D, IO> AsyncIO for TlsStream<T, D, IO>
 where
     T: DerefMut<Target = UnbufferedConnectionCommon<D>>,
     IO: AsyncIO + Unpin,
-    D: SideData,
+    D: SideDataAugmented,
 {
     type Error = Error<IO::Error>;
 
@@ -261,7 +288,7 @@ where
         let mut outgoing = mem::take(&mut self.outgoing);
 
         // no IO here; just in-memory writes
-        match self.conn.process_tls_records(&mut []).state? {
+        match SideDataAugmented::process_tls_records_generic(&mut self.conn, &mut []).state? {
             ConnectionState::WriteTraffic(mut state) => {
                 try_or_resize_and_retry(
                     |out_buffer| state.encrypt(buf, out_buffer),
@@ -310,7 +337,10 @@ where
             log::trace!("incoming buffer has {}B of data", incoming.len());
 
             let UnbufferedStatus { mut discard, state } =
-                self.conn.process_tls_records(incoming.filled_mut());
+                SideDataAugmented::process_tls_records_generic(
+                    &mut self.conn,
+                    incoming.filled_mut(),
+                );
 
             match state? {
                 ConnectionState::ReadTraffic(mut state) => {
