@@ -352,6 +352,7 @@ where
 
             match state? {
                 ConnectionState::ReadTraffic(mut state) => {
+                    log::debug!("XXX d ReadTraffic");
                     while let Some(res) = state.next_record() {
                         let AppDataRecord {
                             discard: new_discard,
@@ -372,6 +373,7 @@ where
 
                 ConnectionState::WriteTraffic(_) => {
                     // panic!("XXX");
+                    log::debug!("XXX d WriteTraffic");
                     let would_block = poll_read(&mut self.io, &mut incoming, cx)?;
 
                     if would_block {
