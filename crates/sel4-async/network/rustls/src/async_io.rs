@@ -378,6 +378,10 @@ where
 
                     if would_block {
                         self.incoming = incoming;
+                        // ?
+                        if cursor.used() != 0 {
+                            break;
+                        }
                         return Poll::Pending;
                     }
                 }
@@ -436,6 +440,11 @@ struct WriteCursor<'a> {
 impl<'a> WriteCursor<'a> {
     fn new(buf: &'a mut [u8]) -> Self {
         Self { buf, used: 0 }
+    }
+
+    // HACK
+    fn used(&self) -> usize {
+        self.used
     }
 
     fn into_used(self) -> usize {
