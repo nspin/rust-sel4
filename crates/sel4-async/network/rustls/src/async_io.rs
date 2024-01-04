@@ -344,6 +344,7 @@ where
         let mut incoming = mem::take(&mut self.incoming);
         let mut cursor = WriteCursor::new(buf);
 
+        log::debug!("XXX d loop enter");
         while !cursor.is_full() {
             log::trace!("incoming buffer has {}B of data", incoming.len());
 
@@ -382,6 +383,7 @@ where
                         if cursor.used() != 0 {
                             break;
                         }
+                        log::debug!("XXX d Pending");
                         return Poll::Pending;
                     }
                 }
@@ -394,6 +396,7 @@ where
             incoming.discard(discard);
         }
 
+        log::debug!("XXX d Read");
         Poll::Ready(Ok(cursor.into_used()))
     }
 }
