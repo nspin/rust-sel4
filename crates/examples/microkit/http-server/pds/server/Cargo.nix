@@ -27,21 +27,6 @@ mk {
 
     async-unsync = { version = versions.async-unsync; default-features = false; };
 
-    ring = ringWith [];
-
-    getrandom = {
-      version = versions.getrandom;
-      features = [ "custom" ];
-    };
-
-    rand = {
-      version = versions.rand;
-      default-features = false;
-      features = [
-        "small_rng"
-      ];
-    };
-
     inherit (localCrates)
       sel4
       sel4-sync
