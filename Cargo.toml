@@ -135,7 +135,6 @@ members = [
     "crates/sel4/config/macros",
     "crates/sel4/sys",
     "crates/sel4/sys/wrappers",
-    "tmp/src/ring",
 ]
 
 [patch.crates-io.ring]
