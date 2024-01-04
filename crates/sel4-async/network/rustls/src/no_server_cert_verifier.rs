@@ -1,10 +1,10 @@
-use alloc::vec::Vec;
 use alloc::sync::Arc;
+use alloc::vec::Vec;
 
-use rustls::client::danger::{ServerCertVerified, ServerCertVerifier, HandshakeSignatureValid};
-use rustls::{SignatureScheme, DigitallySignedStruct, Error, RootCertStore};
-use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
+use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
 use rustls::client::WebPkiServerVerifier;
+use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
+use rustls::{DigitallySignedStruct, Error, RootCertStore, SignatureScheme};
 
 #[derive(Debug)]
 pub struct NoServerCertVerifier;
@@ -16,7 +16,7 @@ impl ServerCertVerifier for NoServerCertVerifier {
         _intermediates: &[CertificateDer<'_>],
         _server_name: &ServerName<'_>,
         _ocsp_response: &[u8],
-        _now: UnixTime
+        _now: UnixTime,
     ) -> Result<ServerCertVerified, Error> {
         Ok(ServerCertVerified::assertion())
     }
@@ -25,7 +25,7 @@ impl ServerCertVerifier for NoServerCertVerifier {
         &self,
         _message: &[u8],
         _cert: &CertificateDer<'_>,
-        _dss: &DigitallySignedStruct
+        _dss: &DigitallySignedStruct,
     ) -> Result<HandshakeSignatureValid, Error> {
         Ok(HandshakeSignatureValid::assertion())
     }
@@ -34,12 +34,14 @@ impl ServerCertVerifier for NoServerCertVerifier {
         &self,
         _message: &[u8],
         _cert: &CertificateDer<'_>,
-        _dss: &DigitallySignedStruct
+        _dss: &DigitallySignedStruct,
     ) -> Result<HandshakeSignatureValid, Error> {
         Ok(HandshakeSignatureValid::assertion())
     }
 
     fn supported_verify_schemes(&self) -> Vec<SignatureScheme> {
-        rustls::crypto::ring::default_provider().signature_verification_algorithms.supported_schemes()
+        rustls::crypto::ring::default_provider()
+            .signature_verification_algorithms
+            .supported_schemes()
     }
 }

@@ -12,9 +12,9 @@ use sel4_async_network::{ManagedInterface, TcpSocketError};
 use sel4_async_network_mbedtls::{
     get_mozilla_ca_list, insecure_dummy_rng, DbgCallbackBuilder, TcpSocketWrapper,
 };
+use sel4_async_network_rustls::NoServerCertVerifier;
 use sel4_async_time::Instant;
 use sel4_async_time::TimerManager;
-use sel4_async_network_rustls::NoServerCertVerifier;
 
 use rustls::version::{TLS12, TLS13};
 use rustls::{
@@ -66,7 +66,7 @@ pub async fn run(
 
     let mut dangerous_config = ClientConfig::dangerous(&mut config);
     dangerous_config.set_certificate_verifier(Arc::new(NoServerCertVerifier));
-    
+
     let config = Arc::new(config);
     let connector = sel4_async_network_rustls::TcpConnector::from(config);
     let mut conn = connector

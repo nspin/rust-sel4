@@ -1,6 +1,6 @@
+use core::future;
 use core::pin::Pin;
 use core::task::Poll;
-use core::future;
 use core::{mem, task};
 
 use alloc::{sync::Arc, vec::Vec};
@@ -428,7 +428,10 @@ where
         Poll::Ready(Ok(()))
     }
 
-    pub fn poll_close(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Result<(), Error<IO::Error>>> {
+    pub fn poll_close(
+        mut self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+    ) -> Poll<Result<(), Error<IO::Error>>> {
         // XXX send out close_notify here?
         // Pin::new(&mut self.io).poll_close(cx)
         Poll::Ready(Ok(()))
