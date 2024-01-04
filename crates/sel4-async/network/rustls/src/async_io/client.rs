@@ -15,7 +15,7 @@ use rustls::ClientConfig;
 
 use super::{
     utils::{poll_read, poll_write, try_or_resize_and_retry, Buffer, WriteCursor},
-    AsyncIo, Error,
+    AsyncIO, Error,
 };
 
 pub struct TcpConnector {
@@ -30,7 +30,7 @@ impl TcpConnector {
         // FIXME should not return an error but instead hoist it into a `Connect` variant
     ) -> Result<Connect<IO>, Error<IO::Error>>
     where
-        IO: AsyncIo,
+        IO: AsyncIO,
     {
         let conn = UnbufferedClientConnection::new(self.config.clone(), domain)?;
 
@@ -76,7 +76,7 @@ impl<IO> ConnectInner<IO> {
 
 impl<IO> Future for Connect<IO>
 where
-    IO: Unpin + AsyncIo,
+    IO: Unpin + AsyncIO,
 {
     type Output = Result<TlsStream<IO>, Error<IO::Error>>;
 
@@ -144,7 +144,7 @@ struct Updates {
     transmit_complete: bool,
 }
 
-impl<IO: AsyncIo> ConnectInner<IO> {
+impl<IO: AsyncIO> ConnectInner<IO> {
     fn advance(&mut self, updates: &mut Updates) -> Result<Action, Error<IO::Error>> {
         log::trace!("incoming buffer has {}B of data", self.incoming.len());
 
@@ -206,9 +206,9 @@ pub struct TlsStream<IO> {
     outgoing: Buffer,
 }
 
-impl<IO> AsyncIo for TlsStream<IO>
+impl<IO> AsyncIO for TlsStream<IO>
 where
-    IO: AsyncIo + Unpin,
+    IO: AsyncIO + Unpin,
 {
     type Error = Error<IO::Error>;
 
@@ -323,7 +323,7 @@ where
 
 impl<IO> TlsStream<IO>
 where
-    IO: AsyncIo + Unpin,
+    IO: AsyncIO + Unpin,
 {
     pub async fn flush(&mut self) -> Result<(), Error<IO::Error>> {
         future::poll_fn(|cx| self.poll_flush(cx)).await

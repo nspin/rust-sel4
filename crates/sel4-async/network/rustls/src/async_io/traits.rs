@@ -6,7 +6,7 @@ use futures::future;
 // TODO remove after bumping rust toolchain
 use async_trait::async_trait;
 
-pub trait AsyncIo {
+pub trait AsyncIO {
     type Error;
 
     fn poll_recv(
@@ -35,7 +35,7 @@ impl<E> From<E> for ClosedError<E> {
 }
 
 #[async_trait(?Send)]
-pub trait AsyncIoExt: AsyncIo {
+pub trait AsyncIOExt: AsyncIO {
     async fn recv(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
         future::poll_fn(|cx| self.poll_recv(cx, buf)).await
     }
@@ -71,4 +71,4 @@ pub trait AsyncIoExt: AsyncIo {
     }
 }
 
-impl<T: AsyncIo + ?Sized> AsyncIoExt for T {}
+impl<T: AsyncIO + ?Sized> AsyncIOExt for T {}

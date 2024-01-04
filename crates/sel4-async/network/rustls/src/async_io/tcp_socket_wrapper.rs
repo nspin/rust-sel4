@@ -2,7 +2,7 @@ use core::task::{Context, Poll};
 
 use sel4_async_network::{TcpSocket, TcpSocketError};
 
-use super::AsyncIo;
+use super::AsyncIO;
 
 pub struct TcpSocketWrapper {
     inner: TcpSocket,
@@ -22,7 +22,7 @@ impl TcpSocketWrapper {
     }
 }
 
-impl AsyncIo for TcpSocketWrapper {
+impl AsyncIO for TcpSocketWrapper {
     type Error = TcpSocketError;
 
     fn poll_recv(

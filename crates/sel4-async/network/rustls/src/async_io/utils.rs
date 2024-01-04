@@ -4,7 +4,7 @@ use core::task::{self, Poll};
 
 use rustls::unbuffered::InsufficientSizeError;
 
-use super::{AsyncIo, Error};
+use super::{AsyncIO, Error};
 
 pub(crate) struct WriteCursor<'a> {
     buf: &'a mut [u8],
@@ -133,7 +133,7 @@ pub(crate) fn poll_read<IO>(
     cx: &mut task::Context,
 ) -> Result<bool, Error<IO::Error>>
 where
-    IO: AsyncIo + Unpin,
+    IO: AsyncIO + Unpin,
 {
     if incoming.unfilled().is_empty() {
         // XXX should this be user configurable?
@@ -162,7 +162,7 @@ pub(crate) fn poll_write<IO>(
     cx: &mut task::Context,
 ) -> Result<bool, Error<IO::Error>>
 where
-    IO: AsyncIo + Unpin,
+    IO: AsyncIO + Unpin,
 {
     let pending = match Pin::new(io).poll_send(cx, outgoing.filled()) {
         Poll::Ready(res) => {

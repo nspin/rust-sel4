@@ -11,7 +11,7 @@ use smoltcp::wire::{DnsQueryType, IpAddress};
 
 use sel4_async_network::ManagedInterface;
 use sel4_async_network_rustls::async_io::client::TcpConnector;
-use sel4_async_network_rustls::async_io::{AsyncIoExt, TcpSocketWrapper};
+use sel4_async_network_rustls::async_io::{AsyncIOExt, TcpSocketWrapper};
 use sel4_async_network_rustls::{GetCurrentTimeImpl, NoServerCertVerifier};
 use sel4_async_time::{Instant, TimerManager};
 

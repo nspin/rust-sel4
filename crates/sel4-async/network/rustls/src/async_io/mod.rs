@@ -7,4 +7,4 @@ pub mod client;
 
 pub use error::Error;
 pub use tcp_socket_wrapper::TcpSocketWrapper;
-pub use traits::{AsyncIo, AsyncIoExt};
+pub use traits::{AsyncIO, AsyncIOExt};
