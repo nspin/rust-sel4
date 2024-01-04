@@ -56,7 +56,7 @@ pub async fn run_server<
 
     seed_insecure_dummy_rng(0);
 
-    // client_test::run(now_fn, network_ctx.clone(), timers_ctx.clone()).await;
+    client_test::run(now_fn, network_ctx.clone(), timers_ctx.clone()).await;
 
     let use_socket_for_http_closure: SocketUser<T> = Box::new({
         move |server, socket| {
