@@ -129,6 +129,7 @@ let
   pds = {
     http-server = mkPD {
       rootCrate = crates.microkit-http-server-example-server;
+      release = true;
       # layers = [
       #   crateUtils.defaultIntermediateLayer
       #   {
