@@ -28,7 +28,7 @@ pub async fn run(
     timers_ctx: TimerManager,
 ) {
     timers_ctx
-        .sleep_until((now_fn()) + Duration::from_secs(1))
+        .sleep_until(now_fn() + Duration::from_secs(1))
         .await;
 
     let query = if DOMAIN == "localhost" {

@@ -20,7 +20,7 @@ impl<F> fmt::Debug for GetCurrentTimeImpl<F> {
 
 impl<F: Send + Sync + Fn() -> Instant> GetCurrentTimeImpl<F> {
     pub fn new(now_global: UnixTime, now_fn: F) -> Self {
-        let start_local = (now_fn)();
+        let start_local = now_fn();
         Self {
             start_global: now_global,
             start_local,
