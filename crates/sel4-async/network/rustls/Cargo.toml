@@ -34,3 +34,7 @@ git = "https://github.com/coliasgroup/rustls.git"
 rev = "c315801aa0c1e9c765b27106b3969dd458995cc7"
 default-features = false
 features = ["logging", "ring", "tls12"]
+
+[dependencies.sel4-newlib]
+path = "../../../sel4-newlib"
+features = ["nosys", "_write", "sel4-panicking-env"]

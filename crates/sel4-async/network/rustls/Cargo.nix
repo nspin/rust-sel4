@@ -16,9 +16,18 @@ mk {
     inherit (versions) log;
     rustls = rustlsWith [] // (localCrates.rustls or {});
     ring = ringWith [] // (localCrates.ring or {}); # just to force "less-safe-getrandom-custom-or-rdrand" feature
+    sel4-newlib = localCrates.sel4-newlib // {
+      features = [
+        "nosys"
+        "_write"
+        "sel4-panicking-env"
+      ];
+    };
     getrandom = {
       version = versions.getrandom;
-      features = [ "custom" ];
+      features = [
+        "custom"
+      ];
     };
     rand = {
       version = versions.rand;
