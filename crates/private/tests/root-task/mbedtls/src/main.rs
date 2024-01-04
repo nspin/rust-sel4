@@ -31,21 +31,9 @@ fn main(_: &sel4::BootInfo) -> ! {
     unreachable!()
 }
 
+sel4_newlib::declare_sbrk_with_static_heap!(HEAP_SIZE);
+
 fn run_tests() {
-    {
-        use sel4_newlib::*;
-
-        set_static_heap_for_sbrk({
-            static HEAP: StaticHeap<{ HEAP_SIZE }> = StaticHeap::new();
-            &HEAP
-        });
-
-        let mut impls = Implementations::default();
-        impls._sbrk = Some(sbrk_with_static_heap);
-        impls._write = Some(write_with_debug_put_char);
-        set_implementations(impls)
-    }
-
     unsafe {
         mbedtls::self_test::enable(rand, Some(log));
     }

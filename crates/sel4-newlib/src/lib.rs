@@ -13,15 +13,12 @@
 #![feature(sync_unsafe_cell)]
 
 #[allow(unused_imports)]
-use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::ffi::{c_char, c_int, c_uint};
 
-pub mod heap;
+mod errno;
+mod heap;
 
-mod errno {
-    use super::*;
-
-    pub(crate) const ENOENT: c_int = 2;
-}
+pub use heap::StaticHeap;
 
 extern "C" {
     #[link_name = "srand"]
@@ -70,7 +67,8 @@ mod impl_write {
                 {
                     log::warn!("_write({}, {:#x?}, {})", file, ptr, len);
                 }
-                -errno::ENOENT
+                errno::set_errno(errno::values::ENOENT);
+                -1
             }
         }
     }
