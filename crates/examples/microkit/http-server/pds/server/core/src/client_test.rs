@@ -63,14 +63,21 @@ pub async fn run(
         .await
         .unwrap();
 
+    log::debug!("XXXXX handshake done");
+
     conn.send_all(b"GET / HTTP/1.1\r\n").await.unwrap();
+    log::debug!("XXXXX a1");
     conn.send_all(b"Host: example.com\r\n").await.unwrap();
+    log::debug!("XXXXX a2");
     conn.send_all(b"\r\n").await.unwrap();
+    log::debug!("XXXXX a3");
     conn.flush().await.unwrap();
+    log::debug!("XXXXX b");
 
     let mut buf = vec![0; 4096];
     loop {
         let n = conn.recv(&mut buf).await.unwrap();
+        log::debug!("XXXXX c1 {}", n);
         if n == 0 {
             break;
         }

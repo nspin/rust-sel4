@@ -178,7 +178,8 @@ where
 {
     if incoming.unfilled().is_empty() {
         // XXX should this be user configurable?
-        incoming.reserve(1024);
+        // incoming.reserve(1024);
+        incoming.reserve(1024 * 256);
     }
 
     let would_block = match Pin::new(io).poll_recv(cx, incoming.unfilled()) {
