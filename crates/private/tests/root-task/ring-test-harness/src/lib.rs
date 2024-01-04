@@ -27,16 +27,6 @@ fn main(_bootinfo: &sel4::BootInfo) -> ! {
 
 fn init() {
     dummy_custom_getrandom::seed_dummy_custom_getrandom(0);
-    init_newlib();
-}
-
-fn init_newlib() {
-    use sel4_newlib::*;
-
-    set_implementations(Implementations {
-        _write: Some(write_with_debug_put_char),
-        ..Default::default()
-    })
 }
 
 mod dummy_custom_getrandom {

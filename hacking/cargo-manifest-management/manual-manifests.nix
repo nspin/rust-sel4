@@ -11,6 +11,6 @@ let
   relativeToTmpSrc = relativePath: relativeToWorkspaceRoot "tmp/src/${relativePath}";
 
 in {
-  # ring = relativeToTmpSrc "ring";
+  ring = relativeToTmpSrc "ring";
   # rustls = relativeToTmpSrc "rustls/rustls";
 }
