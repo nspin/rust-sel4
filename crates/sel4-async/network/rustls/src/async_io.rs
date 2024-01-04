@@ -357,6 +357,8 @@ where
                             discard: new_discard,
                             payload,
                         } = res?;
+                        // log::debug!("payload: {:x?}", payload);
+                        log::debug!("payload: {}", core::str::from_utf8(payload).unwrap());
                         discard += new_discard;
 
                         let remainder = cursor.append(payload);

@@ -85,7 +85,9 @@ pub async fn run(
     conn.flush().await.unwrap();
     log::debug!("XXXXX b");
 
-    let mut buf = vec![0; 4096];
+    const BUF_SIZE: usize = 1024 * 64;
+
+    let mut buf = vec![0; BUF_SIZE];
     loop {
         let n = conn.recv(&mut buf).await.unwrap();
         log::debug!("XXXXX c1 {}", n);
