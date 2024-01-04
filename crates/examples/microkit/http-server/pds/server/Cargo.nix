@@ -21,7 +21,9 @@ mk {
       ];
     };
 
-    smoltcp = smoltcpWith [];
+    smoltcp = smoltcpWith [
+      "log"
+    ];
 
     async-unsync = { version = versions.async-unsync; default-features = false; };
 

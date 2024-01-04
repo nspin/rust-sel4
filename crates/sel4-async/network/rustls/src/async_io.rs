@@ -1,5 +1,6 @@
 use core::pin::Pin;
 use core::task::Poll;
+use core::future;
 use core::{mem, task};
 
 use alloc::{sync::Arc, vec::Vec};
@@ -131,7 +132,6 @@ where
 
                 Action::Read => {
                     let mut incoming = mem::take(&mut inner.incoming);
-
                     let would_block = poll_read(&mut inner.io, &mut incoming, cx)?;
 
                     inner.incoming = incoming;
@@ -385,6 +385,40 @@ where
         }
 
         Poll::Ready(Ok(cursor.into_used()))
+    }
+}
+
+impl<IO> TlsStream<IO>
+where
+    IO: AsyncIo + Unpin,
+{
+    pub async fn flush(&mut self) -> Result<(), Error<IO::Error>> {
+        future::poll_fn(|cx| self.poll_flush(cx)).await
+    }
+
+    pub fn poll_flush(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Error<IO::Error>>> {
+        let mut outgoing = mem::take(&mut self.outgoing);
+
+        // write buffered TLS data into socket
+        while !outgoing.is_empty() {
+            let would_block = poll_write(&mut self.io, &mut outgoing, cx)?;
+
+            if would_block {
+                self.outgoing = outgoing;
+                return Poll::Pending;
+            }
+        }
+
+        self.outgoing = outgoing;
+
+        // Pin::new(&mut self.io).poll_flush(cx)
+        Poll::Ready(Ok(()))
+    }
+
+    pub fn poll_close(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Result<(), Error<IO::Error>>> {
+        // XXX send out close_notify here?
+        // Pin::new(&mut self.io).poll_close(cx)
+        Poll::Ready(Ok(()))
     }
 }
 
