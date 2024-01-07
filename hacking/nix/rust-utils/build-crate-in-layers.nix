@@ -6,6 +6,7 @@
 
 { lib, stdenv, buildPackages
 , linkFarm, emptyDirectory
+, zstd
 , crateUtils
 , vendorLockfile, pruneLockfile
 , defaultRustToolchain, defaultRustTargetInfo
@@ -95,7 +96,7 @@ let
 
   baseArgs = {
     depsBuildBuild = [ buildPackages.stdenv.cc ];
-    nativeBuildInputs = [ rustToolchain ];
+    nativeBuildInputs = [ rustToolchain zstd ];
   } // lib.optionalAttrs (rustTargetInfo.path != null) {
     RUST_TARGET_PATH = rustTargetInfo.path;
   };
@@ -157,7 +158,7 @@ let
 
   f = accumulatedLayers:
     if lib.length accumulatedLayers == 0
-    then emptyDirectory
+    then null
     else
       let
         layer = lib.head accumulatedLayers;
@@ -182,25 +183,30 @@ let
         runClippyThisLayer = runClippy && layer.reals != {};
       in
         modifications.modifyDerivation (stdenv.mkDerivation (baseArgs // {
-          name = "${rootCrate.name}-intermediate";
+          name = "${rootCrate.name}-intermediate.tar.zst";
 
           phases = [ "buildPhase" ];
 
           buildPhase = ''
             runHook preBuild
 
-            cp -r --preserve=timestamps ${prev} $out
-            chmod -R +w $out
+            target_dir=$(realpath ./target)
+            mkdir -p $target_dir
+            ${lib.optionalString (prev != null) ''
+              tar -C $target_dir --zstd -xf ${prev}
+            ''}
 
             ${mkCargoInvocation runClippyThisLayer (flags ++ [
               "--config" "${config}"
               "--manifest-path" "${workspace}/Cargo.toml"
-              "--target-dir" "$out"
+              "--target-dir" "$target_dir"
             ]) []}
 
-            ${lib.optionalString test (lib.concatStringsSep " " (findTestsCommandPrefix "$out" ++ [
+            ${lib.optionalString test (lib.concatStringsSep " " (findTestsCommandPrefix "$target_dir" ++ [
               "-delete"
             ]))}
+
+            tar -C $target_dir --zstd -cf $out .
 
             runHook postBuild
           '';
@@ -235,8 +241,10 @@ in let
       runHook preBuild
 
       target_dir=$(realpath ./target)
-      cp -r --preserve=timestamps ${lastIntermediateLayer} $target_dir
-      chmod -R +w $target_dir
+      mkdir -p $target_dir
+      ${lib.optionalString (lastIntermediateLayer != null) ''
+        tar -C $target_dir --zstd -xf ${lastIntermediateLayer}
+      ''}
 
       ${mkCargoInvocation runClippy (flags ++ [
         "--config" "${config}"
