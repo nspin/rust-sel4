@@ -19,8 +19,8 @@ let
   superVendoredLockfile = vendorLockfile { lockfile = superLockfile; };
 
   runClippyDefault =
-    # true
-    false
+    true
+    # false
   ;
 
 in
