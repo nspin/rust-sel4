@@ -87,31 +87,73 @@ sel4_panicking_env::register_debug_put_char!(sel4::debug_put_char);
 
 #[macro_export]
 macro_rules! declare_root_task {
-    {
-        main = $main:expr $(,)?
-    } => {
-        $crate::_private::declare_root_task! {
-            main = $main,
-            stack_size = $crate::_private::DEFAULT_STACK_SIZE,
-        }
+    (
+        $($k:ident = $v:expr),*$(,)?
+    ) => {
+        $crate::_private::declare_root_task!(
+            @__ensure_stack_size_present
+            $($k = $v,)*
+        );
     };
-    {
+    (
+        @__ensure_stack_size_present
+        $($k0:ident = $v0:expr,)*
+        stack_size = $stack_size:expr,
+        $($k1:ident = $v1:expr,)*
+    ) => {
+        $crate::_private::declare_root_task!(
+            @__emit_declarations
+            $($k0 = $v0,)*
+            stack_size = $stack_size:expr,
+            $($k1 = $v1,)*
+        );
+    };
+    (
+        @__ensure_stack_size_present
+        $($k:ident = $v:expr,)*
+    ) => {
+        $crate::_private::declare_root_task!(
+            @__emit_declarations
+            $($k = $v,)*
+            stack_size = $crate::_private::DEFAULT_STACK_SIZE,
+        );
+    };
+    (
+        @__emit_declarations
+    ) => {
+    };
+    (
+        @__emit_declarations
         main = $main:expr,
-        stack_size = $stack_size:expr $(,)?
-    } => {
+        $($k:ident = $v:expr,)*
+    ) => {
+        $crate::_private::declare_root_task!(
+            @__emit_declarations
+            $($k = $v,)*
+        );
         $crate::_private::declare_main!($main);
+    };
+    (
+        @__emit_declarations
+        stack_size = $stack_size:expr,
+        $($k:ident = $v:expr,)*
+    ) => {
+        $crate::_private::declare_root_task!(
+            @__emit_declarations
+            $($k = $v,)*
+        );
         $crate::_private::declare_stack!($stack_size);
     };
-    {
-        main = $main:expr,
-        $(stack_size = $stack_size:expr,)?
-        heap_size = $heap_size:expr $(,)?
-    } => {
+    (
+        @__emit_declarations
+        heap_size = $heap_size:expr,
+        $($k:ident = $v:expr,)*
+    ) => {
+        $crate::_private::declare_root_task!(
+            @__emit_declarations
+            $($k = $v,)*
+        );
         $crate::_private::declare_heap!($heap_size);
-        $crate::_private::declare_root_task! {
-            main = $main,
-            $(stack_size = $stack_size,)?
-        }
     };
 }
 
