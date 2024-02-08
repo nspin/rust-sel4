@@ -34,6 +34,7 @@ impl<T: CapType> Slot<T> {
         }
     }
 
+    #[allow(dead_code)]
     const fn index(&self) -> usize {
         self.index
     }
