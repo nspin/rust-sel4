@@ -34,8 +34,7 @@ impl<T: CapType> Slot<T> {
         }
     }
 
-    #[allow(dead_code)]
-    const fn index(&self) -> usize {
+    pub const fn index(&self) -> usize {
         self.index
     }
 
@@ -71,13 +70,13 @@ impl<T: CapType> SlotRegion<T> {
         Self::from_range(word_into_usize(sys.start)..word_into_usize(sys.end))
     }
 
-    // pub(crate) fn start(&self) -> Slot {
-    //     Slot::from_index(self.range.start)
-    // }
+    pub const fn start(&self) -> usize {
+        self.range.start
+    }
 
-    // pub(crate) fn end(&self) -> Slot {
-    //     Slot::from_index(self.range.end)
-    // }
+    pub const fn end(&self) -> usize {
+        self.range.end
+    }
 
     pub fn len(&self) -> usize {
         self.range.len()
@@ -89,50 +88,51 @@ impl<T: CapType> SlotRegion<T> {
     }
 }
 
-macro_rules! f {
-    [
-        $(
-            $(#[$outer:meta])*
-            ($name:ident, $cap_type:ident, $sys_name:ident),
-        )*
-    ] => {
-        pub mod slots {
-            use super::{sel4_cfg, sys, cap_type, Slot};
+pub mod slots {
+    use super::{cap_type, sel4_cfg, sys, Slot};
 
+    macro_rules! mk {
+        [
+            $(
+                $(#[$outer:meta])*
+                ($name:ident, $cap_type:ident, $sys_name:ident),
+            )*
+        ] => {
             $(
                 $(#[$outer])*
                 pub const $name: Slot<cap_type::$cap_type> = Slot::from_sys(sys::seL4_RootCNodeCapSlots::$sys_name);
             )*
-        }
-    };
+        };
+    }
+
+    mk![
+        (NULL, Null, seL4_CapNull),
+        (TCB, TCB, seL4_CapInitThreadTCB),
+        (CNODE, CNode, seL4_CapInitThreadCNode),
+        (VSPACE, VSpace, seL4_CapInitThreadVSpace),
+        (IRQ_CONTROL, IRQControl, seL4_CapIRQControl),
+        (ASID_CONTROL, ASIDControl, seL4_CapASIDControl),
+        (ASID_POOL, ASIDPool, seL4_CapInitThreadASIDPool),
+        #[cfg(any())] // TODO
+        (IO_PORT_CONTROL, Null, seL4_CapIOPortControl),
+        #[cfg(any())] // TODO
+        (IO_SPACE, Null, seL4_CapIOSpace),
+        (BOOT_INFO_FRAME, Granule, seL4_CapBootInfoFrame),
+        (IPC_BUFFER, Granule, seL4_CapInitThreadIPCBuffer),
+        #[cfg(any())] // TODO
+        (DOMAIN, Null, seL4_CapDomain),
+        #[cfg(any())] // TODO
+        (SMMU_SID_CONTROL, Null, seL4_CapSMMUSIDControl),
+        #[cfg(any())] // TODO
+        (SMMU_CB_CONTROL, Null, seL4_CapSMMUCBControl),
+        #[sel4_cfg(KERNEL_MCS)]
+        (SC, SchedControl, seL4_CapInitThreadSC),
+        #[cfg(any())] // TODO
+        (SMC, Null, seL4_CapSMC),
+    ];
 }
 
-f![
-    (NULL, Null, seL4_CapNull),
-    (TCB, TCB, seL4_CapInitThreadTCB),
-    (CNODE, CNode, seL4_CapInitThreadCNode),
-    (VSPACE, VSpace, seL4_CapInitThreadVSpace),
-    (IRQ_CONTROL, IRQControl, seL4_CapIRQControl),
-    (ASID_CONTROL, ASIDControl, seL4_CapASIDControl),
-    (ASID_POOL, ASIDPool, seL4_CapInitThreadASIDPool),
-    #[cfg(any())] // TODO
-    (IO_PORT_CONTROL, Null, seL4_CapIOPortControl),
-    #[cfg(any())] // TODO
-    (IO_SPACE, Null, seL4_CapIOSpace),
-    (BOOT_INFO_FRAME, Granule, seL4_CapBootInfoFrame),
-    (IPC_BUFFER, Granule, seL4_CapInitThreadIPCBuffer),
-    #[cfg(any())] // TODO
-    (DOMAIN, Null, seL4_CapDomain),
-    #[cfg(any())] // TODO
-    (SMMU_SID_CONTROL, Null, seL4_CapSMMUSIDControl),
-    #[cfg(any())] // TODO
-    (SMMU_CB_CONTROL, Null, seL4_CapSMMUCBControl),
-    #[sel4_cfg(KERNEL_MCS)]
-    (SC, SchedControl, seL4_CapInitThreadSC),
-    #[cfg(any())] // TODO
-    (SMC, Null, seL4_CapSMC),
-];
-
+// NOTE(rustc_wishlist) use ! once #![never_type] is stabilized
 pub fn suspend_self<T>() -> T {
     slots::TCB.local_cptr().tcb_suspend().unwrap();
 
