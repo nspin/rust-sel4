@@ -27,7 +27,7 @@ impl<T: CapType> Slot<T> {
         Self::from_index(u32_into_usize(slot))
     }
 
-    const fn from_index(index: usize) -> Self {
+    pub const fn from_index(index: usize) -> Self {
         Self {
             index,
             _phantom: PhantomData,
