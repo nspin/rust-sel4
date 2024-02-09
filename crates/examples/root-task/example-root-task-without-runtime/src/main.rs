@@ -16,6 +16,7 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> sel4::Result<Never> {
 
     sel4::debug_println!("p {:#?}", bootinfo.ipc_buffer());
     let mut ipc_buffer = unsafe { bootinfo.ipc_buffer().as_mut().unwrap() };
+    // let mut ipc_buffer = unsafe { &mut *bootinfo.ipc_buffer() };
 
     let blueprint = sel4::ObjectBlueprint::Notification;
 
@@ -108,7 +109,8 @@ mod stack {
 
     unsafe impl Sync for StackTop {}
 
-    const STACK_SIZE: usize = 0x4000 * 16;
+    // const STACK_SIZE: usize = 0x4000 * 16;
+    const STACK_SIZE: usize = 0x4000 * 64;
 
     static STACK: Stack<STACK_SIZE> = Stack::new();
 

@@ -64,11 +64,11 @@ impl<U: InvocationContext> InvocationContext for &mut U {
 //     let a = <&mut &mut i32 as BorrowMut<i32>>::borrow_mut(&mut z);
 // }
 
-impl InvocationContext for &RefCell<IPCBuffer> {
-    fn invoke<T>(self, f: impl FnOnce(&mut IPCBuffer) -> T) -> T {
-        f(&mut self.borrow_mut())
-    }
-}
+// impl InvocationContext for &RefCell<IPCBuffer> {
+//     fn invoke<T>(self, f: impl FnOnce(&mut IPCBuffer) -> T) -> T {
+//         f(&mut self.borrow_mut())
+//     }
+// }
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "state")] {
