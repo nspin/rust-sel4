@@ -340,7 +340,8 @@ in rec {
           rustTargetInfo = seL4RustTargetInfoWithConfig { minimal = true; };
         };
         extraPlatformArgs = lib.optionalAttrs canSimulate {
-          canAutomateSimply = true;
+          # canAutomateSimply = true;
+          canAutomateSimply = false;
         };
       });
     };

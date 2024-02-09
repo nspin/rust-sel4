@@ -14,6 +14,7 @@ use core::arch::global_asm;
 fn main(bootinfo: &sel4::BootInfoPtr) -> sel4::Result<Never> {
     sel4::debug_println!("Hello, World!");
 
+    sel4::debug_println!("p {:#?}", bootinfo.ipc_buffer());
     let mut ipc_buffer = unsafe { bootinfo.ipc_buffer().as_mut().unwrap() };
 
     let blueprint = sel4::ObjectBlueprint::Notification;
@@ -34,6 +35,7 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> sel4::Result<Never> {
     let badged_notification_slot = empty_slots.next().unwrap();
 
     let cnode = sel4::init_thread::slots::CNODE.local_cptr();
+    sel4::debug_println!("x");
 
     untyped.with(&mut ipc_buffer).untyped_retype(
         &blueprint,
@@ -41,6 +43,7 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> sel4::Result<Never> {
         unbadged_notification_slot.index(),
         1,
     )?;
+    sel4::debug_println!("y");
 
     let badge = 0x1337;
 
@@ -105,7 +108,7 @@ mod stack {
 
     unsafe impl Sync for StackTop {}
 
-    const STACK_SIZE: usize = 0x4000;
+    const STACK_SIZE: usize = 0x4000 * 16;
 
     static STACK: Stack<STACK_SIZE> = Stack::new();
 
