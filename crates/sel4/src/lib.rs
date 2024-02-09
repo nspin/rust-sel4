@@ -81,7 +81,7 @@ pub use cptr::{
 };
 pub use error::{Error, Result};
 pub use invocation_context::{
-    ExplicitInvocationContext, InvocationContext, NoExplicitInvocationContext, NoInvocationContext,
+    InvocationContext, NoExplicitInvocationContext, NoInvocationContext,
 };
 pub use ipc_buffer::IPCBuffer;
 pub use message_info::{MessageInfo, MessageInfoBuilder};
