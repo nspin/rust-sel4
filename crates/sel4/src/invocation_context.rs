@@ -26,11 +26,43 @@ impl NoInvocationContext {
 /// The trivial of a strategy for discovering the current thread's IPC buffer.
 pub type ExplicitInvocationContext<'a> = &'a mut IPCBuffer;
 
-impl<'a> InvocationContext for ExplicitInvocationContext<'a> {
+// impl<'a> InvocationContext for ExplicitInvocationContext<'a> {
+//     fn invoke<T>(self, f: impl FnOnce(&mut IPCBuffer) -> T) -> T {
+//         f(self)
+//     }
+// }
+
+impl InvocationContext for &mut IPCBuffer {
     fn invoke<T>(self, f: impl FnOnce(&mut IPCBuffer) -> T) -> T {
         f(self)
     }
 }
+
+// impl<'a, 'b> InvocationContext for &'b mut ExplicitInvocationContext<'a> {
+//     fn invoke<T>(self, f: impl FnOnce(&mut IPCBuffer) -> T) -> T {
+//         f(self)
+//     }
+// }
+
+use core::borrow::BorrowMut;
+
+// impl<U: BorrowMut<IPCBuffer>> InvocationContext for U {
+//     fn invoke<T>(mut self, f: impl FnOnce(&mut IPCBuffer) -> T) -> T {
+//         f(self.borrow_mut())
+//     }
+// }
+
+impl<U: InvocationContext> InvocationContext for &mut U {
+    fn invoke<T>(mut self, f: impl FnOnce(&mut IPCBuffer) -> T) -> T {
+        self.invoke(f)
+    }
+}
+
+// fn x() {
+//     let y: i32 = 1;
+//     let z: &mut &mut i32 = &mut &mut y;
+//     let a = <&mut &mut i32 as BorrowMut<i32>>::borrow_mut(&mut z);
+// }
 
 impl InvocationContext for &RefCell<IPCBuffer> {
     fn invoke<T>(self, f: impl FnOnce(&mut IPCBuffer) -> T) -> T {
