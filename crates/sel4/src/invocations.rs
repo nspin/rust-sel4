@@ -27,7 +27,7 @@ pub type Time = u64;
 impl<C: InvocationContext> Untyped<C> {
     /// Corresponds to `seL4_Untyped_Retype`.
     pub fn untyped_retype(
-        self,
+        &mut self,
         blueprint: &ObjectBlueprint,
         dst: &AbsoluteCPtr,
         dst_offset: usize,
@@ -53,7 +53,7 @@ const USER_CONTEXT_MAX_REG_COUNT: usize =
 
 impl<C: InvocationContext> TCB<C> {
     /// Corresponds to `seL4_TCB_ReadRegisters`.
-    pub fn tcb_read_registers(self, suspend: bool, count: Word) -> Result<UserContext> {
+    pub fn tcb_read_registers(&mut self, suspend: bool, count: Word) -> Result<UserContext> {
         let mut regs: UserContext = Default::default();
         let err = self.invoke(|cptr, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_TCB_ReadRegisters(
@@ -67,14 +67,14 @@ impl<C: InvocationContext> TCB<C> {
         Error::or(err, regs)
     }
 
-    pub fn tcb_read_all_registers(self, suspend: bool) -> Result<UserContext> {
+    pub fn tcb_read_all_registers(&mut self, suspend: bool) -> Result<UserContext> {
         self.tcb_read_registers(suspend, USER_CONTEXT_MAX_REG_COUNT.try_into().unwrap())
     }
 
     /// Corresponds to `seL4_TCB_WriteRegisters`.
     // HACK should not be mut
     pub fn tcb_write_registers(
-        self,
+        &mut self,
         resume: bool,
         count: Word,
         regs: &mut UserContext,
@@ -90,19 +90,19 @@ impl<C: InvocationContext> TCB<C> {
         }))
     }
 
-    pub fn tcb_write_all_registers(self, resume: bool, regs: &mut UserContext) -> Result<()> {
+    pub fn tcb_write_all_registers(&mut self, resume: bool, regs: &mut UserContext) -> Result<()> {
         self.tcb_write_registers(resume, USER_CONTEXT_MAX_REG_COUNT.try_into().unwrap(), regs)
     }
 
     /// Corresponds to `seL4_TCB_Resume`.
-    pub fn tcb_resume(self) -> Result<()> {
+    pub fn tcb_resume(&mut self) -> Result<()> {
         Error::wrap(
             self.invoke(|cptr, ipc_buffer| ipc_buffer.inner_mut().seL4_TCB_Resume(cptr.bits())),
         )
     }
 
     /// Corresponds to `seL4_TCB_Suspend`.
-    pub fn tcb_suspend(self) -> Result<()> {
+    pub fn tcb_suspend(&mut self) -> Result<()> {
         Error::wrap(
             self.invoke(|cptr, ipc_buffer| ipc_buffer.inner_mut().seL4_TCB_Suspend(cptr.bits())),
         )
@@ -112,7 +112,7 @@ impl<C: InvocationContext> TCB<C> {
         if #[cfg(KERNEL_MCS)] {
             /// Corresponds to `seL4_TCB_Configure`.
             pub fn tcb_configure(
-                self,
+                &mut self,
                 cspace_root: CNode,
                 cspace_root_data: CNodeCapData,
                 vspace_root: VSpace,
@@ -134,7 +134,7 @@ impl<C: InvocationContext> TCB<C> {
         } else {
             /// Corresponds to `seL4_TCB_Configure`.
             pub fn tcb_configure(
-                self,
+                &mut self,
                 fault_ep: CPtr,
                 cspace_root: CNode,
                 cspace_root_data: CNodeCapData,
@@ -162,7 +162,7 @@ impl<C: InvocationContext> TCB<C> {
         if #[cfg(KERNEL_MCS)] {
             /// Corresponds to `seL4_TCB_SetSchedParams`.
             pub fn tcb_set_sched_params(
-                self,
+                &mut self,
                 authority: TCB,
                 mcp: Word,
                 priority: Word,
@@ -182,7 +182,7 @@ impl<C: InvocationContext> TCB<C> {
             }
         } else {
             /// Corresponds to `seL4_TCB_SetSchedParams`.
-            pub fn tcb_set_sched_params(self, authority: TCB, mcp: Word, priority: Word) -> Result<()> {
+            pub fn tcb_set_sched_params(&mut self, authority: TCB, mcp: Word, priority: Word) -> Result<()> {
                 Error::wrap(self.invoke(|cptr, ipc_buffer| {
                     ipc_buffer.inner_mut().seL4_TCB_SetSchedParams(
                         cptr.bits(),
@@ -196,7 +196,7 @@ impl<C: InvocationContext> TCB<C> {
     }
 
     #[sel4_cfg(KERNEL_MCS)]
-    pub fn tcb_set_timeout_endpoint(self, timeout_endpoint: Endpoint) -> Result<()> {
+    pub fn tcb_set_timeout_endpoint(&mut self, timeout_endpoint: Endpoint) -> Result<()> {
         Error::wrap(self.invoke(|cptr, ipc_buffer| {
             ipc_buffer
                 .inner_mut()
@@ -206,7 +206,7 @@ impl<C: InvocationContext> TCB<C> {
 
     /// Corresponds to `seL4_TCB_SetAffinity`.
     #[sel4_cfg(all(not(KERNEL_MCS), not(MAX_NUM_NODES = "1")))]
-    pub fn tcb_set_affinity(self, affinity: Word) -> Result<()> {
+    pub fn tcb_set_affinity(&mut self, affinity: Word) -> Result<()> {
         Error::wrap(self.invoke(|cptr, ipc_buffer| {
             ipc_buffer
                 .inner_mut()
@@ -215,7 +215,7 @@ impl<C: InvocationContext> TCB<C> {
     }
 
     /// Corresponds to `seL4_TCB_SetTLSBase`.
-    pub fn tcb_set_tls_base(self, tls_base: Word) -> Result<()> {
+    pub fn tcb_set_tls_base(&mut self, tls_base: Word) -> Result<()> {
         Error::wrap(self.invoke(|cptr, ipc_buffer| {
             ipc_buffer
                 .inner_mut()
@@ -224,7 +224,7 @@ impl<C: InvocationContext> TCB<C> {
     }
 
     /// Corresponds to `seL4_TCB_BindNotification`.
-    pub fn tcb_bind_notification(self, notification: Notification) -> Result<()> {
+    pub fn tcb_bind_notification(&mut self, notification: Notification) -> Result<()> {
         Error::wrap(self.invoke(|cptr, ipc_buffer| {
             ipc_buffer
                 .inner_mut()
@@ -261,7 +261,7 @@ impl<C: InvocationContext> SchedControl<C> {
 
 impl<C: InvocationContext> IRQControl<C> {
     /// Corresponds to `seL4_IRQControl_Get`.
-    pub fn irq_control_get(self, irq: Word, dst: &AbsoluteCPtr) -> Result<()> {
+    pub fn irq_control_get(&mut self, irq: Word, dst: &AbsoluteCPtr) -> Result<()> {
         Error::wrap(self.invoke(|cptr, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_IRQControl_Get(
                 cptr.bits(),
@@ -276,14 +276,14 @@ impl<C: InvocationContext> IRQControl<C> {
 
 impl<C: InvocationContext> IRQHandler<C> {
     /// Corresponds to `seL4_IRQHandler_Ack`.
-    pub fn irq_handler_ack(self) -> Result<()> {
+    pub fn irq_handler_ack(&mut self) -> Result<()> {
         Error::wrap(
             self.invoke(|cptr, ipc_buffer| ipc_buffer.inner_mut().seL4_IRQHandler_Ack(cptr.bits())),
         )
     }
 
     /// Corresponds to `seL4_IRQHandler_SetNotification`.
-    pub fn irq_handler_set_notification(self, notification: Notification) -> Result<()> {
+    pub fn irq_handler_set_notification(&mut self, notification: Notification) -> Result<()> {
         Error::wrap(self.invoke(|cptr, ipc_buffer| {
             ipc_buffer
                 .inner_mut()
@@ -292,7 +292,7 @@ impl<C: InvocationContext> IRQHandler<C> {
     }
 
     /// Corresponds to `seL4_IRQHandler_Clear`.
-    pub fn irq_handler_clear(self) -> Result<()> {
+    pub fn irq_handler_clear(&mut self) -> Result<()> {
         Error::wrap(
             self.invoke(|cptr, ipc_buffer| {
                 ipc_buffer.inner_mut().seL4_IRQHandler_Clear(cptr.bits())
@@ -303,7 +303,7 @@ impl<C: InvocationContext> IRQHandler<C> {
 
 impl<C: InvocationContext> AbsoluteCPtr<C> {
     /// Corresponds to `seL4_CNode_Revoke`.
-    pub fn revoke(self) -> Result<()> {
+    pub fn revoke(&mut self) -> Result<()> {
         Error::wrap(self.invoke(|cptr, path, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_CNode_Revoke(
                 cptr.bits(),
@@ -314,7 +314,7 @@ impl<C: InvocationContext> AbsoluteCPtr<C> {
     }
 
     /// Corresponds to `seL4_CNode_Delete`.
-    pub fn delete(self) -> Result<()> {
+    pub fn delete(&mut self) -> Result<()> {
         Error::wrap(self.invoke(|cptr, path, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_CNode_Delete(
                 cptr.bits(),
@@ -325,7 +325,7 @@ impl<C: InvocationContext> AbsoluteCPtr<C> {
     }
 
     /// Corresponds to `seL4_CNode_Copy`.
-    pub fn copy(self, src: &AbsoluteCPtr, rights: CapRights) -> Result<()> {
+    pub fn copy(&mut self, src: &AbsoluteCPtr, rights: CapRights) -> Result<()> {
         Error::wrap(self.invoke(|cptr, path, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_CNode_Copy(
                 cptr.bits(),
@@ -340,7 +340,7 @@ impl<C: InvocationContext> AbsoluteCPtr<C> {
     }
 
     /// Corresponds to `seL4_CNode_Mint`.
-    pub fn mint(self, src: &AbsoluteCPtr, rights: CapRights, badge: Word) -> Result<()> {
+    pub fn mint(&mut self, src: &AbsoluteCPtr, rights: CapRights, badge: Word) -> Result<()> {
         Error::wrap(self.invoke(|cptr, path, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_CNode_Mint(
                 cptr.bits(),
@@ -356,7 +356,7 @@ impl<C: InvocationContext> AbsoluteCPtr<C> {
     }
 
     /// Corresponds to `seL4_CNode_Mutate`.
-    pub fn mutate(self, src: &AbsoluteCPtr, badge: Word) -> Result<()> {
+    pub fn mutate(&mut self, src: &AbsoluteCPtr, badge: Word) -> Result<()> {
         Error::wrap(self.invoke(|cptr, path, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_CNode_Mutate(
                 cptr.bits(),
@@ -372,7 +372,7 @@ impl<C: InvocationContext> AbsoluteCPtr<C> {
 
     /// Corresponds to `seL4_CNode_SaveCaller`.
     #[sel4_cfg(not(KERNEL_MCS))]
-    pub fn save_caller(self) -> Result<()> {
+    pub fn save_caller(&mut self) -> Result<()> {
         Error::wrap(self.invoke(|cptr, path, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_CNode_SaveCaller(
                 cptr.bits(),

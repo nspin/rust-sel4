@@ -100,11 +100,11 @@ pub trait MutexSyncOpsWithNotification {
 
 impl<O: MutexSyncOpsWithNotification> MutexSyncOps for O {
     fn signal(&self) {
-        self.notification().signal()
+        Notification::signal(&mut self.notification())
     }
 
     fn wait(&self) {
-        let _badge = self.notification().wait();
+        let _badge = Notification::wait(&mut self.notification());
     }
 }
 

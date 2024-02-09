@@ -21,7 +21,7 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> sel4::Result<Never> {
         .position(|desc| !desc.is_device() && desc.size_bits() >= blueprint.physical_size_bits())
         .unwrap();
 
-    let untyped = bootinfo.untyped().index(chosen_untyped_ix).local_cptr();
+    let mut untyped = bootinfo.untyped().index(chosen_untyped_ix).local_cptr();
 
     let mut empty_slots = bootinfo
         .empty()
@@ -47,10 +47,10 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> sel4::Result<Never> {
         badge,
     )?;
 
-    let unbadged_notification = unbadged_notification_slot
+    let mut unbadged_notification = unbadged_notification_slot
         .downcast::<sel4::cap_type::Notification>()
         .local_cptr();
-    let badged_notification = badged_notification_slot
+    let mut badged_notification = badged_notification_slot
         .downcast::<sel4::cap_type::Notification>()
         .local_cptr();
 

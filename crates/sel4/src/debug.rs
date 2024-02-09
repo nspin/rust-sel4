@@ -19,7 +19,7 @@ pub fn debug_snapshot() {
 
 impl<C: InvocationContext> TCB<C> {
     /// Corresponds to `seL4_DebugNameThread`.
-    pub fn debug_name(self, name: &[u8]) {
+    pub fn debug_name(&mut self, name: &[u8]) {
         self.invoke(|cptr, ipc_buffer| {
             sys::seL4_DebugNameThread(cptr.bits(), name, ipc_buffer.inner_mut())
         })
@@ -28,7 +28,7 @@ impl<C: InvocationContext> TCB<C> {
 
 impl<T: CapType> LocalCPtr<T> {
     /// Corresponds to `seL4_DebugCapIdentify`.
-    pub fn debug_identify(self) -> u32 {
+    pub fn debug_identify(&mut self) -> u32 {
         sys::seL4_DebugCapIdentify(self.bits())
     }
 }

@@ -19,7 +19,7 @@ use crate::Result;
 pub type CPtrBits = sys::seL4_CPtr;
 
 /// A capability pointer.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct CPtr {
     bits: CPtrBits,
 }
@@ -39,7 +39,7 @@ impl CPtr {
 }
 
 /// A capability pointer with a number of bits to resolve.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct CPtrWithDepth {
     bits: CPtrBits,
     depth: usize,
@@ -84,7 +84,7 @@ impl From<CPtr> for CPtrWithDepth {
 ///   [`NoInvocationContext`](crate::NoInvocationContext), which does not implement
 ///   [`InvocationContext`]. In such cases, the [`with`](LocalCPtr::with) method is used to specify
 ///   an invocation context before the capability is invoked.
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct LocalCPtr<T: CapType, C = NoExplicitInvocationContext> {
     cptr: CPtr,
     invocation_context: C,
@@ -108,7 +108,7 @@ impl<T: CapType, C> LocalCPtr<T, C> {
         }
     }
 
-    pub fn with<C1>(self, context: C1) -> LocalCPtr<T, C1> {
+    pub fn with<C1>(&self, context: C1) -> LocalCPtr<T, C1> {
         LocalCPtr {
             cptr: self.cptr,
             invocation_context: context,
@@ -116,7 +116,7 @@ impl<T: CapType, C> LocalCPtr<T, C> {
         }
     }
 
-    pub fn without_context(self) -> LocalCPtr<T> {
+    pub fn without_context(&self) -> LocalCPtr<T> {
         self.with(NoExplicitInvocationContext::new())
     }
 
@@ -140,9 +140,9 @@ impl<T: CapType> LocalCPtr<T> {
 }
 
 impl<T: CapType, C: InvocationContext> LocalCPtr<T, C> {
-    pub(crate) fn invoke<R>(self, f: impl FnOnce(CPtr, &mut IPCBuffer) -> R) -> R {
+    pub(crate) fn invoke<R>(&mut self, f: impl FnOnce(CPtr, &mut IPCBuffer) -> R) -> R {
         let cptr = self.cptr();
-        self.into_invocation_context()
+        self.invocation_context
             .invoke(|ipc_buffer| f(cptr, ipc_buffer))
     }
 }
@@ -311,6 +311,10 @@ impl<C> AbsoluteCPtr<C> {
         &self.root
     }
 
+    pub fn root_mut(&mut self) -> &mut CNode<C> {
+        &mut self.root
+    }
+
     pub fn into_root(self) -> CNode<C> {
         self.root
     }
@@ -319,22 +323,25 @@ impl<C> AbsoluteCPtr<C> {
         &self.path
     }
 
-    pub fn with<C1>(self, context: C1) -> AbsoluteCPtr<C1> {
-        AbsoluteCPtr {
-            root: self.root.with(context),
-            path: self.path,
-        }
-    }
+    // pub fn with<C1>(&self, context: C1) -> AbsoluteCPtr<C1> {
+    //     AbsoluteCPtr {
+    //         root: self.root.with(context),
+    //         path: self.path,
+    //     }
+    // }
 
-    pub fn without_context(self) -> AbsoluteCPtr {
-        self.with(NoExplicitInvocationContext::new())
-    }
+    // pub fn without_context(&self) -> AbsoluteCPtr {
+    //     self.with(NoExplicitInvocationContext::new())
+    // }
 }
 
 impl<C: InvocationContext> AbsoluteCPtr<C> {
-    pub(crate) fn invoke<R>(self, f: impl FnOnce(CPtr, CPtrWithDepth, &mut IPCBuffer) -> R) -> R {
+    pub(crate) fn invoke<R>(
+        &mut self,
+        f: impl FnOnce(CPtr, CPtrWithDepth, &mut IPCBuffer) -> R,
+    ) -> R {
         let path = *self.path();
-        self.into_root()
+        self.root
             .invoke(|cptr, ipc_buffer| f(cptr, path, ipc_buffer))
     }
 }

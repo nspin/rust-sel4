@@ -299,7 +299,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
         for cover in self.spec().untyped_covers.iter() {
             let parent_obj_id = cover.parent;
             let parent = self.spec().named_object(parent_obj_id);
-            let parent_cptr = self.orig_local_cptr::<cap_type::Untyped>(parent_obj_id);
+            let mut parent_cptr = self.orig_local_cptr::<cap_type::Untyped>(parent_obj_id);
             for child_obj_id in cover.children.clone() {
                 let child = &self.spec().objects[child_obj_id];
                 trace!(
@@ -396,14 +396,14 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
 
         for (obj_id, notification) in irq_notifications.chain(arm_irq_notifications) {
-            let irq_handler = self.orig_local_cptr::<cap_type::IRQHandler>(obj_id);
+            let mut irq_handler = self.orig_local_cptr::<cap_type::IRQHandler>(obj_id);
             if let Some(logical_nfn_cap) = notification {
                 let nfn = match logical_nfn_cap.badge {
                     0 => self.orig_local_cptr(logical_nfn_cap.object),
                     badge => {
                         let orig_cptr = self.orig_relative_cptr(logical_nfn_cap.object);
                         let slot = self.cslot_alloc_or_panic();
-                        let cptr = cslot_to_relative_cptr(slot);
+                        let mut cptr = cslot_to_relative_cptr(slot);
                         cptr.mint(&orig_cptr, CapRights::all(), badge)?;
                         slot.local_cptr().downcast()
                     }
@@ -456,7 +456,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
 
     fn fill_frame<U: SizedFrameType>(
         &self,
-        frame: LocalCPtr<U>,
+        mut frame: LocalCPtr<U>,
         fill: &[FillEntry<D>],
     ) -> Result<()> {
         frame.frame_map(
@@ -578,7 +578,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
         debug!("Initializing TCBs");
 
         for (obj_id, obj) in self.spec().filter_objects::<&object::TCB>() {
-            let tcb = self.orig_local_cptr::<cap_type::TCB>(obj_id);
+            let mut tcb = self.orig_local_cptr::<cap_type::TCB>(obj_id);
 
             if let Some(bound_notification) = obj.bound_notification() {
                 let bound_notification =
@@ -589,7 +589,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
             sel4::sel4_cfg_if! {
                 if #[cfg(all(ARCH_AARCH64, ARM_HYPERVISOR_SUPPORT))] {
                     if let Some(vcpu) = obj.vcpu() {
-                        let vcpu = self.orig_local_cptr::<cap_type::VCPU>(vcpu.object);
+                        let mut vcpu = self.orig_local_cptr::<cap_type::VCPU>(vcpu.object);
                         vcpu.vcpu_set_tcb(tcb)?;
                     }
                 }
@@ -717,7 +717,8 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                 let src = init_thread::slots::CNODE
                     .local_cptr()
                     .relative(self.orig_local_cptr::<cap_type::Unspecified>(cap.obj()));
-                let dst = cnode.relative_bits_with_depth((*i).try_into().unwrap(), obj.size_bits);
+                let mut dst =
+                    cnode.relative_bits_with_depth((*i).try_into().unwrap(), obj.size_bits);
                 match badge {
                     None => dst.copy(&src, rights),
                     Some(badge) => dst.mint(&src, rights, badge),
@@ -730,7 +731,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
     fn start_threads(&self) -> Result<()> {
         debug!("Starting threads");
         for (obj_id, obj) in self.spec().filter_objects::<&object::TCB>() {
-            let tcb = self.orig_local_cptr::<cap_type::TCB>(obj_id);
+            let mut tcb = self.orig_local_cptr::<cap_type::TCB>(obj_id);
             if obj.extra.resume {
                 tcb.tcb_resume()?;
             }

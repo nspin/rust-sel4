@@ -49,7 +49,7 @@ sel4_cfg_if! {
 
 impl<C: InvocationContext> Endpoint<C> {
     /// Corresponds to `seL4_Send`.
-    pub fn send(self, info: MessageInfo) {
+    pub fn send(&mut self, info: MessageInfo) {
         self.invoke(|cptr, ipc_buffer| {
             ipc_buffer
                 .inner_mut()
@@ -58,7 +58,7 @@ impl<C: InvocationContext> Endpoint<C> {
     }
 
     /// Corresponds to `seL4_NBSend`.
-    pub fn nb_send(self, info: MessageInfo) {
+    pub fn nb_send(&mut self, info: MessageInfo) {
         self.invoke(|cptr, ipc_buffer| {
             ipc_buffer
                 .inner_mut()
@@ -67,7 +67,7 @@ impl<C: InvocationContext> Endpoint<C> {
     }
 
     /// Corresponds to `seL4_Recv`.
-    pub fn recv(self, reply_authority: impl ConveysReplyAuthority) -> (MessageInfo, Badge) {
+    pub fn recv(&mut self, reply_authority: impl ConveysReplyAuthority) -> (MessageInfo, Badge) {
         let (raw_msg_info, badge) = self.invoke(|cptr, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_Recv(
                 cptr.bits(),
@@ -80,7 +80,7 @@ impl<C: InvocationContext> Endpoint<C> {
     }
 
     /// Corresponds to `seL4_NBRecv`.
-    pub fn nb_recv(self, reply_authority: impl ConveysReplyAuthority) -> (MessageInfo, Badge) {
+    pub fn nb_recv(&mut self, reply_authority: impl ConveysReplyAuthority) -> (MessageInfo, Badge) {
         let (raw_msg_info, badge) = self.invoke(|cptr, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_NBRecv(
                 cptr.bits(),
@@ -93,7 +93,7 @@ impl<C: InvocationContext> Endpoint<C> {
     }
 
     /// Corresponds to `seL4_Call`.
-    pub fn call(self, info: MessageInfo) -> MessageInfo {
+    pub fn call(&mut self, info: MessageInfo) -> MessageInfo {
         MessageInfo::from_inner(self.invoke(|cptr, ipc_buffer| {
             ipc_buffer
                 .inner_mut()
@@ -103,7 +103,7 @@ impl<C: InvocationContext> Endpoint<C> {
 
     /// Corresponds to `seL4_ReplyRecv`.
     pub fn reply_recv(
-        self,
+        &mut self,
         info: MessageInfo,
         reply_authority: impl ConveysReplyAuthority,
     ) -> (MessageInfo, Badge) {
@@ -119,7 +119,7 @@ impl<C: InvocationContext> Endpoint<C> {
         (MessageInfo::from_inner(raw_msg_info), badge)
     }
 
-    pub fn send_with_mrs<T: FastMessages>(self, info: MessageInfo, messages: T) {
+    pub fn send_with_mrs<T: FastMessages>(&mut self, info: MessageInfo, messages: T) {
         let [msg0, msg1, msg2, msg3] = messages.prepare_in();
         self.invoke(|cptr, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_SendWithMRs(
@@ -133,7 +133,7 @@ impl<C: InvocationContext> Endpoint<C> {
         })
     }
 
-    pub fn recv_with_mrs(self, reply_authority: impl ConveysReplyAuthority) -> RecvWithMRs {
+    pub fn recv_with_mrs(&mut self, reply_authority: impl ConveysReplyAuthority) -> RecvWithMRs {
         let mut msg = [0; NUM_FAST_MESSAGE_REGISTERS];
         let [ref mut mr0, ref mut mr1, ref mut mr2, ref mut mr3] = &mut msg;
         let (raw_msg_info, badge) = self.invoke(|cptr, ipc_buffer| {
@@ -155,7 +155,11 @@ impl<C: InvocationContext> Endpoint<C> {
         }
     }
 
-    pub fn call_with_mrs<T: FastMessages>(self, info: MessageInfo, messages: T) -> CallWithMRs {
+    pub fn call_with_mrs<T: FastMessages>(
+        &mut self,
+        info: MessageInfo,
+        messages: T,
+    ) -> CallWithMRs {
         let mut msg = messages.prepare_in_out();
         let [ref mut mr0, ref mut mr1, ref mut mr2, ref mut mr3] = &mut msg;
         let raw_msg_info = self.invoke(|cptr, ipc_buffer| {
@@ -177,12 +181,12 @@ impl<C: InvocationContext> Endpoint<C> {
 
 impl<C: InvocationContext> Notification<C> {
     /// Corresponds to `seL4_Signal`.
-    pub fn signal(self) {
+    pub fn signal(&mut self) {
         self.invoke(|cptr, ipc_buffer| ipc_buffer.inner_mut().seL4_Signal(cptr.bits()))
     }
 
     /// Corresponds to `seL4_Wait`.
-    pub fn wait(self) -> (WaitMessageInfo, Badge) {
+    pub fn wait(&mut self) -> (WaitMessageInfo, Badge) {
         let (info, badge) =
             self.invoke(|cptr, ipc_buffer| ipc_buffer.inner_mut().seL4_Wait(cptr.bits()));
         (wait_message_info_from_sys(info), badge)
@@ -193,7 +197,7 @@ impl<T: IPCCapType, C: InvocationContext> LocalCPtr<T, C> {
     /// Corresponds to `seL4_NBSendRecv`.
     #[sel4_cfg(KERNEL_MCS)]
     pub fn nb_send_recv<U: IPCCapType>(
-        self,
+        &mut self,
         info: MessageInfo,
         src: LocalCPtr<U>,
         reply_authority: impl ConveysReplyAuthority,

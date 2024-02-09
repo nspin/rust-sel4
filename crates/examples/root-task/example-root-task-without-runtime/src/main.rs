@@ -38,12 +38,14 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> sel4::Result<Never> {
     let cnode = sel4::init_thread::slots::CNODE.local_cptr();
     sel4::debug_println!("x");
 
-    untyped.with(&mut ipc_buffer).untyped_retype(
+    let mut ut = untyped.with(ipc_buffer);
+    ut.untyped_retype(
         &blueprint,
         &cnode.relative_self(),
         unbadged_notification_slot.index(),
         1,
     )?;
+    let mut ipc_buffer = ut.into_invocation_context();
     sel4::debug_println!("y");
 
     let badge = 0x1337;
