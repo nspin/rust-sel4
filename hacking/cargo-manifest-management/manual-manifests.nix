@@ -13,6 +13,6 @@ let
 in {
   # ring = relativeToTmpSrc "ring";
   # rustls = relativeToTmpSrc "rustls/rustls";
-  # lock_api = relativeToTmpSrc "parking_lot/lock_api";
   # volatile = relativeToTmpSrc "volatile";
+  "embedded-fatfs" = relativeToTmpSrc "embedded-fatfs";
 }

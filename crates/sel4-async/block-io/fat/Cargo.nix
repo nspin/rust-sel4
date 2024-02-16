@@ -19,10 +19,16 @@ mk {
         "alloc"
       ];
     };
-    embedded-fat = fatSource;
+    embedded-fatfs = localCrates.embedded-fatfs // {
+      default-features = false;
+      features = [
+        # "chrono"
+        "alloc" "lfn" "unicode" "log"
+        "device"
+      ];
+    };
     inherit (localCrates)
       sel4-async-block-io
-      # embedded-fat
     ;
   };
 }

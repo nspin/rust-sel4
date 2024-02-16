@@ -24,6 +24,7 @@ log = "0.4.17"
 lru = "0.10.0"
 sel4-async-block-io = { path = ".." }
 
-[dependencies.embedded-fat]
-git = "https://github.com/coliasgroup/rust-embedded-fat.git"
-tag = "keep/e1465a43c9f550ef58701a275b313310"
+[dependencies.embedded-fatfs]
+path = "../../../../tmp/src/embedded-fatfs"
+default-features = false
+features = ["alloc", "lfn", "unicode", "log", "device"]
