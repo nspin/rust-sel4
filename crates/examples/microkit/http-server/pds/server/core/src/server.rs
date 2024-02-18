@@ -188,14 +188,12 @@ where
         Ok(())
     }
 
-    #[cfg(any())]
     async fn lookup_request_path(&self, request_path: &str) -> RequestPathStatus {
-        let mut volume_manager = self.volume_manager.lock().await;
         if !request_path.starts_with('/') {
             return RequestPathStatus::NotFound;
         }
         let has_trailing_slash = request_path.ends_with('/');
-        let mut cur = self.dir;
+        let mut cur = self.fs.root_dir();
         for seg in request_path.split('/') {
             if seg.is_empty() {
                 continue;
