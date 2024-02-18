@@ -97,11 +97,10 @@ pub async fn run_server<
                     let fs_options = fs_options.clone();
                     async move {
                         loop {
-                            let mut fs = taf::FileSystem::new(fs_io.clone(), fs_options.clone())
+                            let fs = taf::FileSystem::new(fs_io.clone(), fs_options.clone())
                                 .await
                                 .unwrap();
-                            let root_dir = fs.root_dir();
-                            let server = Server::new(root_dir);
+                            let server = Server::new(fs);
                             let socket = network_ctx.new_tcp_socket_with_buffer_sizes(8192, 65535);
                             f(server, socket).await;
                         }
@@ -115,10 +114,10 @@ pub async fn run_server<
 }
 
 type SocketUser<IO, TP, OCC> =
-    Box<dyn for<'a> Fn(Server<'a, IO, TP, OCC>, TcpSocket) -> LocalBoxFuture<'static, ()>>;
+    Box<dyn Fn(Server<IO, TP, OCC>, TcpSocket) -> LocalBoxFuture<'static, ()>>;
 
-async fn use_socket_for_http<'a, IO: taf::ReadWriteSeek, TP, OCC>(
-    server: Server<'a, IO, TP, OCC>,
+async fn use_socket_for_http<IO: taf::ReadWriteSeek, TP, OCC>(
+    server: Server<IO, TP, OCC>,
     mut socket: TcpSocket,
 ) -> Result<(), ReadExactError<TcpSocketError>> {
     socket.accept(HTTP_PORT).await?;
@@ -127,8 +126,8 @@ async fn use_socket_for_http<'a, IO: taf::ReadWriteSeek, TP, OCC>(
     Ok(())
 }
 
-async fn use_socket_for_https<'a, IO: taf::ReadWriteSeek, TP, OCC>(
-    server: Server<'a, IO, TP, OCC>,
+async fn use_socket_for_https<IO: taf::ReadWriteSeek, TP, OCC>(
+    server: Server<IO, TP, OCC>,
     tls_config: Arc<ServerConfig>,
     mut socket: TcpSocket,
 ) -> Result<(), ReadExactError<AsyncRustlsError<TcpSocketError>>> {

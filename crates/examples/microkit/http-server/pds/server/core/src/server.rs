@@ -16,18 +16,18 @@ use sel4_async_unsync::Mutex;
 
 use crate::mime::content_type_from_name;
 
-pub(crate) struct Server<'a, IO: taf::ReadWriteSeek, TP, OCC> {
-    root_dir: taf::Dir<'a, IO, TP, OCC>,
+pub(crate) struct Server<IO: taf::ReadWriteSeek, TP, OCC> {
+    fs: taf::FileSystem<IO, TP, OCC>,
 }
 
-impl<'a, IO: taf::ReadWriteSeek, TP, OCC> Server<'a, IO, TP, OCC> {
-    pub(crate) fn new(root_dir: taf::Dir<'a, IO, TP, OCC>) -> Self {
-        Self { root_dir }
+impl<IO: taf::ReadWriteSeek, TP, OCC> Server<IO, TP, OCC> {
+    pub(crate) fn new(fs: taf::FileSystem<IO, TP, OCC>) -> Self {
+        Self { fs }
     }
 }
 
 #[cfg(any())]
-impl<'a, IO, TP, OCC> Server<'a, IO, TP, OCC> {
+impl<IO, TP, OCC> Server<IO, TP, OCC> {
     pub(crate) async fn handle_connection<U: Read + Write + Unpin>(
         &self,
         conn: &mut U,
