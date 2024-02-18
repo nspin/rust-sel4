@@ -117,7 +117,7 @@ pub async fn run_server<
 type SocketUser<IO, TP, OCC> =
     Box<dyn for<'a> Fn(Server<'a, IO, TP, OCC>, TcpSocket) -> LocalBoxFuture<'static, ()>>;
 
-async fn use_socket_for_http<'a, IO, TP, OCC>(
+async fn use_socket_for_http<'a, IO: taf::ReadWriteSeek, TP, OCC>(
     server: Server<'a, IO, TP, OCC>,
     mut socket: TcpSocket,
 ) -> Result<(), ReadExactError<TcpSocketError>> {
@@ -127,7 +127,7 @@ async fn use_socket_for_http<'a, IO, TP, OCC>(
     Ok(())
 }
 
-async fn use_socket_for_https<'a, IO, TP, OCC>(
+async fn use_socket_for_https<'a, IO: taf::ReadWriteSeek, TP, OCC>(
     server: Server<'a, IO, TP, OCC>,
     tls_config: Arc<ServerConfig>,
     mut socket: TcpSocket,

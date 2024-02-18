@@ -16,11 +16,11 @@ use sel4_async_unsync::Mutex;
 
 use crate::mime::content_type_from_name;
 
-pub(crate) struct Server<'a, IO, TP, OCC> {
+pub(crate) struct Server<'a, IO: taf::ReadWriteSeek, TP, OCC> {
     root_dir: taf::Dir<'a, IO, TP, OCC>,
 }
 
-impl<'a, IO, TP, OCC> Server<'a, IO, TP, OCC> {
+impl<'a, IO: taf::ReadWriteSeek, TP, OCC> Server<'a, IO, TP, OCC> {
     pub(crate) fn new(root_dir: taf::Dir<'a, IO, TP, OCC>) -> Self {
         Self { root_dir }
     }
@@ -269,10 +269,14 @@ impl<'a, IO, TP, OCC> Server<'a, IO, TP, OCC> {
     }
 }
 
-#[derive(Debug)]
-enum RequestPathStatus {
-    Ok { file_name: String, file: fat::File },
-    MovedPermanently { location: String },
+enum RequestPathStatus<'a, IO: taf::ReadWriteSeek, TP, OCC> {
+    Ok {
+        file_name: String,
+        file: taf::File<'a, IO, TP, OCC>,
+    },
+    MovedPermanently {
+        location: String,
+    },
     NotFound,
 }
 
