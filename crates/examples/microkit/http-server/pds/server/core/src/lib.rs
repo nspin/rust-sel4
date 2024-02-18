@@ -40,7 +40,8 @@ const HTTPS_PORT: u16 = 443;
 
 #[allow(clippy::too_many_arguments)] // TODO
 pub async fn run_server<
-    const N: usize, T: BlockIO<ReadOnly, BlockSize = ConcreteConstantBlockSize<N>> + Clone + 'static,
+    const N: usize,
+    T: BlockIO<ReadOnly, BlockSize = ConcreteConstantBlockSize<N>> + Clone + 'static,
 >(
     now_unix_time: Duration,
     now_fn: impl 'static + Send + Sync + Fn() -> Instant,
@@ -91,11 +92,11 @@ pub async fn run_server<
                     let fs_options = fs_options.clone();
                     async move {
                         loop {
-                            let fs_block_io = taf::device::BufStream::new(BlockIOWrapper::new(fs_block_io.clone()));
+                            let fs_block_io = taf::device::BufStream::new(BlockIOWrapper::new(
+                                fs_block_io.clone(),
+                            ));
                             let mut fs =
-                                taf::FileSystem::new(fs_block_io, fs_options)
-                                    .await
-                                    .unwrap();
+                                taf::FileSystem::new(fs_block_io, fs_options).await.unwrap();
                             let root_dir = fs.root_dir();
                             let server = Server::new(root_dir);
                             let socket = network_ctx.new_tcp_socket_with_buffer_sizes(8192, 65535);
