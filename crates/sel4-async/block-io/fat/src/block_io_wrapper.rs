@@ -37,16 +37,15 @@ impl<T: BlockIO<A, BlockSize = ConcreteConstantBlockSize<N>>, A: Access, const N
 
     async fn read(&mut self, block_address: u32, data: &mut [[u8; N]]) -> Result<(), Self::Error> {
         let shared = &self;
-        future::join_all(data.iter_mut().enumerate().map(|(i, block)| async move {
-            let block_idx = u64::from(block_address)
-                .checked_add(i.try_into().unwrap())
-                .unwrap();
+        future::join_all(data.iter_mut().enumerate().map(|(i, buf)| async move {
             shared
                 .inner
                 .read_or_write_blocks(
-                    block_idx,
+                    u64::from(block_address)
+                        .checked_add(i.try_into().unwrap())
+                        .unwrap(),
                     Operation::Read {
-                        buf: block,
+                        buf,
                         witness: A::ReadWitness::TRY_WITNESS.unwrap(),
                     },
                 )
@@ -58,16 +57,15 @@ impl<T: BlockIO<A, BlockSize = ConcreteConstantBlockSize<N>>, A: Access, const N
 
     async fn write(&mut self, block_address: u32, data: &[[u8; N]]) -> Result<(), Self::Error> {
         let shared = &self;
-        future::join_all(data.iter().enumerate().map(|(i, block)| async move {
-            let block_idx = u64::from(block_address)
-                .checked_add(i.try_into().unwrap())
-                .unwrap();
+        future::join_all(data.iter().enumerate().map(|(i, buf)| async move {
             shared
                 .inner
                 .read_or_write_blocks(
-                    block_idx,
+                    u64::from(block_address)
+                        .checked_add(i.try_into().unwrap())
+                        .unwrap(),
                     Operation::Write {
-                        buf: block,
+                        buf,
                         witness: A::WriteWitness::TRY_WITNESS.unwrap(),
                     },
                 )
