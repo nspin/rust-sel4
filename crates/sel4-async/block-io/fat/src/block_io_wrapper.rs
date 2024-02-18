@@ -11,7 +11,7 @@ use futures::future;
 
 use sel4_async_block_io::{
     access::{Access, Witness},
-    ConcreteConstantBlockSize, BlockIO, Operation,
+    BlockIO, ConcreteConstantBlockSize, Operation,
 };
 
 use embedded_fatfs::device::BlockDevice;
@@ -30,62 +30,54 @@ impl<T, A, const N: usize> BlockIOWrapper<T, A, N> {
     }
 }
 
-impl<T: BlockIO<A>, A: Access, const N: usize> BlockDevice<N>
-    for BlockIOWrapper<T, A, N>
-where
-    T::BlockSize: ConstantBlockSize,
-    T::BlockSize::BYTES = N,
+impl<T: BlockIO<A, BlockSize = ConcreteConstantBlockSize<N>>, A: Access, const N: usize>
+    BlockDevice<N> for BlockIOWrapper<T, A, N>
 {
-    // type Error = Infallible;
+    type Error = Infallible;
 
-    // async fn read(
-    //     &self,
-    //     blocks: &mut [fat::Block],
-    //     start_block_idx: fat::BlockIdx,
-    //     _reason: &str,
-    // ) -> Result<(), Self::Error> {
-    //     future::join_all(blocks.iter_mut().enumerate().map(|(i, block)| async move {
-    //         let block_idx = u64::from(start_block_idx.0)
-    //             .checked_add(i.try_into().unwrap())
-    //             .unwrap();
-    //         self.inner
-    //             .read_or_write_blocks(
-    //                 block_idx,
-    //                 Operation::Read {
-    //                     buf: &mut block.contents,
-    //                     witness: A::ReadWitness::TRY_WITNESS.unwrap(),
-    //                 },
-    //             )
-    //             .await
-    //     }))
-    //     .await;
-    //     Ok(())
-    // }
+    async fn read(&mut self, block_address: u32, data: &mut [[u8; N]]) -> Result<(), Self::Error> {
+        let shared = &self;
+        future::join_all(data.iter_mut().enumerate().map(|(i, block)| async move {
+            let block_idx = u64::from(block_address)
+                .checked_add(i.try_into().unwrap())
+                .unwrap();
+            shared
+                .inner
+                .read_or_write_blocks(
+                    block_idx,
+                    Operation::Read {
+                        buf: block,
+                        witness: A::ReadWitness::TRY_WITNESS.unwrap(),
+                    },
+                )
+                .await
+        }))
+        .await;
+        Ok(())
+    }
 
-    // async fn write(
-    //     &self,
-    //     blocks: &[fat::Block],
-    //     start_block_idx: fat::BlockIdx,
-    // ) -> Result<(), Self::Error> {
-    //     future::join_all(blocks.iter().enumerate().map(|(i, block)| async move {
-    //         let block_idx = u64::from(start_block_idx.0)
-    //             .checked_add(i.try_into().unwrap())
-    //             .unwrap();
-    //         self.inner
-    //             .read_or_write_blocks(
-    //                 block_idx,
-    //                 Operation::Write {
-    //                     buf: &block.contents,
-    //                     witness: A::WriteWitness::TRY_WITNESS.unwrap(),
-    //                 },
-    //             )
-    //             .await
-    //     }))
-    //     .await;
-    //     Ok(())
-    // }
+    async fn write(&mut self, block_address: u32, data: &[[u8; N]]) -> Result<(), Self::Error> {
+        let shared = &self;
+        future::join_all(data.iter().enumerate().map(|(i, block)| async move {
+            let block_idx = u64::from(block_address)
+                .checked_add(i.try_into().unwrap())
+                .unwrap();
+            shared
+                .inner
+                .read_or_write_blocks(
+                    block_idx,
+                    Operation::Write {
+                        buf: block,
+                        witness: A::WriteWitness::TRY_WITNESS.unwrap(),
+                    },
+                )
+                .await
+        }))
+        .await;
+        Ok(())
+    }
 
-    // async fn num_blocks(&self) -> Result<fat::BlockCount, Self::Error> {
-    //     Ok(fat::BlockCount(self.inner.num_blocks().try_into().unwrap()))
-    // }
+    async fn size(&mut self) -> Result<u64, Self::Error> {
+        Ok(self.inner.num_blocks())
+    }
 }

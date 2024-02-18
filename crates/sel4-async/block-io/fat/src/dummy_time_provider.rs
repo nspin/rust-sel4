@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use embedded_fatfs::{TimeProvider, Date, DateTime};
+use embedded_fatfs::{Date, DateTime, TimeProvider};
 
 #[derive(Default, Debug)]
 pub struct DummyTimeProvider(());
