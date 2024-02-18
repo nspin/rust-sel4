@@ -6,7 +6,6 @@
 
 use alloc::borrow::ToOwned;
 use alloc::format;
-use alloc::rc::Rc;
 use alloc::string::{String, ToString};
 use alloc::vec;
 
@@ -188,7 +187,10 @@ where
         Ok(())
     }
 
-    async fn lookup_request_path(&self, request_path: &str) -> RequestPathStatus {
+    async fn lookup_request_path<'a>(
+        &'a self,
+        request_path: &str,
+    ) -> RequestPathStatus<'a, IO, TP, OCC> {
         if !request_path.starts_with('/') {
             return RequestPathStatus::NotFound;
         }
@@ -198,23 +200,14 @@ where
             if seg.is_empty() {
                 continue;
             }
-            let entry = volume_manager.find_lfn_directory_entry(cur, seg).await;
+            let entry = cur.open_meta(seg).await;
             match entry {
                 Ok(entry) => {
-                    if entry.attributes.is_directory() {
-                        let new = volume_manager.open_dir(cur, entry.name).await.unwrap();
-                        if cur != self.dir {
-                            volume_manager.close_dir(cur).unwrap();
-                        }
+                    if entry.is_dir() {
+                        let new = entry.to_dir();
                         cur = new;
                     } else {
-                        let file = volume_manager
-                            .open_file_in_dir(cur, entry.name, fat::Mode::ReadOnly)
-                            .await
-                            .unwrap();
-                        if cur != self.dir {
-                            volume_manager.close_dir(cur).unwrap();
-                        }
+                        let file = entry.to_file();
                         return RequestPathStatus::Ok {
                             file_name: seg.to_owned(),
                             file,
@@ -223,9 +216,6 @@ where
                 }
                 Err(err) => {
                     log::warn!("{:?}: {:?}", err, request_path);
-                    if cur != self.dir {
-                        volume_manager.close_dir(cur).unwrap();
-                    }
                     return RequestPathStatus::NotFound; // TODO
                 }
             }
@@ -236,18 +226,7 @@ where
             }
         } else {
             let file_name = "index.html";
-            let seg = file_name;
-            let entry = volume_manager
-                .find_lfn_directory_entry(cur, seg)
-                .await
-                .unwrap();
-            let file = volume_manager
-                .open_file_in_dir(cur, entry.name, fat::Mode::ReadOnly)
-                .await
-                .unwrap();
-            if cur != self.dir {
-                volume_manager.close_dir(cur).unwrap();
-            }
+            let file = cur.open_file(file_name).await.unwrap(); // TODO fail with Err
             RequestPathStatus::Ok {
                 file_name: file_name.to_owned(),
                 file,
