@@ -11,12 +11,12 @@ use core::marker::PhantomData;
 
 use futures::future;
 
+use embedded_fatfs::device::BlockDevice;
+
 use sel4_async_block_io::{
     access::{Access, Witness},
     BlockIO, ConcreteConstantBlockSize, Operation,
 };
-
-use embedded_fatfs::device::BlockDevice;
 
 pub use embedded_fatfs::*;
 
