@@ -21,7 +21,6 @@ use rustls::time_provider::TimeProvider;
 use rustls::version::TLS12;
 use rustls::ServerConfig;
 
-use sel4_async_block_io::{access::ReadOnly, BlockIO, ConcreteConstantBlockSize};
 use sel4_async_block_io_fat as taf;
 use sel4_async_io::ReadExactError;
 use sel4_async_network::{ManagedInterface, TcpSocket, TcpSocketError};
@@ -116,7 +115,11 @@ pub async fn run_server<
 type SocketUser<IO, TP, OCC> =
     Box<dyn Fn(Server<IO, TP, OCC>, TcpSocket) -> LocalBoxFuture<'static, ()>>;
 
-async fn use_socket_for_http<IO: taf::ReadWriteSeek, TP, OCC>(
+async fn use_socket_for_http<
+    IO: taf::ReadWriteSeek,
+    TP: taf::TimeProvider,
+    OCC: taf::OemCpConverter,
+>(
     server: Server<IO, TP, OCC>,
     mut socket: TcpSocket,
 ) -> Result<(), ReadExactError<TcpSocketError>> {
@@ -126,7 +129,11 @@ async fn use_socket_for_http<IO: taf::ReadWriteSeek, TP, OCC>(
     Ok(())
 }
 
-async fn use_socket_for_https<IO: taf::ReadWriteSeek, TP, OCC>(
+async fn use_socket_for_https<
+    IO: taf::ReadWriteSeek,
+    TP: taf::TimeProvider,
+    OCC: taf::OemCpConverter,
+>(
     server: Server<IO, TP, OCC>,
     tls_config: Arc<ServerConfig>,
     mut socket: TcpSocket,

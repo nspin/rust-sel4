@@ -12,7 +12,6 @@ use alloc::vec;
 
 use sel4_async_block_io_fat as taf;
 use sel4_async_io::{Read, ReadExactError, Write};
-use sel4_async_unsync::Mutex;
 
 use crate::mime::content_type_from_name;
 
@@ -26,8 +25,12 @@ impl<IO: taf::ReadWriteSeek, TP, OCC> Server<IO, TP, OCC> {
     }
 }
 
-#[cfg(any())]
-impl<IO, TP, OCC> Server<IO, TP, OCC> {
+impl<IO, TP, OCC> Server<IO, TP, OCC>
+where
+    IO: taf::ReadWriteSeek,
+    TP: taf::TimeProvider,
+    OCC: taf::OemCpConverter,
+{
     pub(crate) async fn handle_connection<U: Read + Write + Unpin>(
         &self,
         conn: &mut U,
@@ -87,6 +90,7 @@ impl<IO, TP, OCC> Server<IO, TP, OCC> {
         Ok(())
     }
 
+    #[cfg(any())]
     async fn serve_file<U: Write + Unpin>(
         &self,
         conn: &mut U,
@@ -200,6 +204,7 @@ impl<IO, TP, OCC> Server<IO, TP, OCC> {
         Ok(())
     }
 
+    #[cfg(any())]
     async fn lookup_request_path(&self, request_path: &str) -> RequestPathStatus {
         let mut volume_manager = self.volume_manager.lock().await;
         if !request_path.starts_with('/') {
