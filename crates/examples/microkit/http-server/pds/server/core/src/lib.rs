@@ -90,7 +90,7 @@ pub async fn run_server<
                         loop {
                             let fs_block_io = fat::BlockIOWrapper::new(fs_block_io.clone());
                             let mut volume_manager =
-                                fat::Volume::new(fs_block_io, fat::DummyTimeSource::new())
+                                fat::Volume::new(fs_block_io, fat::DummyTimeProvider::new())
                                     .await
                                     .unwrap();
                             let dir = volume_manager.open_root_dir().unwrap();
