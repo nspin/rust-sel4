@@ -20,12 +20,12 @@ use embedded_fatfs::device::BlockDevice;
 
 pub use embedded_fatfs::*;
 
-pub struct BlockIOWrapper<T, A, const N: usize> {
+pub struct BlockIOAdapter<T, A, const N: usize> {
     inner: T,
     _phantom: PhantomData<(A, [(); N])>,
 }
 
-impl<T, A, const N: usize> BlockIOWrapper<T, A, N> {
+impl<T, A, const N: usize> BlockIOAdapter<T, A, N> {
     pub fn new(inner: T) -> Self {
         Self {
             inner,
@@ -35,7 +35,7 @@ impl<T, A, const N: usize> BlockIOWrapper<T, A, N> {
 }
 
 impl<T: BlockIO<A, BlockSize = ConcreteConstantBlockSize<N>>, A: Access, const N: usize>
-    BlockDevice<N> for BlockIOWrapper<T, A, N>
+    BlockDevice<N> for BlockIOAdapter<T, A, N>
 {
     type Error = Infallible;
 

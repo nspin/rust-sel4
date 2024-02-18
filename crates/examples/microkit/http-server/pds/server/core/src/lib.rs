@@ -92,7 +92,7 @@ pub async fn run_server<
                     let fs_options = fs_options.clone();
                     async move {
                         loop {
-                            let fs_block_io = taf::device::BufStream::new(BlockIOWrapper::new(
+                            let fs_block_io = taf::device::BufStream::new(BlockIOAdapter::new(
                                 fs_block_io.clone(),
                             ));
                             let mut fs =
@@ -113,7 +113,7 @@ pub async fn run_server<
 
 type SocketUser<T> = Box<
     dyn Fn(
-        Server<fat::BlockIOWrapper<T, ReadOnly>, fat::DummyTimeSource>,
+        Server<fat::BlockIOAdapter<T, ReadOnly>, fat::DummyTimeSource>,
         TcpSocket,
     ) -> LocalBoxFuture<'static, ()>,
 >;
