@@ -22,7 +22,7 @@ use rustls::version::TLS12;
 use rustls::ServerConfig;
 
 use sel4_async_block_io::{access::ReadOnly, BlockIO, ConcreteConstantBlockSize};
-use sel4_async_block_io_fat as fat;
+use sel4_async_block_io_fat as taf;
 use sel4_async_io::ReadExactError;
 use sel4_async_network::{ManagedInterface, TcpSocket, TcpSocketError};
 use sel4_async_network_rustls::{Error as AsyncRustlsError, ServerConnector};
@@ -40,7 +40,7 @@ const HTTPS_PORT: u16 = 443;
 
 #[allow(clippy::too_many_arguments)] // TODO
 pub async fn run_server<
-    T: BlockIO<ReadOnly, BlockSize = ConcreteConstantBlockSize<512>> + Clone + 'static,
+    const N: usize, T: BlockIO<ReadOnly, BlockSize = ConcreteConstantBlockSize<N>> + Clone + 'static,
 >(
     now_unix_time: Duration,
     now_fn: impl 'static + Send + Sync + Fn() -> Instant,
@@ -79,6 +79,8 @@ pub async fn run_server<
         }
     });
 
+    let fs_options = taf::FsOptions::new();
+
     for f in [use_socket_for_http_closure, use_socket_for_https_closure].map(Rc::new) {
         for _ in 0..max_num_simultaneous_connections {
             spawner
@@ -86,15 +88,16 @@ pub async fn run_server<
                     let network_ctx = network_ctx.clone();
                     let f = f.clone();
                     let fs_block_io = fs_block_io.clone();
+                    let fs_options = fs_options.clone();
                     async move {
                         loop {
-                            let fs_block_io = fat::BlockIOWrapper::new(fs_block_io.clone());
-                            let mut volume_manager =
-                                fat::Volume::new(fs_block_io, fat::DummyTimeProvider::new())
+                            let fs_block_io = taf::device::BufStream::new(BlockIOWrapper::new(fs_block_io.clone()));
+                            let mut fs =
+                                taf::FileSystem::new(fs_block_io, fs_options)
                                     .await
                                     .unwrap();
-                            let dir = volume_manager.open_root_dir().unwrap();
-                            let server = Server::new(volume_manager, dir);
+                            let root_dir = fs.root_dir();
+                            let server = Server::new(root_dir);
                             let socket = network_ctx.new_tcp_socket_with_buffer_sizes(8192, 65535);
                             f(server, socket).await;
                         }
