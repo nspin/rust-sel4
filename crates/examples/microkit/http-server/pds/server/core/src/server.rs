@@ -90,21 +90,16 @@ where
         Ok(())
     }
 
-    #[cfg(any())]
-    async fn serve_file<U: Write + Unpin>(
-        &self,
+    async fn serve_file<'a, U: Write + Unpin>(
+        &'a self,
         conn: &mut U,
         content_type: &str,
-        file: fat::File,
+        mut file: taf::File<'a, IO, TP, OCC>,
     ) -> Result<(), ReadExactError<U::Error>> {
-        let file_len: usize = self
-            .volume_manager
-            .lock()
-            .await
-            .file_length(file)
-            .unwrap()
-            .try_into()
-            .unwrap();
+        use embedded_io_async::*;
+        file.seek(SeekFrom::End(0)).await.unwrap();
+        let file_len: usize = file.stream_position().await.unwrap().try_into().unwrap();
+        file.rewind().await.unwrap();
         self.start_response_headers(conn, 200, "OK").await?;
         self.send_response_header(conn, "Content-Type", content_type.as_bytes())
             .await?;
@@ -116,23 +111,12 @@ where
             let mut pos = 0;
             while pos < file_len {
                 let n = buf.len().min(file_len - pos);
-                self.volume_manager
-                    .lock()
-                    .await
-                    .read(file, &mut buf[..n])
-                    .await
-                    .unwrap();
+                file.read_exact(&mut buf[..n]).await.unwrap();
                 conn.write_all(&buf[..n]).await?;
                 pos += n;
             }
         }
-        assert!(self.volume_manager.lock().await.file_eof(file).unwrap());
-        self.volume_manager
-            .lock()
-            .await
-            .close_file(file)
-            .await
-            .unwrap();
+        file.close().await.unwrap();
         Ok(())
     }
 

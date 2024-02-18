@@ -28,6 +28,8 @@ mk {
 
     rustls-pemfile = { version = "2.0.0"; default-features = false; };
 
+    embedded-io-async = "0.6.0";
+
     inherit (localCrates)
       sel4-async-single-threaded-executor
       sel4-async-unsync
