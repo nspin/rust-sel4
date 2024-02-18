@@ -98,6 +98,33 @@ pub trait ConstantBlockSize: BlockSize {
     const BYTES: usize;
 }
 
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct ConcreteConstantBlockSize<const N: usize>(());
+
+impl<const N: usize> ConcreteConstantBlockSize<N> {
+    pub const fn new() -> Self {
+        Self(())
+    }
+}
+
+impl<const N: usize> BlockSize for ConcreteConstantBlockSize<N> {
+    type Block = [u8; N];
+
+    fn bytes(&self) -> usize {
+        N
+    }
+
+    fn zeroed_block(&self) -> Self::Block {
+        [0; N]
+    }
+}
+
+impl<const N: usize> ConstantBlockSize for ConcreteConstantBlockSize<N> {
+    const BLOCK_SIZE: Self = Self::new();
+
+    const BYTES: usize = N;
+}
+
 pub trait HasNextBlockSize: ConstantBlockSize {
     type NextBlockSize: ConstantBlockSize;
 }
@@ -106,57 +133,22 @@ pub trait HasPrevBlockSize: ConstantBlockSize {
     type PrevBlockSize: ConstantBlockSize;
 }
 
-pub mod constant_block_sizes {
-    use super::{BlockSize, ConstantBlockSize, HasNextBlockSize, HasPrevBlockSize};
+macro_rules! declare_next_block_size {
+    ($cur:literal, $next:literal) => {
+        impl HasNextBlockSize for ConcreteConstantBlockSize<$cur> {
+            type NextBlockSize = ConcreteConstantBlockSize<$next>;
+        }
 
-    macro_rules! declare_block_size {
-        ($ident:ident, $n:literal) => {
-            #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-            pub struct $ident;
-
-            impl BlockSize for $ident {
-                type Block = [u8; $n];
-
-                fn bytes(&self) -> usize {
-                    Self::BYTES
-                }
-
-                fn zeroed_block(&self) -> Self::Block {
-                    [0; $n]
-                }
-            }
-
-            impl ConstantBlockSize for $ident {
-                const BLOCK_SIZE: Self = $ident;
-
-                const BYTES: usize = $n;
-            }
-        };
-    }
-
-    macro_rules! declare_next_block_size {
-        ($cur:ident, $next:ident) => {
-            impl HasNextBlockSize for $cur {
-                type NextBlockSize = $next;
-            }
-
-            impl HasPrevBlockSize for $next {
-                type PrevBlockSize = $cur;
-            }
-        };
-    }
-
-    declare_block_size!(BlockSize512, 512);
-    declare_block_size!(BlockSize1024, 1024);
-    declare_block_size!(BlockSize2048, 2048);
-    declare_block_size!(BlockSize4096, 4096);
-    declare_block_size!(BlockSize8192, 8192);
-
-    declare_next_block_size!(BlockSize512, BlockSize1024);
-    declare_next_block_size!(BlockSize1024, BlockSize2048);
-    declare_next_block_size!(BlockSize2048, BlockSize4096);
-    declare_next_block_size!(BlockSize4096, BlockSize8192);
+        impl HasPrevBlockSize for ConcreteConstantBlockSize<$next> {
+            type PrevBlockSize = ConcreteConstantBlockSize<$cur>;
+        }
+    };
 }
+
+declare_next_block_size!(512, 1024);
+declare_next_block_size!(1024, 2048);
+declare_next_block_size!(2048, 4096);
+declare_next_block_size!(4096, 8192);
 
 impl<T: BlockIOLayout> BlockIOLayout for &T {
     type Error = T::Error;

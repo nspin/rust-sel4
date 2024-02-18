@@ -11,7 +11,7 @@ use futures::future;
 
 use sel4_async_block_io::{
     access::{Access, Witness},
-    constant_block_sizes, BlockIO, Operation,
+    BlockIO, ConcreteConstantBlockSize, Operation,
 };
 
 pub use embedded_fat as fat;
@@ -30,7 +30,7 @@ impl<T, A> BlockIOWrapper<T, A> {
     }
 }
 
-impl<T: BlockIO<A, BlockSize = constant_block_sizes::BlockSize512>, A: Access> fat::BlockDevice
+impl<T: BlockIO<A, BlockSize = ConcreteConstantBlockSize<512>>, A: Access> fat::BlockDevice
     for BlockIOWrapper<T, A>
 {
     type Error = Infallible;

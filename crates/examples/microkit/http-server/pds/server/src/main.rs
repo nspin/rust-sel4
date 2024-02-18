@@ -18,7 +18,7 @@ use smoltcp::phy::{Device, Medium};
 use smoltcp::wire::{EthernetAddress, HardwareAddress};
 
 use sel4_async_block_io::{
-    constant_block_sizes::BlockSize512, disk::Disk, CachedBlockIO, ConstantBlockSize,
+    disk::Disk, CachedBlockIO, ConcreteConstantBlockSize, ConstantBlockSize,
 };
 use sel4_async_time::Instant;
 use sel4_bounce_buffer_allocator::{Basic, BounceBufferAllocator};
@@ -147,7 +147,7 @@ fn init() -> impl Handler {
             BounceBufferAllocator::new(Basic::new(dma_region.as_ptr().len()), 1);
 
         SharedRingBufferBlockIO::new(
-            BlockSize512::BLOCK_SIZE,
+            ConcreteConstantBlockSize::<512>::BLOCK_SIZE,
             num_blocks,
             dma_region,
             bounce_buffer_allocator,
