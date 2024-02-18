@@ -16,19 +16,18 @@ use sel4_async_unsync::Mutex;
 
 use crate::mime::content_type_from_name;
 
-pub(crate) struct Server<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static> {
-    volume_manager: Rc<Mutex<fat::Volume<D, T, 4, 4>>>,
-    dir: fat::Directory,
+pub(crate) struct Server<'a, IO, TP, OCC> {
+    root_dir: taf::Dir<'a, IO, TP, OCC>,
 }
 
-impl<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static> Server<D, T> {
-    pub(crate) fn new(volume_manager: fat::Volume<D, T, 4, 4>, dir: fat::Directory) -> Self {
-        Self {
-            volume_manager: Rc::new(Mutex::new(volume_manager)),
-            dir,
-        }
+impl<'a, IO, TP, OCC> Server<'a, IO, TP, OCC> {
+    pub(crate) fn new(root_dir: taf::Dir<'a, IO, TP, OCC>) -> Self {
+        Self { root_dir }
     }
+}
 
+#[cfg(any())]
+impl<'a, IO, TP, OCC> Server<'a, IO, TP, OCC> {
     pub(crate) async fn handle_connection<U: Read + Write + Unpin>(
         &self,
         conn: &mut U,

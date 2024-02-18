@@ -40,20 +40,23 @@ const HTTPS_PORT: u16 = 443;
 
 #[allow(clippy::too_many_arguments)] // TODO
 pub async fn run_server<
-    const N: usize,
-    T: BlockIO<ReadOnly, BlockSize = ConcreteConstantBlockSize<N>> + Clone + 'static,
+    IO: taf::ReadWriteSeek + Clone + 'static,
+    TP: taf::TimeProvider + Clone + 'static,
+    OCC: taf::OemCpConverter + Clone + 'static,
 >(
     now_unix_time: Duration,
     now_fn: impl 'static + Send + Sync + Fn() -> Instant,
     _timers_ctx: TimerManager,
     network_ctx: ManagedInterface,
-    fs_block_io: T,
+    fs_io: IO,
+    fs_tp: TP,
+    fs_occ: OCC,
     spawner: LocalSpawner,
     cert_pem: &str,
     priv_pem: &str,
     max_num_simultaneous_connections: usize,
 ) -> ! {
-    let use_socket_for_http_closure: SocketUser<T> = Box::new({
+    let use_socket_for_http_closure: SocketUser<IO, TP, OCC> = Box::new({
         move |server, socket| {
             Box::pin(async move {
                 use_socket_for_http(server, socket)
@@ -67,7 +70,7 @@ pub async fn run_server<
 
     let tls_config = Arc::new(mk_tls_config(cert_pem, priv_pem, now_unix_time, now_fn));
 
-    let use_socket_for_https_closure: SocketUser<T> = Box::new({
+    let use_socket_for_https_closure: SocketUser<IO, TP, OCC> = Box::new({
         move |server, socket| {
             let tls_config = tls_config.clone();
             Box::pin(async move {
@@ -80,7 +83,9 @@ pub async fn run_server<
         }
     });
 
-    let fs_options = taf::FsOptions::new();
+    let fs_options = taf::FsOptions::new()
+        .time_provider(fs_tp)
+        .oem_cp_converter(fs_occ);
 
     for f in [use_socket_for_http_closure, use_socket_for_https_closure].map(Rc::new) {
         for _ in 0..max_num_simultaneous_connections {
@@ -88,15 +93,13 @@ pub async fn run_server<
                 .spawn_local({
                     let network_ctx = network_ctx.clone();
                     let f = f.clone();
-                    let fs_block_io = fs_block_io.clone();
+                    let fs_io = fs_io.clone();
                     let fs_options = fs_options.clone();
                     async move {
                         loop {
-                            let fs_block_io = taf::device::BufStream::new(BlockIOAdapter::new(
-                                fs_block_io.clone(),
-                            ));
-                            let mut fs =
-                                taf::FileSystem::new(fs_block_io, fs_options).await.unwrap();
+                            let mut fs = taf::FileSystem::new(fs_io.clone(), fs_options.clone())
+                                .await
+                                .unwrap();
                             let root_dir = fs.root_dir();
                             let server = Server::new(root_dir);
                             let socket = network_ctx.new_tcp_socket_with_buffer_sizes(8192, 65535);
@@ -111,15 +114,11 @@ pub async fn run_server<
     future::pending().await
 }
 
-type SocketUser<T> = Box<
-    dyn Fn(
-        Server<fat::BlockIOAdapter<T, ReadOnly>, fat::DummyTimeSource>,
-        TcpSocket,
-    ) -> LocalBoxFuture<'static, ()>,
->;
+type SocketUser<IO, TP, OCC> =
+    Box<dyn for<'a> Fn(Server<'a, IO, TP, OCC>, TcpSocket) -> LocalBoxFuture<'static, ()>>;
 
-async fn use_socket_for_http<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static>(
-    server: Server<D, T>,
+async fn use_socket_for_http<'a, IO, TP, OCC>(
+    server: Server<'a, IO, TP, OCC>,
     mut socket: TcpSocket,
 ) -> Result<(), ReadExactError<TcpSocketError>> {
     socket.accept(HTTP_PORT).await?;
@@ -128,8 +127,8 @@ async fn use_socket_for_http<D: fat::BlockDevice + 'static, T: fat::TimeSource +
     Ok(())
 }
 
-async fn use_socket_for_https<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static>(
-    server: Server<D, T>,
+async fn use_socket_for_https<'a, IO, TP, OCC>(
+    server: Server<'a, IO, TP, OCC>,
     tls_config: Arc<ServerConfig>,
     mut socket: TcpSocket,
 ) -> Result<(), ReadExactError<AsyncRustlsError<TcpSocketError>>> {
