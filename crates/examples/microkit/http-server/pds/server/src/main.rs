@@ -171,7 +171,11 @@ fn init() -> impl Handler {
         |timers_ctx, network_ctx, spawner| async move {
             let fs_block_io = shared_block_io.clone();
             let fs_block_io = CachedBlockIO::new(fs_block_io.clone(), BLOCK_CACHE_SIZE_IN_BLOCKS);
-            let fs_io: fat::device::BufStream<fat::BlockIOAdapter<_, sel4_async_block_io::access::ReadOnly, 512>, 512, 1> = fat::device::BufStream::new(fat::BlockIOAdapter::new(fs_block_io));
+            let fs_block_device: fat::BlockIOAdapter<
+                _,
+                sel4_async_block_io::access::ReadOnly,
+                512,
+            > = fat::BlockIOAdapter::new(fs_block_io);
             let disk = Disk::new(fs_block_io);
             let entry = disk.read_mbr().await.unwrap().partition(0).unwrap();
             let fs_block_io = disk.partition_using_mbr(&entry);
@@ -181,7 +185,7 @@ fn init() -> impl Handler {
                 now_fn,
                 timers_ctx,
                 network_ctx,
-                fs_io,
+                fs_block_device,
                 fat::NullTimeProvider::default(),
                 fat::LossyOemCpConverter::default(),
                 spawner,

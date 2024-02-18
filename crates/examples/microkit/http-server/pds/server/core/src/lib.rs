@@ -39,7 +39,8 @@ const HTTPS_PORT: u16 = 443;
 
 #[allow(clippy::too_many_arguments)] // TODO
 pub async fn run_server<
-    IO: taf::ReadWriteSeek + Clone + 'static,
+    const N: usize,
+    D: taf::device::BlockDevice<N> + Clone + 'static,
     TP: taf::TimeProvider + Clone + 'static,
     OCC: taf::OemCpConverter + Clone + 'static,
 >(
@@ -47,7 +48,7 @@ pub async fn run_server<
     now_fn: impl 'static + Send + Sync + Fn() -> Instant,
     _timers_ctx: TimerManager,
     network_ctx: ManagedInterface,
-    fs_io: IO,
+    fs_block_device: D,
     fs_tp: TP,
     fs_occ: OCC,
     spawner: LocalSpawner,
@@ -55,7 +56,7 @@ pub async fn run_server<
     priv_pem: &str,
     max_num_simultaneous_connections: usize,
 ) -> ! {
-    let use_socket_for_http_closure: SocketUser<IO, TP, OCC> = Box::new({
+    let use_socket_for_http_closure: SocketUser<N, D, TP, OCC> = Box::new({
         move |server, socket| {
             Box::pin(async move {
                 use_socket_for_http(server, socket)
@@ -69,7 +70,7 @@ pub async fn run_server<
 
     let tls_config = Arc::new(mk_tls_config(cert_pem, priv_pem, now_unix_time, now_fn));
 
-    let use_socket_for_https_closure: SocketUser<IO, TP, OCC> = Box::new({
+    let use_socket_for_https_closure: SocketUser<N, D, TP, OCC> = Box::new({
         move |server, socket| {
             let tls_config = tls_config.clone();
             Box::pin(async move {
@@ -92,11 +93,12 @@ pub async fn run_server<
                 .spawn_local({
                     let network_ctx = network_ctx.clone();
                     let f = f.clone();
-                    let fs_io = fs_io.clone();
+                    let fs_block_device = fs_block_device.clone();
                     let fs_options = fs_options.clone();
                     async move {
                         loop {
-                            let fs = taf::FileSystem::new(fs_io.clone(), fs_options.clone())
+                            let fs_io = taf::device::BufStream::new(fs_block_device.clone());
+                            let fs = taf::FileSystem::new(fs_io, fs_options.clone())
                                 .await
                                 .unwrap();
                             let server = Server::new(fs);
@@ -112,8 +114,12 @@ pub async fn run_server<
     future::pending().await
 }
 
-type SocketUser<IO, TP, OCC> =
-    Box<dyn Fn(Server<IO, TP, OCC>, TcpSocket) -> LocalBoxFuture<'static, ()>>;
+type SocketUser<const N: usize, D, TP, OCC> = Box<
+    dyn Fn(
+        Server<taf::device::BufStream<D, N, 1>, TP, OCC>,
+        TcpSocket,
+    ) -> LocalBoxFuture<'static, ()>,
+>;
 
 async fn use_socket_for_http<
     IO: taf::ReadWriteSeek,

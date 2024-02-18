@@ -20,6 +20,7 @@ use sel4_async_block_io::{
 
 pub use embedded_fatfs::*;
 
+#[derive(Clone)]
 pub struct BlockIOAdapter<T, A, const N: usize> {
     inner: T,
     _phantom: PhantomData<(A, [(); N])>,
