@@ -175,14 +175,14 @@ in rec {
     "packetmeta-id" "async"
   ];
 
+  embeddedFatfsSource = {
+    git = "https://github.com/MabezDev/embedded-fatfs";
+    tag = "eec9091cf2abbd73e504079eb91e08c5f8a7c126";
+  };
+
   volatileSource = {
     git = "https://github.com/coliasgroup/volatile.git";
     tag = "keep/aa7512906e9b76066ed928eb6986b0f9"; # branch coliasgroup
-  };
-
-  fatSource = {
-    git = "https://github.com/coliasgroup/rust-embedded-fat.git";
-    tag = "keep/e1465a43c9f550ef58701a275b313310"; # branch sel4
   };
 
   ringWith = features: {

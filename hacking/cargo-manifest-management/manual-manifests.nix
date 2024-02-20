@@ -14,5 +14,5 @@ in {
   # ring = relativeToTmpSrc "ring";
   # rustls = relativeToTmpSrc "rustls/rustls";
   # volatile = relativeToTmpSrc "volatile";
-  "embedded-fatfs" = relativeToTmpSrc "embedded-fatfs";
+  # embedded-fatfs = relativeToTmpSrc "embedded-fatfs";
 }

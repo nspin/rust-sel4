@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, localCrates, versions, fatSource }:
+{ mk, localCrates, versions, embeddedFatfsSource }:
 
 mk {
   package.name = "sel4-async-block-io-fat";
@@ -19,7 +19,7 @@ mk {
         "alloc"
       ];
     };
-    embedded-fatfs = localCrates.embedded-fatfs // {
+    embedded-fatfs = embeddedFatfsSource // {
       default-features = false;
       features = [
         # "chrono"
