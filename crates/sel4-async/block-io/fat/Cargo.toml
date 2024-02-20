@@ -25,6 +25,7 @@ lru = "0.10.0"
 sel4-async-block-io = { path = ".." }
 
 [dependencies.embedded-fatfs]
-path = "../../../../tmp/src/embedded-fatfs"
+git = "https://github.com/MabezDev/embedded-fatfs"
+rev = "676f5364061709bfb9c90e80fb6db5c72617ee1a"
 default-features = false
 features = ["alloc", "lfn", "unicode", "log", "device"]

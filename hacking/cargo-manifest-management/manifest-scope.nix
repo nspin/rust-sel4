@@ -177,7 +177,7 @@ in rec {
 
   embeddedFatfsSource = {
     git = "https://github.com/MabezDev/embedded-fatfs";
-    tag = "eec9091cf2abbd73e504079eb91e08c5f8a7c126";
+    rev = "676f5364061709bfb9c90e80fb6db5c72617ee1a";
   };
 
   volatileSource = {
