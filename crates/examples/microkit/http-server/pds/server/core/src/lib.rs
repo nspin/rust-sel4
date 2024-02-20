@@ -21,7 +21,7 @@ use rustls::time_provider::TimeProvider;
 use rustls::version::TLS12;
 use rustls::ServerConfig;
 
-use sel4_async_block_io_fat as taf;
+use sel4_async_block_io_fat as fat;
 use sel4_async_io::ReadExactError;
 use sel4_async_network::{ManagedInterface, TcpSocket, TcpSocketError};
 use sel4_async_network_rustls::{Error as AsyncRustlsError, ServerConnector};
@@ -40,9 +40,9 @@ const HTTPS_PORT: u16 = 443;
 #[allow(clippy::too_many_arguments)] // TODO
 pub async fn run_server<
     const N: usize,
-    D: taf::device::BlockDevice<N> + Clone + 'static,
-    TP: taf::TimeProvider + Clone + 'static,
-    OCC: taf::OemCpConverter + Clone + 'static,
+    D: fat::device::BlockDevice<N> + Clone + 'static,
+    TP: fat::TimeProvider + Clone + 'static,
+    OCC: fat::OemCpConverter + Clone + 'static,
 >(
     now_unix_time: Duration,
     now_fn: impl 'static + Send + Sync + Fn() -> Instant,
@@ -83,7 +83,7 @@ pub async fn run_server<
         }
     });
 
-    let fs_options = taf::FsOptions::new()
+    let fs_options = fat::FsOptions::new()
         .time_provider(fs_tp)
         .oem_cp_converter(fs_occ);
 
@@ -97,8 +97,8 @@ pub async fn run_server<
                     let fs_options = fs_options.clone();
                     async move {
                         loop {
-                            let fs_io = taf::device::BufStream::new(fs_block_device.clone());
-                            let fs = taf::FileSystem::new(fs_io, fs_options.clone())
+                            let fs_io = fat::device::BufStream::new(fs_block_device.clone());
+                            let fs = fat::FileSystem::new(fs_io, fs_options.clone())
                                 .await
                                 .unwrap();
                             let server = Server::new(fs);
@@ -116,15 +116,15 @@ pub async fn run_server<
 
 type SocketUser<const N: usize, D, TP, OCC> = Box<
     dyn Fn(
-        Server<taf::device::BufStream<D, N, 1>, TP, OCC>,
+        Server<fat::device::BufStream<D, N, 1>, TP, OCC>,
         TcpSocket,
     ) -> LocalBoxFuture<'static, ()>,
 >;
 
 async fn use_socket_for_http<
-    IO: taf::ReadWriteSeek,
-    TP: taf::TimeProvider,
-    OCC: taf::OemCpConverter,
+    IO: fat::ReadWriteSeek,
+    TP: fat::TimeProvider,
+    OCC: fat::OemCpConverter,
 >(
     server: Server<IO, TP, OCC>,
     mut socket: TcpSocket,
@@ -136,9 +136,9 @@ async fn use_socket_for_http<
 }
 
 async fn use_socket_for_https<
-    IO: taf::ReadWriteSeek,
-    TP: taf::TimeProvider,
-    OCC: taf::OemCpConverter,
+    IO: fat::ReadWriteSeek,
+    TP: fat::TimeProvider,
+    OCC: fat::OemCpConverter,
 >(
     server: Server<IO, TP, OCC>,
     tls_config: Arc<ServerConfig>,

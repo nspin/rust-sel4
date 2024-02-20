@@ -9,26 +9,26 @@ use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec;
 
-use sel4_async_block_io_fat as taf;
+use sel4_async_block_io_fat as fat;
 use sel4_async_io::{Read, ReadExactError, Write};
 
 use crate::mime::content_type_from_name;
 
-pub(crate) struct Server<IO: taf::ReadWriteSeek, TP, OCC> {
-    fs: taf::FileSystem<IO, TP, OCC>,
+pub(crate) struct Server<IO: fat::ReadWriteSeek, TP, OCC> {
+    fs: fat::FileSystem<IO, TP, OCC>,
 }
 
-impl<IO: taf::ReadWriteSeek, TP, OCC> Server<IO, TP, OCC> {
-    pub(crate) fn new(fs: taf::FileSystem<IO, TP, OCC>) -> Self {
+impl<IO: fat::ReadWriteSeek, TP, OCC> Server<IO, TP, OCC> {
+    pub(crate) fn new(fs: fat::FileSystem<IO, TP, OCC>) -> Self {
         Self { fs }
     }
 }
 
 impl<IO, TP, OCC> Server<IO, TP, OCC>
 where
-    IO: taf::ReadWriteSeek,
-    TP: taf::TimeProvider,
-    OCC: taf::OemCpConverter,
+    IO: fat::ReadWriteSeek,
+    TP: fat::TimeProvider,
+    OCC: fat::OemCpConverter,
 {
     pub(crate) async fn handle_connection<U: Read + Write + Unpin>(
         &self,
@@ -93,7 +93,7 @@ where
         &'a self,
         conn: &mut U,
         content_type: &str,
-        mut file: taf::File<'a, IO, TP, OCC>,
+        mut file: fat::File<'a, IO, TP, OCC>,
     ) -> Result<(), ReadExactError<U::Error>> {
         use embedded_io_async::*;
         file.seek(SeekFrom::End(0)).await.unwrap();
@@ -235,10 +235,10 @@ where
     }
 }
 
-enum RequestPathStatus<'a, IO: taf::ReadWriteSeek, TP, OCC> {
+enum RequestPathStatus<'a, IO: fat::ReadWriteSeek, TP, OCC> {
     Ok {
         file_name: String,
-        file: taf::File<'a, IO, TP, OCC>,
+        file: fat::File<'a, IO, TP, OCC>,
     },
     MovedPermanently {
         location: String,
