@@ -9,6 +9,8 @@ use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec;
 
+use embedded_io_async::{Read as _};
+
 use sel4_async_block_io_fat as fat;
 use sel4_async_io::{Read, ReadExactError, Write};
 
@@ -93,12 +95,10 @@ where
         &'a self,
         conn: &mut U,
         content_type: &str,
-        mut file: fat::File<'a, IO, TP, OCC>,
+        file: fat::DirEntry<'a, IO, TP, OCC>,
     ) -> Result<(), ReadExactError<U::Error>> {
-        use embedded_io_async::*;
-        file.seek(SeekFrom::End(0)).await.unwrap();
-        let file_len: usize = file.stream_position().await.unwrap().try_into().unwrap();
-        file.rewind().await.unwrap();
+        let file_len: usize = file.len().try_into().unwrap();
+        let mut file = file.to_file();
         self.start_response_headers(conn, 200, "OK").await?;
         self.send_response_header(conn, "Content-Type", content_type.as_bytes())
             .await?;
@@ -207,10 +207,9 @@ where
                         let new = entry.to_dir();
                         cur = new;
                     } else {
-                        let file = entry.to_file();
                         return RequestPathStatus::Ok {
                             file_name: seg.to_owned(),
-                            file,
+                            file: entry,
                         };
                     }
                 }
@@ -226,7 +225,7 @@ where
             }
         } else {
             let file_name = "index.html";
-            let file = cur.open_file(file_name).await.unwrap(); // TODO fail with Err
+            let file = cur.open_meta(file_name).await.unwrap();
             RequestPathStatus::Ok {
                 file_name: file_name.to_owned(),
                 file,
@@ -238,7 +237,7 @@ where
 enum RequestPathStatus<'a, IO: fat::ReadWriteSeek, TP, OCC> {
     Ok {
         file_name: String,
-        file: fat::File<'a, IO, TP, OCC>,
+        file: fat::DirEntry<'a, IO, TP, OCC>,
     },
     MovedPermanently {
         location: String,
