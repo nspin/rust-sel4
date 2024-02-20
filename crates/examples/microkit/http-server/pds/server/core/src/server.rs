@@ -9,7 +9,7 @@ use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec;
 
-use embedded_io_async::{Read as _};
+use embedded_io_async::Read as _;
 
 use sel4_async_block_io_fat as fat;
 use sel4_async_io::{Read, ReadExactError, Write};
