@@ -64,7 +64,6 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for Rc<T> {
     }
 }
 
-#[derive(Debug)]
 pub struct CachedBlockIO<T: BlockIOLayout> {
     inner: T,
     lru: RefCell<LruCache<u64, <T::BlockSize as BlockSize>::Block>>,
