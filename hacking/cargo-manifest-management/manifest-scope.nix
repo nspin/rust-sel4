@@ -175,11 +175,6 @@ in rec {
     "packetmeta-id" "async"
   ];
 
-  embeddedFatfsSource = {
-    git = "https://github.com/MabezDev/embedded-fatfs";
-    rev = "676f5364061709bfb9c90e80fb6db5c72617ee1a";
-  };
-
   volatileSource = {
     git = "https://github.com/coliasgroup/volatile.git";
     tag = "keep/aa7512906e9b76066ed928eb6986b0f9"; # branch coliasgroup
@@ -192,7 +187,7 @@ in rec {
 
   rustlsSource = {
     git = "https://github.com/coliasgroup/rustls.git";
-    rev = "c315801aa0c1e9c765b27106b3969dd458995cc7";
+    tag = "keep/c315801aa0c1e9c765b27106b3969dd4";
   };
 
   rustlsWith = features: rustlsSource // {
@@ -202,6 +197,11 @@ in rec {
       "ring"
       "tls12"
     ] ++ features;
+  };
+
+  embeddedFatfsSource = {
+    git = "https://github.com/MabezDev/embedded-fatfs";
+    rev = "676f5364061709bfb9c90e80fb6db5c72617ee1a";
   };
 
   virtioDriversWith = features: filterOutEmptyFeatureList {
