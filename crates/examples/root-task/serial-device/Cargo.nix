@@ -9,7 +9,7 @@
 mk {
   package.name = "serial-device";
   dependencies = {
-    inherit (versions) tock-registers;
+    inherit (versions) fdt tock-registers;
     inherit (localCrates)
       sel4
       sel4-root-task

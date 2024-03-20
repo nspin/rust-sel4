@@ -2706,6 +2706,7 @@ dependencies = [
 name = "serial-device"
 version = "0.1.0"
 dependencies = [
+ "fdt",
  "sel4",
  "sel4-root-task",
  "tock-registers",

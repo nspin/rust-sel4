@@ -22,6 +22,32 @@ const SERIAL_DEVICE_BASE_ADDR: usize = 0x0900_0000;
 
 #[root_task]
 fn main(bootinfo: &sel4::BootInfoPtr) -> sel4::Result<Never> {
+    for extra in bootinfo.extra() {
+        match extra.id {
+            sel4::BootInfoExtraId::Fdt => {
+                let dt = fdt::Fdt::new(extra.content()).unwrap();
+                let stdout_node = dt.chosen().stdout().unwrap();
+                let mut reg_it = stdout_node.reg().unwrap();
+                let reg = reg_it.next().unwrap();
+                assert!(reg_it.next().is_none());
+                assert_eq!(reg.size.unwrap(), GRANULE_SIZE);
+                let paddr = reg.starting_address as usize;
+                sel4::debug_println!("yyy {:#x?}", stdout_node.interrupt_parent());
+                // assert_eq!(stdout_node.interrupt_cells().unwrap(), 3);
+                let mut interrupts_it = stdout_node.interrupts().unwrap();
+                let interrupt_type = interrupts_it.next().unwrap();
+                assert_eq!(interrupt_type, 0);
+                let interrupt_number = interrupts_it.next().unwrap();
+                let interrupt_flags = interrupts_it.next().unwrap();
+                assert!(interrupts_it.next().is_none());
+                sel4::debug_println!("xxx {:#x?}, {}, {}", paddr, interrupt_number, interrupt_flags);
+            }
+            _ => {}
+        }
+    }
+
+    sel4::init_thread::suspend_self::<()>();
+
     let mut empty_slots = bootinfo
         .empty()
         .range()

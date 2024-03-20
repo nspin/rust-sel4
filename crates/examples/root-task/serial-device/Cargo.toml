@@ -17,6 +17,7 @@ edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
+fdt = "0.1.5"
 sel4 = { path = "../../../sel4" }
 sel4-root-task = { path = "../../../sel4-root-task" }
 tock-registers = "0.8.1"
