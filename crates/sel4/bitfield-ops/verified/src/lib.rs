@@ -10,6 +10,7 @@ use core::marker::PhantomData;
 use core::mem;
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, Range, Shl, Shr};
 
+use builtin::SpecShr;
 use vstd::prelude::*;
 
 verus! {
@@ -25,9 +26,12 @@ pub trait UnsignedPrimInt:
     + BitOrAssign
     + Shl<usize, Output = Self>
     + Shr<usize, Output = Self>
+    // + SpecShr<usize, Output = Self>
     + From<bool> // HACK for generic 0 and 1
 {
-    const NUM_BITS: usize = mem::size_of::<Self>() * 8;
+    fn num_bits() -> usize {
+        mem::size_of::<Self>() * 8
+    }
 
     fn zero() -> Self {
         false.into()
@@ -41,8 +45,8 @@ pub trait UnsignedPrimInt:
 pub trait PrimInt: PrimIntSealed {
     type Unsigned: UnsignedPrimInt;
 
-    fn cast_from_unsigned(val: Self::Unsigned) -> Self;
-    fn cast_to_unsigned(val: Self) -> Self::Unsigned;
+    fn cast_from_unsigned(val: Self::Unsigned) -> Self where Self: Sized;
+    fn cast_to_unsigned(val: Self) -> Self::Unsigned where Self: Sized;
 }
 
 impl<T> PrimInt for T
@@ -103,13 +107,13 @@ impl_prim_int!(usize, isize);
 
 trait UnsignedPrimIntExt: UnsignedPrimInt {
     fn mask(range: Range<usize>) -> Self {
-        debug_assert!(range.start <= range.end);
-        debug_assert!(range.end <= Self::NUM_BITS);
+        assert(range.start <= range.end);
+        assert(range.end <= Self::num_bits());
         let num_bits = range.end - range.start;
         // avoid overflow
         match num_bits {
             0 => Self::zero(),
-            _ if num_bits == Self::NUM_BITS => !Self::zero(),
+            _ if num_bits == Self::num_bits() => !Self::zero(),
             _ => !(!Self::zero() << num_bits) << range.start,
         }
     }
@@ -124,8 +128,8 @@ impl<T: UnsignedPrimInt> UnsignedPrimIntExt for T {}
 // // //
 
 pub fn get_bit<T: UnsignedPrimInt>(src: &[T], i: usize) -> bool {
-    assert(i < src.len() * T::NUM_BITS);
-    src[i / T::NUM_BITS] & (T::one() << (i % T::NUM_BITS)) != T::zero()
+    assert(i < src.len() * T::num_bits());
+    src[i / T::num_bits()] & (T::one() << (i % T::num_bits())) != T::zero()
 }
 
 pub fn get_bits<T: UnsignedPrimInt, U: UnsignedPrimInt + TryFrom<T>>(
@@ -135,9 +139,9 @@ pub fn get_bits<T: UnsignedPrimInt, U: UnsignedPrimInt + TryFrom<T>>(
     check_range::<T, U>(src, &src_range);
 
     let num_bits = src_range.end - src_range.start;
-    let index_of_first_primitive = src_range.start / T::NUM_BITS;
-    let offset_into_first_primitive = src_range.start % T::NUM_BITS;
-    let num_bits_from_first_primitive = (T::NUM_BITS - offset_into_first_primitive).min(num_bits);
+    let index_of_first_primitive = src_range.start / T::num_bits();
+    let offset_into_first_primitive = src_range.start % T::num_bits();
+    let num_bits_from_first_primitive = (T::num_bits() - offset_into_first_primitive).min(num_bits);
 
     let bits_from_first_primitive = (src[index_of_first_primitive] >> offset_into_first_primitive)
         .take(num_bits_from_first_primitive);
@@ -147,7 +151,7 @@ pub fn get_bits<T: UnsignedPrimInt, U: UnsignedPrimInt + TryFrom<T>>(
     let mut index_of_cur_primitive = index_of_first_primitive + 1;
 
     while num_bits_so_far < num_bits {
-        let num_bits_from_cur_primitive = (num_bits - num_bits_so_far).min(T::NUM_BITS);
+        let num_bits_from_cur_primitive = (num_bits - num_bits_so_far).min(T::num_bits());
         let bits_from_cur_primitive = src[index_of_cur_primitive].take(num_bits_from_cur_primitive);
         bits |= checked_cast::<T, U>(bits_from_cur_primitive) << num_bits_so_far;
         num_bits_so_far += num_bits_from_cur_primitive;
@@ -166,11 +170,14 @@ pub fn set_bits<T: UnsignedPrimInt, U: UnsignedPrimInt + TryInto<T>>(
 
     let num_bits = dst_range.end - dst_range.start;
 
-    assert(num_bits == U::NUM_BITS || src >> num_bits == U::zero());
+    // assert(num_bits == U::NUM_BITS || src >> num_bits == U::zero());
+    // if !(num_bits == U::num_bits() || src >> num_bits == U::zero()) {
+    //     assert(false);
+    // }
 
-    let index_of_first_primitive = dst_range.start / T::NUM_BITS;
-    let offset_into_first_primitive = dst_range.start % T::NUM_BITS;
-    let num_bits_for_first_primitive = (T::NUM_BITS - offset_into_first_primitive).min(num_bits);
+    let index_of_first_primitive = dst_range.start / T::num_bits();
+    let offset_into_first_primitive = dst_range.start % T::num_bits();
+    let num_bits_for_first_primitive = (T::num_bits() - offset_into_first_primitive).min(num_bits);
     let bits_for_first_primitive = src.take(num_bits_for_first_primitive);
 
     dst[index_of_first_primitive] = (dst[index_of_first_primitive]
@@ -184,10 +191,10 @@ pub fn set_bits<T: UnsignedPrimInt, U: UnsignedPrimInt + TryInto<T>>(
     let mut index_of_cur_primitive = index_of_first_primitive + 1;
 
     while num_bits_so_far < num_bits {
-        let num_bits_for_cur_primitive = (num_bits - num_bits_so_far).min(T::NUM_BITS);
+        let num_bits_for_cur_primitive = (num_bits - num_bits_so_far).min(T::num_bits());
         let bits_for_cur_primitive = (src >> num_bits_so_far).take(num_bits_for_cur_primitive);
         dst[index_of_cur_primitive] = (dst[index_of_cur_primitive]
-            & T::mask(num_bits_for_cur_primitive..T::NUM_BITS))
+            & T::mask(num_bits_for_cur_primitive..T::num_bits()))
             | checked_cast(bits_for_cur_primitive);
         num_bits_so_far += num_bits_for_cur_primitive;
         index_of_cur_primitive += 1;
@@ -196,8 +203,8 @@ pub fn set_bits<T: UnsignedPrimInt, U: UnsignedPrimInt + TryInto<T>>(
 
 fn check_range<T: UnsignedPrimInt, U: UnsignedPrimInt>(arr: &[T], range: &Range<usize>) {
     assert(range.start <= range.end);
-    assert(range.end <= arr.len() * T::NUM_BITS);
-    assert(range.end - range.start <= U::NUM_BITS);
+    assert(range.end <= arr.len() * T::num_bits());
+    assert(range.end - range.start <= U::num_bits());
 }
 
 fn checked_cast<T: TryInto<U>, U>(val: T) -> U {
@@ -230,12 +237,12 @@ fn set_bits_from_slice_via<T, U, V>(
     let num_bits = dst_range.len();
 
     assert(dst_range.start <= dst_range.end);
-    assert(dst_range.end <= dst.len() * T::NUM_BITS);
-    assert(src_start + num_bits <= src.len() * U::NUM_BITS);
+    assert(dst_range.end <= dst.len() * T::num_bits());
+    assert(src_start + num_bits <= src.len() * U::num_bits());
 
     let mut cur_xfer_start = 0;
     while cur_xfer_start < num_bits {
-        let cur_xfer_end = num_bits.min(cur_xfer_start + V::NUM_BITS);
+        let cur_xfer_end = num_bits.min(cur_xfer_start + V::num_bits());
         let cur_xfer_src_range = (src_start + cur_xfer_start)..(src_start + cur_xfer_end);
         let cur_xfer_dst_range =
             (dst_range.start + cur_xfer_start)..(dst_range.start + cur_xfer_end);
@@ -251,7 +258,7 @@ pub fn get<T: UnsignedPrimInt, U: PrimInt>(src: &[T], src_start_bit: usize) -> U
 where
     U::Unsigned: TryFrom<T>,
 {
-    let src_range = src_start_bit..(src_start_bit + U::Unsigned::NUM_BITS);
+    let src_range = src_start_bit..(src_start_bit + U::Unsigned::num_bits());
     U::cast_from_unsigned(get_bits(src, src_range))
 }
 
@@ -259,7 +266,7 @@ pub fn set<T: UnsignedPrimInt, U: PrimInt>(dst: &mut [T], dst_start_bit: usize, 
 where
     U::Unsigned: TryInto<T>,
 {
-    let dst_range = dst_start_bit..(dst_start_bit + U::Unsigned::NUM_BITS);
+    let dst_range = dst_start_bit..(dst_start_bit + U::Unsigned::num_bits());
     set_bits(dst, dst_range, U::cast_to_unsigned(src))
 }
 
