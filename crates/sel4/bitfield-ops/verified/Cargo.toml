@@ -1,0 +1,36 @@
+#
+# Copyright 2023, Colias Group, LLC
+#
+# SPDX-License-Identifier: BSD-2-Clause
+#
+#
+# This file is generated from './Cargo.nix'. You can edit this file directly
+# if you are not using this project's Cargo manifest management tools.
+# See 'hacking/cargo-manifest-management/README.md' for more information.
+#
+
+[package]
+name = "sel4-bitfield-ops-verified"
+version = "0.1.0"
+authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
+edition = "2021"
+license = "BSD-2-Clause"
+
+[package.metadata.verus]
+verify = true
+
+[dependencies]
+sel4-bitfield-ops = { path = ".." }
+
+[dependencies.builtin]
+git = "https://github.com/coliasgroup/verus.git"
+tag = "keep/c1d8b986315b1d7fcaa0bf63c2e0497f"
+
+[dependencies.builtin_macros]
+git = "https://github.com/coliasgroup/verus.git"
+tag = "keep/c1d8b986315b1d7fcaa0bf63c2e0497f"
+
+[dependencies.vstd]
+git = "https://github.com/coliasgroup/verus.git"
+tag = "keep/c1d8b986315b1d7fcaa0bf63c2e0497f"
+default-features = false

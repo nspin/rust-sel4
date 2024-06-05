@@ -2064,6 +2064,16 @@ name = "sel4-bitfield-ops"
 version = "0.1.0"
 
 [[package]]
+name = "sel4-bitfield-ops-verified"
+version = "0.1.0"
+dependencies = [
+ "builtin",
+ "builtin_macros",
+ "sel4-bitfield-ops",
+ "vstd",
+]
+
+[[package]]
 name = "sel4-bitfield-parser"
 version = "0.1.0"
 dependencies = [
