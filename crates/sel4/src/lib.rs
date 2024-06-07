@@ -212,6 +212,10 @@ pub use state::{
     try_with_ipc_buffer_slot_mut, with_ipc_buffer, with_ipc_buffer_mut, ImplicitInvocationContext,
 };
 
+#[cfg(feature = "state")]
+#[sel4_cfg(KERNEL_INVOCATION_REPORT_ERROR_IPC)]
+pub use state::{get_print_error, set_print_error};
+
 /// Corresponds to `seL4_Word`.
 pub type Word = sys::seL4_Word;
 

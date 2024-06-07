@@ -5,8 +5,10 @@
 //
 
 use core::cell::UnsafeCell;
+use core::ffi::c_char;
 
-use crate::{InvocationContext, IpcBuffer};
+#[allow(unused_imports)]
+use crate::{sel4_cfg, sel4_cfg_usize, InvocationContext, IpcBuffer};
 
 mod token;
 
@@ -182,5 +184,48 @@ impl ImplicitInvocationContext {
 impl InvocationContext for ImplicitInvocationContext {
     fn with_context<T>(&mut self, f: impl FnOnce(&mut IpcBuffer) -> T) -> T {
         with_ipc_buffer_mut(f)
+    }
+}
+
+// // //
+
+#[sel4_cfg(KERNEL_INVOCATION_REPORT_ERROR_IPC)]
+pub use print_error::*;
+
+#[sel4_cfg(KERNEL_INVOCATION_REPORT_ERROR_IPC)]
+mod print_error {
+    use super::*;
+
+    maybe_extern! {
+        __sel4_print_error: SyncUnsafeCell<c_char> =
+            SyncUnsafeCell(UnsafeCell::new(sel4_cfg_usize!(LIB_SEL4_PRINT_INVOCATION_ERRORS) as c_char));
+    }
+
+    struct PrintErrorAccessor;
+
+    impl Accessor<c_char> for PrintErrorAccessor {
+        #[allow(unused_unsafe)]
+        fn with<F, U>(&self, f: F) -> U
+        where
+            F: FnOnce(&UnsafeCell<c_char>) -> U,
+        {
+            f(unsafe { &__sel4_print_error.0 })
+        }
+    }
+
+    maybe_add_thread_local_attr! {
+        static PRINT_ERROR: TokenCellWrapper<PrintErrorAccessor> = unsafe {
+            TokenCellWrapper(TokenCell::new(PrintErrorAccessor))
+        };
+    }
+
+    pub fn get_print_error() -> bool {
+        PRINT_ERROR.0.try_with(|slot| *slot.unwrap() != 0)
+    }
+
+    pub fn set_print_error(print_error: bool) {
+        PRINT_ERROR
+            .0
+            .try_with_mut(|slot| *slot.unwrap() = print_error.into())
     }
 }
