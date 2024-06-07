@@ -23,3 +23,8 @@ Files:
   crates/examples/microkit/banscii/pds/assistant/core/assets/fonts/rock-salt/*.ttf
 Copyright: 2010 by Font Diner, Inc DBA Sideshow. All rights reserved.
 License: Apache-2.0
+
+Files:
+  crates/examples/microkit/banscii/pds/uart-driver/xuartps/*
+Copyright: TODO
+License: BSD-2-Clause
