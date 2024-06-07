@@ -184,7 +184,7 @@ version = "0.1.0"
 dependencies = [
  "banscii-artist-interface-types",
  "banscii-assistant-core",
- "banscii-pl011-driver-interface-types",
+ "banscii-uart-driver-interface-types",
  "hex",
  "sel4-externally-shared",
  "sel4-microkit",
@@ -213,25 +213,40 @@ dependencies = [
 name = "banscii-pl011-driver"
 version = "0.1.0"
 dependencies = [
- "banscii-pl011-driver-core",
- "banscii-pl011-driver-interface-types",
+ "banscii-uart-driver-traits",
+ "tock-registers",
+]
+
+[[package]]
+name = "banscii-uart-driver"
+version = "0.1.0"
+dependencies = [
+ "banscii-pl011-driver",
+ "banscii-uart-driver-interface-types",
+ "banscii-uart-driver-traits",
+ "banscii-xuartps-driver",
  "heapless",
  "sel4-microkit",
  "sel4-microkit-message",
 ]
 
 [[package]]
-name = "banscii-pl011-driver-core"
-version = "0.1.0"
-dependencies = [
- "tock-registers",
-]
-
-[[package]]
-name = "banscii-pl011-driver-interface-types"
+name = "banscii-uart-driver-interface-types"
 version = "0.1.0"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "banscii-uart-driver-traits"
+version = "0.1.0"
+
+[[package]]
+name = "banscii-xuartps-driver"
+version = "0.1.0"
+dependencies = [
+ "banscii-uart-driver-traits",
+ "tock-registers",
 ]
 
 [[package]]

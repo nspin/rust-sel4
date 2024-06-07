@@ -10,11 +10,11 @@
 #
 
 [package]
-name = "banscii-pl011-driver-core"
+name = "banscii-xuartps-driver"
 version = "0.1.0"
-authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2021"
 license = "BSD-2-Clause"
 
 [dependencies]
+banscii-uart-driver-traits = { path = "../traits" }
 tock-registers = "0.8.1"

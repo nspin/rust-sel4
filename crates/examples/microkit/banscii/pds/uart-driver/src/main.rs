@@ -14,8 +14,27 @@ use sel4_microkit::{
 };
 use sel4_microkit_message::MessageInfoExt as _;
 
-use banscii_pl011_driver_core::Driver;
-use banscii_pl011_driver_interface_types::*;
+use banscii_uart_driver_interface_types::*;
+use banscii_uart_driver_traits::UartDriver;
+
+#[cfg(feature = "board-qemu_virt_aarch64")]
+use banscii_pl011_driver::Driver;
+
+#[cfg(feature = "board-zcu102")]
+use banscii_xuartps_driver::Driver;
+
+macro_rules! count_enabled {
+    [ $($feat:literal,)* ] => {
+        $(cfg!(feature = $feat) as i32 +)* 0
+    }
+}
+
+const _: () = {
+    let n = count_enabled!["board-qemu_virt_aarch64", "board-zcu102",];
+    if n != 1 {
+        panic!("exacly one board-* feature must be enabled");
+    }
+};
 
 const DEVICE: Channel = Channel::new(0);
 const ASSISTANT: Channel = Channel::new(1);
@@ -23,7 +42,7 @@ const ASSISTANT: Channel = Channel::new(1);
 #[protection_domain]
 fn init() -> HandlerImpl {
     let driver =
-        unsafe { Driver::new(memory_region_symbol!(pl011_register_block: *mut ()).as_ptr()) };
+        unsafe { Driver::new(memory_region_symbol!(uart_register_block: *mut ()).as_ptr()) };
     HandlerImpl {
         driver,
         buffer: Deque::new(),

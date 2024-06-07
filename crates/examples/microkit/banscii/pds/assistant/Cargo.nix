@@ -13,7 +13,7 @@ mk {
     inherit (localCrates)
       sel4-microkit-message
       banscii-assistant-core
-      banscii-pl011-driver-interface-types
+      banscii-uart-driver-interface-types
       banscii-artist-interface-types
     ;
     sel4-externally-shared = localCrates.sel4-externally-shared // { features = [ "unstable" ]; };

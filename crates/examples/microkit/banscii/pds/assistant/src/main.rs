@@ -27,7 +27,7 @@ use sel4_microkit_message::MessageInfoExt as _;
 
 use banscii_artist_interface_types as artist;
 use banscii_assistant_core::Draft;
-use banscii_pl011_driver_interface_types as pl011_driver;
+use banscii_uart_driver_interface_types as pl011_driver;
 
 const PL011_DRIVER: Channel = Channel::new(0);
 const ARTIST: Channel = Channel::new(1);
