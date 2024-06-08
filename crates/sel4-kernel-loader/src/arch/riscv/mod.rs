@@ -126,6 +126,7 @@ sel4_cfg_if! {
     }
 }
 
+#[no_mangle]
 fn switch_page_tables() {
     #[cfg(target_pointer_width = "32")]
     const MODE: satp::Mode = satp::Mode::Sv32;

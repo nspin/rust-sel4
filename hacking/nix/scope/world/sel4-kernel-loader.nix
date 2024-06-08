@@ -17,8 +17,8 @@ let
 
   rootCrate = crates.sel4-kernel-loader;
 
-  profile = "release";
-  # profile = "dev";
+  # profile = "release";
+  profile = "dev";
 
   profiles = crateUtils.clobber [
     {
@@ -31,7 +31,7 @@ let
         # overflow-checks = true; # TODO
         codegen-units = 1;
         incremental = false;
-        # debug = 2;
+        debug = 2;
       };
     }
   ];
