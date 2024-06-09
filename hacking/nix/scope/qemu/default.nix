@@ -14,13 +14,27 @@
 
 stdenv.mkDerivation rec {
   pname = "qemu";
-  # version = "9.0.0";
-  version = "8.2.0";
+  # version = "9.0.0"; # n
+  # version = "8.2.0"; # n
+  # version = "8.1.0"; # n
+  # version = "8.1.0-rc1"; # n
+  # version = "8.1.0-rc0"; # ?
+  # version = "8.0.5"; # y
+  # version = "8.0.4"; # y
+  # version = "8.0.3"; # y
+  # version = "8.0.0"; # y
 
   src = fetchurl {
     url = "https://download.qemu.org/qemu-${version}.tar.xz";
-    # hash = "sha256-MnCKxmww2MiSYz6paMdxwcdtWX1w3erSGg0izPOG2mk=";
-    hash = "sha256-vwDS+hIBDfiwrekzcd71jmMssypr/cX1oP+Oah+xvzI=";
+    # hash = "sha256-MnCKxmww2MiSYz6paMdxwcdtWX1w3erSGg0izPOG2mk="; # 9.0.0
+    # hash = "sha256-vwDS+hIBDfiwrekzcd71jmMssypr/cX1oP+Oah+xvzI="; # 8.2.0
+    # hash = "sha256-cQwQEZjjNNR2Lu9l9km8Q/qKXddTA1VLis/sPrJfDlU="; # 8.1.0
+    # hash = "sha256-0v7c+WLqybeeDeno4Bun9jCVw4fHDZxTZLLMzJMmHC0="; # 8.1.0-rc1
+    # hash = "sha256-uQX+PRzDpvHNYMvUgKB7bJ7LbX9plCWIS5DeQwcBGIw="; # 8.1.0-rc0
+    # hash = "sha256-kdMCTVHkQcI13LGwyHyzqrMCKDFm6NPV+CgqoGw0a+E="; # 8.0.5
+    # hash = "sha256-gcgX3aOK+Vi+W+8abPVbZYuy0/uHwealcd5reyxEUWw="; # 8.0.4
+    # hash = "sha256-7PTTLL7505e/yMxQ5NHpKhswJTvzLo7nPHqNz5ojKwk="; # 8.0.3
+    # hash = "sha256-u2DwNBUxGB1sw5ad0ZoBPQQnqH+RgZOXDZrbkRMeVtA="; # 8.0.0
   };
 
   depsBuildBuild = [
