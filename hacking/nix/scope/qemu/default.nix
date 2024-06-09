@@ -14,11 +14,13 @@
 
 stdenv.mkDerivation rec {
   pname = "qemu";
-  version = "9.0.0";
+  # version = "9.0.0";
+  version = "8.2.0";
 
   src = fetchurl {
     url = "https://download.qemu.org/qemu-${version}.tar.xz";
-    hash = "sha256-MnCKxmww2MiSYz6paMdxwcdtWX1w3erSGg0izPOG2mk=";
+    # hash = "sha256-MnCKxmww2MiSYz6paMdxwcdtWX1w3erSGg0izPOG2mk=";
+    hash = "sha256-vwDS+hIBDfiwrekzcd71jmMssypr/cX1oP+Oah+xvzI=";
   };
 
   depsBuildBuild = [
