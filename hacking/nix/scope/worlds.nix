@@ -247,7 +247,7 @@ in rec {
                 mkInstanceForPlatform = platUtils.qemu.mkMkInstanceForPlatform {
                   mkQemuCmd = loader: [
                     "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
-                      "-machine" "virt"
+                      "-machine" "virt,aclint=on"
                       "-cpu" "rv64" "-smp" numCores "-m" qemuMemory
                       "-nographic"
                       "-serial" "mon:stdio"

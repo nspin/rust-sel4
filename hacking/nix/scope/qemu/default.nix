@@ -14,7 +14,7 @@
 
 stdenv.mkDerivation rec {
   pname = "qemu";
-  # version = "9.0.0"; # n
+  version = "9.0.0"; # n
   # version = "8.2.0"; # n
   # version = "8.1.0"; # n
   # version = "8.1.0-rc1"; # n
@@ -26,7 +26,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://download.qemu.org/qemu-${version}.tar.xz";
-    # hash = "sha256-MnCKxmww2MiSYz6paMdxwcdtWX1w3erSGg0izPOG2mk="; # 9.0.0
+    hash = "sha256-MnCKxmww2MiSYz6paMdxwcdtWX1w3erSGg0izPOG2mk="; # 9.0.0
     # hash = "sha256-vwDS+hIBDfiwrekzcd71jmMssypr/cX1oP+Oah+xvzI="; # 8.2.0
     # hash = "sha256-cQwQEZjjNNR2Lu9l9km8Q/qKXddTA1VLis/sPrJfDlU="; # 8.1.0
     # hash = "sha256-0v7c+WLqybeeDeno4Bun9jCVw4fHDZxTZLLMzJMmHC0="; # 8.1.0-rc1
