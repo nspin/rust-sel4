@@ -271,8 +271,10 @@ superCallPackage ../rust-utils {} self //
       };
 
   # qemuForSeL4 = (import xxx {}).qemu;
+  qemuForSeL4 = pkgsBuildBuild.qemu;
+  # qemuForSeL4 = xqemuForSeL4;
 
-  qemuForSeL4 = callPackage ./qemu {
+  xqemuForSeL4 = callPackage ./qemu {
     hostCpuTargets = [
       "arm-softmmu"
       "aarch64-softmmu"
