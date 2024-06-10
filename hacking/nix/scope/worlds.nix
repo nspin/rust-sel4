@@ -281,20 +281,18 @@ in rec {
         canSimulate = true;
         mkInstanceForPlatform = platUtils.qemu.mkMkInstanceForPlatform {
           mkQemuCmd = loader: [
-            # "${pkgsBuildBuild.spike}/bin/spike"
-              # # "-machine" "spike"
-              # # "-cpu" "rv64"
-              # "-m4096"
-              # # "-nographic"
-              # # "-serial" "mon:stdio"
-              # "--kernel=${loader}"
-            "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
-              "-machine" "spike"
-              "-cpu" "rv64" "-m" "size=4096M"
-              "-nographic"
-              "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
-              "-serial" "mon:stdio"
-              "-kernel" loader
+            "${pkgsBuildBuild.spike}/bin/spike"
+              "-m4096"
+              "--kernel=${loader}"
+              "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.elf"
+              # "${opensbi}/share/opensbi/lp64/generic/firmware/fw_jump.elf"
+            # "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
+            #   "-machine" "spike"
+            #   "-cpu" "rv64" "-m" "size=4096M"
+            #   "-nographic"
+            #   "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
+            #   "-serial" "mon:stdio"
+            #   "-kernel" loader
           ];
         };
       };
