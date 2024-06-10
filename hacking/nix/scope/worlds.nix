@@ -252,7 +252,7 @@ in rec {
                       "-cpu" "rv64" "-smp" numCores "-m" qemuMemory
                       "-nographic"
                       "-serial" "mon:stdio"
-                      # "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
+                      "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
                       "-kernel" loader
                       # "-d" "unimp,guest_errors"
                       # "--trace" "'*'"
@@ -281,9 +281,35 @@ in rec {
         canSimulate = true;
         mkInstanceForPlatform = platUtils.qemu.mkMkInstanceForPlatform {
           mkQemuCmd = loader: [
+            # "${pkgsBuildBuild.spike}/bin/spike"
+              # # "-machine" "spike"
+              # # "-cpu" "rv64"
+              # "-m4096"
+              # # "-nographic"
+              # # "-serial" "mon:stdio"
+              # "--kernel=${loader}"
             "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
               "-machine" "spike"
               "-cpu" "rv64" "-m" "size=4096M"
+              "-nographic"
+              "-serial" "mon:stdio"
+              "-kernel" loader
+          ];
+        };
+      };
+
+      hifive = mkWorld {
+        inherit kernelLoaderConfig;
+        kernelConfig = kernelConfigCommon // {
+          KernelArch = mkString "riscv";
+          KernelSel4Arch = mkString "riscv64";
+          KernelPlatform = mkString "hifive";
+        };
+        canSimulate = true;
+        mkInstanceForPlatform = platUtils.qemu.mkMkInstanceForPlatform {
+          mkQemuCmd = loader: [
+            "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
+              "-machine" "sifive_u"
               "-nographic"
               "-serial" "mon:stdio"
               "-kernel" loader

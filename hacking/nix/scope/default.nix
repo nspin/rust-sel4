@@ -290,12 +290,12 @@ superCallPackage ../rust-utils {} self //
 
   mk = yyy: (yyy.override {
     hostCpuTargets = [
-      # "arm-softmmu"
-      # "aarch64-softmmu"
-      # "riscv32-softmmu"
+      "arm-softmmu"
+      "aarch64-softmmu"
+      "riscv32-softmmu"
       "riscv64-softmmu"
-      # "i386-softmmu"
-      # "x86_64-softmmu"
+      "i386-softmmu"
+      "x86_64-softmmu"
     ];
     guestAgentSupport = false;
     numaSupport = false;
