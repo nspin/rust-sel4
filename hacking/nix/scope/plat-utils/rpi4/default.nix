@@ -103,7 +103,7 @@ let
         mkQemuCmd = loader: [
           "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-${if hostPlatform.is32bit then "arm" else "aarch64"}"
             "-smp" "4"
-            "-m" "2048"
+            "-m" "size=2048"
             "-machine" "raspi4b"
             "-nographic"
             "-serial" "null"

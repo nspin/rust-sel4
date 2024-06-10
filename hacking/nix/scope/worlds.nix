@@ -90,7 +90,7 @@ in rec {
                     # virtualization=on even when hypervisor to test loader dropping exception level
                     "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-aarch64"
                       "-machine" "virt${lib.optionalString el2 ",virtualization=on"}"
-                      "-cpu" cpu "-smp" numCores "-m" "1024"
+                      "-cpu" cpu "-smp" numCores "-m" "size=1024"
                       "-nographic"
                       "-serial" "mon:stdio"
                   ] ++ mkSeL4KernelLoaderWithPayloadQEMUArgs loader ++ extraQEMUArgs;
@@ -190,7 +190,7 @@ in rec {
                   mkQemuCmd = loader: [
                     "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-arm"
                       "-machine" "virt,highmem=off,secure=off,virtualization=${if bootInHyp then "on" else "off"}"
-                      "-cpu" cpu "-smp" numCores "-m" "1024"
+                      "-cpu" cpu "-smp" numCores "-m" "size=1024"
                       "-nographic"
                       "-serial" "mon:stdio"
                       "-kernel" loader
@@ -247,15 +247,12 @@ in rec {
                 mkInstanceForPlatform = platUtils.qemu.mkMkInstanceForPlatform {
                   mkQemuCmd = loader: [
                     "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
-                      # "-machine" "virt,dumpdtb=${toString /home/x/i/rust-sel4/tmp/foo.dtb}"
                       "-machine" "virt"
-                      "-cpu" "rv64" "-smp" numCores "-m" qemuMemory
+                      "-cpu" "rv64" "-smp" numCores "-m" "size=${qemuMemory}"
                       "-nographic"
                       "-serial" "mon:stdio"
-                      "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
                       "-kernel" loader
                       # "-d" "unimp,guest_errors"
-                      # "--trace" "'*'"
                   ];
                 };
               };
@@ -281,18 +278,17 @@ in rec {
         canSimulate = true;
         mkInstanceForPlatform = platUtils.qemu.mkMkInstanceForPlatform {
           mkQemuCmd = loader: [
-            "${pkgsBuildBuild.spike}/bin/spike"
-              "-m4096"
-              "--kernel=${loader}"
-              "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.elf"
-              # "${opensbi}/share/opensbi/lp64/generic/firmware/fw_jump.elf"
-            # "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
-            #   "-machine" "spike"
-            #   "-cpu" "rv64" "-m" "size=4096M"
-            #   "-nographic"
-            #   "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
-            #   "-serial" "mon:stdio"
-            #   "-kernel" loader
+            "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
+              "-machine" "spike"
+              "-cpu" "rv64" "-m" "size=4096M"
+              "-nographic"
+              "-serial" "mon:stdio"
+              "-kernel" loader
+            # TODO
+            # "${pkgsBuildBuild.spike}/bin/spike"
+            #   "-m4096"
+            #   "--kernel=${loader}"
+            #   "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.elf"
           ];
         };
       };
@@ -312,7 +308,6 @@ in rec {
               "-m" "size=8192M"
               "-nographic"
               "-serial" "mon:stdio"
-              "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
               "-kernel" loader
           ];
         };
