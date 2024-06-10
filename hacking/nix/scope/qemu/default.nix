@@ -14,10 +14,10 @@
 
 stdenv.mkDerivation rec {
   pname = "qemu";
-  version = "9.0.0"; # n
+  # version = "9.0.0"; # n
   # version = "8.2.0"; # n
   # version = "8.1.0"; # n
-  # version = "8.1.0-rc1"; # n
+  version = "8.1.0-rc1"; # n
   # version = "8.1.0-rc0"; # ?
   # version = "8.0.5"; # y
   # version = "8.0.4"; # y
@@ -26,10 +26,10 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://download.qemu.org/qemu-${version}.tar.xz";
-    hash = "sha256-MnCKxmww2MiSYz6paMdxwcdtWX1w3erSGg0izPOG2mk="; # 9.0.0
+    # hash = "sha256-MnCKxmww2MiSYz6paMdxwcdtWX1w3erSGg0izPOG2mk="; # 9.0.0
     # hash = "sha256-vwDS+hIBDfiwrekzcd71jmMssypr/cX1oP+Oah+xvzI="; # 8.2.0
     # hash = "sha256-cQwQEZjjNNR2Lu9l9km8Q/qKXddTA1VLis/sPrJfDlU="; # 8.1.0
-    # hash = "sha256-0v7c+WLqybeeDeno4Bun9jCVw4fHDZxTZLLMzJMmHC0="; # 8.1.0-rc1
+    hash = "sha256-0v7c+WLqybeeDeno4Bun9jCVw4fHDZxTZLLMzJMmHC0="; # 8.1.0-rc1
     # hash = "sha256-uQX+PRzDpvHNYMvUgKB7bJ7LbX9plCWIS5DeQwcBGIw="; # 8.1.0-rc0
     # hash = "sha256-kdMCTVHkQcI13LGwyHyzqrMCKDFm6NPV+CgqoGw0a+E="; # 8.0.5
     # hash = "sha256-gcgX3aOK+Vi+W+8abPVbZYuy0/uHwealcd5reyxEUWw="; # 8.0.4
@@ -72,16 +72,34 @@ stdenv.mkDerivation rec {
       sha256 = "sha256-12uGZRO6T1uWYvblAx5/FdRsuZZ1B1iWT9ZxpN3Qga0=";
     })
     # ../../../../tmp/1.diff
-    ../../../../tmp/2.diff
+    # ../../../../tmp/2.diff
+    ../../../../tmp/3.diff
+    # (fetchurl {
+    #   url = "https://github.com/qemu/qemu/commit/a574b27af4fe340684ca9f20560a1b01905e4364.patch";
+    #   # sha256 = "sha256-12uGZRO6T1uWYvblAx5/FdRsuZZ1B1iWT9ZxpN3Qga0=";
+    #   sha256 = lib.fakeHash;
+    #   revert = true;
+    # })
+    # (fetchpatch {
+    #   url = "https://github.com/qemu/qemu/commit/7efd65423ab22e6f5890ca08ae40c84d6660242f.patch";
+    #   # sha256 = "sha256-12uGZRO6T1uWYvblAx5/FdRsuZZ1B1iWT9ZxpN3Qga0=";
+    #   sha256 = lib.fakeHash;
+    #   revert = true;
+    # })
+    # (fetchurl {
+    #   url = "https://github.com/qemu/qemu/commit/a574b27af4fe340684ca9f20560a1b01905e4364.patch";
+    #   # sha256 = "sha256-12uGZRO6T1uWYvblAx5/FdRsuZZ1B1iWT9ZxpN3Qga0=";
+    #   sha256 = lib.fakeHash;
+    #   revert = true;
+    # })
   ];
 
   postPatch = ''
     # Otherwise tries to ensure /var/run exists.
     sed -i "/install_emptydir(get_option('localstatedir') \/ 'run')/d" \
         qga/meson.build
-
-    cp ${../../../../tmp/1.2-opensbi-riscv64-generic-fw_dynamic.bin} pc-bios/opensbi-riscv64-generic-fw_dynamic.bin
   '';
+    # cp ${../../../../tmp/1.2-opensbi-riscv64-generic-fw_dynamic.bin} pc-bios/opensbi-riscv64-generic-fw_dynamic.bin
 
   preConfigure = ''
     unset CPP # intereferes with dependency calculation

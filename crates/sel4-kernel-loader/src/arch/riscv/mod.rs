@@ -43,6 +43,15 @@ impl Arch for ArchImpl {
         unsafe {
             kernel_boot_level_0_table_access.finish_for_riscv();
         }
+
+        unsafe {
+            let addr = 0x200bff8usize;
+            crate::fmt::debug_println_without_synchronization!("BEFORE");
+            for _ in 0..3 {
+                let t: u64 = core::ptr::read_volatile(addr as *const _);
+                crate::fmt::debug_println_without_synchronization!("AFTER {:#x}", t);
+            }
+        }
     }
 
     fn idle() -> ! {

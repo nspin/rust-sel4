@@ -247,13 +247,14 @@ in rec {
                 mkInstanceForPlatform = platUtils.qemu.mkMkInstanceForPlatform {
                   mkQemuCmd = loader: [
                     "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
+                      # "-machine" "virt,dumpdtb=${toString /home/x/i/rust-sel4/tmp/foo.dtb}"
                       "-machine" "virt"
                       "-cpu" "rv64" "-smp" numCores "-m" qemuMemory
                       "-nographic"
                       "-serial" "mon:stdio"
                       # "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
                       "-kernel" loader
-                      "-d" "unimp,guest_errors"
+                      # "-d" "unimp,guest_errors"
                       # "--trace" "'*'"
                   ];
                 };
