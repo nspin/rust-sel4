@@ -261,6 +261,17 @@ superCallPackage ../rust-utils {} self //
 
   opensbi = callPackage ./opensbi.nix {};
 
+  xxx =
+    let
+      rev = "cd18e2ae9ab8e2a0a8d715b60c91b54c0ac35ff9";
+    in
+      builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
+        sha256 = "sha256:01kdnslli483pf12j4bq7w8vrhlg6lgvnss8wavndr9mvzvdikbk";
+      };
+
+  # qemuForSeL4 = (import xxx {}).qemu;
+
   qemuForSeL4 = callPackage ./qemu {
     hostCpuTargets = [
       "arm-softmmu"

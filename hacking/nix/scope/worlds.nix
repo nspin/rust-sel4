@@ -247,11 +247,12 @@ in rec {
                 mkInstanceForPlatform = platUtils.qemu.mkMkInstanceForPlatform {
                   mkQemuCmd = loader: [
                     "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
-                      "-machine" "virt,aclint=on"
+                      "-machine" "virt"
                       "-cpu" "rv64" "-smp" numCores "-m" qemuMemory
                       "-nographic"
                       "-serial" "mon:stdio"
                       "-kernel" loader
+                      # "--trace" "'*'"
                   ];
                 };
               };
