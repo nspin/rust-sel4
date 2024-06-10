@@ -311,6 +311,7 @@ in rec {
           mkQemuCmd = loader: [
             "${pkgsBuildBuild.this.qemuForSeL4}/bin/qemu-system-riscv64"
               "-machine" "sifive_u"
+              "-m" "size=8192M"
               "-nographic"
               "-serial" "mon:stdio"
               "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
