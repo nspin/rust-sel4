@@ -292,6 +292,7 @@ in rec {
               "-machine" "spike"
               "-cpu" "rv64" "-m" "size=4096M"
               "-nographic"
+              "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
               "-serial" "mon:stdio"
               "-kernel" loader
           ];
@@ -312,6 +313,7 @@ in rec {
               "-machine" "sifive_u"
               "-nographic"
               "-serial" "mon:stdio"
+              "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
               "-kernel" loader
           ];
         };
