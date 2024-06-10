@@ -71,12 +71,16 @@ stdenv.mkDerivation rec {
       url = "https://github.com/coliasgroup/qemu/commit/db69d0a7dc0af9d8130328347fdd81ab5fa9e352.patch";
       sha256 = "sha256-12uGZRO6T1uWYvblAx5/FdRsuZZ1B1iWT9ZxpN3Qga0=";
     })
+    # ../../../../tmp/1.diff
+    ../../../../tmp/2.diff
   ];
 
   postPatch = ''
     # Otherwise tries to ensure /var/run exists.
     sed -i "/install_emptydir(get_option('localstatedir') \/ 'run')/d" \
         qga/meson.build
+
+    cp ${../../../../tmp/1.2-opensbi-riscv64-generic-fw_dynamic.bin} pc-bios/opensbi-riscv64-generic-fw_dynamic.bin
   '';
 
   preConfigure = ''

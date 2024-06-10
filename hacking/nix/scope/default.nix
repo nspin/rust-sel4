@@ -263,26 +263,70 @@ superCallPackage ../rust-utils {} self //
 
   xxx =
     let
-      rev = "cd18e2ae9ab8e2a0a8d715b60c91b54c0ac35ff9";
+      # rev = "cd18e2ae9ab8e2a0a8d715b60c91b54c0ac35ff9";
+      rev = "6e980e645823095c83c12eea43691e7a407bd6b4";
     in
       builtins.fetchTarball {
         url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
-        sha256 = "sha256:01kdnslli483pf12j4bq7w8vrhlg6lgvnss8wavndr9mvzvdikbk";
+        # sha256 = "sha256:01kdnslli483pf12j4bq7w8vrhlg6lgvnss8wavndr9mvzvdikbk";
+        sha256 = "sha256:0490bsbb7p4iglas4i5ph2c5qpkwcinvzn9fgvp5vriz6xgzx26q";
       };
 
-  # qemuForSeL4 = (import xxx {}).qemu;
-  qemuForSeL4 = pkgsBuildBuild.qemu;
-  # qemuForSeL4 = xqemuForSeL4;
+  # qemuForSeL4 = mk (import xxx {}).qemu;
+  # qemuForSeL4 = mk pkgsBuildBuild.qemu;
+  # qemuForSeL4 = pkgsBuildBuild.qemu;
+  qemuForSeL4 = xqemuForSeL4;
 
   xqemuForSeL4 = callPackage ./qemu {
     hostCpuTargets = [
-      "arm-softmmu"
-      "aarch64-softmmu"
-      "riscv32-softmmu"
+      # "arm-softmmu"
+      # "aarch64-softmmu"
+      # "riscv32-softmmu"
       "riscv64-softmmu"
-      "i386-softmmu"
-      "x86_64-softmmu"
+      # "i386-softmmu"
+      # "x86_64-softmmu"
     ];
   };
+
+  mk = yyy: (yyy.override {
+    hostCpuTargets = [
+      # "arm-softmmu"
+      # "aarch64-softmmu"
+      # "riscv32-softmmu"
+      "riscv64-softmmu"
+      # "i386-softmmu"
+      # "x86_64-softmmu"
+    ];
+    guestAgentSupport = false;
+    numaSupport = false;
+    seccompSupport = false;
+    alsaSupport = false;
+    pulseSupport = false;
+    sdlSupport = false;
+    jackSupport = false;
+    gtkSupport = false;
+    vncSupport = false;
+    smartcardSupport = false;
+    spiceSupport = false;
+    ncursesSupport = false;
+    usbredirSupport = false;
+    libiscsiSupport = false;
+    tpmSupport = false;
+    uringSupport = false;
+  }).overrideDerivation (attrs: {
+    # patches from https://github.com/coliasgroup/qemu
+    patches = attrs.patches ++ [
+      # nspin/arm-virt-sp804
+      (fetchurl {
+        url = "https://github.com/coliasgroup/qemu/commit/79310d4cd22230a0dfca55697729670fe7e952fa.patch";
+        sha256 = "sha256-6CMhLFo7B6tGrOfvIqfT+ZtJz7A7WBfHazeAYECDWbE=";
+      })
+      # nspin/opensbi-fw-payload-use-elf-entry-point
+      (fetchurl {
+        url = "https://github.com/coliasgroup/qemu/commit/4b0e8e5be4cdcdd9aeb387f949bbc8a1dbfe9299.patch";
+        sha256 = "sha256-CoEnu5Ijy+khO7Jqq8NaKzJ1E4lLdaKDFF1ZC/I1C6k=";
+      })
+    ];
+  });
 
 })

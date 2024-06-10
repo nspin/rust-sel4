@@ -251,7 +251,9 @@ in rec {
                       "-cpu" "rv64" "-smp" numCores "-m" qemuMemory
                       "-nographic"
                       "-serial" "mon:stdio"
+                      # "-bios" "${opensbi}/share/opensbi/lp64/generic/firmware/fw_dynamic.bin"
                       "-kernel" loader
+                      "-d" "unimp,guest_errors"
                       # "--trace" "'*'"
                   ];
                 };
