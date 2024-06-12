@@ -218,6 +218,7 @@ dependencies = [
  "sel4-microkit-embedded-hal-adapters",
  "sel4-microkit-message",
  "sel4-pl011-driver",
+ "sel4-xuartps-driver",
 ]
 
 [[package]]
@@ -2784,6 +2785,15 @@ dependencies = [
  "sel4-driver-traits",
  "smoltcp",
  "virtio-drivers",
+]
+
+[[package]]
+name = "sel4-xuartps-driver"
+version = "0.1.0"
+dependencies = [
+ "embedded-hal-nb",
+ "sel4-driver-traits",
+ "tock-registers",
 ]
 
 [[package]]

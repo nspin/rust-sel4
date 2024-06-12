@@ -16,8 +16,10 @@ mk {
     ;
     sel4-microkit = localCrates.sel4-microkit // { default-features = false; };
     sel4-pl011-driver = localCrates.sel4-pl011-driver // { optional = true; };
+    sel4-xuartps-driver = localCrates.sel4-xuartps-driver // { optional = true; };
   };
   features = {
     board-qemu_virt_aarch64 = [ "sel4-pl011-driver" ];
+    board-zcu102 = [ "sel4-xuartps-driver" ];
   };
 }

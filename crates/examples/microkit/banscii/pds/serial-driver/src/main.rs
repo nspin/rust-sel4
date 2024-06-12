@@ -13,6 +13,9 @@ use sel4_microkit_embedded_hal_adapters::serial::driver::Driver;
 #[cfg(feature = "board-qemu_virt_aarch64")]
 use sel4_pl011_driver::Driver as DriverImpl;
 
+#[cfg(feature = "board-zcu102")]
+use sel4_xuartps_driver::Driver as DriverImpl;
+
 const DEVICE: Channel = Channel::new(0);
 const ASSISTANT: Channel = Channel::new(1);
 

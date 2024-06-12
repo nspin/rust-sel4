@@ -29,6 +29,9 @@ def mk_context(board):
     if board == 'qemu_virt_aarch64':
         context['serial_mmio_phys_addr'] = 0x9000000
         context['serial_irq'] = 33
+    elif board == 'zcu102':
+        context['serial_mmio_phys_addr'] = 0xff000000
+        context['serial_irq'] = 53
     else:
         raise Exception('unsupported configuration')
 
