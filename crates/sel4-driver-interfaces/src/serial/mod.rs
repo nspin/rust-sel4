@@ -60,7 +60,7 @@ impl<R: RawMutex, Word: Copy, T: Deref<Target = Mutex<R, U>>, U: Read<Word>> Rea
     for WrappedMutex<T>
 {
     fn read(&mut self) -> nb::Result<Word, Self::Error> {
-        self.0.deref().lock().read()
+        self.0.lock().read()
     }
 }
 
@@ -68,10 +68,10 @@ impl<R: RawMutex, Word: Copy, T: Deref<Target = Mutex<R, U>>, U: Write<Word>> Wr
     for WrappedMutex<T>
 {
     fn write(&mut self, word: Word) -> nb::Result<(), Self::Error> {
-        self.0.deref().lock().write(word)
+        self.0.lock().write(word)
     }
 
     fn flush(&mut self) -> nb::Result<(), Self::Error> {
-        self.0.deref().lock().flush()
+        self.0.lock().flush()
     }
 }

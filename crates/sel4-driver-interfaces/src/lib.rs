@@ -10,6 +10,8 @@ use core::cell::{RefCell, RefMut};
 use core::fmt;
 use core::ops::Deref;
 
+// use lock_api::{Mutex, MutexGuard, RawMutex};
+
 pub mod block;
 pub mod net;
 pub mod serial;
@@ -57,3 +59,12 @@ impl<E: fmt::Display> fmt::Display for WrappedRefCellError<E> {
 
 #[derive(Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Default)]
 pub struct WrappedMutex<T>(pub T);
+
+// impl<T> WrappedMutex<T> {
+//     fn lock<R: RawMutex, U>(&self) -> MutexGuard<R, U>
+//     where
+//         T: Deref<Target = Mutex<R, U>>,
+//     {
+//         self.0.deref().lock()
+//     }
+// }
