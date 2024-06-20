@@ -47,16 +47,43 @@ let
     in
       lib.concatStringsSep "/" relSegs;
 
-  scanDirForFilesWithName = dirFilter: fileName:
+  scanDirForFilesWithName = filter: fileName:
     let
-      f = relativePathSegments: absolutePath: lib.concatLists (lib.mapAttrsToList (name: type:
+      visit = relativePathSegments: absolutePath: type:
+        lib.optionals (filter relativePathSegments) (
+          let
+          in {
+            "regular" = lib.optional (lib.last relativePathSegments == fileName) absolutePath;
+            "directory" = lib.concatLists (lib.flip lib.mapAttrsToList (builtins.readDir absolutePath) (entryName: entryType:
+              let
+                entryRelativePathSegments = relativePathSegments ++ [ entryName ];
+                entryAbsolutePath = "${absolutePath}/${entryName}";
+              in
+                visit entryRelativePathSegments entryAbsolutePath entryType
+            ));
+            "symlink" =
+              let
+                target = builtins.readFile childAbsolutePath;
+              in
+          }."${type}" or []
+        );
+
+      f = relativePathSegments: absolutePath: lib.concatLists (lib.mapAttrsToList (
         let
-          childAbsolutePath = "${absolutePath}/${name}";
-          childRelativePathSegments = relativePathSegments ++ [ name ];
-        in {
-          "regular" = lib.optional (name == fileName) childAbsolutePath;
-          "directory" = lib.optionals (dirFilter childRelativePathSegments) (f childRelativePathSegments childAbsolutePath);
-        }."${type}" or []
+          g = name: type:
+            let
+              childAbsolutePath = "${absolutePath}/${name}";
+              childRelativePathSegments = relativePathSegments ++ [ name ];
+            in {
+              "regular" = lib.optional (name == fileName) childAbsolutePath;
+              "directory" = lib.optionals (dirFilter childRelativePathSegments) (f childRelativePathSegments childAbsolutePath);
+              "symlink" =
+                let
+                  target = builtins.readFile childAbsolutePath;
+                in
+            }."${type}" or [];
+          in
+            g
       ) (builtins.readDir absolutePath));
     in
       f [];
@@ -88,7 +115,7 @@ in
 
 let
   cargoNixPaths =
-      scanDirForFilesWithName workspaceDirFilter "Cargo.nix" workspaceRoot;
+    scanDirForFilesWithName workspaceDirFilter "Cargo.nix" workspaceRoot;
 
   generateManifest = cargoNixAbsolutePath:
     let
