@@ -84,31 +84,7 @@ in rec {
 
   # TODO collect automatically
   all = lib.filter (v: v != null) [
-    tests.root-task.loader
-    tests.root-task.config
-    tests.root-task.tls
-    tests.root-task.backtrace
-    tests.root-task.panicking
-    tests.root-task.c
-    tests.root-task.verus
-    tests.root-task.dafny
-    tests.root-task.default-test-harness
-    tests.capdl.threads
-    tests.capdl.utcover
-    microkit.examples.hello
-    microkit.examples.banscii
-    microkit.examples.http-server
-    microkit.tests.minimal
-    microkit.tests.passive-server-with-deferred-action
-    microkit.tests.reset
-    examples.root-task.hello
-    examples.root-task.example-root-task
-    examples.root-task.example-root-task-without-runtime
-    examples.root-task.spawn-thread
-    examples.root-task.spawn-task
-    examples.root-task.serial-device
-
-    # tests.root-task.ring
+    tests.root-task.ring
   ];
 
   allAutomationScripts = map
