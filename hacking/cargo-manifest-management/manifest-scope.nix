@@ -21,7 +21,6 @@ in rec {
       nix.frontmatter = defaultFrontmatter;
       package = {
         edition = "2021";
-        version = "0.1.0";
         license = defaultLicense;
         authors = defaultAuthors;
       };
