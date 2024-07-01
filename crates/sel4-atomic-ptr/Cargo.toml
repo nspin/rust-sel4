@@ -11,7 +11,6 @@
 
 [package]
 name = "sel4-atomic-ptr"
-version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"

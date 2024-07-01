@@ -162,7 +162,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "banscii-artist"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "banscii-artist-interface-types",
  "rsa",
@@ -173,14 +173,14 @@ dependencies = [
 
 [[package]]
 name = "banscii-artist-interface-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "banscii-assistant"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "banscii-artist-interface-types",
  "banscii-assistant-core",
@@ -194,7 +194,7 @@ dependencies = [
 
 [[package]]
 name = "banscii-assistant-core"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ab_glyph",
  "log",
@@ -203,7 +203,7 @@ dependencies = [
 
 [[package]]
 name = "banscii-assistant-core-test"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "banscii-assistant-core",
  "env_logger",
@@ -212,7 +212,7 @@ dependencies = [
 
 [[package]]
 name = "banscii-serial-driver"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-microkit",
  "sel4-microkit-driver-adapters",
@@ -675,7 +675,7 @@ dependencies = [
 
 [[package]]
 name = "example-root-task"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
@@ -683,7 +683,7 @@ dependencies = [
 
 [[package]]
 name = "example-root-task-without-runtime"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "sel4",
@@ -889,7 +889,7 @@ dependencies = [
 
 [[package]]
 name = "hello"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
@@ -1064,7 +1064,7 @@ dependencies = [
 
 [[package]]
 name = "meta"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "log",
@@ -1100,14 +1100,14 @@ dependencies = [
 
 [[package]]
 name = "microkit-hello"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-microkit",
 ]
 
 [[package]]
 name = "microkit-http-server-example-pl031-driver"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-microkit",
  "sel4-microkit-driver-adapters",
@@ -1116,7 +1116,7 @@ dependencies = [
 
 [[package]]
 name = "microkit-http-server-example-server"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "async-unsync",
  "futures",
@@ -1151,7 +1151,7 @@ dependencies = [
 
 [[package]]
 name = "microkit-http-server-example-server-core"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "embedded-io-async",
  "futures",
@@ -1175,7 +1175,7 @@ dependencies = [
 
 [[package]]
 name = "microkit-http-server-example-sp804-driver"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-driver-interfaces",
  "sel4-microkit",
@@ -1186,7 +1186,7 @@ dependencies = [
 
 [[package]]
 name = "microkit-http-server-example-virtio-blk-driver"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "sel4",
@@ -1207,7 +1207,7 @@ dependencies = [
 
 [[package]]
 name = "microkit-http-server-example-virtio-net-driver"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "sel4",
@@ -1883,7 +1883,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sel4"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "sel4-config",
@@ -1892,7 +1892,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-async-block-io"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "bytemuck",
  "futures",
@@ -1904,7 +1904,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-async-block-io-fat"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "embedded-fat",
  "futures",
@@ -1917,14 +1917,14 @@ dependencies = [
 
 [[package]]
 name = "sel4-async-io"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "embedded-io-async",
 ]
 
 [[package]]
 name = "sel4-async-network"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "sel4-async-io",
@@ -1933,7 +1933,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-async-network-rustls"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "embedded-io-async",
  "log",
@@ -1943,7 +1943,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-async-network-rustls-utils"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "getrandom",
  "rand",
@@ -1954,14 +1954,14 @@ dependencies = [
 
 [[package]]
 name = "sel4-async-single-threaded-executor"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "futures",
 ]
 
 [[package]]
 name = "sel4-async-time"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "pin-project",
@@ -1969,21 +1969,21 @@ dependencies = [
 
 [[package]]
 name = "sel4-async-unsync"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "async-unsync",
 ]
 
 [[package]]
 name = "sel4-atomic-ptr"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
 ]
 
 [[package]]
 name = "sel4-backtrace"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "postcard",
@@ -1994,7 +1994,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-backtrace-addr2line-context-helper"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "addr2line",
  "gimli 0.28.1",
@@ -2003,7 +2003,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-backtrace-cli"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "addr2line",
  "clap",
@@ -2014,7 +2014,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-backtrace-embedded-debug-info"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "addr2line",
  "object",
@@ -2023,7 +2023,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-backtrace-embedded-debug-info-cli"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "clap",
  "num",
@@ -2032,7 +2032,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-backtrace-simple"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-backtrace",
  "sel4-panicking-env",
@@ -2040,7 +2040,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-backtrace-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "addr2line",
  "cfg-if",
@@ -2050,7 +2050,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-bcm2835-aux-uart-driver"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "embedded-hal-nb",
  "sel4-driver-interfaces",
@@ -2059,11 +2059,11 @@ dependencies = [
 
 [[package]]
 name = "sel4-bitfield-ops"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "sel4-bitfield-parser"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "pest",
  "pest_derive",
@@ -2072,7 +2072,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-bitfield-parser-test"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "clap",
  "glob",
@@ -2081,18 +2081,18 @@ dependencies = [
 
 [[package]]
 name = "sel4-bounce-buffer-allocator"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
 ]
 
 [[package]]
 name = "sel4-build-env"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "sel4-capdl-initializer"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "postcard",
@@ -2107,7 +2107,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-capdl-initializer-add-spec"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -2122,7 +2122,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-capdl-initializer-core"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "sel4",
@@ -2131,7 +2131,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-capdl-initializer-embed-spec"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "hex",
  "proc-macro2",
@@ -2144,7 +2144,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-capdl-initializer-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "log",
@@ -2157,7 +2157,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-capdl-initializer-types-derive"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2167,7 +2167,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-capdl-initializer-with-embedded-spec"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-capdl-initializer-core",
@@ -2180,7 +2180,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-capdl-initializer-with-embedded-spec-build-env"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-capdl-initializer-embed-spec",
  "sel4-capdl-initializer-types",
@@ -2190,7 +2190,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-capdl-initializer-with-embedded-spec-embedded-spec"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-capdl-initializer-embed-spec",
  "sel4-capdl-initializer-types",
@@ -2201,7 +2201,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-capdl-initializer-with-embedded-spec-embedded-spec-validate"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-capdl-initializer-types",
  "sel4-capdl-initializer-with-embedded-spec-build-env",
@@ -2210,7 +2210,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-config"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-config-data",
  "sel4-config-generic",
@@ -2220,7 +2220,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-config-data"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "lazy_static",
  "sel4-build-env",
@@ -2230,7 +2230,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-config-generic"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "fallible-iterator 0.2.0",
  "proc-macro2",
@@ -2241,14 +2241,14 @@ dependencies = [
 
 [[package]]
 name = "sel4-config-generic-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "sel4-config-macros"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-config-data",
  "sel4-config-generic",
@@ -2256,7 +2256,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-dlmalloc"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "dlmalloc",
  "lock_api",
@@ -2264,7 +2264,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-driver-interfaces"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "embedded-hal-nb",
  "heapless",
@@ -2275,11 +2275,11 @@ dependencies = [
 
 [[package]]
 name = "sel4-elf-header"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "sel4-externally-shared"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "sel4-atomic-ptr",
@@ -2289,7 +2289,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-generate-target-specs"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "clap",
  "serde_json",
@@ -2297,22 +2297,22 @@ dependencies = [
 
 [[package]]
 name = "sel4-immediate-sync-once-cell"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "sel4-immutable-cell"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "sel4-initialize-tls"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
 ]
 
 [[package]]
 name = "sel4-kernel-loader"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "aarch64-cpu",
  "cc",
@@ -2345,7 +2345,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-kernel-loader-add-payload"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -2365,14 +2365,14 @@ dependencies = [
 
 [[package]]
 name = "sel4-kernel-loader-config-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "sel4-kernel-loader-embed-page-tables"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "bitfield",
  "proc-macro2",
@@ -2381,11 +2381,11 @@ dependencies = [
 
 [[package]]
 name = "sel4-kernel-loader-embed-page-tables-runtime"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "sel4-kernel-loader-payload-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "heapless",
  "num-traits",
@@ -2395,7 +2395,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-logging"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "lock_api",
  "log",
@@ -2403,7 +2403,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-microkit"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "sel4",
@@ -2419,7 +2419,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-microkit-base"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-immutable-cell",
@@ -2427,7 +2427,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-microkit-driver-adapters"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "chrono",
  "embedded-hal-nb",
@@ -2446,7 +2446,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-microkit-macros"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2455,7 +2455,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-microkit-message"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-microkit-base",
  "sel4-microkit-message-types",
@@ -2464,7 +2464,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-microkit-message-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "num_enum",
  "postcard",
@@ -2474,7 +2474,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-mod-in-out-dir"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -2482,7 +2482,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-newlib"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cc",
  "log",
@@ -2491,11 +2491,11 @@ dependencies = [
 
 [[package]]
 name = "sel4-one-ref-cell"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "sel4-panicking"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "rustc_version",
@@ -2506,11 +2506,11 @@ dependencies = [
 
 [[package]]
 name = "sel4-panicking-env"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "sel4-pl011-driver"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "embedded-hal-nb",
  "sel4-driver-interfaces",
@@ -2519,7 +2519,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-pl031-driver"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "rtcc",
  "tock-registers",
@@ -2527,7 +2527,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-platform-info"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2540,11 +2540,11 @@ dependencies = [
 
 [[package]]
 name = "sel4-platform-info-types"
-version = "0.1.0"
+version = "0.0.0"
 
 [[package]]
 name = "sel4-render-elf-with-data"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "fallible-iterator 0.2.0",
@@ -2554,7 +2554,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-root-task"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-dlmalloc",
@@ -2568,7 +2568,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-root-task-default-test-harness"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
@@ -2577,7 +2577,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-root-task-macros"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2586,7 +2586,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-runtime-common"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "sel4",
@@ -2598,14 +2598,14 @@ dependencies = [
 
 [[package]]
 name = "sel4-rustfmt-helper"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "which",
 ]
 
 [[package]]
 name = "sel4-shared-ring-buffer"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "sel4-externally-shared",
@@ -2614,7 +2614,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-shared-ring-buffer-block-io"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "async-unsync",
  "futures",
@@ -2629,7 +2629,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-shared-ring-buffer-block-io-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "num_enum",
  "sel4-shared-ring-buffer",
@@ -2638,14 +2638,14 @@ dependencies = [
 
 [[package]]
 name = "sel4-shared-ring-buffer-bookkeeping"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "async-unsync",
 ]
 
 [[package]]
 name = "sel4-shared-ring-buffer-smoltcp"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "sel4-bounce-buffer-allocator",
@@ -2657,7 +2657,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-simple-task-config-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "sel4",
@@ -2667,7 +2667,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-simple-task-rpc"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "postcard",
  "sel4",
@@ -2676,7 +2676,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-simple-task-runtime"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "postcard",
  "sel4",
@@ -2697,7 +2697,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-simple-task-runtime-config-cli"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-simple-task-runtime-config-types",
  "serde_json",
@@ -2705,7 +2705,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-simple-task-runtime-config-types"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "serde",
  "zerocopy",
@@ -2713,7 +2713,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-simple-task-runtime-macros"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2722,7 +2722,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-simple-task-threading"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-panicking",
@@ -2730,7 +2730,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-sp804-driver"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-driver-interfaces",
  "tock-registers",
@@ -2738,7 +2738,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-sync"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "lock_api",
  "sel4",
@@ -2747,7 +2747,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-sys"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "bindgen",
  "glob",
@@ -2766,7 +2766,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-test-harness"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-immediate-sync-once-cell",
  "sel4-panicking",
@@ -2775,7 +2775,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-virtio-blk"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "sel4-driver-interfaces",
@@ -2784,7 +2784,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-virtio-hal-impl"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-bounce-buffer-allocator",
  "sel4-externally-shared",
@@ -2795,7 +2795,7 @@ dependencies = [
 
 [[package]]
 name = "sel4-virtio-net"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "sel4-driver-interfaces",
@@ -2855,7 +2855,7 @@ dependencies = [
 
 [[package]]
 name = "serial-device"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
@@ -2918,7 +2918,7 @@ dependencies = [
 
 [[package]]
 name = "spawn-task"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "object",
  "sel4",
@@ -2927,7 +2927,7 @@ dependencies = [
 
 [[package]]
 name = "spawn-task-child"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "sel4",
@@ -2940,7 +2940,7 @@ dependencies = [
 
 [[package]]
 name = "spawn-thread"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "sel4",
@@ -3053,7 +3053,7 @@ dependencies = [
 
 [[package]]
 name = "tests-capdl-threads-components-test"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-simple-task-config-types",
@@ -3064,7 +3064,7 @@ dependencies = [
 
 [[package]]
 name = "tests-capdl-utcover-components-test"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-simple-task-config-types",
@@ -3075,21 +3075,21 @@ dependencies = [
 
 [[package]]
 name = "tests-microkit-passive-server-with-deferred-action-pds-client"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-microkit",
 ]
 
 [[package]]
 name = "tests-microkit-passive-server-with-deferred-action-pds-server"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4-microkit",
 ]
 
 [[package]]
 name = "tests-root-task-backtrace"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-backtrace",
@@ -3101,7 +3101,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-c"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cc",
  "glob",
@@ -3112,7 +3112,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-config"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
@@ -3120,7 +3120,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-dafny-core"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "dafny_runtime",
  "num",
@@ -3129,7 +3129,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-dafny-task"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
@@ -3138,7 +3138,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-default-test-harness"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "log",
  "sel4-root-task-default-test-harness",
@@ -3146,7 +3146,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-loader"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "fdt",
  "sel4",
@@ -3156,7 +3156,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-panicking"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cfg-if",
  "sel4",
@@ -3165,7 +3165,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-ring-test-harness"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "getrandom",
  "rand",
@@ -3177,7 +3177,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-tls"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
@@ -3185,7 +3185,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-verus-core"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "builtin",
  "builtin_macros",
@@ -3194,7 +3194,7 @@ dependencies = [
 
 [[package]]
 name = "tests-root-task-verus-task"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
