@@ -75,8 +75,7 @@ impl seL4_Fault {
                 }
                 #[sel4_cfg(ARM_HYPERVISOR_SUPPORT)]
                 seL4_Fault_tag::seL4_Fault_VPPIEvent => {
-                    // TODO
-                    // assert!(length == seL4_VPPIEvent_Msg::seL4_VPPIEvent_Length);
+                    assert!(length == seL4_VPPIEvent_Msg::seL4_VPPIEvent_Length);
                     seL4_Fault_VPPIEvent_Unpacked {
                         irq: f(seL4_VPPIEvent_Msg::seL4_VPPIEvent_IRQ),
                     }
