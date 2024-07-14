@@ -2836,10 +2836,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sel4-vmm-gic"
-version = "0.1.0"
-
-[[package]]
 name = "sel4-vmm-interfaces"
 version = "0.1.0"
 

@@ -142,7 +142,6 @@ members = [
     "crates/sel4-synthetic-elf",
     "crates/sel4-test-harness",
     "crates/sel4-vmm",
-    "crates/sel4-vmm/gic",
     "crates/sel4-vmm/interfaces",
     "crates/sel4-vmm/payload",
     "crates/sel4-vmm/payload/cli",
