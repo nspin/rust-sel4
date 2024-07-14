@@ -8,9 +8,11 @@
 
 use core::ops::{Range, RangeInclusive};
 
-use zerocopy::AsBytes;
-
 use sel4::{sel4_cfg, UnknownSyscall, UnknownSyscallInIpcBuffer, UserContext, Word};
+
+pub use sel4_supervising_types::{
+    MemoryAccessData as VmFaultData, MemoryAccessWidth as VmFaultWidth,
+};
 
 mod arch;
 
@@ -346,92 +348,6 @@ where
             7 => self.inner_mut().x7_mut(),
             _ => panic!(),
         }
-    }
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
-pub enum VmFaultWidth {
-    U8,
-    U16,
-    U32,
-    #[cfg(target_pointer_width = "64")]
-    U64,
-}
-
-impl VmFaultWidth {
-    pub fn mask(self) -> Word {
-        match self {
-            Self::U8 => 0xff,
-            Self::U16 => 0xffff,
-            Self::U32 => 0xffff_ffff,
-            #[cfg(target_pointer_width = "64")]
-            Self::U64 => 0xffff_ffff_ffff_ffff,
-        }
-    }
-
-    pub fn truncate(self, val: Word) -> VmFaultData {
-        match self {
-            Self::U8 => VmFaultData::U8(val as u8),
-            Self::U16 => VmFaultData::U16(val as u16),
-            Self::U32 => VmFaultData::U32(val as u32),
-            #[cfg(target_pointer_width = "64")]
-            Self::U64 => VmFaultData::U64(val as u64),
-        }
-    }
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub enum VmFaultData {
-    U8(u8),
-    U16(u16),
-    U32(u32),
-    #[cfg(target_pointer_width = "64")]
-    U64(u64),
-}
-
-impl VmFaultData {
-    pub fn width(&self) -> VmFaultWidth {
-        match self {
-            Self::U8(_) => VmFaultWidth::U8,
-            Self::U16(_) => VmFaultWidth::U16,
-            Self::U32(_) => VmFaultWidth::U32,
-            #[cfg(target_pointer_width = "64")]
-            Self::U64(_) => VmFaultWidth::U64,
-        }
-    }
-
-    pub fn zero_extend(&self) -> Word {
-        match self {
-            Self::U8(raw) => *raw as Word,
-            Self::U16(raw) => *raw as Word,
-            Self::U32(raw) => *raw as Word,
-            #[cfg(target_pointer_width = "64")]
-            Self::U64(raw) => *raw as Word,
-        }
-    }
-
-    pub fn bytes(&self) -> &[u8] {
-        match self {
-            Self::U8(raw) => raw.as_bytes(),
-            Self::U16(raw) => raw.as_bytes(),
-            Self::U32(raw) => raw.as_bytes(),
-            #[cfg(target_pointer_width = "64")]
-            Self::U64(raw) => raw.as_bytes(),
-        }
-    }
-
-    pub fn bytes_mut(&mut self) -> &mut [u8] {
-        match self {
-            Self::U8(raw) => raw.as_bytes_mut(),
-            Self::U16(raw) => raw.as_bytes_mut(),
-            Self::U32(raw) => raw.as_bytes_mut(),
-            #[cfg(target_pointer_width = "64")]
-            Self::U64(raw) => raw.as_bytes_mut(),
-        }
-    }
-
-    pub fn set(&self, old_val: Word) -> Word {
-        (old_val & !self.width().mask()) | self.zero_extend()
     }
 }
 

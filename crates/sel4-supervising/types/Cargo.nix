@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, localCrates }:
+{ mk, versions }:
 
 mk {
-  package.name = "sel4-supervising";
+  package.name = "sel4-supervising-types";
   dependencies = {
-    inherit (localCrates) sel4 sel4-supervising-types;
+    inherit (versions) zerocopy;
   };
 }

@@ -2741,6 +2741,13 @@ name = "sel4-supervising"
 version = "0.1.0"
 dependencies = [
  "sel4",
+ "sel4-supervising-types",
+]
+
+[[package]]
+name = "sel4-supervising-types"
+version = "0.1.0"
+dependencies = [
  "zerocopy",
 ]
 
