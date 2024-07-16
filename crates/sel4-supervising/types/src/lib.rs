@@ -6,6 +6,8 @@
 
 #![no_std]
 
+use core::fmt;
+
 use zerocopy::AsBytes;
 
 #[cfg(target_pointer_width = "64")]
@@ -24,17 +26,17 @@ pub enum MemoryAccessWidth {
 }
 
 impl MemoryAccessWidth {
-    pub fn mask(self) -> Word {
+    pub const fn num_bytes(self) -> usize {
         match self {
-            Self::U8 => 0xff,
-            Self::U16 => 0xffff,
-            Self::U32 => 0xffff_ffff,
+            Self::U8 => 1,
+            Self::U16 => 2,
+            Self::U32 => 4,
             #[cfg(target_pointer_width = "64")]
-            Self::U64 => 0xffff_ffff_ffff_ffff,
+            Self::U64 => 8,
         }
     }
 
-    pub fn truncate(self, val: Word) -> MemoryAccessData {
+    pub const fn truncate(self, val: Word) -> MemoryAccessData {
         match self {
             Self::U8 => MemoryAccessData::U8(val as u8),
             Self::U16 => MemoryAccessData::U16(val as u16),
@@ -42,6 +44,10 @@ impl MemoryAccessWidth {
             #[cfg(target_pointer_width = "64")]
             Self::U64 => MemoryAccessData::U64(val as u64),
         }
+    }
+
+    pub const fn mask(self) -> Word {
+        self.truncate(!0).zero_extend()
     }
 }
 
@@ -55,7 +61,7 @@ pub enum MemoryAccessData {
 }
 
 impl MemoryAccessData {
-    pub fn width(&self) -> MemoryAccessWidth {
+    pub const fn width(&self) -> MemoryAccessWidth {
         match self {
             Self::U8(_) => MemoryAccessWidth::U8,
             Self::U16(_) => MemoryAccessWidth::U16,
@@ -65,7 +71,7 @@ impl MemoryAccessData {
         }
     }
 
-    pub fn zero_extend(&self) -> Word {
+    pub const fn zero_extend(&self) -> Word {
         match self {
             Self::U8(raw) => *raw as Word,
             Self::U16(raw) => *raw as Word,
@@ -95,7 +101,19 @@ impl MemoryAccessData {
         }
     }
 
-    pub fn set(&self, old_val: Word) -> Word {
+    pub const fn set(&self, old_val: Word) -> Word {
         (old_val & !self.width().mask()) | self.zero_extend()
+    }
+}
+
+impl fmt::Display for MemoryAccessData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::U8(raw) => write!(f, "{:#04x}", raw),
+            Self::U16(raw) => write!(f, "{:#06x}", raw),
+            Self::U32(raw) => write!(f, "{:#010x}", raw),
+            #[cfg(target_pointer_width = "64")]
+            Self::U64(raw) => write!(f, "{:#018x}", raw),
+        }
     }
 }
