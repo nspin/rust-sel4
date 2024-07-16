@@ -49,6 +49,10 @@ impl MemoryAccessWidth {
     pub const fn mask(self) -> Word {
         self.truncate(!0).zero_extend()
     }
+
+    pub const fn is_aligned(self, v: Word) -> bool {
+        v & (self.num_bytes() as Word - 1) == 0
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]

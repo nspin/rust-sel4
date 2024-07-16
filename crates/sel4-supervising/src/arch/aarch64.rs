@@ -58,13 +58,7 @@ pub trait VmFaultExt {
     }
 
     fn is_aligned(&self) -> bool {
-        let mask = match self.width() {
-            VmFaultWidth::U8 => 0x0,
-            VmFaultWidth::U16 => 0x1,
-            VmFaultWidth::U32 => 0x3,
-            VmFaultWidth::U64 => 0x7,
-        };
-        self.inner().addr() & mask == 0
+        self.width().is_aligned(self.inner().addr())
     }
 
     fn data(&self, ctx: &UserContext) -> VmFaultData {
