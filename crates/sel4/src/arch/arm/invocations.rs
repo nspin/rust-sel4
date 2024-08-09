@@ -40,7 +40,7 @@ impl<C: InvocationContext> VCpu<C> {
         Error::wrap(self.invoke(|cptr, ipc_buffer| {
             ipc_buffer.inner_mut().seL4_ARM_VCPU_WriteRegs(
                 cptr.bits(),
-                field.into_sys().into(),
+                field.into_sys(),
                 value,
             )
         }))

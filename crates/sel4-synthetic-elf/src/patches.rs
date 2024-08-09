@@ -11,6 +11,7 @@ use object::read::ReadRef;
 use object::{Endian, File, Object, ObjectSegment, ObjectSymbol};
 use thiserror::Error;
 
+#[derive(Default)]
 pub struct Patches {
     patches: Vec<(u64, Vec<u8>)>,
 }

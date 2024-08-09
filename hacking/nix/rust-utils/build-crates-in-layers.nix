@@ -22,8 +22,8 @@ let
   ;
 
   runClippyDefault =
-    # true
-    false
+    true
+    # false
   ;
 
 in
