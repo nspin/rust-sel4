@@ -9,15 +9,19 @@
 
 use sel4_root_task::{root_task, panicking};
 
-#[root_task(stack_size = 64 * 1024, heap_size = 64 * 1024)]
+// #[root_task(stack_size = 64 * 1024, heap_size = 64 * 1024)]
+#[root_task(stack_size = 100 * 1024, heap_size = 64 * 1024)]
+// #[root_task(stack_size = 16 * 1024, heap_size = 64 * 1024)]
 // #[root_task(stack_size = 128 * 1024, heap_size = 64 * 1024)]
 // #[root_task(heap_size = 64 * 1024)]
 fn main(_: &sel4::BootInfoPtr) -> ! {
 
     sel4_root_task::print_sp("main");
+
     let r = panicking::catch_unwind(|| {
         sel4_root_task::print_sp("inside catch unwind");
-        panic!("uh oh");
+        // panic!("uh oh");
+        f(0);
     });
     assert!(r.is_err());
     sel4_root_task::print_sp("after catch");
@@ -25,4 +29,12 @@ fn main(_: &sel4::BootInfoPtr) -> ! {
 
     sel4::debug_println!("TEST_PASS");
     sel4::init_thread::suspend_self()
+}
+
+fn f(i: usize) {
+    if i == 1 {
+        panic!("p");
+    } else {
+        f(i + 1);
+    }
 }

@@ -19,7 +19,7 @@ mk {
     inherit (versions) rustc_version;
   };
   target."cfg(not(target_arch = \"arm\"))".dependencies = {
-    unwinding = unwindingWith [ "personality" ] // { optional = true; };
+    unwinding = unwindingWith localCrates [ "personality" ] // { optional = true; };
   };
   features = {
     alloc = [];

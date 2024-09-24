@@ -10,7 +10,7 @@ mk {
   package.name = "sel4-backtrace";
   dependencies = {
     inherit (versions) cfg-if;
-    unwinding = unwindingWith [] // { optional = true; };
+    unwinding = unwindingWith localCrates [] // { optional = true; };
     postcard = postcardWith [] // { optional = true; };
     serde = serdeWith [] // { optional = true; };
     inherit (localCrates)
