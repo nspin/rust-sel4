@@ -8,7 +8,7 @@
 #![feature(cfg_target_thread_local)]
 #![feature(never_type)]
 
-pub use sel4_panicking_env::abort;
+pub use sel4_panicking_env::{abort, print_sp};
 pub use sel4_root_task_macros::root_task;
 
 #[doc(inline)]

@@ -15,7 +15,7 @@ unsafe extern "C" fn sel4_runtime_rust_entry(bootinfo: *const sel4::BootInfo) ->
     unsafe extern "C" fn cont_fn(cont_arg: *mut sel4_runtime_common::ContArg) -> ! {
         inner_entry(cont_arg.cast_const().cast())
     }
-    sel4_panicking_env::print_sp();
+    sel4_panicking_env::print_sp("before init tls");
 
     sel4_runtime_common::initialize_tls_on_stack_and_continue(cont_fn, bootinfo.cast_mut().cast())
 }
@@ -28,7 +28,7 @@ unsafe extern "C" fn sel4_runtime_rust_entry(bootinfo: *const sel4::BootInfo) ->
 
 #[allow(unreachable_code)]
 fn inner_entry(bootinfo: *const sel4::BootInfo) -> ! {
-    sel4_panicking_env::print_sp();
+    sel4_panicking_env::print_sp("after init tls");
     #[cfg(all(feature = "unwinding", panic = "unwind"))]
     {
         sel4_runtime_common::set_eh_frame_finder().unwrap();

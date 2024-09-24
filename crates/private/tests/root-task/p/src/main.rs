@@ -14,10 +14,13 @@ use sel4_root_task::{root_task, panicking};
 // #[root_task(heap_size = 64 * 1024)]
 fn main(_: &sel4::BootInfoPtr) -> ! {
 
+    sel4_root_task::print_sp("main");
     let r = panicking::catch_unwind(|| {
+        sel4_root_task::print_sp("inside catch unwind");
         panic!("uh oh");
     });
     assert!(r.is_err());
+    sel4_root_task::print_sp("after catch");
     // panic!("uh oh");
 
     sel4::debug_println!("TEST_PASS");

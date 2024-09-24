@@ -13,11 +13,19 @@ use core::fmt;
 use core::panic::Location;
 use core::str;
 
-pub fn print_sp() {
+pub fn print_sp(s: &str) {
+    let bottom = unsafe {
+        extern "C" {
+            static __sel4_runtime_common__stack_bottom: usize;
+        }
+        __sel4_runtime_common__stack_bottom
+    };
+
     unsafe {
-        let val: u64;
+        let val: usize;
         core::arch::asm!("mrs {val}, tpidr_el0", val = out(reg) val);
-        debug_println!("sp = {:#x?}", val);
+        let used = bottom - val;
+        debug_println!("stack: bottom = {bottom:#x?}, sp = {val:#x?}, used = {used:#x?} at {s}");
     }
 }
 

@@ -66,11 +66,13 @@ pub(crate) fn start_panic(payload: Payload) -> i32 {
             exception_present: true,
             exception: MaybeUninit::new(exception),
         };
+        sel4_panicking_env::print_sp("x");
         sel4_panicking_env::debug_println!("AAA 3");
         let x = CURRENT_EXCEPTION.exception.assume_init_mut();
         sel4_panicking_env::debug_println!("CURRENT_EXCEPTION {:?}", size_of::<CurrentException>());
         sel4_panicking_env::debug_println!("CURRENT_PAYLOAD {:?}", size_of::<RefCell<Option<Payload>>>());
         sel4_panicking_env::debug_println!("AAA 4");
+        sel4_panicking_env::print_sp("x");
         _Unwind_RaiseException(x).0
     }
 }
