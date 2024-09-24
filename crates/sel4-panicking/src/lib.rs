@@ -160,8 +160,11 @@ pub fn catch_unwind<R, F: FnOnce() -> R + UnwindSafe>(f: F) -> Result<R, Payload
         sel4_panicking_env::debug_println!("BBB B");
         unsafe {
             let data = data as *mut Data<F, R>;
+            sel4_panicking_env::debug_println!("BBB B1");
             let data = &mut (*data);
+            sel4_panicking_env::debug_println!("BBB B2");
             let f = ManuallyDrop::take(&mut data.f);
+            sel4_panicking_env::debug_println!("BBB B3");
             data.r = ManuallyDrop::new(f());
         }
         sel4_panicking_env::debug_println!("BBB C");
