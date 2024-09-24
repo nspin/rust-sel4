@@ -30,14 +30,12 @@ static mut CURRENT_EXCEPTION: CurrentException = CurrentException {
 };
 
 pub(crate) fn panic_cleanup(exception: *mut u8) -> Payload {
-    sel4_panicking_env::debug_println!("AAAx 4");
     let exception = exception as *mut UnwindException;
     unsafe {
         if (*exception).exception_class != RUST_EXCEPTION_CLASS {
             _Unwind_DeleteException(exception);
             foreign_exception()
         } else {
-            sel4_panicking_env::debug_println!("AAA 5");
             CURRENT_EXCEPTION.exception_present = false;
             CURRENT_PAYLOAD.replace(None).unwrap()
         }
@@ -51,7 +49,6 @@ pub(crate) fn start_panic(payload: Payload) -> i32 {
     ) {
         drop_panic()
     }
-    sel4_panicking_env::debug_println!("AAA 1");
 
     let mut exception = unsafe { mem::zeroed::<UnwindException>() };
     exception.exception_class = RUST_EXCEPTION_CLASS;
@@ -59,20 +56,12 @@ pub(crate) fn start_panic(payload: Payload) -> i32 {
 
     assert!(CURRENT_PAYLOAD.replace(Some(payload)).is_none());
 
-    sel4_panicking_env::debug_println!("AAA 2");
     unsafe {
         assert!(!CURRENT_EXCEPTION.exception_present);
         CURRENT_EXCEPTION = CurrentException {
             exception_present: true,
             exception: MaybeUninit::new(exception),
         };
-        sel4_panicking_env::print_sp("x");
-        sel4_panicking_env::debug_println!("AAA 3");
-        let x = CURRENT_EXCEPTION.exception.assume_init_mut();
-        sel4_panicking_env::debug_println!("CURRENT_EXCEPTION {:?}", size_of::<CurrentException>());
-        sel4_panicking_env::debug_println!("CURRENT_PAYLOAD {:?}", size_of::<RefCell<Option<Payload>>>());
-        sel4_panicking_env::debug_println!("AAA 4");
-        sel4_panicking_env::print_sp("x");
-        _Unwind_RaiseException(x).0
+        _Unwind_RaiseException(CURRENT_EXCEPTION.exception.assume_init_mut()).0
     }
 }
