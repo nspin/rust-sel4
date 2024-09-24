@@ -109,12 +109,18 @@ pub fn panic_any<M: UpcastIntoPayload>(msg: M) -> ! {
 }
 
 fn do_panic(info: ExternalPanicInfo) -> ! {
+    sel4_panicking_env::debug_println!("CCC 1");
     count_panic();
+    sel4_panicking_env::debug_println!("CCC 2");
     (get_hook())(&info);
+    sel4_panicking_env::debug_println!("CCC 3");
     if info.can_unwind() {
+        sel4_panicking_env::debug_println!("CCC 4");
         let code = start_panic(info.payload);
+        sel4_panicking_env::debug_println!("CCC 5");
         abort!("failed to initiate panic, error {}", code)
     } else {
+        sel4_panicking_env::debug_println!("CCC 6");
         abort!("can't unwind this panic")
     }
 }
@@ -141,24 +147,29 @@ pub fn catch_unwind<R, F: FnOnce() -> R + UnwindSafe>(f: F) -> Result<R, Payload
     let data_ptr = &mut data as *mut _ as *mut u8;
     unsafe {
         return if catch_unwind_intrinsic(do_call::<F, R>, data_ptr, do_catch::<F, R>) == 0 {
+            sel4_panicking_env::debug_println!("BBB E");
             Ok(ManuallyDrop::into_inner(data.r))
         } else {
+            sel4_panicking_env::debug_println!("BBB F");
             Err(ManuallyDrop::into_inner(data.p))
         };
     }
 
     #[inline]
     fn do_call<F: FnOnce() -> R, R>(data: *mut u8) {
+        sel4_panicking_env::debug_println!("BBB B");
         unsafe {
             let data = data as *mut Data<F, R>;
             let data = &mut (*data);
             let f = ManuallyDrop::take(&mut data.f);
             data.r = ManuallyDrop::new(f());
         }
+        sel4_panicking_env::debug_println!("BBB C");
     }
 
     #[inline]
     fn do_catch<F: FnOnce() -> R, R>(data: *mut u8, exception: *mut u8) {
+        sel4_panicking_env::debug_println!("BBB A");
         unsafe {
             let data = data as *mut Data<F, R>;
             let data = &mut (*data);
@@ -166,5 +177,6 @@ pub fn catch_unwind<R, F: FnOnce() -> R + UnwindSafe>(f: F) -> Result<R, Payload
             count_panic_caught();
             data.p = ManuallyDrop::new(payload);
         }
+        sel4_panicking_env::debug_println!("BBB D");
     }
 }
