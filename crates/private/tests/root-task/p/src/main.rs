@@ -10,6 +10,7 @@
 use sel4_root_task::{root_task, panicking};
 
 #[root_task(stack_size = 64 * 1024)]
+// #[root_task(stack_size = 128 * 1024)]
 // #[root_task(heap_size = 64 * 1024)]
 fn main(_: &sel4::BootInfoPtr) -> ! {
 

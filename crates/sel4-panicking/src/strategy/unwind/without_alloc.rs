@@ -30,7 +30,7 @@ static mut CURRENT_EXCEPTION: CurrentException = CurrentException {
 };
 
 pub(crate) fn panic_cleanup(exception: *mut u8) -> Payload {
-    sel4_panicking_env::debug_println!("AAA 4");
+    sel4_panicking_env::debug_println!("AAAx 4");
     let exception = exception as *mut UnwindException;
     unsafe {
         if (*exception).exception_class != RUST_EXCEPTION_CLASS {
@@ -68,6 +68,8 @@ pub(crate) fn start_panic(payload: Payload) -> i32 {
         };
         sel4_panicking_env::debug_println!("AAA 3");
         let x = CURRENT_EXCEPTION.exception.assume_init_mut();
+        sel4_panicking_env::debug_println!("CURRENT_EXCEPTION {:?}", size_of::<CurrentException>());
+        sel4_panicking_env::debug_println!("CURRENT_PAYLOAD {:?}", size_of::<RefCell<Option<Payload>>>());
         sel4_panicking_env::debug_println!("AAA 4");
         _Unwind_RaiseException(x).0
     }

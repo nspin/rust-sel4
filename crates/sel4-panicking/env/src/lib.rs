@@ -13,6 +13,14 @@ use core::fmt;
 use core::panic::Location;
 use core::str;
 
+pub fn print_sp() {
+    unsafe {
+        let val: u64;
+        core::arch::asm!("mrs {val}, tpidr_el0", val = out(reg) val);
+        debug_println!("sp = {:#x?}", val);
+    }
+}
+
 extern "Rust" {
     fn __sel4_panicking_env__debug_put_char(c: u8);
     fn __sel4_panicking_env__abort_hook(info: Option<&AbortInfo>);
