@@ -3184,6 +3184,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "tests-root-task-p"
+version = "0.1.0"
+dependencies = [
+ "sel4",
+ "sel4-root-task",
+]
+
+[[package]]
 name = "tests-root-task-panicking"
 version = "0.1.0"
 dependencies = [

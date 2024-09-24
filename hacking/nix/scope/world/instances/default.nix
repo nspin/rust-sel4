@@ -167,6 +167,17 @@ in rec {
         ];
       });
 
+      p = maybe haveFullRuntime (mkInstance {
+        rootTask = mkTask {
+          rootCrate = crates.tests-root-task-p;
+          # release = true; # test optimizations
+          release = false;
+        };
+        extraPlatformArgs = lib.optionalAttrs canSimulate {
+          canAutomateSimply = true;
+        };
+      });
+
       panicking =
         let
           alloc = {
