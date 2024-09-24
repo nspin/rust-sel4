@@ -7,7 +7,7 @@
 use core::mem;
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "alloc")] {
+    if #[cfg(feature = "xalloc")] {
         mod with_alloc;
         use with_alloc as whether_alloc;
     } else {
