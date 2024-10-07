@@ -7,6 +7,7 @@
 { lib, buildPlatform, hostPlatform, buildPackages
 , runCommandCC, linkFarm, symlinkJoin, emptyDirectory
 , rsync
+, perl
 
 , crateUtils
 , defaultRustEnvironment
@@ -14,6 +15,7 @@
 , buildSysroot
 , libclangPath
 , crates
+, globalPatchSection
 
 , mkSeL4RustTargetTriple
 , seL4RustEnvVars
@@ -48,9 +50,16 @@ let
 
   buildDocs = { targetTriple, features }:
     let
+      manifestPatches = {
+        patch.crates-io = {
+          inherit (globalPatchSection.crates-io) ring;
+        };
+      };
+
       prunedLockfile = pruneLockfile {
         inherit (rustEnvironment) rustToolchain vendoredSuperLockfile;
         rootCrates = [ rootCrate ];
+        extraManifest = manifestPatches;
       };
 
       vendoredLockfile = vendorLockfile {
@@ -87,10 +96,13 @@ let
         { name = "src"; path = src; }
       ];
 
-      manifest = crateUtils.toTOMLFile "Cargo.toml" ({
-        workspace.resolver = "2";
-        workspace.members = [ "src/${rootCrate.name}" ];
-      });
+      manifest = crateUtils.toTOMLFile "Cargo.toml" (crateUtils.clobber [
+        {
+          workspace.resolver = "2";
+          workspace.members = [ "src/${rootCrate.name}" ];
+        }
+        manifestPatches
+      ]);
 
       src = crateUtils.collectReals (lib.attrValues rootCrate.closure);
 
@@ -126,8 +138,14 @@ let
 
     in
       runCommandCC "rustdoc-view" ({
-        depsBuildBuild = [ buildPackages.stdenv.cc ];
-        nativeBuildInputs = [ rsync rustToolchain ];
+        depsBuildBuild = [
+          buildPackages.stdenv.cc
+        ];
+        nativeBuildInputs = [
+          rustToolchain
+          perl
+          rsync
+        ];
         RUST_TARGET_PATH = rustEnvironment.mkTargetPath targetTriple;
         LIBCLANG_PATH = libclangPath;
       } // lib.optionalAttrs (!rustEnvironment.isNightly) {
