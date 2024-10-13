@@ -18,6 +18,8 @@ let
       capDL-tool = self.callPackage ./capDL-tool.nix {
         inherit sources;
       };
+      # HACK
+      time-compat = haskell.lib.dontCheckIf super.time-compat stdenv.buildPlatform.isAarch64;
     };
   };
 
