@@ -161,6 +161,10 @@ in {
 
   inherit (docs) html;
 
+  distribution = import ./distribution {
+    inherit lib pkgs;
+  };
+
   worlds = lib.fix (self: {
     default = self.aarch64.default;
   } // lib.mapAttrs (_: arch: arch.none.this.worlds) {
