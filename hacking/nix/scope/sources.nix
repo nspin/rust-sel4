@@ -47,6 +47,11 @@ in rec {
   # NOTE: Be sure to keep the commit hashes in the top-level README up-to-date.
 
   seL4 = {
+    upstream = builtins.fetchGit {
+      url = "https://github.com/seL4/seL4.git";
+      ref = "refs/tags/13.0.0";
+    };
+
     rust = fetchGit {
       url = "https://github.com/coliasgroup/seL4.git";
       rev = "dcdd2bcf2a64f3b34d2a406824fa54df7ed55571"; # branch "rust-testing"
