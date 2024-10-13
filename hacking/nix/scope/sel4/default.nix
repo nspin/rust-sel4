@@ -12,15 +12,13 @@
 , sources
 }:
 
-kernelConfig:
+{ src ? sources.seL4.rust, config }:
 
 let
-  src = sources.seL4.rust;
-
   settings = writeText "settings.cmake" ''
     ${lib.concatStrings (lib.mapAttrsToList (k: v: ''
       set(${k} ${v.value} CACHE ${v.type} "")
-    '') kernelConfig)}
+    '') config)}
   '';
 
 in

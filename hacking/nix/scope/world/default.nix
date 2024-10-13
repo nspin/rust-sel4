@@ -62,7 +62,11 @@ self: with self;
     in
       "${microkitForUserspace.sdk}/board/${board}/${config}";
 
-  seL4 = assert !worldConfig.isMicrokit; mkSeL4 worldConfig.kernelConfig;
+  seL4 =
+    assert !worldConfig.isMicrokit;
+    mkSeL4 {
+      config = worldConfig.kernelConfig;
+    };
 
   seL4ForUserspace = seL4;
 
