@@ -43,9 +43,6 @@ stdenv.mkDerivation {
   hardeningDisable = [ "all" ];
 
   postPatch = ''
-    # patchShebangs can't handle env -S
-    rm configs/*_verified.cmake
-
     patchShebangs --build .
   '';
 
