@@ -33,10 +33,26 @@
 #![feature(linkage)]
 #![feature(never_type)]
 
+#[cfg(all(feature = "std", feature = "no-std"))]
+compile_error!("The features 'std' and 'no-std' are mutually exclusive");
+
+#[cfg(not(any(feature = "std", feature = "no-std")))]
+compile_error!("One of 'std' or 'no-std' must be set");
+
+#[cfg(feature = "std")]
+extern crate std;
+
 pub use sel4_panicking_env::abort;
 
 #[doc(inline)]
+#[cfg(feature = "no-std")]
 pub use sel4_panicking as panicking;
+
+#[cfg(feature = "no-std")]
+use sel4_panicking::catch_unwind;
+
+#[cfg(feature = "std")]
+use std::panic::catch_unwind;
 
 mod entry;
 mod heap;

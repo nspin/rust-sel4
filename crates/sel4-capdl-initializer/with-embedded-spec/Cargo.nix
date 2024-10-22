@@ -16,7 +16,7 @@ mk {
       sel4
       sel4-logging
     ;
-    sel4-root-task = localCrates.sel4-root-task // { default-features = false; features = [ "single-threaded" ]; };
+    sel4-root-task = localCrates.sel4-root-task // { default-features = false; features = [ "no-std" "single-threaded" ]; };
   };
   build-dependencies = {
     inherit (localCrates)
