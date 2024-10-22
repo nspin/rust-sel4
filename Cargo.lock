@@ -3218,6 +3218,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tests-root-task-musl"
+version = "0.1.0"
+dependencies = [
+ "sel4",
+ "sel4-linux-syscall-types",
+ "sel4-musl",
+ "sel4-root-task",
+]
+
+[[package]]
 name = "tests-root-task-panicking"
 version = "0.1.0"
 dependencies = [
