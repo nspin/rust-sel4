@@ -20,4 +20,8 @@ license = "BSD-2-Clause"
 sel4 = { path = "../../../../sel4" }
 sel4-linux-syscall-types = { path = "../../../../sel4-linux-syscall-types" }
 sel4-musl = { path = "../../../../sel4-musl" }
-sel4-root-task = { path = "../../../../sel4-root-task" }
+
+[dependencies.sel4-root-task]
+path = "../../../../sel4-root-task"
+default-features = false
+features = ["std"]

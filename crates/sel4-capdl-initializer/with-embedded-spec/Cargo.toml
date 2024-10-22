@@ -32,7 +32,7 @@ sel4-logging = { path = "../../sel4-logging" }
 [dependencies.sel4-root-task]
 path = "../../sel4-root-task"
 default-features = false
-features = ["single-threaded"]
+features = ["no-std", "single-threaded"]
 
 [build-dependencies.sel4-capdl-initializer-with-embedded-spec-embedded-spec-validate]
 path = "embedded-spec/validate"

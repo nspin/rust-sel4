@@ -6,7 +6,7 @@
 
 use core::panic::UnwindSafe;
 
-use crate::{abort, panicking::catch_unwind, Termination};
+use crate::{abort, catch_unwind, Termination};
 
 #[cfg(target_thread_local)]
 #[no_mangle]
