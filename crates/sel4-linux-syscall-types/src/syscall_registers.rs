@@ -60,6 +60,7 @@ impl<T: SyscallArgs + ?Sized> SyscallArgs for &mut T {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct IteratorAsSyscallArgs<T>(T);
 
 impl<T> IteratorAsSyscallArgs<T> {
@@ -74,6 +75,7 @@ impl<T: Iterator<Item = SyscallWordArg>> SyscallArgs for IteratorAsSyscallArgs<T
     }
 }
 
+#[derive(Debug)]
 pub struct VaListAsSyscallArgs<'a, 'f>(VaList<'a, 'f>);
 
 impl<'a, 'f> VaListAsSyscallArgs<'a, 'f> {
