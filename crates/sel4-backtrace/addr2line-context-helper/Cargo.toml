@@ -25,4 +25,4 @@ stable_deref_trait = { version = "1.1.0", default-features = false, features = [
 path = "../../../tmp/src/addr2line"
 version = "0.24.2"
 default-features = false
-features = ["rustc-demangle", "cpp_demangle", "fallible-iterator", "smallvec", "object"]
+features = ["rustc-demangle", "cpp_demangle", "fallible-iterator", "smallvec"]
