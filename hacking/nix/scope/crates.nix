@@ -56,6 +56,12 @@ let
         ".git/HEAD"
       ];
     };
+    addr2line = {
+      extraPaths = [
+        "tests"
+        "benches"
+      ];
+    };
   };
 
   unAugmentedCrates = lib.listToAttrs (lib.forEach workspaceMemberPaths (cratePath: rec {
