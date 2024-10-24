@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 #
 
-{ mk, mkDefaultFrontmatterWithReuseArgs, defaultReuseFrontmatterArgs, versions, serdeWith, postcardWith }:
+{ mk, mkDefaultFrontmatterWithReuseArgs, defaultReuseFrontmatterArgs, versions, serdeWith, postcardWith, localCrates }:
 
 mk rec {
   nix.frontmatter = mkDefaultFrontmatterWithReuseArgs (defaultReuseFrontmatterArgs // {
@@ -16,7 +16,7 @@ mk rec {
     inherit (versions) cfg-if;
     serde = serdeWith [ "derive" ] // { optional = true; };
     postcard = postcardWith [] // { optional = true; };
-    addr2line = { version = versions.addr2line; default-features = false; features = [ "rustc-demangle" "cpp_demangle" "fallible-iterator" "smallvec" ]; optional = true; };
+    addr2line = localCrates.addr2line // { version = versions.addr2line; default-features = false; features = [ "rustc-demangle" "cpp_demangle" "fallible-iterator" "smallvec" ]; optional = true; };
   };
   features = {
     alloc = [

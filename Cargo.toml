@@ -155,6 +155,8 @@ members = [
     "crates/sel4/config/generic/types",
     "crates/sel4/config/macros",
     "crates/sel4/sys",
+    "tmp/src/addr2line",
+    "tmp/src/addr2line/tests/auxiliary",
 ]
 
 [patch.crates-io.ring]

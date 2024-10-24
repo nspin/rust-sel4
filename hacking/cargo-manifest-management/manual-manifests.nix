@@ -18,4 +18,6 @@ in {
   # lock_api = relativeToTmpSrc "parking_lot/lock_api";
   # volatile = relativeToTmpSrc "volatile";
   # dafny_runtime = relativeToTmpSrc "dafny/Source/DafnyRuntime/DafnyRuntimeRust";
+  addr2line = relativeToTmpSrc "addr2line";
+  auxiliary = relativeToTmpSrc "addr2line/tests/auxiliary";
 }
