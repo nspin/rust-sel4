@@ -6,16 +6,17 @@
 
 use sel4_config_generic_types::Configuration;
 
-mod attr_macros;
-mod cfg_if;
+// mod attr_macros;
+// mod cfg_if;
 mod common_helpers;
-mod eval;
-mod expr_macros;
+// mod expr_macros;
 mod generate_consts;
+mod condition;
 
-use common_helpers::parse_or_return;
+use condition::Condition;
+// use common_helpers::parse_or_return;
 
-pub use generate_consts::generate_consts;
+// pub use generate_consts::generate_consts;
 
 pub struct MacroImpls<'a> {
     config: &'a Configuration,
