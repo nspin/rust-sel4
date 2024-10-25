@@ -14,9 +14,9 @@ mod generate_consts;
 mod condition;
 
 use condition::Condition;
-// use common_helpers::parse_or_return;
+use common_helpers::parse_or_return;
 
-// pub use generate_consts::generate_consts;
+pub use generate_consts::generate_consts;
 
 pub struct MacroImpls<'a> {
     config: &'a Configuration,
