@@ -10,7 +10,7 @@ mk {
   package.name = "sel4-root-task-macros";
   lib.proc-macro = true;
   dependencies = {
-    syn = { version = versions.syn; features = [ "full" ]; };
+    syn = { version = versions.syn; };
     inherit (versions) proc-macro2 quote;
   };
 }

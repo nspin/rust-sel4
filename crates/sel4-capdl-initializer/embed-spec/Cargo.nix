@@ -16,7 +16,7 @@ mk {
       serde_json
     ;
     hex = "0.4.3";
-    syn = { version = versions.syn; features = [ "full" ]; };
+    syn = { version = versions.syn; };
     sel4-capdl-initializer-types = localCrates.sel4-capdl-initializer-types // { features = [ "serde" "std" "deflate" ]; };
   };
 }

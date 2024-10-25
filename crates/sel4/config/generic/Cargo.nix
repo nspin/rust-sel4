@@ -14,7 +14,7 @@ mk {
       proc-macro2
       quote
     ;
-    syn = { version = versions.syn; features = [ "full" ]; };
+    syn = { version = versions.syn; };
     inherit (localCrates)
       sel4-config-generic-types
     ;

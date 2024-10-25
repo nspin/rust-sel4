@@ -11,6 +11,6 @@ mk {
   lib.proc-macro = true;
   dependencies = {
     inherit (versions) proc-macro2 quote;
-    syn = { version = versions.syn; features = [ "full" ]; };
+    syn = { version = versions.syn; };
   };
 }
