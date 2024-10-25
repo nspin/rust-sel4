@@ -9,7 +9,7 @@ use sel4_config_generic_types::Configuration;
 // mod attr_macros;
 // mod cfg_if;
 mod common_helpers;
-// mod expr_macros;
+mod expr_macros;
 mod generate_consts;
 mod condition;
 
