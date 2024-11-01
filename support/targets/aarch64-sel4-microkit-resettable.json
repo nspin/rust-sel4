@@ -6,7 +6,7 @@
   "exe-suffix": ".elf",
   "features": "+v8a,+strict-align,+neon,+fp-armv8",
   "has-thread-local": true,
-  "link-script": "SECTIONS {\n    .persistent : {\n        *(.persistent .persistent.*)\n    }\n} INSERT BEFORE .data;\n\nASSERT(DEFINED(_reset), \"_reset is not defined\")\n\nENTRY(_reset)\n__sel4_ipc_buffer_obj = (__ehdr_start & ~(4096 - 1)) - 4096;",
+  "link-script": "__sel4_ipc_buffer_obj = (__ehdr_start & ~(4096 - 1)) - 4096\nSECTIONS {\n    .persistent : {\n        *(.persistent .persistent.*)\n    }\n} INSERT BEFORE .data;\n\nASSERT(DEFINED(_reset), \"_reset is not defined\")\n\nENTRY(_reset)\nSECTIONS {\n    .tls ALIGN(MAX(16, MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)))) (NOLOAD) : {\n        __tls_start = .;\n        . += 16;\n        . = ALIGN(MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)));\n        . += SIZEOF(.tdata);\n        . = ALIGN(ALIGNOF(.tbss));\n        . += SIZEOF(.tbss);\n        __tls_end = .;\n    }\n} INSERT AFTER .bss;\n",
   "linker": "rust-lld",
   "linker-flavor": "gnu-lld",
   "llvm-target": "aarch64-unknown-none",

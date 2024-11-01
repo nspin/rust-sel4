@@ -112,16 +112,39 @@ impl Config {
         }
 
         if let Context::Microkit { resettable } = &self.context {
-            let mut linker_script = String::new();
+            let linker_script = target
+                .options
+                .link_script
+                .get_or_insert(Default::default())
+                .to_mut();
+            linker_script.push_str(include_str!(
+                "linker-script-fragments/microkit-ipc-buffer.lds"
+            ));
             if *resettable {
-                linker_script.push_str(include_str!("microkit-resettable.lds"));
+                linker_script.push_str(include_str!(
+                    "linker-script-fragments/microkit-resettable.lds"
+                ));
             }
-            linker_script.push_str("__sel4_ipc_buffer_obj = (__ehdr_start & ~(4096 - 1)) - 4096;");
-            let options = &mut target.options;
-            options.link_script = Some(linker_script.into());
         }
 
         target.options.has_thread_local = !self.minimal;
+
+        if !self.minimal {
+            let tls_linker_script_fragment = match self.arch {
+                Arch::AArch64 => include_str!("linker-script-fragments/tls/aarch64.lds"),
+                Arch::Armv7a => include_str!("linker-script-fragments/tls/arm.lds"),
+                Arch::RiscV64(_) | Arch::RiscV32(_) => {
+                    include_str!("linker-script-fragments/tls/riscv.lds")
+                }
+                Arch::X86_64 => include_str!("linker-script-fragments/tls/x86_64.lds"),
+            };
+            target
+                .options
+                .link_script
+                .get_or_insert(Default::default())
+                .to_mut()
+                .push_str(tls_linker_script_fragment);
+        }
 
         if self.unwinding_support() {
             target.options.panic_strategy = PanicStrategy::Unwind;
