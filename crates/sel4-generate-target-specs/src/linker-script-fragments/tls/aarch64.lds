@@ -1,4 +1,6 @@
 SECTIONS {
+    .tdata : {}
+    .tbss : {}
     .tls ALIGN(MAX(16, MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)))) (NOLOAD) : {
         __tls_start = .;
         . += 16;

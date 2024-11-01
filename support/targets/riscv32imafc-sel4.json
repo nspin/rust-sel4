@@ -7,7 +7,7 @@
   "exe-suffix": ".elf",
   "features": "+m,+a,+c,+f",
   "has-thread-local": true,
-  "link-script": "SECTIONS {\n    .tls ALIGN(MAX(ALIGNOF(.tdata), ALIGNOF(.tbss))) (NOLOAD) : {\n        __tls_start = .;\n        . += SIZEOF(.tdata);\n        . = ALIGN(ALIGNOF(.tbss));\n        . += SIZEOF(.tbss);\n        __tls_end = .;\n    }\n} INSERT AFTER .bss;\n",
+  "link-script": "SECTIONS {\n    .tdata : {}\n    .tbss : {}\n    .tls ALIGN(MAX(ALIGNOF(.tdata), ALIGNOF(.tbss))) (NOLOAD) : {\n        __tls_start = .;\n        . += SIZEOF(.tdata);\n        . = ALIGN(ALIGNOF(.tbss));\n        . += SIZEOF(.tbss);\n        __tls_end = .;\n    }\n} INSERT AFTER .bss;\n",
   "linker": "rust-lld",
   "linker-flavor": "gnu-lld",
   "llvm-abiname": "ilp32f",

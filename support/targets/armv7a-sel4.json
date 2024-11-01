@@ -9,7 +9,7 @@
   "exe-suffix": ".elf",
   "features": "+v7,+thumb2,+soft-float,-neon,+strict-align",
   "has-thread-local": true,
-  "link-script": "SECTIONS {\n    .tls ALIGN(MAX(8, MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)))) (NOLOAD) : {\n        __tls_start = .;\n        . += 8;\n        . = ALIGN(MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)));\n        . += SIZEOF(.tdata);\n        . = ALIGN(ALIGNOF(.tbss));\n        . += SIZEOF(.tbss);\n        __tls_end = .;\n    }\n} INSERT AFTER .bss;\n",
+  "link-script": "SECTIONS {\n    .tdata : {}\n    .tbss : {}\n    .tls ALIGN(MAX(8, MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)))) (NOLOAD) : {\n        __tls_start = .;\n        . += 8;\n        . = ALIGN(MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)));\n        . += SIZEOF(.tdata);\n        . = ALIGN(ALIGNOF(.tbss));\n        . += SIZEOF(.tbss);\n        __tls_end = .;\n    }\n} INSERT AFTER .bss;\n",
   "linker": "rust-lld",
   "linker-flavor": "gnu-lld",
   "llvm-target": "armv7a-none-eabi",
