@@ -4,15 +4,29 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+use core::ptr;
+
 use sel4_elf_header::PT_TLS;
 use sel4_panicking_env::abort;
 
 #[allow(unused_imports)]
 use sel4_initialize_tls::{SetThreadPointerFn, UncheckedTlsImage, DEFAULT_SET_THREAD_POINTER_FN};
 
-pub use sel4_initialize_tls::{ContArg, ContFn};
+pub use sel4_initialize_tls::{ContArg, ContFn, Region};
 
 use crate::locate_phdrs;
+
+extern "C" {
+    static mut __tls_start: u8;
+    static mut __tls_end: u8;
+}
+
+#[allow(unused_unsafe)]
+fn tls_region() -> Region {
+    let start = unsafe { ptr::addr_of_mut!(__tls_start) };
+    let end = unsafe { ptr::addr_of_mut!(__tls_end) };
+    Region::new(start, end as usize - start as usize)
+}
 
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn initialize_tls_on_stack_and_continue(cont_fn: ContFn, cont_arg: *mut ContArg) -> ! {
@@ -26,10 +40,14 @@ pub unsafe fn initialize_tls_on_stack_and_continue(cont_fn: ContFn, cont_arg: *m
         memsz: phdr.p_memsz,
         align: phdr.p_align,
     };
-    unchecked
+    let checked = unchecked
         .check()
-        .unwrap_or_else(|_| abort!("invalid TLS image: {unchecked:#x?}"))
-        .initialize_on_stack(CHOSEN_SET_THREAD_POINTER_FN, cont_fn, cont_arg)
+        .unwrap_or_else(|_| abort!("invalid TLS image: {unchecked:#x?}"));
+    let thread_pointer = checked
+        .initialize_exact_reservation_region(&tls_region())
+        .unwrap_or_else(|_| abort!("invalid TLS reservation"));
+    CHOSEN_SET_THREAD_POINTER_FN(thread_pointer);
+    cont_fn(cont_arg)
 }
 
 sel4::sel4_cfg_if! {
