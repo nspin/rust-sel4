@@ -27,17 +27,13 @@ let
 
   rustToolchain = assembleRustToolchain {
     inherit channel;
-    sha256 = "sha256-e4mlaJehWBymYxJGgnbuCObVlqMlQSilZ8FljG9zPHY=";
+    sha256 = "sha256-yMuSb5eQPO/bHv+Bcf/US8LVMbf/G/0MSfiPwBhiPpk=";
   };
 
   rustEnvironment = lib.fix (self: elaborateRustEnvironment (mkDefaultElaborateRustEnvironmentArgs {
     inherit rustToolchain;
   } // {
     inherit channel;
-    backwardsCompatibilityHacks = {
-      outDirInsteadOfArtifactDir = true;
-      noLibraryWorkspace = true;
-    };
     mkCustomTargetPath = mkMkCustomTargetPathForEnvironment {
       rustEnvironment = self;
     };
@@ -45,7 +41,7 @@ let
 
   src = sources.fetchGit {
     url = "https://github.com/coliasgroup/verus.git";
-    rev = "c1d8b986315b1d7fcaa0bf63c2e0497fbebab231"; # branch dev
+    rev = "a60b3b7e08d514dc8e0ac3b30236db0c3023c17a"; # branch dev
   };
 
   lockfile = vendorLockfile {
