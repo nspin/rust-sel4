@@ -4,7 +4,8 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ runCommand
+{ lib
+, runCommand
 , capdl-tool
 , objectSizes
 , mkTask, crates
@@ -38,6 +39,14 @@ in mkTask {
       modifications = seL4Modifications;
     }
   ];
+
+  commonModifications = {
+    modifyManifest = lib.flip lib.recursiveUpdate {
+      profile.release = {
+        opt-level = 0;
+      };
+    };
+  };
 
   lastLayerModifications = crateUtils.composeModifications seL4Modifications (crateUtils.elaborateModifications {
     modifyDerivation = drv: drv.overrideAttrs (self: super: {
