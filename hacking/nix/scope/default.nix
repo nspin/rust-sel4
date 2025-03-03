@@ -120,7 +120,7 @@ superCallPackage ../rust-utils {} self //
   defaultUpstreamRustEnvironment = elaborateRustEnvironment (mkDefaultElaborateRustEnvironmentArgs {
     rustToolchain = fenix.fromToolchainFile {
       file = topLevelRustToolchainFile.path;
-      sha256 = "sha256-frXQAACBsfofKDEg6nSD0k+F3wDzfqM1ZxQKZVMtWCA=";
+      sha256 = "sha256-0gdEivgilaY6nNwveFlNB+WO7Y9lbBwyzz5J5+XpuC4=";
     };
   } // {
     channel = topLevelRustToolchainFile.attrs.toolchain.channel;
