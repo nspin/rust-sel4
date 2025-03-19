@@ -41,6 +41,9 @@ sel4-shared-ring-buffer = { path = "../../../../../sel4-shared-ring-buffer" }
 sel4-shared-ring-buffer-block-io = { path = "../../../../../sel4-shared-ring-buffer/block-io" }
 sel4-shared-ring-buffer-smoltcp = { path = "../../../../../sel4-shared-ring-buffer/smoltcp" }
 
+[dependencies.sel4-abstract-allocator-offset-allocator]
+path = "../../../../../sel4-abstract-allocator/offset-allocator"
+
 [dependencies.sel4-async-single-threaded-executor]
 path = "../../../../../sel4-async/single-threaded-executor"
 

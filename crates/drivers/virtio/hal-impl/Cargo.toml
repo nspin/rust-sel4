@@ -22,3 +22,6 @@ sel4-abstract-allocator = { path = "../../../sel4-abstract-allocator" }
 sel4-immediate-sync-once-cell = { path = "../../../sel4-immediate-sync-once-cell" }
 sel4-shared-memory = { path = "../../../sel4-shared-memory" }
 virtio-drivers = { version = "0.7.2", default-features = false }
+
+[dependencies.sel4-abstract-allocator-offset-allocator]
+path = "../../../sel4-abstract-allocator/offset-allocator"

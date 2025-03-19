@@ -12,8 +12,8 @@ use core::ptr::{self, NonNull};
 use one_shot_mutex::OneShotMutex;
 use virtio_drivers::{BufferDirection, Hal, PhysAddr, PAGE_SIZE};
 
-use sel4_abstract_allocator::basic::BasicAllocator;
 use sel4_abstract_allocator::{ByRange, WithAlignmentBound};
+use sel4_abstract_allocator_offset_allocator::OffsetAllocator;
 use sel4_immediate_sync_once_cell::ImmediateSyncOnceCell;
 use sel4_shared_memory::SharedMemoryRef;
 
@@ -22,7 +22,7 @@ static GLOBAL_STATE: ImmediateSyncOnceCell<OneShotMutex<State>> = ImmediateSyncO
 struct State {
     dma_region: SharedMemoryRef<'static, [u8]>,
     dma_region_paddr: usize,
-    bounce_buffer_allocator: ByRange<WithAlignmentBound<BasicAllocator>>,
+    bounce_buffer_allocator: ByRange<WithAlignmentBound<OffsetAllocator>>,
 }
 
 impl State {
@@ -53,7 +53,7 @@ impl HalImpl {
                 .min(dma_region_paddr.trailing_zeros());
 
         let bounce_buffer_allocator = ByRange::new(WithAlignmentBound::new(
-            BasicAllocator::new(dma_region_size),
+            OffsetAllocator::with_max_allocs(dma_region_size, 1024),
             max_alignment,
         ));
 

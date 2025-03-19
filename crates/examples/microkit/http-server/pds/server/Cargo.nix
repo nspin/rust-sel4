@@ -40,6 +40,7 @@ mk {
       sel4-async-time
       sel4-shared-ring-buffer-bookkeeping
       sel4-abstract-allocator
+      sel4-abstract-allocator-offset-allocator
       sel4-shared-ring-buffer
       sel4-shared-ring-buffer-smoltcp
       sel4-shared-ring-buffer-block-io

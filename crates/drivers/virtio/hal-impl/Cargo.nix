@@ -17,6 +17,7 @@ mk {
       sel4-immediate-sync-once-cell
       sel4-shared-memory
       sel4-abstract-allocator
+      sel4-abstract-allocator-offset-allocator
     ;
   };
 }
