@@ -65,3 +65,27 @@ impl seL4_IPCBuffer {
         self.caps_or_badges[i] = cptr;
     }
 }
+
+pub struct ExclusiveIpcBufferAccess {
+    ptr: *mut seL4_IPCBuffer,
+}
+
+pub struct ExclusiveIpcBufferLendedToken(());
+
+impl ExclusiveIpcBufferAccess {
+    pub unsafe fn new(ptr: *mut seL4_IPCBuffer) -> Self {
+        Self { ptr }
+    }
+
+    fn with_ref<T>(&self, f: impl FnOnce(&seL4_IPCBuffer) -> T) -> T {
+        unsafe { f(&*self.ptr) }
+    }
+
+    fn with_mut<T>(&mut self, f: impl FnOnce(&mut seL4_IPCBuffer) -> T) -> T {
+        unsafe { f(&mut *self.ptr) }
+    }
+
+    fn lend<T>(&mut self, f: impl FnOnce(&ExclusiveIpcBufferLendedToken) -> T) -> T {
+        f(&ExclusiveIpcBufferLendedToken(()))
+    }
+}
