@@ -7,6 +7,7 @@
 use core::mem;
 use core::ops::Range;
 use core::slice;
+use core::ops::{Deref, DerefMut};
 
 use sel4_bitfield_ops::{get_bits, set_bits, set_bits_from_slice, PrimInt, UnsignedPrimInt};
 
@@ -66,26 +67,34 @@ impl seL4_IPCBuffer {
     }
 }
 
-pub struct ExclusiveIpcBufferAccess {
-    ptr: *mut seL4_IPCBuffer,
+pub struct NotRef<T> {
+    ptr: *mut T,
 }
 
-pub struct ExclusiveIpcBufferLendedToken(());
-
-impl ExclusiveIpcBufferAccess {
-    pub unsafe fn new(ptr: *mut seL4_IPCBuffer) -> Self {
+impl<T> NotRef<T> {
+    pub unsafe fn new(ptr: *mut T) -> Self {
         Self { ptr }
     }
 
-    fn with_ref<T>(&self, f: impl FnOnce(&seL4_IPCBuffer) -> T) -> T {
-        unsafe { f(&*self.ptr) }
+    pub fn without(_: &mut Self, f: impl FnOnce() -> T) -> T {
+        f()
     }
+}
 
-    fn with_mut<T>(&mut self, f: impl FnOnce(&mut seL4_IPCBuffer) -> T) -> T {
-        unsafe { f(&mut *self.ptr) }
+impl<T> Deref for NotRef<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe {
+            &*self.ptr
+        }
     }
+}
 
-    fn lend<T>(&mut self, f: impl FnOnce(&ExclusiveIpcBufferLendedToken) -> T) -> T {
-        f(&ExclusiveIpcBufferLendedToken(()))
+impl<T> DerefMut for NotRef<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe {
+            &mut *self.ptr
+        }
     }
 }
