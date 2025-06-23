@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ lib, stdenv, writeText, buildPackages
+{ lib, gcc12Stdenv, writeText, buildPackages
 , cmake, ninja
 , dtc, libxml2
 , python312Packages
@@ -15,6 +15,7 @@
 kernelConfig:
 
 let
+  stdenv = gcc12Stdenv;
   src = sources.seL4.rust;
 
   settings = writeText "settings.cmake" ''
