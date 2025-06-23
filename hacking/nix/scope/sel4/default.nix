@@ -4,12 +4,13 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ lib, gcc12Stdenv, writeText, buildPackages
+{ lib, stdenv, writeText, buildPackages
 , cmake, ninja
 , dtc, libxml2
 , python312Packages
 , qemuForSeL4
 , sources
+, gcc12Stdenv
 }:
 
 kernelConfig:

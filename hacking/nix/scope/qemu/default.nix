@@ -24,7 +24,11 @@
     "i386-softmmu"
     "x86_64-softmmu"
   ]
+
+, gcc12Stdenv
 }:
+
+let stdenv = gcc12Stdenv; in
 
 stdenv.mkDerivation (finalAttrs: with finalAttrs; {
   pname = "qemu";
