@@ -50,13 +50,15 @@ in rec {
   seL4 = {
     rust = fetchGit {
       url = "https://github.com/coliasgroup/seL4.git";
-      rev = "dcdd2bcf2a64f3b34d2a406824fa54df7ed55571"; # branch "rust-testing", based on 13.0.0
+      # rev = "dcdd2bcf2a64f3b34d2a406824fa54df7ed55571"; # branch "rust-testing", based on 13.0.0
+      rev = "f096e863e3d1fe1d68b3fc5f5cd6dbcfd89efb7b";
       local = localRoot + "/seL4";
     };
 
     rust-microkit = fetchGit {
       url = "https://github.com/coliasgroup/seL4.git";
-      rev = "4b97df4c7e24fd0c297e21cae8d997a08b8952b0"; # branch "rust-microkit" seL4/seL4:microkit
+      # rev = "4b97df4c7e24fd0c297e21cae8d997a08b8952b0"; # branch "rust-microkit" seL4/seL4:microkit
+      rev = "cd9e1cfbc7e85160975df7e1b47ac98122f745eb";
       local = localRoot + "/seL4";
     };
   };
