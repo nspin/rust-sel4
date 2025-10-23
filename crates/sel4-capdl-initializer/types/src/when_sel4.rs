@@ -21,7 +21,7 @@ impl<D, M> Object<'_, D, M> {
                     size_bits: obj.size_bits,
                 },
                 Object::Tcb(_) => ObjectBlueprint::Tcb,
-                #[sel4_cfg(all(ARCH_AARCH64, ARM_HYPERVISOR_SUPPORT))]
+                #[sel4_cfg(all(ARCH_ARM, ARM_HYPERVISOR_SUPPORT))]
                 Object::VCpu => sel4::ObjectBlueprintArch::VCpu.into(),
                 Object::Frame(obj) => sel4::FrameObjectType::from_bits(obj.size_bits).unwrap().blueprint(),
                 #[sel4_cfg(ARCH_AARCH64)]
@@ -42,7 +42,7 @@ impl<D, M> Object<'_, D, M> {
                         sel4::ObjectBlueprintArch::PT.into()
                     }
                 }
-                #[sel4_cfg(any(ARCH_RISCV64, ARCH_RISCV32))]
+                #[sel4_cfg(ARCH_RISCV)]
                 Object::PageTable(obj) => {
                     assert!(obj.level.is_none()); // sanity check
                     sel4::ObjectBlueprintArch::PageTable.into()
@@ -119,10 +119,10 @@ impl HasVmAttributes for cap::PageTable {
 }
 
 sel4::sel4_cfg_if! {
-    if #[sel4_cfg(any(ARCH_AARCH64, ARCH_AARCH32))] {
+    if #[sel4_cfg(ARCH_ARM)] {
         const CACHED: VmAttributes = VmAttributes::PAGE_CACHEABLE;
         const UNCACHED: VmAttributes = VmAttributes::DEFAULT;
-    } else if #[sel4_cfg(any(ARCH_RISCV64, ARCH_RISCV32))] {
+    } else if #[sel4_cfg(ARCH_RISCV)] {
         const CACHED: VmAttributes = VmAttributes::DEFAULT;
         const UNCACHED: VmAttributes = VmAttributes::NONE;
     } else if #[sel4_cfg(ARCH_X86_64)] {
