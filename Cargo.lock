@@ -2052,7 +2052,7 @@ name = "sddf-sys"
 version = "0.1.0"
 dependencies = [
  "bindgen",
- "ptr_meta",
+ "cc",
  "sel4-sys",
 ]
 

@@ -10,7 +10,6 @@ mk {
   package.name = "sddf-sys";
   package.links = "sddf";
   dependencies = {
-    ptr_meta = { version = versions.ptr_meta; default-features = false; };
     inherit (localCrates)
       sel4-sys
     ;
@@ -18,6 +17,7 @@ mk {
   build-dependencies = {
     inherit (versions)
       bindgen
+      cc
     ;
   };
 }
