@@ -73,7 +73,6 @@ members = [
     "crates/private/tests/root-task/verus/core",
     "crates/private/tests/root-task/verus/task",
     "crates/sddf",
-    "crates/sddf/ipc-types",
     "crates/sddf/sys",
     "crates/sel4",
     "crates/sel4-abstract-allocator",
