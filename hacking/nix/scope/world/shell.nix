@@ -73,7 +73,7 @@ mkShell (seL4RustEnvVars // kernelLoaderConfigEnvVars // capdlEnvVars // bindgen
     in
       lib.concatStringsSep ":" [
         "${d}/include"
-        "${d}/include/extern"
+        "${d}/include/microkit"
       ];
 
   LIONSOS_INCLUDE_DIRS =
