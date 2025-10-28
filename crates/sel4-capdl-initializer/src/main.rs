@@ -13,6 +13,7 @@ use alloc::vec;
 use core::ops::Range;
 use core::ptr;
 use core::slice;
+use sel4::{UntypedDesc, sel4_cfg_usize};
 
 use one_shot_mutex::sync::RawOneShotMutex;
 
@@ -40,6 +41,9 @@ static LOGGER: Logger = LoggerBuilder::const_default()
 #[global_allocator]
 static GLOBAL_ALLOCATOR: DeferredStaticDlmalloc<RawOneShotMutex> = DeferredStaticDlmalloc::new();
 
+const UNTYPED_DESC_SIZE: usize = size_of::<UntypedDesc>();
+const MAX_UNTYPEDS: usize = sel4_cfg_usize!(MAX_NUM_BOOTINFO_UNTYPED_CAPS);
+
 #[root_task(stack_size = 0x10000)]
 fn main(bootinfo: &sel4::BootInfoPtr) -> ! {
     let _ = GLOBAL_ALLOCATOR.set_bounds(static_heap_bounds());
@@ -54,6 +58,7 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> ! {
         user_image_bounds(),
         &spec_with_sources,
         &mut buffers,
+        get_expected_untypeds(),
     )
 }
 
@@ -80,6 +85,17 @@ static mut sel4_capdl_initializer_image_start: *mut u8 = ptr::null_mut();
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 static mut sel4_capdl_initializer_image_end: *mut u8 = ptr::null_mut();
+
+/// Optional
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".data")]
+static mut sel4_capdl_initializer_expected_untypeds_list: [u8; UNTYPED_DESC_SIZE * MAX_UNTYPEDS] =
+    [0; UNTYPED_DESC_SIZE * MAX_UNTYPEDS];
+
+/// Optional
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".data")]
+static mut sel4_capdl_initializer_expected_untypeds_list_num_entries: usize = 0;
 
 fn get_spec_with_sources<'a>() -> SpecWithSources<
     'a,
@@ -114,5 +130,16 @@ fn static_heap_bounds() -> StaticHeapBounds {
             sel4_capdl_initializer_heap_start,
             sel4_capdl_initializer_heap_size,
         )
+    }
+}
+
+/// This is useful for error checking when your upstream spec generation tool expects a certain range of untypeds from the kernel.
+fn get_expected_untypeds() -> &'static [UntypedDesc] {
+    #[allow(static_mut_refs)]
+    unsafe {
+        let num_entries = sel4_capdl_initializer_expected_untypeds_list_num_entries
+            .min(sel4::sel4_cfg_usize!(MAX_NUM_BOOTINFO_UNTYPED_CAPS));
+        let ptr = sel4_capdl_initializer_expected_untypeds_list.as_ptr() as *const UntypedDesc;
+        core::slice::from_raw_parts(ptr, num_entries)
     }
 }

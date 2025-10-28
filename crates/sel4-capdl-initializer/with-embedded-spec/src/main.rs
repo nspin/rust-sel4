@@ -41,7 +41,7 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> ! {
     };
     Initializer::initialize(bootinfo, user_image_bounds(), &spec_with_sources, unsafe {
         ptr::addr_of_mut!(BUFFERS).as_mut().unwrap()
-    })
+    }, &[])
 }
 
 unsafe extern "C" {
