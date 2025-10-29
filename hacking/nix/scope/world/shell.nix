@@ -30,7 +30,7 @@ let
     SEL4_KERNEL_LOADER_CONFIG = writeText "loader-config.json" (builtins.toJSON worldConfig.kernelLoaderConfig);
   };
 
-  capdlEnvVars = lib.optionalAttrs (!worldConfig.isMicrokit) {
+  capdlEnvVars = {
     CAPDL_SPEC_FILE = serializeCapDLSpec { inherit (dummyCapDLSpec) cdl; };
     CAPDL_FILL_DIR = dummyCapDLSpec.fill;
   };

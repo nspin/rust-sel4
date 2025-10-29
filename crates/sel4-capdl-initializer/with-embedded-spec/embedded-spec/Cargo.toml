@@ -20,7 +20,7 @@ license = "BSD-2-Clause"
 deflate = ["sel4-capdl-initializer-types/deflate"]
 
 [dependencies]
-sel4-capdl-initializer-types = { path = "../../types", features = ["borrowed-indirect"] }
+sel4-capdl-initializer-types = { path = "../../types" }
 
 [build-dependencies]
 prettyplease = "0.2.37"

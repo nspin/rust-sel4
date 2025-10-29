@@ -23,6 +23,7 @@ mk {
     alloc = [ "miniz_oxide?/with-alloc" ];
     serde = [ "alloc" "dep:serde" ];
     deflate = [ "dep:miniz_oxide" ];
-    borrowed-indirect = [];
+    indirect-borrowed = [];
+    indirect-owned = ["alloc"];
   };
 }

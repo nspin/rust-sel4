@@ -18,8 +18,9 @@ license = "BSD-2-Clause"
 
 [features]
 alloc = ["miniz_oxide?/with-alloc"]
-borrowed-indirect = []
 deflate = ["dep:miniz_oxide"]
+indirect-borrowed = []
+indirect-owned = ["alloc"]
 serde = ["alloc", "dep:serde"]
 std = ["alloc", "serde", "serde_json"]
 

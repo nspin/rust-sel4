@@ -13,6 +13,6 @@ mk {
     inherit (localCrates)
       sel4-capdl-initializer-embed-spec
     ;
-    sel4-capdl-initializer-types = localCrates.sel4-capdl-initializer-types // { features = [ "std" "serde" ]; };
+    sel4-capdl-initializer-types = localCrates.sel4-capdl-initializer-types // { features = [ "std" "serde" "indirect-owned" ]; };
   };
 }

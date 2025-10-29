@@ -12,11 +12,11 @@ mk {
     inherit (localCrates)
       sel4-capdl-initializer-core
       sel4-capdl-initializer-with-embedded-spec-embedded-spec
-      sel4-capdl-initializer-types
       sel4
       sel4-logging
     ;
     sel4-root-task = localCrates.sel4-root-task // { features = [ "single-threaded" ]; };
+    sel4-capdl-initializer-types = localCrates.sel4-capdl-initializer-types // { features = [ "indirect-borrowed" ]; };
   };
   build-dependencies = {
     inherit (localCrates)

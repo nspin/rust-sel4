@@ -20,7 +20,10 @@ license = "BSD-2-Clause"
 hex = "0.4.3"
 proc-macro2 = "1.0.103"
 quote = "1.0.41"
-sel4-capdl-initializer-types = { path = "../types", features = ["serde", "std", "deflate"] }
 serde = "1.0.228"
 serde_json = "1.0.145"
 syn = "2.0.108"
+
+[dependencies.sel4-capdl-initializer-types]
+path = "../types"
+features = ["std", "serde", "deflate", "indirect-owned"]
