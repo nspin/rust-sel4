@@ -18,15 +18,3 @@ license = "BSD-2-Clause"
 
 [package.metadata.verus]
 verify = true
-
-[dependencies]
-builtin = { git = "https://github.com/verus-lang/verus.git", rev = "release/0.2025.06.30.0c71b39" }
-
-[dependencies.builtin_macros]
-git = "https://github.com/verus-lang/verus.git"
-rev = "release/0.2025.06.30.0c71b39"
-
-[dependencies.vstd]
-git = "https://github.com/verus-lang/verus.git"
-rev = "release/0.2025.06.30.0c71b39"
-default-features = false

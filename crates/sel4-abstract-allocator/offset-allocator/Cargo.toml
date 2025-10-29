@@ -18,7 +18,3 @@ license = "BSD-2-Clause"
 
 [dependencies]
 sel4-abstract-allocator = { path = ".." }
-
-[dependencies.offset-allocator]
-git = "https://github.com/coliasgroup/offset-allocator.git"
-tag = "keep/ae15c9cbf352c1eb12b6be377324d100"

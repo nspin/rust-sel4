@@ -23,7 +23,3 @@ hex = { version = "0.4.3", default-features = false }
 log = "0.4.28"
 lru = "0.16.2"
 sel4-async-block-io = { path = ".." }
-
-[dependencies.embedded-fat]
-git = "https://github.com/coliasgroup/rust-embedded-fat.git"
-tag = "keep/e1465a43c9f550ef58701a275b313310"
