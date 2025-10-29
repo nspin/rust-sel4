@@ -706,9 +706,55 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
             .spec()
             .filter_objects_with::<&object::PageTable>(|obj| obj.is_root)
         {
-            let vspace = self.orig_cap::<cap_type::VSpace>(obj_id);
-            let root_level = obj.level.unwrap_or(0).into();
-            self.init_vspace(vspace, root_level, 0, obj)?;
+            if obj.x86_ept {
+                sel4::sel4_cfg_if! {
+                    if #[sel4_cfg(all(ARCH_X86_64, VTX))] {
+                        let vspace = self.orig_cap::<cap_type::EPTPML4>(obj_id);
+                        self.init_vspace_x86_ept(vspace, 0, 0, obj)?;
+                    } else {
+                        panic!("root page table is EPT without VTX")
+                    }
+                }
+            } else {
+                let vspace = self.orig_cap::<cap_type::VSpace>(obj_id);
+                let root_level = obj.level.unwrap_or(0).into();
+                self.init_vspace(vspace, root_level, 0, obj)?;
+            }
+        }
+        Ok(())
+    }
+
+    #[sel4::sel4_cfg(all(ARCH_X86_64, VTX))]
+    fn init_vspace_x86_ept(
+        &mut self,
+        eptpml4: sel4::cap::EPTPML4,
+        level: usize,
+        vaddr: usize,
+        obj: &object::PageTable,
+    ) -> Result<()> {
+        for (i, entry) in obj.entries() {
+            let vaddr = vaddr + (i << sel4::vspace_levels::ept_step_bits(level));
+            match entry {
+                PageTableEntry::Frame(cap) => {
+                    let frame = self.orig_cap::<cap_type::UnspecifiedPage>(cap.object);
+                    let rights = (&cap.rights).into();
+                    self.copy(frame)?
+                        .ept_frame_map(eptpml4, vaddr, rights, cap.vm_attributes())?;
+                }
+                PageTableEntry::PageTable(cap) => {
+                    self.orig_cap::<cap_type::UnspecifiedIntermediateTranslationTable>(cap.object)
+                        .ept_intermediate_translation_table_map(
+                            sel4::TranslationTableObjectType::from_level_ept(level + 1).unwrap(),
+                            eptpml4,
+                            vaddr,
+                            cap.vm_attributes(),
+                        )?;
+                    let obj = self
+                        .spec()
+                        .lookup_object::<&object::PageTable>(cap.object)?;
+                    self.init_vspace_x86_ept(eptpml4, level + 1, vaddr, obj)?;
+                }
+            }
         }
         Ok(())
     }
@@ -792,6 +838,14 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                     if let Some(vcpu) = obj.vcpu() {
                         let vcpu = self.orig_cap::<cap_type::VCpu>(vcpu.object);
                         vcpu.vcpu_set_tcb(tcb)?;
+                    }
+                }
+            }
+            sel4::sel4_cfg_if! {
+                if #[sel4_cfg(all(ARCH_X86_64, VTX))] {
+                    if let Some(_vcpu) = obj.vcpu() {
+                        let eptpml4 = self.orig_cap::<cap_type::EPTPML4>(obj.eptpml4().unwrap().object);
+                        tcb.tcb_set_ept_root(eptpml4)?;
                     }
                 }
             }

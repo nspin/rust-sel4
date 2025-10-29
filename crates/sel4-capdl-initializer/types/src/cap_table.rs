@@ -59,6 +59,7 @@ impl object::Tcb<'_> {
     pub const SLOT_TEMP_FAULT_EP: CapSlot = 7;
     pub const SLOT_BOUND_NOTIFICATION: CapSlot = 8;
     pub const SLOT_VCPU: CapSlot = 9;
+    pub const SLOT_EPTPML4: CapSlot = 10;
 
     pub fn cspace(&self) -> &cap::CNode {
         self.slot_as(Self::SLOT_CSPACE)
@@ -90,6 +91,10 @@ impl object::Tcb<'_> {
 
     pub fn vcpu(&self) -> Option<&cap::VCpu> {
         self.maybe_slot_as(Self::SLOT_VCPU)
+    }
+
+    pub fn eptpml4(&self) -> Option<&cap::PageTable> {
+        self.maybe_slot_as(Self::SLOT_EPTPML4)
     }
 }
 
