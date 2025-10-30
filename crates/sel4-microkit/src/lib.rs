@@ -39,6 +39,7 @@ pub use sel4_microkit_base::*;
 mod entry;
 mod heap;
 mod printing;
+mod start;
 
 pub mod panicking;
 
@@ -88,47 +89,21 @@ macro_rules! declare_protection_domain {
     {
         init = $init:expr $(,)?
     } => {
-        $crate::_private::declare_protection_domain! {
-            init = $init,
-            stack_size = $crate::_private::DEFAULT_STACK_SIZE,
-        }
-    };
-    {
-        init = $init:expr,
-        stack_size = $stack_size:expr $(,)?
-    } => {
         $crate::_private::declare_init!($init);
-        $crate::_private::declare_stack!($stack_size);
     };
     {
         init = $init:expr,
-        $(stack_size = $stack_size:expr,)?
         heap_size = $heap_size:expr $(,)?
     } => {
+        $crate::_private::declare_init!($init);
         $crate::_private::declare_heap!($heap_size);
-        $crate::_private::declare_protection_domain! {
-            init = $init,
-            $(stack_size = $stack_size,)?
-        }
     };
 }
-
-/// The default stack size used by [`#[protection_domain]`](crate::protection_domain).
-pub const DEFAULT_STACK_SIZE: usize = 1024
-    * if cfg!(panic = "unwind") && cfg!(debug_assertions) {
-        128
-    } else {
-        64
-    };
 
 // For macros
 #[doc(hidden)]
 pub mod _private {
-    pub use sel4_runtime_common::declare_stack;
-
     pub use crate::heap::_private as heap;
 
-    pub use crate::{
-        DEFAULT_STACK_SIZE, declare_heap, declare_init, declare_protection_domain, entry::run_main,
-    };
+    pub use crate::{declare_heap, declare_init, declare_protection_domain, entry::run_main};
 }
