@@ -17,7 +17,7 @@ mod reserialize_spec;
 use args::Args;
 
 // HACK hardcoded
-const GRANULE_SIZE_BITS: usize = 12;
+const GRANULE_SIZE_BITS: u8 = 12;
 
 fn main() -> Result<()> {
     let args = Args::parse()?;
@@ -56,7 +56,7 @@ fn main() -> Result<()> {
 
     let render_elf_args = render_elf::RenderElfArgs {
         data: &serialized_spec,
-        granule_size_bits: GRANULE_SIZE_BITS,
+        granule_size_bits: GRANULE_SIZE_BITS.into(),
         heap_size,
     };
 

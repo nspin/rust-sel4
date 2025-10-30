@@ -7,7 +7,8 @@
 use core::convert::Infallible;
 
 use crate::{
-    Fill, FillEntry, FillEntryContent, FrameInit, NamedObject, NeverEmbedded, Object, Spec, object,
+    CramUsize, Fill, FillEntry, FillEntryContent, FrameInit, NamedObject, NeverEmbedded, Object,
+    ObjectId, Spec, object,
 };
 
 impl<N, D, M> Spec<N, D, M> {
@@ -35,7 +36,11 @@ impl<N, D, M> Spec<N, D, M> {
                             Object::Frame(obj) => Object::Frame(object::Frame {
                                 size_bits: obj.size_bits,
                                 paddr: obj.paddr,
-                                init: g(obj, self.root_objects.contains(&obj_id))?,
+                                init: g(
+                                    obj,
+                                    ObjectId::into_usize_range(&self.root_objects)
+                                        .contains(&obj_id),
+                                )?,
                             }),
                             Object::PageTable(obj) => Object::PageTable(obj.clone()),
                             Object::AsidPool(obj) => Object::AsidPool(obj.clone()),
@@ -98,7 +103,7 @@ impl<N: Clone, D, M> Spec<N, D, M> {
 impl<N: Clone, D, M: Clone> Spec<N, D, M> {
     pub fn traverse_data_with_context_fallible<D1, E>(
         &self,
-        mut f: impl FnMut(usize, &D) -> Result<D1, E>,
+        mut f: impl FnMut(u64, &D) -> Result<D1, E>,
     ) -> Result<Spec<N, D1, M>, E> {
         self.traverse_frame_init(|frame, _is_root| {
             Ok(match &frame.init {
@@ -113,9 +118,9 @@ impl<N: Clone, D, M: Clone> Spec<N, D, M> {
                                     FillEntryContent::BootInfo(content_bootinfo) => {
                                         FillEntryContent::BootInfo(*content_bootinfo)
                                     }
-                                    FillEntryContent::Data(content_data) => {
-                                        FillEntryContent::Data(f(entry.range.len(), content_data)?)
-                                    }
+                                    FillEntryContent::Data(content_data) => FillEntryContent::Data(
+                                        f(entry.range.end - entry.range.start, content_data)?,
+                                    ),
                                 },
                             })
                         })
@@ -128,7 +133,7 @@ impl<N: Clone, D, M: Clone> Spec<N, D, M> {
 
     pub fn traverse_data_with_context<D1>(
         &self,
-        mut f: impl FnMut(usize, &D) -> D1,
+        mut f: impl FnMut(u64, &D) -> D1,
     ) -> Spec<N, D1, M> {
         unwrap_infallible(self.traverse_data_with_context_fallible(|x1, x2| Ok(f(x1, x2))))
     }
@@ -167,7 +172,7 @@ impl<N: Clone, D: Clone> Spec<N, D, NeverEmbedded> {
     pub fn split_embedded_frames(
         &self,
         embed_frames: bool,
-        granule_size_bits: usize,
+        granule_size_bits: u8,
     ) -> Spec<N, D, Fill<D>> {
         unwrap_infallible(
             self.traverse_frame_init::<_, _, Infallible>(|frame, is_root| {

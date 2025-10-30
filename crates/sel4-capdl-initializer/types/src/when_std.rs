@@ -15,7 +15,7 @@ use std::ops::Deref;
 use std::os::unix::fs::FileExt;
 use std::path::{Path, PathBuf};
 
-use crate::{FileContent, FileContentRange, Fill, NeverEmbedded, Spec};
+use crate::{CramUsize, FileContent, FileContentRange, Fill, NeverEmbedded, Spec};
 
 pub type InputSpec = Spec<String, FileContentRange, NeverEmbedded>;
 
@@ -47,7 +47,8 @@ impl FillMap {
     pub fn get_frame(&self, frame_size: usize, fill: &Fill<FileContentRange>) -> Vec<u8> {
         let mut frame = vec![0; frame_size];
         for entry in fill.entries.iter() {
-            frame[entry.range.clone()].copy_from_slice(self.get(entry.content.as_data().unwrap()))
+            frame[u64::into_usize_range(&entry.range)]
+                .copy_from_slice(self.get(entry.content.as_data().unwrap()))
         }
         frame
     }
@@ -92,11 +93,11 @@ impl FillMapBuilder {
                 .insert(key.file.to_owned(), File::open(path)?);
         }
         if !self.fill_data.contains_key(key) {
-            let mut buf = vec![0; key.file_length];
+            let mut buf = vec![0; key.file_length.into_usize()];
             self.file_handles
                 .get(&key.file)
                 .unwrap()
-                .read_exact_at(&mut buf, key.file_offset.try_into().unwrap())?;
+                .read_exact_at(&mut buf, key.file_offset)?;
             self.fill_data.insert(key.clone(), buf);
         }
         Ok(())

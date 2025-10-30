@@ -139,7 +139,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
         let mut by_size_end: [usize; sel4::WORD_SIZE] = array::from_fn(|_| 0);
         {
             for obj_id in first_obj_without_paddr..self.spec().root_objects().len() {
-                let obj = &self.spec().object(obj_id);
+                let obj = &self.spec().object(ObjectId::from_usize(obj_id));
                 if let Some(blueprint) = obj.blueprint() {
                     by_size_end[blueprint.physical_size_bits()] += 1;
                 }
@@ -178,7 +178,13 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
             );
             loop {
                 let target = if next_obj_with_paddr < num_objs_with_paddr {
-                    ut_paddr_end.min(self.spec().object(next_obj_with_paddr).paddr().unwrap())
+                    ut_paddr_end.min(
+                        self.spec()
+                            .object(ObjectId::from_usize(next_obj_with_paddr))
+                            .paddr()
+                            .unwrap()
+                            .into_usize(),
+                    )
                 } else {
                     ut_paddr_end
                 };
@@ -193,11 +199,12 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                             let obj_id = &mut by_size_start[size_bits];
                             // Skip embedded frames
                             while *obj_id < by_size_end[size_bits] {
-                                if let Object::Frame(obj) = self.spec().object(*obj_id)
+                                if let Object::Frame(obj) =
+                                    self.spec().object(ObjectId::from_usize(*obj_id))
                                     && let FrameInit::Embedded(embedded) = &obj.init
                                 {
                                     self.take_cap_for_embedded_frame(
-                                        *obj_id,
+                                        ObjectId::from_usize(*obj_id),
                                         &embedded.get_embedded_frame(
                                             self.spec_with_sources.embedded_frame_source,
                                         ),
@@ -209,7 +216,8 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                             }
                             // Create a largest possible object that would fit
                             if *obj_id < by_size_end[size_bits] {
-                                let named_obj = &self.spec().named_object(*obj_id);
+                                let named_obj =
+                                    &self.spec().named_object(ObjectId::from_usize(*obj_id));
                                 let blueprint = named_obj.object.blueprint().unwrap();
                                 assert_eq!(blueprint.physical_size_bits(), size_bits);
                                 trace!(
@@ -221,7 +229,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                                 self.ut_cap(*i_ut).untyped_retype(
                                     &blueprint,
                                     &init_thread_cnode_absolute_cptr(),
-                                    self.alloc_orig_cslot(*obj_id).index(),
+                                    self.alloc_orig_cslot(ObjectId::from_usize(*obj_id)).index(),
                                     1,
                                 )?;
                                 cur_paddr += 1 << size_bits;
@@ -254,7 +262,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                 }
                 if target_is_obj_with_paddr {
                     let obj_id = next_obj_with_paddr;
-                    let named_obj = &self.spec().named_object(obj_id);
+                    let named_obj = &self.spec().named_object(ObjectId::from_usize(obj_id));
                     let blueprint = named_obj.object.blueprint().unwrap();
                     trace!(
                         "Creating device object: paddr=0x{:x}, size_bits={} name={:?}",
@@ -265,7 +273,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                     self.ut_cap(*i_ut).untyped_retype(
                         &blueprint,
                         &init_thread_cnode_absolute_cptr(),
-                        self.alloc_orig_cslot(obj_id).index(),
+                        self.alloc_orig_cslot(ObjectId::from_usize(obj_id)).index(),
                         1,
                     )?;
                     cur_paddr += 1 << blueprint.physical_size_bits();
@@ -287,7 +295,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
             let parent_obj_id = cover.parent;
             let parent = self.spec().named_object(parent_obj_id);
             let parent_cptr = self.orig_cap::<cap_type::Untyped>(parent_obj_id);
-            for child_obj_id in cover.children.clone() {
+            for child_obj_id in ObjectId::into_usize_range(&cover.children) {
                 let child = &self.spec().objects[child_obj_id];
                 trace!(
                     "Creating kernel object: name={:?} from {:?}",
@@ -297,7 +305,8 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                 parent_cptr.untyped_retype(
                     &child.object.blueprint().unwrap(),
                     &init_thread_cnode_absolute_cptr(),
-                    self.alloc_orig_cslot(child_obj_id).index(),
+                    self.alloc_orig_cslot(ObjectId::from_usize(child_obj_id))
+                        .index(),
                     1,
                 )?;
             }
@@ -325,22 +334,22 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                     match self.spec().object(*handler) {
                         Object::Irq(_) => {
                             init_thread::slot::IRQ_CONTROL.cap()
-                                .irq_control_get(*irq, &cslot_to_absolute_cptr(slot))?;
+                                .irq_control_get(irq.into_word(), &cslot_to_absolute_cptr(slot))?;
                         }
                         #[sel4_cfg(any(ARCH_AARCH64, ARCH_AARCH32))]
                         Object::ArmIrq(obj) => {
                             sel4::sel4_cfg_if! {
                                 if #[sel4_cfg(MAX_NUM_NODES = "1")] {
                                     init_thread::slot::IRQ_CONTROL.cap().irq_control_get_trigger(
-                                        *irq,
+                                        irq.into_word(),
                                         obj.extra.trigger != 0,
                                         &cslot_to_absolute_cptr(slot),
                                     )?;
                                 } else {
                                     init_thread::slot::IRQ_CONTROL.cap().irq_control_get_trigger_core(
-                                        *irq,
+                                        irq.into_word(),
                                         obj.extra.trigger != 0,
-                                        obj.extra.target,
+                                        obj.extra.target.into_word(),
                                         &cslot_to_absolute_cptr(slot),
                                     )?;
                                 }
@@ -353,7 +362,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                                 obj.extra.pci_dev,
                                 obj.extra.pci_func,
                                 obj.extra.handle,
-                                *irq,
+                                irq.into_word(),
                                 &cslot_to_absolute_cptr(slot),
                             )?;
                         }
@@ -364,14 +373,14 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                                 obj.extra.pin,
                                 obj.extra.level,
                                 obj.extra.polarity,
-                                *irq,
+                                irq.into_word(),
                                 &cslot_to_absolute_cptr(slot),
                             )?;
                         }
                         #[sel4_cfg(any(ARCH_RISCV64, ARCH_RISCV32))]
                         Object::RiscvIrq(obj) => {
                             init_thread::slot::IRQ_CONTROL.cap().irq_control_get_trigger(
-                                *irq,
+                                irq.into_word(),
                                 obj.extra.trigger != 0,
                                 &cslot_to_absolute_cptr(slot),
                             )?;
@@ -475,7 +484,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                         let orig_cptr = self.orig_absolute_cptr(logical_nfn_cap.object);
                         let slot = self.cslot_alloc_or_panic();
                         let cptr = cslot_to_absolute_cptr(slot);
-                        cptr.mint(&orig_cptr, CapRights::all(), badge)?;
+                        cptr.mint(&orig_cptr, CapRights::all(), badge.into_word())?;
                         slot.cap().downcast()
                     }
                 };
@@ -505,7 +514,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                 let entries = &fill.entries;
                 if !entries.is_empty() {
                     let frame_object_type =
-                        sel4::FrameObjectType::from_bits(obj.size_bits).unwrap();
+                        sel4::FrameObjectType::from_bits(obj.size_bits.into()).unwrap();
                     let frame = self.orig_cap::<cap_type::UnspecifiedPage>(obj_id);
                     self.fill_frame(frame, frame_object_type, entries)?;
                 }
@@ -527,9 +536,10 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
             vm_attributes_from_whether_cached(false),
         )?;
         for entry in fill.iter() {
-            let offset = entry.range.start;
-            let length = entry.range.end - entry.range.start;
-            assert!(entry.range.end <= frame_object_type.bytes());
+            let range = u64::into_usize_range(&entry.range);
+            let offset = range.start;
+            let length = range.len();
+            assert!(range.end <= frame_object_type.bytes());
             let dst_frame = self.copy_addrs.select(frame_object_type) as *mut u8;
             let dst = unsafe { slice::from_raw_parts_mut(dst_frame.add(offset), length) };
             match &entry.content {
@@ -543,12 +553,12 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                                 extra
                                     .content_with_header()
                                     .len()
-                                    .saturating_sub(content_bootinfo.offset),
+                                    .saturating_sub(content_bootinfo.offset.into_usize()),
                             );
                             if n > 0 {
+                                let offset = content_bootinfo.offset.into_usize();
                                 dst[..n].copy_from_slice(
-                                    &extra.content_with_header()
-                                        [content_bootinfo.offset..(content_bootinfo.offset + n)],
+                                    &extra.content_with_header()[offset..(offset + n)],
                                 );
                             }
                         }
@@ -580,7 +590,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
         obj: &object::PageTable,
     ) -> Result<()> {
         for (i, entry) in obj.entries() {
-            let vaddr = vaddr + (i << sel4::vspace_levels::step_bits(level));
+            let vaddr = vaddr + (i.into_usize() << sel4::vspace_levels::step_bits(level));
             match entry {
                 PageTableEntry::Frame(cap) => {
                     let frame = self.orig_cap::<cap_type::UnspecifiedPage>(cap.object);
@@ -658,7 +668,7 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
             {
                 let cspace = self.orig_cap(obj.cspace().object);
                 let cspace_root_data = sel4::CNodeCapData::new(
-                    obj.cspace().guard,
+                    obj.cspace().guard.into_word(),
                     obj.cspace().guard_size.try_into().unwrap(),
                 );
                 let vspace = self.orig_cap(obj.vspace().object);
@@ -727,14 +737,14 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
 
                         tcb.tcb_set_timeout_endpoint(temp_fault_ep)?;
                     } else {
-                        let fault_ep = sel4::CPtr::from_bits(obj.extra.master_fault_ep.unwrap());
+                        let fault_ep = sel4::CPtr::from_bits(obj.extra.master_fault_ep.unwrap().into_word());
 
                         tcb.tcb_configure(
                             fault_ep,
                             cspace,
                             cspace_root_data,
                             vspace,
-                            ipc_buffer_addr,
+                            ipc_buffer_addr.into_word(),
                             ipc_buffer_frame,
                         )?;
 
@@ -755,10 +765,10 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
 
             {
                 let mut regs = sel4::UserContext::default();
-                *regs.pc_mut() = obj.extra.ip;
-                *regs.sp_mut() = obj.extra.sp;
+                *regs.pc_mut() = obj.extra.ip.into_word();
+                *regs.sp_mut() = obj.extra.sp.into_word();
                 for (i, value) in obj.extra.gprs.iter().enumerate() {
-                    *regs.c_param_mut(i) = *value;
+                    *regs.c_param_mut(i) = value.into_word();
                 }
                 tcb.tcb_write_all_registers(false, &mut regs)?;
             }
@@ -785,11 +795,11 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
                 let src = init_thread::slot::CNODE
                     .cap()
                     .absolute_cptr(self.orig_cap::<cap_type::Unspecified>(cap.obj()));
-                let dst = cnode
-                    .absolute_cptr_from_bits_with_depth((*i).try_into().unwrap(), obj.size_bits);
+                let dst =
+                    cnode.absolute_cptr_from_bits_with_depth((*i).into(), obj.size_bits.into());
                 match badge {
                     None => dst.copy(&src, rights),
-                    Some(badge) => dst.mint(&src, rights, badge),
+                    Some(badge) => dst.mint(&src, rights, badge.into_word()),
                 }?;
             }
         }
@@ -823,11 +833,13 @@ impl<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame, B: BorrowMut<[PerObject
     }
 
     fn set_orig_cslot(&mut self, obj_id: ObjectId, slot: Slot) {
-        self.buffers.per_obj_mut()[obj_id].orig_slot = Some(slot);
+        self.buffers.per_obj_mut()[obj_id.into_usize()].orig_slot = Some(slot);
     }
 
     fn orig_cslot(&self, obj_id: ObjectId) -> Slot {
-        self.buffers.per_obj()[obj_id].orig_slot.unwrap()
+        self.buffers.per_obj()[obj_id.into_usize()]
+            .orig_slot
+            .unwrap()
     }
 
     fn alloc_orig_cslot(&mut self, obj_id: ObjectId) -> Slot {

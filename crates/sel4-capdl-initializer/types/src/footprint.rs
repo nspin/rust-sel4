@@ -22,11 +22,14 @@ pub trait Footprint {
     }
 }
 
+impl Footprint for u8 {}
+impl Footprint for u16 {}
+impl Footprint for u32 {}
+impl Footprint for u64 {}
+
 impl Footprint for IrqEntry {}
-impl Footprint for AsidSlotEntry {}
 impl Footprint for Cap {}
 impl Footprint for CapTableEntry {}
-impl Footprint for Word {}
 impl Footprint for IndirectBytesContent {}
 impl Footprint for IndirectObjectName {}
 impl Footprint for IndirectEmbeddedFrame {}

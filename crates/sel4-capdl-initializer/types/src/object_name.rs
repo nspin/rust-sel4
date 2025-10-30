@@ -11,7 +11,7 @@ use core::str;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{NamedObject, Object, SelfContained};
+use crate::{CramUsize, NamedObject, Object, SelfContained};
 
 pub trait SelfContainedObjectName {
     fn self_contained_object_name(&self) -> Option<&str>;
@@ -63,14 +63,14 @@ impl<T: SelfContainedObjectName> ObjectName for SelfContained<T> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct IndirectObjectName {
-    pub range: Range<usize>,
+    pub range: Range<u64>,
 }
 
 impl ObjectName for IndirectObjectName {
     type Source = [u8];
 
     fn object_name<'a>(&'a self, source: &'a Self::Source) -> Option<&'a str> {
-        Some(str::from_utf8(&source[self.range.clone()]).unwrap())
+        Some(str::from_utf8(&source[u64::into_usize_range(&self.range)]).unwrap())
     }
 }
 
