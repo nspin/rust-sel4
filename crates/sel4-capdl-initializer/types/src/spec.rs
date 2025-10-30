@@ -8,8 +8,6 @@ use alloc::boxed::Box;
 use core::fmt;
 use core::ops::Range;
 
-use cfg_if::cfg_if;
-
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -17,20 +15,13 @@ use sel4_capdl_initializer_types_derive::{IsCap, IsObject, IsObjectWithCapTable}
 
 use crate::{FrameInit, HasCapTable};
 
-cfg_if! {
-    if #[cfg(feature = "sel4")] {
-        pub use sel4::Word;
-    } else {
-        pub type Word = u64;
-    }
-}
+pub type PortableWord = u64;
+pub type PortableBadge = PortableWord;
+pub type PortableCPtr = PortableWord;
 
-pub type Badge = Word;
-pub type CPtr = Word;
+pub type ObjectId = u32;
 
-pub type ObjectId = usize;
-
-pub type CapSlot = usize;
+pub type CapSlot = u32;
 pub type CapTableEntry = (CapSlot, Cap);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -48,7 +39,7 @@ pub struct Spec<N, D, M> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct IrqEntry {
-    pub irq: Word,
+    pub irq: PortableWord,
     pub handler: ObjectId,
 }
 
@@ -95,7 +86,7 @@ pub enum Object<D, M> {
 }
 
 impl<D, M> Object<D, M> {
-    pub fn paddr(&self) -> Option<usize> {
+    pub fn paddr(&self) -> Option<u64> {
         match self {
             Object::Untyped(obj) => obj.paddr,
             Object::Frame(obj) => obj.paddr,
@@ -171,15 +162,15 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Untyped {
-        pub size_bits: usize,
-        pub paddr: Option<usize>,
+        pub size_bits: u8,
+        pub paddr: Option<u64>,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct CNode {
-        pub size_bits: usize,
+        pub size_bits: u8,
         pub slots: Box<[CapTableEntry]>,
     }
 
@@ -195,18 +186,18 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct TcbExtraInfo {
-        pub ipc_buffer_addr: Word,
+        pub ipc_buffer_addr: PortableWord,
 
-        pub affinity: Word,
+        pub affinity: PortableWord,
         pub prio: u8,
         pub max_prio: u8,
         pub resume: bool,
 
-        pub ip: Word,
-        pub sp: Word,
-        pub gprs: Box<[Word]>,
+        pub ip: PortableWord,
+        pub sp: PortableWord,
+        pub gprs: Box<[PortableWord]>,
 
-        pub master_fault_ep: Option<CPtr>,
+        pub master_fault_ep: Option<PortableCPtr>,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -220,8 +211,8 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Frame<D, M> {
-        pub size_bits: usize,
-        pub paddr: Option<usize>,
+        pub size_bits: u8,
+        pub paddr: Option<u64>,
         pub init: FrameInit<D, M>,
     }
 
@@ -238,7 +229,7 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct AsidPool {
-        pub high: Word,
+        pub high: PortableWord,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -253,8 +244,8 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct ArmIrqExtraInfo {
-        pub trigger: Word,
-        pub target: Word,
+        pub trigger: PortableWord,
+        pub target: PortableWord,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -269,10 +260,10 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IrqMsiExtraInfo {
-        pub handle: Word,
-        pub pci_bus: Word,
-        pub pci_dev: Word,
-        pub pci_func: Word,
+        pub handle: PortableWord,
+        pub pci_bus: PortableWord,
+        pub pci_dev: PortableWord,
+        pub pci_func: PortableWord,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -287,10 +278,10 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IrqIOApicExtraInfo {
-        pub ioapic: Word,
-        pub pin: Word,
-        pub level: Word,
-        pub polarity: Word,
+        pub ioapic: PortableWord,
+        pub pin: PortableWord,
+        pub level: PortableWord,
+        pub polarity: PortableWord,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -305,22 +296,22 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct RiscvIrqExtraInfo {
-        pub trigger: Word,
+        pub trigger: PortableWord,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IOPorts {
-        pub start_port: Word,
-        pub end_port: Word,
+        pub start_port: PortableWord,
+        pub end_port: PortableWord,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct SchedContext {
-        pub size_bits: usize,
+        pub size_bits: u8,
         pub extra: SchedContextExtraInfo,
     }
 
@@ -330,7 +321,7 @@ pub mod object {
     pub struct SchedContextExtraInfo {
         pub period: u64,
         pub budget: u64,
-        pub badge: Badge,
+        pub badge: PortableBadge,
     }
 }
 
@@ -354,7 +345,7 @@ pub mod cap {
         //   enough, or do we ever need to actually use the badge value '0'?
         // TODO
         //   Is it correct that these are ignored in the case of Tcb::SLOT_TEMP_FAULT_EP?
-        pub badge: Badge,
+        pub badge: PortableBadge,
         pub rights: Rights,
     }
 
@@ -363,7 +354,7 @@ pub mod cap {
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Notification {
         pub object: ObjectId,
-        pub badge: Badge,
+        pub badge: PortableBadge,
         pub rights: Rights,
     }
 
@@ -372,8 +363,8 @@ pub mod cap {
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct CNode {
         pub object: ObjectId,
-        pub guard: Word,
-        pub guard_size: Word,
+        pub guard: PortableWord,
+        pub guard_size: PortableWord,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsCap)]

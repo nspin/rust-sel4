@@ -11,6 +11,10 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+use core::ops::Range;
+
+use rkyv::primitive::{ArchivedU16, ArchivedU32, ArchivedU64};
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -41,8 +45,9 @@ pub use object_name::{
     IndirectObjectName, ObjectName, ObjectNamesLevel, SelfContainedObjectName, Unnamed,
 };
 pub use spec::{
-    AsidSlotEntry, Badge, CPtr, Cap, CapSlot, CapTableEntry, IrqEntry, NamedObject, Object,
-    ObjectId, Rights, Spec, TryFromCapError, TryFromObjectError, UntypedCover, Word, cap, object,
+    AsidSlotEntry, Cap, CapSlot, CapTableEntry, IrqEntry, NamedObject, Object, ObjectId,
+    PortableBadge, PortableCPtr, PortableWord, Rights, Spec, TryFromCapError, TryFromObjectError,
+    UntypedCover, cap, object,
 };
 
 pub use frame_init::{FileContent, FileContentRange};
@@ -88,3 +93,30 @@ impl<T> SelfContained<T> {
         self.0
     }
 }
+
+pub trait CramUsize: Copy + TryFrom<usize> + TryInto<usize> {
+    fn into_usize(self) -> usize {
+        self.try_into().unwrap_or_else(|_| panic!())
+    }
+
+    fn from_usize(x: usize) -> Self {
+        Self::try_from(x).unwrap_or_else(|_| panic!())
+    }
+
+    fn into_usize_range(range: &Range<Self>) -> Range<usize> {
+        range.start.into_usize()..range.end.into_usize()
+    }
+
+    fn from_usize_range(range: &Range<usize>) -> Range<Self> {
+        Self::from_usize(range.start)..Self::from_usize(range.end)
+    }
+}
+
+impl CramUsize for u8 {}
+impl CramUsize for u16 {}
+impl CramUsize for u32 {}
+impl CramUsize for u64 {}
+
+impl CramUsize for ArchivedU16 {}
+impl CramUsize for ArchivedU32 {}
+impl CramUsize for ArchivedU64 {}

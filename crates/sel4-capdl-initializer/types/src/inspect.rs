@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use crate::{NamedObject, Object, ObjectId, Spec};
+use crate::{CramUsize, NamedObject, Object, ObjectId, Spec};
 
 impl<N, D, M> Spec<N, D, M> {
     pub fn num_objects(&self) -> usize {
@@ -12,7 +12,7 @@ impl<N, D, M> Spec<N, D, M> {
     }
 
     pub fn named_object(&self, obj_id: ObjectId) -> &NamedObject<N, D, M> {
-        &self.objects[obj_id]
+        &self.objects[obj_id.into_usize()]
     }
 
     pub fn name(&self, obj_id: ObjectId) -> &N {
@@ -24,7 +24,7 @@ impl<N, D, M> Spec<N, D, M> {
     }
 
     pub fn root_objects(&self) -> &[NamedObject<N, D, M>] {
-        &self.objects[self.root_objects.clone()]
+        &self.objects[ObjectId::into_usize_range(&self.root_objects)]
     }
 
     pub fn named_objects(&self) -> impl Iterator<Item = &NamedObject<N, D, M>> {
@@ -39,9 +39,9 @@ impl<N, D, M> Spec<N, D, M> {
     pub fn filter_objects<'a, O: TryFrom<&'a Object<D, M>>>(
         &'a self,
     ) -> impl Iterator<Item = (ObjectId, O)> + 'a {
-        self.objects()
-            .enumerate()
-            .filter_map(|(obj_id, obj)| Some((obj_id, O::try_from(obj).ok()?)))
+        self.objects().enumerate().filter_map(|(obj_id, obj)| {
+            Some((ObjectId::from_usize(obj_id), O::try_from(obj).ok()?))
+        })
     }
 
     pub fn filter_objects_with<'a, O: TryFrom<&'a Object<D, M>>>(

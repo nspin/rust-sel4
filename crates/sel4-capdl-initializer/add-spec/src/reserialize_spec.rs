@@ -14,7 +14,7 @@ pub fn reserialize_spec(
     fill_dir_path: impl AsRef<Path>,
     object_names_level: &ObjectNamesLevel,
     embed_frames: bool,
-    granule_size_bits: usize,
+    granule_size_bits: u8,
     verbose: bool,
 ) -> (SpecWithIndirection, Vec<u8>) {
     let granule_size = 1 << granule_size_bits;
@@ -28,21 +28,21 @@ pub fn reserialize_spec(
             object_names_level
                 .apply(named_obj)
                 .map(|s| IndirectObjectName {
-                    range: sources.append(s.as_bytes()),
+                    range: u64::from_usize_range(&sources.append(s.as_bytes())),
                 })
         })
         .split_embedded_frames(embed_frames, granule_size_bits)
         .traverse_data(|key| {
             let compressed = DeflatedBytesContent::pack(fill_map.get(key));
             IndirectDeflatedBytesContent {
-                deflated_bytes_range: sources.append(&compressed),
+                deflated_bytes_range: u64::from_usize_range(&sources.append(&compressed)),
             }
         })
         .traverse_embedded_frames(|fill| {
             num_embedded_frames += 1;
             sources.align_to(granule_size);
             let range = sources.append(&fill_map.get_frame(granule_size, fill));
-            IndirectEmbeddedFrame::new(range.start)
+            IndirectEmbeddedFrame::new(u64::from_usize(range.start))
         });
 
     if verbose {

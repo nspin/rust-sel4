@@ -15,7 +15,7 @@ use core::iter;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{SelfContained, object};
+use crate::{CramUsize, SelfContained, object};
 
 // // //
 
@@ -62,7 +62,7 @@ impl<D> FrameInit<D, NeverEmbedded> {
 }
 
 impl<D> object::Frame<D, NeverEmbedded> {
-    pub fn can_embed(&self, granule_size_bits: usize, is_root: bool) -> bool {
+    pub fn can_embed(&self, granule_size_bits: u8, is_root: bool) -> bool {
         is_root
             && self.paddr.is_none()
             && self.size_bits == granule_size_bits
@@ -127,15 +127,15 @@ impl<T: SelfContainedGetEmbeddedFrame> GetEmbeddedFrame for SelfContained<T> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct IndirectEmbeddedFrame {
-    offset: usize,
+    offset: u64,
 }
 
 impl IndirectEmbeddedFrame {
-    pub const fn new(offset: usize) -> Self {
+    pub const fn new(offset: u64) -> Self {
         Self { offset }
     }
 
-    pub const fn offset(&self) -> usize {
+    pub const fn offset(&self) -> u64 {
         self.offset
     }
 }
@@ -144,7 +144,7 @@ impl GetEmbeddedFrame for IndirectEmbeddedFrame {
     type Source = [u8];
 
     fn get_embedded_frame(&self, source: &Self::Source) -> EmbeddedFrame {
-        EmbeddedFrame::new(&source[self.offset()])
+        EmbeddedFrame::new(&source[self.offset().into_usize()])
     }
 }
 
@@ -171,7 +171,7 @@ impl<D> Fill<D> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct FillEntry<D> {
-    pub range: Range<usize>,
+    pub range: Range<u64>,
     pub content: FillEntryContent<D>,
 }
 
@@ -212,7 +212,7 @@ impl<D> FillEntryContent<D> {
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct FillEntryContentBootInfo {
     pub id: FillEntryContentBootInfoId,
-    pub offset: usize,
+    pub offset: u64,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -229,11 +229,11 @@ pub enum FillEntryContentBootInfoId {
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct FileContent {
     pub file: String,
-    pub file_offset: usize,
+    pub file_offset: u64,
 }
 
 impl FileContent {
-    pub fn with_length(&self, length: usize) -> FileContentRange {
+    pub fn with_length(&self, length: u64) -> FileContentRange {
         FileContentRange {
             file: self.file.clone(),
             file_offset: self.file_offset,
@@ -247,12 +247,12 @@ impl FileContent {
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct FileContentRange {
     pub file: String,
-    pub file_offset: usize,
-    pub file_length: usize,
+    pub file_offset: u64,
+    pub file_length: u64,
 }
 
 impl FileContentRange {
-    pub fn file_range(&self) -> Range<usize> {
+    pub fn file_range(&self) -> Range<u64> {
         self.file_offset..self.file_offset + self.file_length
     }
 }
@@ -348,7 +348,7 @@ impl<T: SelfContainedContent> Content for SelfContained<T> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct IndirectBytesContent {
-    pub bytes_range: Range<usize>,
+    pub bytes_range: Range<u64>,
 }
 
 impl Content for IndirectBytesContent {
@@ -356,7 +356,7 @@ impl Content for IndirectBytesContent {
 
     fn copy_out(&self, source: &Self::Source, dst: &mut [u8]) {
         BytesContent {
-            bytes: &source[self.bytes_range.clone()],
+            bytes: &source[u64::into_usize_range(&self.bytes_range)],
         }
         .self_contained_copy_out(dst)
     }
@@ -367,7 +367,7 @@ impl Content for IndirectBytesContent {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct IndirectDeflatedBytesContent {
-    pub deflated_bytes_range: Range<usize>,
+    pub deflated_bytes_range: Range<u64>,
 }
 
 #[cfg(feature = "deflate")]
@@ -376,7 +376,7 @@ impl Content for IndirectDeflatedBytesContent {
 
     fn copy_out(&self, source: &Self::Source, dst: &mut [u8]) {
         DeflatedBytesContent {
-            deflated_bytes: &source[self.deflated_bytes_range.clone()],
+            deflated_bytes: &source[u64::into_usize_range(&self.deflated_bytes_range)],
         }
         .self_contained_copy_out(dst)
     }
