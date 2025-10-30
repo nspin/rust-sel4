@@ -8,14 +8,11 @@ use core::borrow::Borrow;
 use core::fmt;
 use core::ops::Deref;
 
-#[cfg(feature = "indirect-owned")]
+#[cfg(feature = "alloc")]
 use core::marker::PhantomData;
 
-#[cfg(all(feature = "indirect-owned", not(feature = "std")))]
-// #[cfg(feature = "indirect-owned")]
-use alloc::{boxed::Box, vec::Vec};
-
-use cfg_if::cfg_if;
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use alloc::boxed::Box;
 
 #[cfg(feature = "serde")]
 use serde::{
@@ -23,62 +20,35 @@ use serde::{
     ser::{Serialize, Serializer},
 };
 
-#[cfg(not(any(feature = "indirect-borrowed", feature = "indirect-owned",)))]
-compile_error!(r#"at least one of "indirect-borrowed" or "indirect-owned" must be enabled"#);
-
-pub trait IndirectTarget {
-    #[cfg(feature = "indirect-owned")]
-    type Owned: Borrow<Self>;
-
-    // May be unecessary, depending on whether postcard gives size hints
-    #[cfg(feature = "indirect-owned")]
-    fn shrink_to_fit(_owned: &mut Self::Owned) {}
-}
-
-cfg_if! {
-    if #[cfg(feature = "indirect-owned")] {
-        impl<T> IndirectTarget for T {
-            type Owned = Box<T>;
-        }
-
-        impl<T> IndirectTarget for [T] {
-            type Owned = Vec<T>;
-
-            fn shrink_to_fit(owned: &mut Self::Owned) {
-                owned.shrink_to_fit();
-            }
-        }
-    } else {
-        impl<T: ?Sized> IndirectCompatible for T {}
-    }
-}
+#[cfg(not(any(feature = "borrowed-indirect", feature = "alloc")))]
+compile_error!("at least on of feature = \"alloc\" or feature = \"borrowed-indirect\" is required");
 
 // NOTE
 // Box<[T]> vs Vec<T>: Box<[T]> has no wasted capacity, but is always constructed by first constructing a Vec<T>.
 // Does this have a positive or negative impact on memory footprint?
 // Minimization but possibly incurring fragmentation.
 
-pub struct Indirect<'a, T: IndirectTarget + ?Sized>(IndirectImpl<'a, T>);
+pub struct Indirect<'a, T: ?Sized>(IndirectImpl<'a, T>);
 
-enum IndirectImpl<'a, T: IndirectTarget + ?Sized> {
-    #[cfg(feature = "indirect-borrowed")]
+enum IndirectImpl<'a, T: ?Sized> {
+    #[cfg(feature = "borrowed-indirect")]
     Borrowed { borrowed: &'a T },
-    #[cfg(feature = "indirect-owned")]
+    #[cfg(feature = "alloc")]
     Owned {
-        owned: T::Owned,
+        owned: Box<T>,
         phantom: PhantomData<&'a ()>,
     },
 }
 
 #[allow(clippy::needless_lifetimes)]
-impl<'a, T: IndirectTarget + ?Sized> Indirect<'a, T> {
-    #[cfg(feature = "indirect-borrowed")]
+impl<'a, T: ?Sized> Indirect<'a, T> {
+    #[cfg(feature = "borrowed-indirect")]
     pub const fn from_borrowed(borrowed: &'a T) -> Self {
         Self(IndirectImpl::Borrowed { borrowed })
     }
 
-    #[cfg(feature = "indirect-owned")]
-    pub const fn from_owned(owned: T::Owned) -> Self {
+    #[cfg(feature = "alloc")]
+    pub const fn from_owned(owned: Box<T>) -> Self {
         Self(IndirectImpl::Owned {
             owned,
             phantom: PhantomData,
@@ -87,25 +57,24 @@ impl<'a, T: IndirectTarget + ?Sized> Indirect<'a, T> {
 
     fn inner(&self) -> &T {
         match self.0 {
-            #[cfg(feature = "indirect-borrowed")]
+            #[cfg(feature = "borrowed-indirect")]
             IndirectImpl::Borrowed { borrowed } => borrowed,
-            #[cfg(feature = "indirect-owned")]
+            #[cfg(feature = "alloc")]
             IndirectImpl::Owned { ref owned, .. } => owned.borrow(),
         }
     }
 
-    #[cfg(feature = "indirect-borrowed")]
     pub const fn const_inner(&self) -> &T {
         match self.0 {
-            #[cfg(feature = "indirect-indirect")]
+            #[cfg(feature = "borrowed-indirect")]
             IndirectImpl::Borrowed { borrowed } => borrowed,
-            #[cfg(feature = "indirect-owned")]
+            #[cfg(feature = "alloc")]
             IndirectImpl::Owned { .. } => panic!(),
         }
     }
 }
 
-impl<T: IndirectTarget + ?Sized> Deref for Indirect<'_, T> {
+impl<T: ?Sized> Deref for Indirect<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -113,7 +82,7 @@ impl<T: IndirectTarget + ?Sized> Deref for Indirect<'_, T> {
     }
 }
 
-impl<T: IndirectTarget + ?Sized> Borrow<T> for Indirect<'_, T> {
+impl<T: ?Sized> Borrow<T> for Indirect<'_, T> {
     fn borrow(&self) -> &T {
         self.inner()
     }
@@ -122,9 +91,9 @@ impl<T: IndirectTarget + ?Sized> Borrow<T> for Indirect<'_, T> {
 impl<T: Clone> Clone for Indirect<'_, T> {
     fn clone(&self) -> Self {
         Self(match self.0 {
-            #[cfg(feature = "indirect-borrowed")]
+            #[cfg(feature = "borrowed-indirect")]
             IndirectImpl::Borrowed { borrowed } => IndirectImpl::Borrowed { borrowed },
-            #[cfg(feature = "indirect-owned")]
+            #[cfg(feature = "alloc")]
             IndirectImpl::Owned { ref owned, phantom } => IndirectImpl::Owned {
                 owned: owned.clone(),
                 phantom,
@@ -136,9 +105,9 @@ impl<T: Clone> Clone for Indirect<'_, T> {
 impl<T: Clone> Clone for Indirect<'_, [T]> {
     fn clone(&self) -> Self {
         Self(match self.0 {
-            #[cfg(feature = "indirect-borrowed")]
+            #[cfg(feature = "borrowed-indirect")]
             IndirectImpl::Borrowed { borrowed } => IndirectImpl::Borrowed { borrowed },
-            #[cfg(feature = "indirect-owned")]
+            #[cfg(feature = "alloc")]
             IndirectImpl::Owned { ref owned, phantom } => IndirectImpl::Owned {
                 owned: owned.clone(),
                 phantom,
@@ -147,14 +116,13 @@ impl<T: Clone> Clone for Indirect<'_, [T]> {
     }
 }
 
-impl<T: IndirectTarget + fmt::Debug + ?Sized> fmt::Debug for Indirect<'_, T> {
+impl<T: fmt::Debug + ?Sized> fmt::Debug for Indirect<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.inner().fmt(f)
     }
 }
 
-impl<'b, T: IndirectTarget + ?Sized, U: IndirectTarget + ?Sized> PartialEq<Indirect<'b, U>>
-    for Indirect<'_, T>
+impl<'b, T: ?Sized, U: ?Sized> PartialEq<Indirect<'b, U>> for Indirect<'_, T>
 where
     T: PartialEq<U>,
 {
@@ -163,10 +131,10 @@ where
     }
 }
 
-impl<T: IndirectTarget + Eq + ?Sized> Eq for Indirect<'_, T> {}
+impl<T: Eq + ?Sized> Eq for Indirect<'_, T> {}
 
-#[cfg(feature = "indirect-owned")]
-impl<T: IndirectTarget> FromIterator<T> for Indirect<'_, [T]> {
+#[cfg(feature = "alloc")]
+impl<T> FromIterator<T> for Indirect<'_, [T]> {
     fn from_iter<U>(iter: U) -> Self
     where
         U: IntoIterator<Item = T>,
@@ -176,21 +144,18 @@ impl<T: IndirectTarget> FromIterator<T> for Indirect<'_, [T]> {
 }
 
 #[cfg(feature = "serde")]
-impl<T: IndirectTarget + Serialize + ?Sized> Serialize for Indirect<'_, T> {
+impl<T: Serialize + ?Sized> Serialize for Indirect<'_, T> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.inner().serialize(serializer)
     }
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: IndirectTarget + ?Sized> Deserialize<'de> for Indirect<'_, T>
+impl<'de, T: ?Sized> Deserialize<'de> for Indirect<'_, T>
 where
-    T::Owned: Deserialize<'de>,
+    Box<T>: Deserialize<'de>,
 {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Deserialize::deserialize(deserializer).map(|mut x| {
-            T::shrink_to_fit(&mut x);
-            Indirect::from_owned(x)
-        })
+        Deserialize::deserialize(deserializer).map(Indirect::from_owned)
     }
 }

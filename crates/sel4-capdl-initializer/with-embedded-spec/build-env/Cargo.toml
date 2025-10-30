@@ -18,9 +18,6 @@ license = "BSD-2-Clause"
 
 [dependencies]
 sel4-capdl-initializer-embed-spec = { path = "../../embed-spec" }
+sel4-capdl-initializer-types = { path = "../../types", features = ["std", "serde"] }
 serde = "1.0.228"
 serde_json = "1.0.145"
-
-[dependencies.sel4-capdl-initializer-types]
-path = "../../types"
-features = ["std", "serde", "indirect-owned"]
