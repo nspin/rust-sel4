@@ -145,12 +145,13 @@ let
         dontInstall = true;
         dontFixup = true;
 
-        configurePhase = ''
-          cat ${cargoConfigFile} >> .cargo/config.toml
-        '';
-
         buildPhase = ''
-          cargo build -Z unstable-options --frozen --config ${cargoConfigFile} ${rustEnvironment.artifactDirFlag} $out/bin
+          cargo build \
+            -Z unstable-options \
+            --frozen \
+            --config ${cargoConfigFile} \
+            --release \
+            ${rustEnvironment.artifactDirFlag} $out/bin
         '';
       });
 
@@ -208,6 +209,7 @@ let
             --config ${cargoConfigFile} \
             ${rustEnvironment.artifactDirFlag} . \
             --target ${defaultRustTargetTriple.name} \
+            --release \
             -p sel4-capdl-initializer
 
           d=$out/board/${board}/${config}/elf

@@ -9,8 +9,7 @@
     <memory_region name="sp804_mmio" size="0x1000" phys_addr="0x90d0000" />
     <memory_region name="virtio_mmio" size="0x1000" phys_addr="0xa003000" />
 
-    <!-- <memory_region name="virtio_net_driver_dma" size="0x200_000" page_size="0x200_000" phys_addr="0x41_000_000" /> -->
-    <memory_region name="virtio_net_driver_dma" size="0x200_000" page_size="0x200_000" />
+    <memory_region name="virtio_net_driver_dma" size="0x200_000" page_size="0x200_000" phys_addr="0x62_000_000" />
     <memory_region name="virtio_net_client_dma" size="0x200_000" page_size="0x200_000" />
 
     <memory_region name="virtio_net_rx_free" size="0x200_000" page_size="0x200_000"/>
@@ -18,8 +17,7 @@
     <memory_region name="virtio_net_tx_free" size="0x200_000" page_size="0x200_000"/>
     <memory_region name="virtio_net_tx_used" size="0x200_000" page_size="0x200_000"/>
 
-    <!-- <memory_region name="virtio_blk_driver_dma" size="0x200_000" page_size="0x200_000" phys_addr="0x42_000_000" /> -->
-    <memory_region name="virtio_blk_driver_dma" size="0x200_000" page_size="0x200_000" />
+    <memory_region name="virtio_blk_driver_dma" size="0x200_000" page_size="0x200_000" phys_addr="0x62_c00_000" />
     <memory_region name="virtio_blk_client_dma" size="0x200_000" page_size="0x200_000" />
 
     <memory_region name="virtio_blk_free" size="0x200_000" page_size="0x200_000"/>
@@ -59,7 +57,7 @@
         <map mr="virtio_mmio" vaddr="0x6_000_000_000" perms="rw" cached="false" setvar_vaddr="virtio_net_mmio_vaddr" />
 
         <map mr="virtio_net_driver_dma" vaddr="0x7_000_000_000" perms="rw" cached="true" setvar_vaddr="virtio_net_driver_dma_vaddr" />
-        <!-- <setvar symbol="virtio_net_driver_dma_paddr" region_paddr="virtio_net_driver_dma" /> -->
+        <setvar symbol="virtio_net_driver_dma_paddr" region_paddr="virtio_net_driver_dma" />
 
         <map mr="virtio_net_client_dma" vaddr="0x1_000_000_000" perms="rw" cached="true" setvar_vaddr="virtio_net_client_dma_vaddr" />
 
@@ -77,7 +75,7 @@
         <map mr="virtio_mmio" vaddr="0x6_000_000_000" perms="rw" cached="false" setvar_vaddr="virtio_blk_mmio_vaddr" />
 
         <map mr="virtio_blk_driver_dma" vaddr="0x8_000_000_000" perms="rw" cached="true" setvar_vaddr="virtio_blk_driver_dma_vaddr" />
-        <!-- <setvar symbol="virtio_blk_driver_dma_paddr" region_paddr="virtio_blk_driver_dma" /> -->
+        <setvar symbol="virtio_blk_driver_dma_paddr" region_paddr="virtio_blk_driver_dma" />
 
         <map mr="virtio_blk_client_dma" vaddr="0x3_000_000_000" perms="rw" cached="true" setvar_vaddr="virtio_blk_client_dma_vaddr" />
 

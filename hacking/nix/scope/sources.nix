@@ -70,11 +70,12 @@ in rec {
 
   microkit = fetchGit {
     url = "https://github.com/coliasgroup/microkit.git";
-    rev = "55a972479f81a1a706d6eb4e8fbfd6daa88b603f"; # branch "rust-nix", based on 2.0.1
+    # rev = "55a972479f81a1a706d6eb4e8fbfd6daa88b603f"; # branch "rust-nix", based on 2.0.1
+    rev = "e1bddcd49b7aec166bebecb3e217c60ac3916a4d";
     local = localRoot + "/microkit";
     extraFilter = path: type:
       lib.hasSuffix "/target" path;
-    useLocal = true;
+    # useLocal = true;
   };
 
   microkitRustSeL4 = fetchGit {
