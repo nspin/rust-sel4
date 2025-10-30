@@ -74,6 +74,7 @@ in rec {
     local = localRoot + "/microkit";
     extraFilter = path: type:
       lib.hasSuffix "/target" path;
+    useLocal = true;
   };
 
   sdfgen = fetchGit {
