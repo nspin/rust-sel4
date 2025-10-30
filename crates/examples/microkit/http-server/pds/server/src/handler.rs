@@ -120,10 +120,10 @@ impl HandlerImpl {
             let now = self.now();
             let now_smoltcp = SmoltcpInstant::ZERO + now.since_zero().into();
             let mut activity = false;
-            activity |= self.shared_timers.poll(now);
-            activity |= self.net_device.poll();
-            activity |= self.shared_network.poll(now_smoltcp, &mut self.net_device);
-            activity |= self.shared_block_io.poll().unwrap();
+            activity |= fff("timer", self.shared_timers.poll(now));
+            activity |= fff("net", self.net_device.poll());
+            activity |= fff("net stack", self.shared_network.poll(now_smoltcp, &mut self.net_device));
+            activity |= fff("blk", self.shared_block_io.poll().unwrap());
             if !activity {
                 let delays = &[
                     self.shared_timers.poll_at().map(|absolute| absolute - now),
@@ -143,6 +143,11 @@ impl HandlerImpl {
             }
         }
     }
+}
+
+fn fff(s: &str, b: bool) -> bool {
+    sel4_microkit::debug_println!("xxx {s}");
+    b
 }
 
 impl Handler for HandlerImpl {
