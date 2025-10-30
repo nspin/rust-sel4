@@ -14,9 +14,12 @@
 , python312Packages
 , qemuForSeL4
 , sources
+, libclangPath
 , vendorLockfile
-, toTOMLFile
+, crateUtils
 , defaultRustEnvironment
+, defaultRustTargetTriple
+, buildSysroot
 , rustEnvironment ? defaultRustEnvironment
 }:
 
@@ -24,6 +27,26 @@
 
 let
   microkitSource = sources.microkit;
+
+  microkitRustSeL4Source = sources.microkitRustSeL4;
+
+  # rustToolchainAttrs = builtins.fromTOML (builtins.readFile (src + "/rust-toolchain.toml"));
+
+  # inherit (rustToolchainAttrs.toolchain) channel;
+
+  # rustToolchain = assembleRustToolchain {
+  #   inherit channel;
+  #   sha256 = "sha256-Qxt8XAuaUR2OMdKbN4u8dBJOhSHxS+uS06Wl9+flVEk=";
+  # };
+
+  # rustEnvironment = lib.fix (self: elaborateRustEnvironment (mkDefaultElaborateRustEnvironmentArgs {
+  #   inherit rustToolchain;
+  # } // {
+  #   inherit channel;
+  #   mkCustomTargetPath = mkMkCustomTargetPathForEnvironment {
+  #     rustEnvironment = self;
+  #   };
+  # }));
 
   kernelSource = sources.seL4.rust-microkit;
 
@@ -50,7 +73,7 @@ let
     else if hostPlatform.isRiscV64 then "riscv64"
     else throw "unkown arch";
 
-  sdk = stdenv.mkDerivation {
+  sdkWithoutInitializer = stdenv.mkDerivation {
     name = "microkit-sdk-without-tool";
 
     src = lib.cleanSourceWith {
@@ -79,8 +102,9 @@ let
         --sel4 ${kernelSourcePatched} \
         --boards ${board} \
         --configs ${config} \
-        --toolchain-prefix-${sdkArch} ${lib.removeSuffix "-" stdenv.cc.targetPrefix} \
+        --gcc-toolchain-prefix-${sdkArch} ${lib.removeSuffix "-" stdenv.cc.targetPrefix} \
         --skip-tool \
+        --skip-initialiser \
         --skip-docs \
         --skip-tar
     '';
@@ -97,7 +121,7 @@ let
         lockfile = microkitSource + "/tool/microkit/Cargo.lock";
       };
 
-      cargoConfigFile = toTOMLFile "config.toml" vendoredLockfile.configFragment;
+      cargoConfigFile = crateUtils.toTOMLFile "config.toml" vendoredLockfile.configFragment;
 
     in
       stdenv.mkDerivation ({
@@ -129,6 +153,76 @@ let
           cargo build -Z unstable-options --frozen --config ${cargoConfigFile} ${rustEnvironment.artifactDirFlag} $out/bin
         '';
       });
+
+  initializer =
+    let
+      vendoredLockfile = vendorLockfile {
+        inherit (rustEnvironment) rustToolchain;
+        lockfile = microkitRustSeL4Source + "/Cargo.lock";
+      };
+
+      sysroot = buildSysroot {
+        inherit rustEnvironment;
+        targetTriple = defaultRustTargetTriple;
+      };
+
+      cargoConfigFile = crateUtils.toTOMLFile "config.toml" (crateUtils.clobber [
+        vendoredLockfile.configFragment
+        {
+            target.${defaultRustTargetTriple.name}.rustflags = [
+            "--sysroot" sysroot
+          ];
+        }
+        # rustEnvironment.vendoredSysrootLockfile.configFragment
+      ]);
+
+    in
+      stdenv.mkDerivation ({
+        name = "microkit-sdk-just-initializer";
+
+        src = microkitRustSeL4Source;
+
+        nativeBuildInputs = [
+          rustEnvironment.rustToolchain
+        ];
+
+        depsBuildBuild = [
+          buildPackages.stdenv.cc
+        ];
+
+      } // lib.optionalAttrs (!rustEnvironment.isNightly) {
+        # HACK
+        RUSTC_BOOTSTRAP = 1;
+      } // {
+
+        dontInstall = true;
+        dontFixup = true;
+
+        LIBCLANG_PATH = libclangPath;
+        SEL4_INCLUDE_DIRS = "${sdkWithoutInitializer}/board/${board}/${config}/include";
+
+        buildPhase = ''
+          cargo build \
+            -Z unstable-options \
+            --frozen \
+            --config ${cargoConfigFile} \
+            ${rustEnvironment.artifactDirFlag} . \
+            --target ${defaultRustTargetTriple.name} \
+            -p sel4-capdl-initializer
+
+          d=$out/board/${board}/${config}/elf
+          mkdir -p $d
+          cp sel4-capdl-initializer.elf $d/initialiser.elf
+        '';
+      });
+
+  sdk = buildEnv {
+    name = "microkit-sdk-with-tool";
+    paths = [
+      sdkWithoutInitializer
+      initializer
+    ];
+  };
 
   sdkWithTool = buildEnv {
     name = "microkit-sdk-with-tool";
@@ -181,7 +275,9 @@ let
 
 in rec {
   inherit
-    sdk tool
+    sdk
+    tool
+    initializer
     sdkWithTool
     mkSystem
   ;

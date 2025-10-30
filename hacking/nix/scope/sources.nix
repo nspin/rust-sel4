@@ -77,6 +77,14 @@ in rec {
     useLocal = true;
   };
 
+  microkitRustSeL4 = fetchGit {
+    url = "https://github.com/au-ts/rust-seL4";
+    rev = "118c9cd67d3a7c95431a0aeb08d8ce8692ab9d80";
+    local = localRoot + "/microkit-rust-sel4";
+    extraFilter = path: type:
+      lib.hasSuffix "/target" path;
+  };
+
   sdfgen = fetchGit {
     url = "https://github.com/coliasgroup/microkit_sdf_gen";
     rev = "16f735ab4954ae8e0490c65787b33f5b0ec87957"; # branch "rust", based on 0.27.0
