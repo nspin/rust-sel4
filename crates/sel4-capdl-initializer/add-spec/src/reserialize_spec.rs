@@ -4,65 +4,57 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::ops::Range;
 use std::path::Path;
 
 use sel4_capdl_initializer_types::*;
 
 pub fn reserialize_spec(
     input_spec: &InputSpec,
-    fill_dir_path: impl AsRef<Path>,
+    fill_dirs: &[impl AsRef<Path>],
     object_names_level: &ObjectNamesLevel,
     embed_frames: bool,
     granule_size_bits: u8,
-    verbose: bool,
-) -> (SpecForInitializer, Vec<u8>) {
+) -> (SpecForInitializer, EmbeddedFramesData) {
     let granule_size = 1 << granule_size_bits;
 
-    let fill_map = input_spec.collect_fill(&[fill_dir_path]);
+    let fill_map = input_spec.collect_fill(fill_dirs);
 
-    let mut sources = SourcesBuilder::new();
-    let mut num_embedded_frames = 0;
+    let mut embedded_frames_data = EmbeddedFramesData::new(granule_size);
+
     let output_spec: SpecForInitializer = input_spec
         .traverse_names_with_context(|named_obj| object_names_level.apply(named_obj).cloned())
         .split_embedded_frames(embed_frames, granule_size_bits)
         .traverse_data(|key| DeflatedBytesContent::pack(fill_map.get(key)))
         .traverse_embedded_frames(|fill| {
-            num_embedded_frames += 1;
-            sources.align_to(granule_size);
-            let range = sources.append(&fill_map.get_frame(granule_size, fill));
-            EmbeddedFrameOffset::new(u64::from_usize(range.start))
+            embedded_frames_data.align_to(granule_size);
+            let start = embedded_frames_data.append(&fill_map.get_frame(granule_size, fill));
+            EmbeddedFrameOffset::new(start.try_into().unwrap())
         });
 
-    if verbose {
-        eprintln!("embedded frames count: {num_embedded_frames}");
-    }
-
-    (output_spec, sources.build())
+    (output_spec, embedded_frames_data)
 }
 
-struct SourcesBuilder {
-    buf: Vec<u8>,
+pub(crate) struct EmbeddedFramesData {
+    pub(crate) alignment: usize,
+    pub(crate) data: Vec<u8>,
 }
 
-impl SourcesBuilder {
-    fn new() -> Self {
-        Self { buf: vec![] }
-    }
-
-    fn build(self) -> Vec<u8> {
-        self.buf
+impl EmbeddedFramesData {
+    fn new(alignment: usize) -> Self {
+        Self {
+            alignment,
+            data: vec![],
+        }
     }
 
     fn align_to(&mut self, align: usize) {
         assert!(align.is_power_of_two());
-        self.buf.resize(self.buf.len().next_multiple_of(align), 0);
+        self.data.resize(self.data.len().next_multiple_of(align), 0);
     }
 
-    fn append(&mut self, bytes: &[u8]) -> Range<usize> {
-        let start = self.buf.len();
-        self.buf.extend(bytes);
-        let end = self.buf.len();
-        start..end
+    fn append(&mut self, bytes: &[u8]) -> usize {
+        let start = self.data.len();
+        self.data.extend(bytes);
+        start
     }
 }
