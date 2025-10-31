@@ -6,7 +6,8 @@
 
 use alloc::boxed::Box;
 use alloc::string::String;
-use core::mem::size_of_val;
+use alloc::vec::Vec;
+use core::mem::{size_of, size_of_val};
 
 use crate::frame_init::*;
 use crate::object_name::*;
@@ -52,9 +53,9 @@ impl<T: Footprint> Footprint for Option<T> {
     }
 }
 
-impl<T: Footprint> Footprint for Box<[T]> {
+impl<T: Footprint> Footprint for Vec<T> {
     fn external_footprint(&self) -> usize {
-        self.iter().map(Footprint::total_footprint).sum()
+        3 * size_of::<usize>() + self.iter().map(Footprint::total_footprint).sum::<usize>()
     }
 }
 

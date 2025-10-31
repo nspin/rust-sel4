@@ -5,6 +5,7 @@
 //
 
 use alloc::boxed::Box;
+use alloc::vec::Vec;
 use core::fmt;
 use core::ops::Range;
 
@@ -28,11 +29,11 @@ pub type CapTableEntry = (CapSlot, Cap);
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct Spec<N, D, M> {
-    pub objects: Box<[NamedObject<N, D, M>]>,
-    pub irqs: Box<[IrqEntry]>,
-    pub asid_slots: Box<[AsidSlotEntry]>,
+    pub objects: Vec<NamedObject<N, D, M>>,
+    pub irqs: Vec<IrqEntry>,
+    pub asid_slots: Vec<AsidSlotEntry>,
     pub root_objects: Range<ObjectId>,
-    pub untyped_covers: Box<[UntypedCover]>,
+    pub untyped_covers: Vec<UntypedCover>,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -171,14 +172,14 @@ pub mod object {
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct CNode {
         pub size_bits: u8,
-        pub slots: Box<[CapTableEntry]>,
+        pub slots: Vec<CapTableEntry>,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Tcb {
-        pub slots: Box<[CapTableEntry]>,
+        pub slots: Vec<CapTableEntry>,
         pub extra: Box<TcbExtraInfo>,
     }
 
@@ -195,7 +196,7 @@ pub mod object {
 
         pub ip: PortableWord,
         pub sp: PortableWord,
-        pub gprs: Box<[PortableWord]>,
+        pub gprs: Vec<PortableWord>,
 
         pub master_fault_ep: Option<PortableCPtr>,
     }
@@ -204,7 +205,7 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Irq {
-        pub slots: Box<[CapTableEntry]>,
+        pub slots: Vec<CapTableEntry>,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject)]
@@ -222,7 +223,7 @@ pub mod object {
     pub struct PageTable {
         pub is_root: bool,
         pub level: Option<u8>,
-        pub slots: Box<[CapTableEntry]>,
+        pub slots: Vec<CapTableEntry>,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject)]
@@ -236,7 +237,7 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct ArmIrq {
-        pub slots: Box<[CapTableEntry]>,
+        pub slots: Vec<CapTableEntry>,
         pub extra: Box<ArmIrqExtraInfo>,
     }
 
@@ -252,7 +253,7 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IrqMsi {
-        pub slots: Box<[CapTableEntry]>,
+        pub slots: Vec<CapTableEntry>,
         pub extra: Box<IrqMsiExtraInfo>,
     }
 
@@ -270,7 +271,7 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IrqIOApic {
-        pub slots: Box<[CapTableEntry]>,
+        pub slots: Vec<CapTableEntry>,
         pub extra: Box<IrqIOApicExtraInfo>,
     }
 
@@ -288,7 +289,7 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct RiscvIrq {
-        pub slots: Box<[CapTableEntry]>,
+        pub slots: Vec<CapTableEntry>,
         pub extra: RiscvIrqExtraInfo,
     }
 
