@@ -26,7 +26,7 @@ impl RenderElfArgs<'_> {
 
         let embedded_frame_data_vaddr = builder
             .next_vaddr()
-            .next_multiple_of(1 << self.embedded_frame_data_alignment);
+            .next_multiple_of(self.embedded_frame_data_alignment.try_into().unwrap());
         builder.add_segment(Segment::simple(
             embedded_frame_data_vaddr,
             self.embedded_frame_data.into(),
@@ -40,7 +40,7 @@ impl RenderElfArgs<'_> {
 
         let serialized_spec_data_vaddr = builder
             .next_vaddr()
-            .next_multiple_of(1 << self.spec_data_alignment);
+            .next_multiple_of(self.spec_data_alignment.try_into().unwrap());
         builder.add_segment(Segment::simple(
             serialized_spec_data_vaddr,
             self.spec_data.into(),
