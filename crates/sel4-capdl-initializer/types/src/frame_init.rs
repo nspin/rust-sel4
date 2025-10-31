@@ -11,10 +11,12 @@ use core::ops::Range;
 #[cfg(feature = "deflate")]
 use core::iter;
 
+use rkyv::Archive;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{CramUsize, SelfContained, object};
+use crate::object;
 
 // // //
 
@@ -60,6 +62,15 @@ impl<D> FrameInit<D, NeverEmbedded> {
     }
 }
 
+impl<D: Archive, M: Archive> ArchivedFrameInit<D, M> {
+    pub const fn as_fill(&self) -> Option<&ArchivedFill<D>> {
+        match self {
+            Self::Fill(fill) => Some(fill),
+            _ => None,
+        }
+    }
+}
+
 impl<D> object::Frame<D, NeverEmbedded> {
     pub fn can_embed(&self, granule_size_bits: u8, is_root: bool) -> bool {
         is_root
@@ -78,58 +89,13 @@ pub enum NeverEmbedded {}
 // // //
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct EmbeddedFrame {
-    ptr: *const u8,
-}
-
-impl EmbeddedFrame {
-    pub const fn new(ptr: *const u8) -> Self {
-        Self { ptr }
-    }
-
-    pub const fn ptr(&self) -> *const u8 {
-        self.ptr
-    }
-
-    pub fn check(&self, frame_size: usize) {
-        assert_eq!(self.ptr().cast::<()>().align_offset(frame_size), 0);
-    }
-}
-
-unsafe impl Sync for EmbeddedFrame {}
-
-pub trait SelfContainedGetEmbeddedFrame {
-    fn self_contained_get_embedded_frame(&self) -> EmbeddedFrame;
-}
-
-impl SelfContainedGetEmbeddedFrame for EmbeddedFrame {
-    fn self_contained_get_embedded_frame(&self) -> EmbeddedFrame {
-        *self
-    }
-}
-
-pub trait GetEmbeddedFrame {
-    type Source: ?Sized;
-
-    fn get_embedded_frame(&self, source: &Self::Source) -> EmbeddedFrame;
-}
-
-impl<T: SelfContainedGetEmbeddedFrame> GetEmbeddedFrame for SelfContained<T> {
-    type Source = ();
-
-    fn get_embedded_frame(&self, _source: &Self::Source) -> EmbeddedFrame {
-        self.inner().self_contained_get_embedded_frame()
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct IndirectEmbeddedFrame {
+pub struct EmbeddedFrameOffset {
     offset: u64,
 }
 
-impl IndirectEmbeddedFrame {
+impl EmbeddedFrameOffset {
     pub const fn new(offset: u64) -> Self {
         Self { offset }
     }
@@ -139,11 +105,23 @@ impl IndirectEmbeddedFrame {
     }
 }
 
-impl GetEmbeddedFrame for IndirectEmbeddedFrame {
-    type Source = [u8];
+unsafe impl Sync for EmbeddedFrameOffset {}
 
-    fn get_embedded_frame(&self, source: &Self::Source) -> EmbeddedFrame {
-        EmbeddedFrame::new(&source[self.offset().into_usize()])
+pub trait GetEmbeddedFrameOffset {
+    fn get_embedded_frame(&self) -> EmbeddedFrameOffset;
+}
+
+impl GetEmbeddedFrameOffset for EmbeddedFrameOffset {
+    fn get_embedded_frame(&self) -> EmbeddedFrameOffset {
+        *self
+    }
+}
+
+impl GetEmbeddedFrameOffset for ArchivedEmbeddedFrameOffset {
+    fn get_embedded_frame(&self) -> EmbeddedFrameOffset {
+        EmbeddedFrameOffset {
+            offset: self.offset.into(),
+        }
     }
 }
 
@@ -258,30 +236,26 @@ impl FileContentRange {
 
 // // //
 
-pub trait SelfContainedContent {
-    fn self_contained_copy_out(&self, dst: &mut [u8]);
+pub trait Content {
+    fn copy_out(&self, dst: &mut [u8]);
 }
 
 #[derive(Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct BytesContent<'a> {
-    pub bytes: &'a [u8],
+pub struct BytesContent {
+    pub bytes: Vec<u8>,
 }
 
-impl BytesContent<'_> {
-    pub fn pack(raw_content: &[u8]) -> Vec<u8> {
-        raw_content.to_vec()
+impl BytesContent {
+    pub fn pack(raw_content: &[u8]) -> Self {
+        Self {
+            bytes: raw_content.to_vec(),
+        }
     }
 }
 
-impl SelfContainedContent for BytesContent<'_> {
-    fn self_contained_copy_out(&self, dst: &mut [u8]) {
-        dst.copy_from_slice(self.bytes)
-    }
-}
-
-impl fmt::Debug for BytesContent<'_> {
+impl fmt::Debug for BytesContent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("BytesContent")
             .field("bytes", &"&[...]")
@@ -289,37 +263,37 @@ impl fmt::Debug for BytesContent<'_> {
     }
 }
 
+impl Content for BytesContent {
+    fn copy_out(&self, dst: &mut [u8]) {
+        dst.copy_from_slice(&self.bytes)
+    }
+}
+
+impl Content for ArchivedBytesContent {
+    fn copy_out(&self, dst: &mut [u8]) {
+        dst.copy_from_slice(&self.bytes)
+    }
+}
+
 #[cfg(feature = "deflate")]
 #[derive(Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct DeflatedBytesContent<'a> {
-    pub deflated_bytes: &'a [u8],
+pub struct DeflatedBytesContent {
+    pub deflated_bytes: Vec<u8>,
 }
 
 #[cfg(feature = "deflate")]
-impl DeflatedBytesContent<'_> {
-    pub fn pack(raw_content: &[u8]) -> Vec<u8> {
-        miniz_oxide::deflate::compress_to_vec(raw_content, 10)
+impl DeflatedBytesContent {
+    pub fn pack(raw_content: &[u8]) -> Self {
+        Self {
+            deflated_bytes: miniz_oxide::deflate::compress_to_vec(raw_content, 10),
+        }
     }
 }
 
 #[cfg(feature = "deflate")]
-impl SelfContainedContent for DeflatedBytesContent<'_> {
-    fn self_contained_copy_out(&self, dst: &mut [u8]) {
-        let n = miniz_oxide::inflate::decompress_slice_iter_to_slice(
-            dst,
-            iter::once(self.deflated_bytes),
-            false, // zlib_header
-            true,  // ignore_adler32
-        )
-        .unwrap();
-        assert_eq!(n, dst.len())
-    }
-}
-
-#[cfg(feature = "deflate")]
-impl fmt::Debug for DeflatedBytesContent<'_> {
+impl fmt::Debug for DeflatedBytesContent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("DeflatedBytesContent")
             .field("deflated_bytes", &"&[...]")
@@ -327,56 +301,28 @@ impl fmt::Debug for DeflatedBytesContent<'_> {
     }
 }
 
-// // //
-
-pub trait Content {
-    type Source: ?Sized;
-
-    fn copy_out(&self, source: &Self::Source, dst: &mut [u8]);
-}
-
-impl<T: SelfContainedContent> Content for SelfContained<T> {
-    type Source = ();
-
-    fn copy_out(&self, _source: &Self::Source, dst: &mut [u8]) {
-        self.inner().self_contained_copy_out(dst)
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct IndirectBytesContent {
-    pub bytes_range: Range<u64>,
-}
-
-impl Content for IndirectBytesContent {
-    type Source = [u8];
-
-    fn copy_out(&self, source: &Self::Source, dst: &mut [u8]) {
-        BytesContent {
-            bytes: &source[u64::into_usize_range(&self.bytes_range)],
-        }
-        .self_contained_copy_out(dst)
+#[cfg(feature = "deflate")]
+impl Content for DeflatedBytesContent {
+    fn copy_out(&self, dst: &mut [u8]) {
+        copy_out_deflated(&self.deflated_bytes, dst)
     }
 }
 
 #[cfg(feature = "deflate")]
-#[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct IndirectDeflatedBytesContent {
-    pub deflated_bytes_range: Range<u64>,
+impl Content for ArchivedDeflatedBytesContent {
+    fn copy_out(&self, dst: &mut [u8]) {
+        copy_out_deflated(&self.deflated_bytes, dst)
+    }
 }
 
 #[cfg(feature = "deflate")]
-impl Content for IndirectDeflatedBytesContent {
-    type Source = [u8];
-
-    fn copy_out(&self, source: &Self::Source, dst: &mut [u8]) {
-        DeflatedBytesContent {
-            deflated_bytes: &source[u64::into_usize_range(&self.deflated_bytes_range)],
-        }
-        .self_contained_copy_out(dst)
-    }
+fn copy_out_deflated(deflated_src: &[u8], dst: &mut [u8]) {
+    let n = miniz_oxide::inflate::decompress_slice_iter_to_slice(
+        dst,
+        iter::once(deflated_src),
+        false, // zlib_header
+        true,  // ignore_adler32
+    )
+    .unwrap();
+    assert_eq!(n, dst.len())
 }

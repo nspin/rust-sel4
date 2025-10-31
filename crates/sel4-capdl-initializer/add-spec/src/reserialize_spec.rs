@@ -16,42 +16,29 @@ pub fn reserialize_spec(
     embed_frames: bool,
     granule_size_bits: u8,
     verbose: bool,
-) -> (SpecWithIndirection, Vec<u8>) {
+) -> (SpecForInitializer, Vec<u8>) {
     let granule_size = 1 << granule_size_bits;
 
     let fill_map = input_spec.collect_fill(&[fill_dir_path]);
 
     let mut sources = SourcesBuilder::new();
     let mut num_embedded_frames = 0;
-    let final_spec: SpecWithIndirection = input_spec
-        .traverse_names_with_context(|named_obj| {
-            object_names_level
-                .apply(named_obj)
-                .map(|s| IndirectObjectName {
-                    range: u64::from_usize_range(&sources.append(s.as_bytes())),
-                })
-        })
+    let output_spec: SpecForInitializer = input_spec
+        .traverse_names_with_context(|named_obj| object_names_level.apply(named_obj).cloned())
         .split_embedded_frames(embed_frames, granule_size_bits)
-        .traverse_data(|key| {
-            let compressed = DeflatedBytesContent::pack(fill_map.get(key));
-            IndirectDeflatedBytesContent {
-                deflated_bytes_range: u64::from_usize_range(&sources.append(&compressed)),
-            }
-        })
+        .traverse_data(|key| DeflatedBytesContent::pack(fill_map.get(key)))
         .traverse_embedded_frames(|fill| {
             num_embedded_frames += 1;
             sources.align_to(granule_size);
             let range = sources.append(&fill_map.get_frame(granule_size, fill));
-            IndirectEmbeddedFrame::new(u64::from_usize(range.start))
+            EmbeddedFrameOffset::new(u64::from_usize(range.start))
         });
 
     if verbose {
         eprintln!("embedded frames count: {num_embedded_frames}");
     }
 
-    let mut blob = postcard::to_allocvec(&final_spec).unwrap();
-    blob.extend(sources.build());
-    (final_spec, blob)
+    (output_spec, sources.build())
 }
 
 struct SourcesBuilder {

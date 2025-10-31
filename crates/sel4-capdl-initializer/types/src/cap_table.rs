@@ -5,8 +5,6 @@
 //
 
 use core::fmt;
-use core::iter;
-use core::slice;
 
 use crate::{Cap, CapSlot, CapTableEntry, TryFromCapError, cap, object};
 
@@ -38,9 +36,7 @@ pub trait HasCapTable {
     }
 
     #[allow(clippy::type_complexity)]
-    fn slots_as<'a, T: TryFrom<&'a Cap>>(
-        &'a self,
-    ) -> iter::Map<slice::Iter<'a, (CapSlot, Cap)>, fn(&'a (CapSlot, Cap)) -> (CapSlot, T)>
+    fn slots_as<'a, T: TryFrom<&'a Cap>>(&'a self) -> impl Iterator<Item = (CapSlot, T)>
     where
         <T as TryFrom<&'a Cap>>::Error: fmt::Debug,
     {

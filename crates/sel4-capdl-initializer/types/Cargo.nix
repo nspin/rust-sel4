@@ -6,6 +6,8 @@
 
 { mk, localCrates, versions, serdeWith }:
 
+# TODO make rkyv::{Serialize, Deserialze} optional
+
 mk {
   package.name = "sel4-capdl-initializer-types";
   dependencies = {
