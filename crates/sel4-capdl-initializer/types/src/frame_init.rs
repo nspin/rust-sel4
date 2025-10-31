@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use alloc::boxed::Box;
 use alloc::{string::String, vec::Vec};
 use core::fmt;
 use core::ops::Range;
@@ -154,7 +153,7 @@ impl GetEmbeddedFrame for IndirectEmbeddedFrame {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct Fill<D> {
-    pub entries: Box<[FillEntry<D>]>,
+    pub entries: Vec<FillEntry<D>>,
 }
 
 impl<D> Fill<D> {
