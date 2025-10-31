@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, localCrates, versions, postcardWith }:
+{ mk, localCrates, versions }:
 
 mk {
   package.name = "sel4-capdl-initializer-add-spec";
@@ -14,9 +14,9 @@ mk {
       serde_json
       num
       clap
+      rkyv
     ;
     object = { version = versions.object; features = [ "all" ]; };
-    postcard = postcardWith [ "alloc" ];
     inherit (localCrates)
       sel4-synthetic-elf
     ;

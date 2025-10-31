@@ -5,80 +5,64 @@
 //
 
 use alloc::string::String;
-use core::ops::Range;
 use core::str;
+
+use rkyv::option::ArchivedOption;
+use rkyv::string::ArchivedString;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{CramUsize, NamedObject, Object, SelfContained};
+use crate::{NamedObject, Object};
 
-pub trait SelfContainedObjectName {
-    fn self_contained_object_name(&self) -> Option<&str>;
+pub trait ObjectName {
+    fn object_name(&self) -> Option<&str>;
 }
 
-impl SelfContainedObjectName for &str {
-    fn self_contained_object_name(&self) -> Option<&str> {
+impl ObjectName for &str {
+    fn object_name(&self) -> Option<&str> {
         Some(self)
     }
 }
 
-impl SelfContainedObjectName for String {
-    fn self_contained_object_name(&self) -> Option<&str> {
+impl ObjectName for String {
+    fn object_name(&self) -> Option<&str> {
         Some(self)
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub struct Unnamed;
+impl ObjectName for ArchivedString {
+    fn object_name(&self) -> Option<&str> {
+        Some(self)
+    }
+}
 
-impl SelfContainedObjectName for Unnamed {
-    fn self_contained_object_name(&self) -> Option<&str> {
+impl ObjectName for ArchivedUnnamed {
+    fn object_name(&self) -> Option<&str> {
         None
     }
 }
 
-impl<T: SelfContainedObjectName> SelfContainedObjectName for Option<T> {
-    fn self_contained_object_name(&self) -> Option<&str> {
-        self.as_ref()
-            .and_then(SelfContainedObjectName::self_contained_object_name)
+impl<T: ObjectName> ObjectName for Option<T> {
+    fn object_name(&self) -> Option<&str> {
+        self.as_ref().and_then(ObjectName::object_name)
     }
 }
 
-pub trait ObjectName {
-    type Source: ?Sized;
-
-    fn object_name<'a>(&'a self, means: &'a Self::Source) -> Option<&'a str>;
-}
-
-impl<T: SelfContainedObjectName> ObjectName for SelfContained<T> {
-    type Source = ();
-
-    fn object_name<'a>(&'a self, _source: &'a Self::Source) -> Option<&'a str> {
-        self.inner().self_contained_object_name()
+impl<T: ObjectName> ObjectName for ArchivedOption<T> {
+    fn object_name(&self) -> Option<&str> {
+        self.as_ref().and_then(ObjectName::object_name)
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct IndirectObjectName {
-    pub range: Range<u64>,
-}
+pub struct Unnamed;
 
-impl ObjectName for IndirectObjectName {
-    type Source = [u8];
-
-    fn object_name<'a>(&'a self, source: &'a Self::Source) -> Option<&'a str> {
-        Some(str::from_utf8(&source[u64::into_usize_range(&self.range)]).unwrap())
-    }
-}
-
-impl<T: ObjectName> ObjectName for Option<T> {
-    type Source = T::Source;
-
-    fn object_name<'a>(&'a self, source: &'a Self::Source) -> Option<&'a str> {
-        self.as_ref().and_then(|name| name.object_name(source))
+impl ObjectName for Unnamed {
+    fn object_name(&self) -> Option<&str> {
+        None
     }
 }
 

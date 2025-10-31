@@ -11,17 +11,17 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+use alloc::string::String;
 use core::ops::Range;
 
+use rkyv::Archive;
 use rkyv::primitive::{ArchivedU16, ArchivedU32, ArchivedU64};
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
+mod archived_cap_table;
 mod cap_table;
-mod footprint;
 mod frame_init;
 mod inspect;
+mod inspect_archived;
 mod object_name;
 mod spec;
 
@@ -33,27 +33,26 @@ mod when_std;
 #[cfg(feature = "sel4")]
 mod when_sel4;
 
+pub use archived_cap_table::{ArchivedPageTableEntry, HasArchivedCapTable};
 pub use cap_table::{HasCapTable, PageTableEntry};
-pub use footprint::Footprint;
 pub use frame_init::{
-    BytesContent, Content, EmbeddedFrame, Fill, FillEntry, FillEntryContent,
-    FillEntryContentBootInfo, FillEntryContentBootInfoId, FrameInit, GetEmbeddedFrame,
-    IndirectBytesContent, IndirectEmbeddedFrame, NeverEmbedded, SelfContainedContent,
-    SelfContainedGetEmbeddedFrame,
+    ArchivedFillEntry, ArchivedFillEntryContent, ArchivedFillEntryContentBootInfoId,
+    ArchivedFrameInit, BytesContent, Content, EmbeddedFrameOffset, Fill, FillEntry,
+    FillEntryContent, FillEntryContentBootInfo, FillEntryContentBootInfoId, FrameInit,
+    GetEmbeddedFrameOffset, NeverEmbedded,
 };
-pub use object_name::{
-    IndirectObjectName, ObjectName, ObjectNamesLevel, SelfContainedObjectName, Unnamed,
-};
+pub use object_name::{ArchivedUnnamed, ObjectName, ObjectNamesLevel, Unnamed};
 pub use spec::{
-    AsidSlotEntry, Cap, CapSlot, CapTableEntry, IrqEntry, NamedObject, Object, ObjectId,
-    PortableBadge, PortableCPtr, PortableWord, Rights, Spec, TryFromCapError, TryFromObjectError,
-    UntypedCover, cap, object,
+    ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry, ArchivedIrqEntry, ArchivedNamedObject,
+    ArchivedObject, ArchivedObjectId, ArchivedRights, ArchivedSpec, AsidSlotEntry, Cap, CapSlot,
+    CapTableEntry, IrqEntry, NamedObject, Object, ObjectId, PortableBadge, PortableCPtr,
+    PortableWord, Rights, Spec, TryFromCapError, TryFromObjectError, UntypedCover, cap, object,
 };
 
 pub use frame_init::{FileContent, FileContentRange};
 
 #[cfg(feature = "deflate")]
-pub use frame_init::{DeflatedBytesContent, IndirectDeflatedBytesContent};
+pub use frame_init::DeflatedBytesContent;
 
 #[cfg(feature = "std")]
 pub use when_std::{FillMap, FillMapBuilder, InputSpec};
@@ -63,36 +62,10 @@ pub use when_sel4::*;
 
 // // //
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct SpecWithSources<'a, N: ObjectName, D: Content, M: GetEmbeddedFrame> {
-    pub spec: Spec<N, D, M>,
-    pub object_name_source: &'a N::Source,
-    pub content_source: &'a D::Source,
-    pub embedded_frame_source: &'a M::Source,
-}
-
 #[cfg(feature = "deflate")]
-pub type SpecWithIndirection =
-    Spec<Option<IndirectObjectName>, IndirectDeflatedBytesContent, IndirectEmbeddedFrame>;
+pub type SpecForInitializer = Spec<Option<String>, DeflatedBytesContent, EmbeddedFrameOffset>;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct SelfContained<T>(T);
-
-impl<T> SelfContained<T> {
-    pub const fn new(inner: T) -> Self {
-        Self(inner)
-    }
-
-    pub const fn inner(&self) -> &T {
-        &self.0
-    }
-
-    pub fn into_inner(self) -> T {
-        self.0
-    }
-}
+// // //
 
 pub trait CramUsize: Copy + TryFrom<usize> + TryInto<usize> {
     fn into_usize(self) -> usize {
@@ -120,3 +93,28 @@ impl CramUsize for u64 {}
 impl CramUsize for ArchivedU16 {}
 impl CramUsize for ArchivedU32 {}
 impl CramUsize for ArchivedU64 {}
+
+// // //
+
+pub trait ArchiveSimple: Archive + Copy {
+    fn into_archived(self) -> Self::Archived;
+    fn from_archived(x: Self::Archived) -> Self;
+}
+
+macro_rules! impl_archive_simple_using_from_into {
+    ($ty:ty) => {
+        impl ArchiveSimple for $ty {
+            fn into_archived(self) -> Self::Archived {
+                self.into()
+            }
+
+            fn from_archived(x: Self::Archived) -> Self {
+                Self::from(x)
+            }
+        }
+    };
+}
+
+impl_archive_simple_using_from_into!(u16);
+impl_archive_simple_using_from_into!(u32);
+impl_archive_simple_using_from_into!(u64);

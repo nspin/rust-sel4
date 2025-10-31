@@ -9,21 +9,33 @@ use alloc::vec::Vec;
 use core::fmt;
 use core::ops::Range;
 
+use rkyv::Archive;
+use rkyv::option::ArchivedOption;
+use rkyv::primitive::ArchivedU64;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use sel4_capdl_initializer_types_derive::{IsCap, IsObject, IsObjectWithCapTable};
 
-use crate::{FrameInit, HasCapTable};
+use crate::{FrameInit, HasArchivedCapTable, HasCapTable};
 
+// TODO newtype wrappers
 pub type PortableWord = u64;
 pub type PortableBadge = PortableWord;
 pub type PortableCPtr = PortableWord;
 
+// TODO newtype wrappers
 pub type ObjectId = u32;
+pub type ArchivedObjectId = <ObjectId as Archive>::Archived;
 
+// TODO newtype wrappers
 pub type CapSlot = u32;
+pub type ArchivedCapSlot = <CapSlot as Archive>::Archived;
+
+// TODO use struct
 pub type CapTableEntry = (CapSlot, Cap);
+pub type ArchivedCapTableEntry = <CapTableEntry as Archive>::Archived;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -96,6 +108,16 @@ impl<D, M> Object<D, M> {
     }
 }
 
+impl<D: Archive, M: Archive> ArchivedObject<D, M> {
+    pub fn paddr(&self) -> ArchivedOption<ArchivedU64> {
+        match self {
+            ArchivedObject::Untyped(obj) => obj.paddr,
+            ArchivedObject::Frame(obj) => obj.paddr,
+            _ => ArchivedOption::None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
@@ -141,6 +163,31 @@ impl Cap {
             Cap::SchedContext(cap) => cap.object,
             Cap::Reply(cap) => cap.object,
             Cap::ArmSmc(cap) => cap.object,
+        }
+    }
+}
+
+impl ArchivedCap {
+    pub fn obj(&self) -> ArchivedObjectId {
+        match self {
+            ArchivedCap::Untyped(cap) => cap.object,
+            ArchivedCap::Endpoint(cap) => cap.object,
+            ArchivedCap::Notification(cap) => cap.object,
+            ArchivedCap::CNode(cap) => cap.object,
+            ArchivedCap::Frame(cap) => cap.object,
+            ArchivedCap::Tcb(cap) => cap.object,
+            ArchivedCap::IrqHandler(cap) => cap.object,
+            ArchivedCap::VCpu(cap) => cap.object,
+            ArchivedCap::PageTable(cap) => cap.object,
+            ArchivedCap::AsidPool(cap) => cap.object,
+            ArchivedCap::ArmIrqHandler(cap) => cap.object,
+            ArchivedCap::IrqMsiHandler(cap) => cap.object,
+            ArchivedCap::IrqIOApicHandler(cap) => cap.object,
+            ArchivedCap::RiscvIrqHandler(cap) => cap.object,
+            ArchivedCap::IOPorts(cap) => cap.object,
+            ArchivedCap::SchedContext(cap) => cap.object,
+            ArchivedCap::Reply(cap) => cap.object,
+            ArchivedCap::ArmSmc(cap) => cap.object,
         }
     }
 }

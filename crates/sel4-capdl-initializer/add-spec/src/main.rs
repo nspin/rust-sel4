@@ -7,8 +7,10 @@
 use std::fs;
 
 use anyhow::Result;
+use rkyv::rancor;
+use rkyv::util::AlignedVec;
 
-use sel4_capdl_initializer_types::{Footprint, InputSpec};
+use sel4_capdl_initializer_types::InputSpec;
 
 mod args;
 mod render_elf;
@@ -18,6 +20,8 @@ use args::Args;
 
 // HACK hardcoded
 const GRANULE_SIZE_BITS: u8 = 12;
+
+type ArchiveAlignedVec = AlignedVec<16>;
 
 fn main() -> Result<()> {
     let args = Args::parse()?;
@@ -35,7 +39,7 @@ fn main() -> Result<()> {
 
     let input_spec = InputSpec::parse(&spec_json);
 
-    let (final_spec, serialized_spec) = reserialize_spec::reserialize_spec(
+    let (output_spec, embedded_frame_data) = reserialize_spec::reserialize_spec(
         &input_spec,
         fill_dir_path,
         object_names_level,
@@ -44,20 +48,13 @@ fn main() -> Result<()> {
         args.verbose,
     );
 
-    let footprint = final_spec.total_footprint();
-
-    // TODO make configurable
-    let heap_size = footprint * 2 + 16 * 4096;
-
-    if args.verbose {
-        eprintln!("footprint: {footprint}");
-        eprintln!("heap size: {}", heap_size / 4096);
-    }
+    let spec_data: ArchiveAlignedVec = rkyv::to_bytes::<rancor::Error>(&output_spec).unwrap();
 
     let render_elf_args = render_elf::RenderElfArgs {
-        data: &serialized_spec,
-        granule_size_bits: GRANULE_SIZE_BITS.into(),
-        heap_size,
+        spec_data: &spec_data,
+        spec_data_alignment: ArchiveAlignedVec::ALIGNMENT,
+        embedded_frame_data: &embedded_frame_data,
+        embedded_frame_data_alignment: GRANULE_SIZE_BITS.into(),
     };
 
     let rendered_initializer_elf_buf = match object::File::parse(&*initializer_elf_buf).unwrap() {
