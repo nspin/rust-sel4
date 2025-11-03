@@ -23,6 +23,8 @@ use sel4_immutable_cell::ImmutableCell;
 use sel4_logging::{LevelFilter, Logger, LoggerBuilder};
 use sel4_root_task::{debug_print, root_task};
 
+// TODO consolidate core into this crate
+
 const LOG_LEVEL: LevelFilter = {
     // LevelFilter::Trace
     // LevelFilter::Debug
