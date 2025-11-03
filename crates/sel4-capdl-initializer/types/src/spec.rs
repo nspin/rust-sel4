@@ -20,10 +20,7 @@ use sel4_capdl_initializer_types_derive::{IsCap, IsObject, IsObjectWithCapTable}
 
 use crate::{FrameInit, HasArchivedCapTable, HasCapTable};
 
-// TODO newtype wrappers
 pub type PortableWord = u64;
-pub type PortableBadge = PortableWord;
-pub type PortableCPtr = PortableWord;
 
 // TODO newtype wrappers
 pub type ObjectId = u32;
@@ -33,9 +30,13 @@ pub type ArchivedObjectId = <ObjectId as Archive>::Archived;
 pub type CapSlot = u32;
 pub type ArchivedCapSlot = <CapSlot as Archive>::Archived;
 
-// TODO use struct
-pub type CapTableEntry = (CapSlot, Cap);
-pub type ArchivedCapTableEntry = <CapTableEntry as Archive>::Archived;
+#[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+pub struct CapTableEntry {
+    pub slot: CapSlot,
+    pub cap: Cap,
+}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -245,7 +246,7 @@ pub mod object {
         pub sp: PortableWord,
         pub gprs: Vec<PortableWord>,
 
-        pub master_fault_ep: Option<PortableCPtr>,
+        pub master_fault_ep: Option<CPtr>,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -369,7 +370,7 @@ pub mod object {
     pub struct SchedContextExtraInfo {
         pub period: u64,
         pub budget: u64,
-        pub badge: PortableBadge,
+        pub badge: Badge,
     }
 }
 
@@ -393,7 +394,7 @@ pub mod cap {
         //   enough, or do we ever need to actually use the badge value '0'?
         // TODO
         //   Is it correct that these are ignored in the case of Tcb::SLOT_TEMP_FAULT_EP?
-        pub badge: PortableBadge,
+        pub badge: Badge,
         pub rights: Rights,
     }
 
@@ -402,7 +403,7 @@ pub mod cap {
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Notification {
         pub object: ObjectId,
-        pub badge: PortableBadge,
+        pub badge: Badge,
         pub rights: Rights,
     }
 
@@ -515,6 +516,16 @@ pub mod cap {
         pub object: ObjectId,
     }
 }
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+pub struct CPtr(pub(crate) PortableWord);
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+pub struct Badge(pub(crate) PortableWord);
 
 // // //
 

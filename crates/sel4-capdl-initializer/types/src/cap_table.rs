@@ -15,10 +15,13 @@ pub trait HasCapTable {
     fn slots(&self) -> &[CapTableEntry];
 
     fn maybe_slot(&self, slot: CapSlot) -> Option<&Cap> {
-        self.slots()
-            .as_ref()
-            .iter()
-            .find_map(|(k, v)| if k == &slot { Some(v) } else { None })
+        self.slots().as_ref().iter().find_map(|entry| {
+            if entry.slot == slot {
+                Some(&entry.cap)
+            } else {
+                None
+            }
+        })
     }
 
     fn maybe_slot_as<'a, T: TryFrom<&'a Cap>>(&'a self, slot: CapSlot) -> Option<T>
@@ -42,7 +45,7 @@ pub trait HasCapTable {
     {
         self.slots()
             .iter()
-            .map(|(k, v)| (*k, T::try_from(v).unwrap()))
+            .map(|entry| (entry.slot, T::try_from(&entry.cap).unwrap()))
     }
 }
 

@@ -502,7 +502,7 @@ impl<
         for (obj_id, notification) in all_irq_notifications {
             let irq_handler = self.orig_cap::<cap_type::IrqHandler>(obj_id);
             if let Some(logical_nfn_cap) = notification {
-                let nfn = match logical_nfn_cap.badge.into_word() {
+                let nfn = match logical_nfn_cap.badge.into_sel4() {
                     0 => self.orig_cap(logical_nfn_cap.object),
                     badge => {
                         let orig_cptr = self.orig_absolute_cptr(logical_nfn_cap.object);
@@ -766,7 +766,7 @@ impl<
 
                         tcb.tcb_set_timeout_endpoint(temp_fault_ep)?;
                     } else {
-                        let fault_ep = sel4::CPtr::from_bits(obj.extra.master_fault_ep.unwrap().into_word());
+                        let fault_ep = obj.extra.master_fault_ep.as_ref().unwrap().into_sel4();
 
                         tcb.tcb_configure(
                             fault_ep,
@@ -818,14 +818,16 @@ impl<
 
         for (obj_id, obj) in self.spec().filter_objects::<&object::ArchivedCNode>() {
             let cnode = self.orig_cap::<cap_type::CNode>(obj_id);
-            for (i, cap) in obj.slots() {
-                let badge = cap.badge();
-                let rights = cap.rights().unwrap_or(CapRights::all());
+            for entry in obj.slots() {
+                let badge = entry.cap.badge();
+                let rights = entry.cap.rights().unwrap_or(CapRights::all());
                 let src = init_thread::slot::CNODE
                     .cap()
-                    .absolute_cptr(self.orig_cap::<cap_type::Unspecified>(cap.obj()));
-                let dst = cnode
-                    .absolute_cptr_from_bits_with_depth((*i).into_word(), obj.size_bits.into());
+                    .absolute_cptr(self.orig_cap::<cap_type::Unspecified>(entry.cap.obj()));
+                let dst = cnode.absolute_cptr_from_bits_with_depth(
+                    entry.slot.into_word(),
+                    obj.size_bits.into(),
+                );
                 match badge {
                     None => dst.copy(&src, rights),
                     Some(badge) => dst.mint(&src, rights, badge.into_word()),

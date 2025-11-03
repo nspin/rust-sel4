@@ -43,10 +43,11 @@ pub use frame_init::{
 };
 pub use object_name::{ArchivedUnnamed, ObjectName, ObjectNamesLevel, Unnamed};
 pub use spec::{
-    ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry, ArchivedIrqEntry, ArchivedNamedObject,
-    ArchivedObject, ArchivedObjectId, ArchivedRights, ArchivedSpec, AsidSlotEntry, Cap, CapSlot,
-    CapTableEntry, IrqEntry, NamedObject, Object, ObjectId, PortableBadge, PortableCPtr,
-    PortableWord, Rights, Spec, TryFromCapError, TryFromObjectError, UntypedCover, cap, object,
+    ArchivedBadge, ArchivedCPtr, ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry,
+    ArchivedIrqEntry, ArchivedNamedObject, ArchivedObject, ArchivedObjectId, ArchivedRights,
+    ArchivedSpec, AsidSlotEntry, Badge, CPtr, Cap, CapSlot, CapTableEntry, IrqEntry, NamedObject,
+    Object, ObjectId, PortableWord, Rights, Spec, TryFromCapError, TryFromObjectError,
+    UntypedCover, cap, object,
 };
 
 pub use frame_init::{FileContent, FileContentRange};
