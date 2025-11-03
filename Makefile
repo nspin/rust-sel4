@@ -69,13 +69,17 @@ update-lockfile:
 check-lockfile:
 	cargo update -w --locked
 
+cmm_manifest_path_arg := --manifest-path hacking/cargo-manifest-management/tool/Cargo.toml
+
 .PHONY: fmt
 fmt:
 	cargo fmt --all
+	cargo fmt $(cmm_manifest_path_arg) --all
 
 .PHONY: check-fmt
 check-fmt:
 	cargo fmt --all -- --check
+	cargo fmt $(cmm_manifest_path_arg) --all -- --check
 
 .PHONY: check-generic-formatting
 check-generic-formatting:
@@ -189,3 +193,8 @@ check-exhaustively: check-immediately
 check-oneshot: check-immediately
 	$(MAKE) run-tests
 	$(MAKE) everything-with-excess
+
+.PHONY: vscode-env
+vscode-env:
+	d=$$($(nix_build) -A pkgs.build.this.vscodeEnv --no-out-link) && \
+		code $$d/*-workspace

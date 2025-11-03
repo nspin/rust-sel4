@@ -189,7 +189,7 @@ rec {
       inherit (final) state;
     };
 
-  # f :: (attrPath :: [String]) -> (depName :: String) -> (depAttrs :: { ... }) -> (state :: a) -> { value :: { ... }, state :: a }
+  # f :: (attrPath :: [String]) -> (depName :: String) -> (depValue :: { ... }) -> (state :: a) -> { value :: { ... }, state :: a }
   traverseDependencies = f: manifest: state0:
     let
       dependencyAttributes = [
@@ -227,18 +227,19 @@ rec {
       fForTargets = name: value: state':
         if name == "target"
         then
-          let step =
-            traverseAttrs
-              (name: value: state':
-                let step = traverseAttrs (fForTarget [ "target" name ]) value state';
-                in {
-                  value = step.attrs;
-                  inherit (step) state;
-                }
-              )
-              value
-              state'
-            ;
+          let
+            step =
+              traverseAttrs
+                (name: value: state':
+                  let step = traverseAttrs (fForTarget [ "target" name ]) value state';
+                  in {
+                    value = step.attrs;
+                    inherit (step) state;
+                  }
+                )
+                value
+                state'
+              ;
           in {
             inherit (step) state;
             value = step.attrs;
@@ -258,25 +259,35 @@ rec {
   extractAndPatchPathDependencies = patch: manifest:
     let
       step = traverseDependencies
-        (attrPath: depName: depAttrs: state':
-          if depAttrs ? path
+        (attrPath: depName: depValue: state':
+          if depValue ? path
           then
             let
-              realDepName = depAttrs.package or depName;
-              consistent = if state' ? "${realDepName}" then state'."${realDepName}" == depAttrs.path else true;
+              crateName = depValue.package or depName;
+              consistent =
+                if state' ? "${crateName}"
+                then lib.all (ctx: ctx.depValue.path == depValue.path) (state'."${crateName}")
+                else true
+              ;
             in
               assert consistent;
               {
-                value = depAttrs // {
-                  path = patch realDepName depAttrs.path;
+                value = depValue // {
+                  path = patch crateName depValue.path;
                 };
                 state = state' // {
-                  "${realDepName}" = depAttrs.path;
+                  "${crateName}" = (state'."${crateName}" or []) ++ [
+                    {
+                      inherit attrPath;
+                      inherit depName;
+                      inherit depValue;
+                    }
+                  ];
                 };
               }
           else
             {
-              value = depAttrs;
+              value = depValue;
               state = state';
             }
         )
@@ -310,7 +321,7 @@ rec {
       hasExplicitBuildScript = manifest.package ? "build";
       hasAnyBuildScript = hasImplicitBuildScript || hasExplicitBuildScript;
 
-      extractedAndPatched = extractAndPatchPathDependencies (realDepName: pathValue: "../${realDepName}") manifest;
+      extractedAndPatched = extractAndPatchPathDependencies (crateName: _: "../${crateName}") manifest;
       pathDependencies = extractedAndPatched.pathDependencies;
       manifestWithPatchedPathDependencies = extractedAndPatched.patchedManifest;
 
@@ -375,19 +386,51 @@ rec {
 
     in {
       inherit name version manifest real dummy pathDependencies;
+      path = cratePath;
     };
 
-  augmentCrates = crates: lib.fix (selfCrates:
-    lib.flip lib.mapAttrs crates (_: crate:
-      let
-        pathDependenciesList = lib.mapAttrsToList (depName: _: selfCrates.${depName}) crate.pathDependencies;
-      in
-        lib.fix (selfCrate: crate // {
-          closure = {
-            "${crate.name}" = selfCrate;
-          } // lib.foldl' (acc: crate': acc // crate'.closure) {} pathDependenciesList;
-        })
-    )
-  );
+  getDeps =
+    let
+      depsToSet = deps:
+        lib.listToAttrs
+          (map
+            (k: lib.nameValuePair k null)
+            (lib.attrNames deps));
+    in {
+      all = crate: depsToSet crate.pathDependencies;
+
+      nonOptional = crate:
+        depsToSet
+          (lib.filterAttrs
+            (_crateName: ctxs: !(lib.all (ctx: ctx.depValue.optional or false) ctxs))
+            crate.pathDependencies);
+
+      build = crate:
+        depsToSet
+          (lib.filterAttrs
+            (_crateName: ctxs:
+              lib.any
+                (ctx: lib.last ctx.attrPath == "build-dependencies")
+                ctxs)
+            crate.pathDependencies);
+
+      normal = crate:
+        depsToSet
+          (lib.filterAttrs
+            (_crateName: ctxs:
+              lib.any
+                (ctx: lib.last ctx.attrPath == "dependencies")
+                ctxs)
+            crate.pathDependencies);
+
+      normalNonOptional = crate:
+        depsToSet
+          (lib.filterAttrs
+            (_crateName: ctxs:
+              lib.any
+                (ctx: lib.last ctx.attrPath == "dependencies" && !(ctx.depValue.optional or false))
+                ctxs)
+            crate.pathDependencies);
+    };
 
 }

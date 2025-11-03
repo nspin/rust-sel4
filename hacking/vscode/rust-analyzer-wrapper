@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+here="$(dirname $0)"
+here_abs="$(cd "$here" && echo $PWD)"
+
+export __RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED="$(command -v cargo)"
+
+export __RUST_ANALYZER_WRAPPER__EXCLUDES="$here_abs/excludes.txt"
+
+# export __RUST_ANALYZER_WRAPPER__LOG="$here_abs/log.txt"
+# rm -f "$__RUST_ANALYZER_WRAPPER__LOG"
+
+export PATH="$here_abs/cargo-wrapper:$PATH"
+
+exec rust-analyzer "$@"

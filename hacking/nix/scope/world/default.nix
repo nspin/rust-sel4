@@ -225,4 +225,6 @@ self: with self;
 
   cargoConfig = callPackage ./cargo-config {};
 
+  vscodeEnvs = callPackage ./vscode-envs {};
+
 }
