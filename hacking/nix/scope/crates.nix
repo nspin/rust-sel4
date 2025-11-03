@@ -69,7 +69,51 @@ let
     value = crateUtils.mkCrate cratePath (overridesForMkCrate.${name} or {});
   }));
 
-  crates = crateUtils.augmentCrates unAugmentedCrates;
+  augmentCrates = crates: lib.fix (selfCrates:
+    lib.flip lib.mapAttrs crates (_: crate:
+      let
+        apply = f:
+          lib.mapAttrsToList
+            (k: v: lib.getAttr k selfCrates)
+            (f crate);
+      in
+        lib.fix (selfCrate: crate // {
+          closure = {
+            "${crate.name}" = selfCrate;
+          } // lib.foldl'
+            (acc: crate': acc // crate'.closure)
+            {}
+            (apply crateUtils.getDeps.all);
+          nonOptionalClosure = {
+            "${crate.name}" = selfCrate;
+          } // lib.foldl'
+            (acc: crate': acc // crate'.nonOptionalClosure)
+            {}
+            (apply crateUtils.getDeps.nonOptional);
+          normalNonOptionalClosure = {
+            "${crate.name}" = selfCrate;
+          } // lib.foldl'
+            (acc: crate': acc // crate'.normalNonOptionalClosure)
+            {}
+            (lib.filter
+              (crate'': (!(crate''.manifest.lib.proc-macro or false)))
+              (apply crateUtils.getDeps.normalNonOptional));
+          normalNonOptionalClosureWithProcMacros = {
+            "${crate.name}" = selfCrate;
+          } // lib.foldl'
+            (acc: crate':
+              acc //
+              { "${crate'.name }" = crate'; } //
+              lib.optionalAttrs
+                (!(crate'.manifest.lib.proc-macro or false))
+                crate'.normalNonOptionalClosureWithProcMacros)
+            {}
+            (apply crateUtils.getDeps.normalNonOptional);
+        })
+    )
+  );
+
+  crates = augmentCrates unAugmentedCrates;
 
   isPrivate = crateName: builtins.match "^sel4-.*" crateName == null;
 
