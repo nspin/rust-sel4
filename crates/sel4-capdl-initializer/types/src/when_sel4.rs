@@ -9,7 +9,10 @@ use rkyv::primitive::{ArchivedU16, ArchivedU32, ArchivedU64};
 
 use sel4::{ObjectBlueprint, VmAttributes};
 
-use crate::{ArchivedCap, ArchivedFillEntryContentBootInfoId, ArchivedObject, ArchivedRights, cap};
+use crate::{
+    ArchivedBadge, ArchivedCPtr, ArchivedCap, ArchivedFillEntryContentBootInfoId, ArchivedObject,
+    ArchivedRights, cap,
+};
 
 impl<D: Archive, M: Archive> ArchivedObject<D, M> {
     pub fn blueprint(&self) -> Option<ObjectBlueprint> {
@@ -84,8 +87,8 @@ impl ArchivedCap {
 
     pub fn badge(&self) -> Option<sel4::Badge> {
         Some(match self {
-            ArchivedCap::Endpoint(cap) => cap.badge.into_word(),
-            ArchivedCap::Notification(cap) => cap.badge.into_word(),
+            ArchivedCap::Endpoint(cap) => cap.badge.into_sel4(),
+            ArchivedCap::Notification(cap) => cap.badge.into_sel4(),
             ArchivedCap::CNode(cap) => {
                 sel4::CNodeCapData::new(cap.guard.into_word(), cap.guard_size.try_into().unwrap())
                     .into_word()
@@ -93,6 +96,18 @@ impl ArchivedCap {
 
             _ => return None,
         })
+    }
+}
+
+impl ArchivedCPtr {
+    pub fn into_sel4(&self) -> sel4::CPtr {
+        sel4::CPtr::from_bits(self.0.into_word())
+    }
+}
+
+impl ArchivedBadge {
+    pub fn into_sel4(&self) -> sel4::Badge {
+        self.0.into_word()
     }
 }
 

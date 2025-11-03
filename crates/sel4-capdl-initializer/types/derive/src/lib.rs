@@ -116,7 +116,7 @@ fn derive_object_with_cap_table_impl(ast: &syn::DeriveInput) -> TokenStream {
         }
 
         impl #generics HasArchivedCapTable for #archived_name #generics {
-            fn archived_slots(&self) -> &[ArchivedCapTableEntry] {
+            fn slots(&self) -> &[ArchivedCapTableEntry] {
                 &*self.slots
             }
         }

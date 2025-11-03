@@ -6,25 +6,22 @@
 
 use core::fmt;
 
-use rkyv::tuple::ArchivedTuple2;
-
 use crate::{ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry, TryFromCapError, cap, object};
 
 // NOTE
 // Magic constants must be kept in sync with capDL-tool.
 
 pub trait HasArchivedCapTable {
-    fn archived_slots(&self) -> &[ArchivedCapTableEntry];
-
-    fn slots(&self) -> impl Iterator<Item = (&ArchivedCapSlot, &ArchivedCap)> {
-        self.archived_slots()
-            .iter()
-            .map(|ArchivedTuple2(k, v)| (k, v))
-    }
+    fn slots(&self) -> &[ArchivedCapTableEntry];
 
     fn maybe_slot(&self, slot: ArchivedCapSlot) -> Option<&ArchivedCap> {
-        self.slots()
-            .find_map(|(k, v)| if k == &slot { Some(v) } else { None })
+        self.slots().as_ref().iter().find_map(|entry| {
+            if entry.slot == slot {
+                Some(&entry.cap)
+            } else {
+                None
+            }
+        })
     }
 
     fn maybe_slot_as<'a, T: TryFrom<&'a ArchivedCap>>(&'a self, slot: ArchivedCapSlot) -> Option<T>
@@ -48,7 +45,9 @@ pub trait HasArchivedCapTable {
     where
         <T as TryFrom<&'a ArchivedCap>>::Error: fmt::Debug,
     {
-        self.slots().map(|(k, v)| (*k, T::try_from(v).unwrap()))
+        self.slots()
+            .iter()
+            .map(|entry| (entry.slot, T::try_from(&entry.cap).unwrap()))
     }
 }
 
