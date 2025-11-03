@@ -189,3 +189,8 @@ check-exhaustively: check-immediately
 check-oneshot: check-immediately
 	$(MAKE) run-tests
 	$(MAKE) everything-with-excess
+
+.PHONY: vscode-env
+vscode-env:
+	d=$$($(nix_build) -A pkgs.build.this.vscodeEnv --no-out-link) && \
+		code $$d/*-workspace

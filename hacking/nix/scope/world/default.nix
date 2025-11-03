@@ -212,4 +212,7 @@ self: with self;
   docs = callPackage ./docs.nix {};
 
   shell = callPackage ./shell.nix {};
+
+  vscodeEnvs = callPackage ./vscode-envs {};
+
 }
