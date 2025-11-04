@@ -1,0 +1,15 @@
+//
+// Copyright 2024, Colias Group, LLC
+//
+// SPDX-License-Identifier: BSD-2-Clause
+//
+
+{
+    "rust-analyzer.statusBar.clickAction": "stopServer",
+    "rust-analyzer.server.path": "rust-analyzer",
+    "rust-analyzer.cargo.targetDir": true, // use subdir
+    "rust-analyzer.linkedProjects": [
+        "Cargo.toml",
+        "hacking/cargo-manifest-management/tool/Cargo.toml"
+    ]
+}
