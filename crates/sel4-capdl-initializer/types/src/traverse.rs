@@ -101,9 +101,9 @@ impl<N: Clone, D, M> Spec<N, D, M> {
 }
 
 impl<N: Clone, D, M: Clone> Spec<N, D, M> {
-    pub fn traverse_data_with_context_fallible<D1, E>(
+    pub fn traverse_data_with_length_fallible<D1, E>(
         &self,
-        mut f: impl FnMut(u64, &D) -> Result<D1, E>,
+        mut f: impl FnMut(&D, u64) -> Result<D1, E>,
     ) -> Result<Spec<N, D1, M>, E> {
         self.traverse_frame_init(|frame, _is_root| {
             Ok(match &frame.init {
@@ -119,7 +119,7 @@ impl<N: Clone, D, M: Clone> Spec<N, D, M> {
                                         FillEntryContent::BootInfo(*content_bootinfo)
                                     }
                                     FillEntryContent::Data(content_data) => FillEntryContent::Data(
-                                        f(entry.range.end - entry.range.start, content_data)?,
+                                        f(content_data, entry.range.end - entry.range.start)?,
                                     ),
                                 },
                             })
@@ -131,18 +131,18 @@ impl<N: Clone, D, M: Clone> Spec<N, D, M> {
         })
     }
 
-    pub fn traverse_data_with_context<D1>(
+    pub fn traverse_data_with_length<D1>(
         &self,
-        mut f: impl FnMut(u64, &D) -> D1,
+        mut f: impl FnMut(&D, u64) -> D1,
     ) -> Spec<N, D1, M> {
-        unwrap_infallible(self.traverse_data_with_context_fallible(|x1, x2| Ok(f(x1, x2))))
+        unwrap_infallible(self.traverse_data_with_length_fallible(|x1, x2| Ok(f(x1, x2))))
     }
 
     pub fn traverse_data_fallible<D1, E>(
         &self,
         mut f: impl FnMut(&D) -> Result<D1, E>,
     ) -> Result<Spec<N, D1, M>, E> {
-        self.traverse_data_with_context_fallible(|_length, data| f(data))
+        self.traverse_data_with_length_fallible(|data, _length| f(data))
     }
 
     pub fn traverse_data<D1>(&self, mut f: impl FnMut(&D) -> D1) -> Spec<N, D1, M> {
