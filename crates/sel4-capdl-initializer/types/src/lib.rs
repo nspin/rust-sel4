@@ -46,7 +46,7 @@ pub use spec::{
     ArchivedBadge, ArchivedCPtr, ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry,
     ArchivedIrqEntry, ArchivedNamedObject, ArchivedObject, ArchivedObjectId, ArchivedRights,
     ArchivedSpec, AsidSlotEntry, Badge, CPtr, Cap, CapSlot, CapTableEntry, IrqEntry, NamedObject,
-    Object, ObjectId, PortableWord, Rights, Spec, TryFromCapError, TryFromObjectError,
+    Object, ObjectId, Rights, Spec, TryFromCapError, TryFromObjectError,
     UntypedCover, cap, object,
 };
 

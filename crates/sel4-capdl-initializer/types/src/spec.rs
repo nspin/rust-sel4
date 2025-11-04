@@ -20,7 +20,7 @@ use sel4_capdl_initializer_types_derive::{IsCap, IsObject, IsObjectWithCapTable}
 
 use crate::{FrameInit, HasArchivedCapTable, HasCapTable};
 
-pub type PortableWord = u64;
+type PortableWord = u64;
 
 // TODO newtype wrappers
 pub type ObjectId = u32;
