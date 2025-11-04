@@ -8,19 +8,21 @@ use core::ops::Range;
 
 use rkyv::Archive;
 use rkyv::ops::ArchivedRange;
+use rkyv::option::ArchivedOption;
+use rkyv::string::ArchivedString;
 
 use crate::{ArchivedNamedObject, ArchivedObject, ArchivedObjectId, ArchivedSpec, CramUsize};
 
-impl<N: Archive, D: Archive, M: Archive> ArchivedSpec<N, D, M> {
+impl<D: Archive, M: Archive> ArchivedSpec<D, M> {
     pub fn num_objects(&self) -> usize {
         self.objects.len()
     }
 
-    pub fn named_object(&self, obj_id: ArchivedObjectId) -> &ArchivedNamedObject<N, D, M> {
+    pub fn named_object(&self, obj_id: ArchivedObjectId) -> &ArchivedNamedObject<D, M> {
         &self.objects[obj_id.into_usize()]
     }
 
-    pub fn name(&self, obj_id: ArchivedObjectId) -> &N::Archived {
+    pub fn name(&self, obj_id: ArchivedObjectId) -> &ArchivedOption<ArchivedString> {
         &self.named_object(obj_id).name
     }
 
@@ -28,12 +30,12 @@ impl<N: Archive, D: Archive, M: Archive> ArchivedSpec<N, D, M> {
         &self.named_object(obj_id).object
     }
 
-    pub fn root_objects(&self) -> &[ArchivedNamedObject<N, D, M>] {
+    pub fn root_objects(&self) -> &[ArchivedNamedObject<D, M>] {
         &self.objects
             [ArchivedObjectId::into_usize_range(&archived_range_to_range(&self.root_objects))]
     }
 
-    pub fn named_objects(&self) -> impl Iterator<Item = &ArchivedNamedObject<N, D, M>> {
+    pub fn named_objects(&self) -> impl Iterator<Item = &ArchivedNamedObject<D, M>> {
         self.objects.iter()
     }
 

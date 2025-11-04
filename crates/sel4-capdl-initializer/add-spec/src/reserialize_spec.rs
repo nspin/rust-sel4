@@ -13,6 +13,8 @@ use std::{
 
 use sel4_capdl_initializer_types::*;
 
+use super::ObjectNamesLevel;
+
 pub fn reserialize_spec(
     input_spec: &InputSpec,
     fill_dirs: &[impl AsRef<Path>],
@@ -26,8 +28,7 @@ pub fn reserialize_spec(
 
     let mut embedded_frames_data = EmbeddedFramesData::new(granule_size);
 
-    let output_spec: SpecForInitializer = input_spec
-        .traverse_names_with_context(|named_obj| object_names_level.apply(named_obj).cloned())
+    let mut output_spec: SpecForInitializer = input_spec
         .split_embedded_frames(embed_frames, granule_size_bits)
         .traverse_data_with_length(|data, length| {
             let mut buf = vec![0; length.into_usize()];
@@ -46,6 +47,17 @@ pub fn reserialize_spec(
             let start = embedded_frames_data.append(&frame);
             EmbeddedFrameOffset::new(start.try_into().unwrap())
         });
+
+    for (name, obj) in output_spec.names_mut() {
+        let keep = match object_names_level {
+            ObjectNamesLevel::All => true,
+            ObjectNamesLevel::JustTcbs => matches!(obj, Object::Tcb(_)),
+            ObjectNamesLevel::None => false,
+        };
+        if !keep {
+            *name = None;
+        }
+    }
 
     (output_spec, embedded_frames_data)
 }

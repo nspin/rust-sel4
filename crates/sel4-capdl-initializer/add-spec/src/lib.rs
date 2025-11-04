@@ -9,7 +9,7 @@ use std::path::Path;
 use rkyv::rancor;
 use rkyv::util::AlignedVec;
 
-use sel4_capdl_initializer_types::{InputSpec, ObjectNamesLevel};
+use sel4_capdl_initializer_types::InputSpec;
 
 mod render_elf;
 mod reserialize_spec;
@@ -51,4 +51,11 @@ pub fn add_spec(
             panic!()
         }
     }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ObjectNamesLevel {
+    All,
+    JustTcbs,
+    None,
 }

@@ -9,9 +9,7 @@ use std::fs;
 use anyhow::Result;
 use clap::{Arg, ArgAction, Command};
 
-use sel4_capdl_initializer_types::ObjectNamesLevel;
-
-use sel4_capdl_initializer_add_spec::add_spec;
+use sel4_capdl_initializer_add_spec::{ObjectNamesLevel, add_spec};
 
 fn main() -> Result<()> {
     let args = Args::parse()?;

@@ -8,7 +8,6 @@
 
 extern crate alloc;
 
-use alloc::string::String;
 use core::ops::Range;
 
 use rkyv::Archive;
@@ -19,7 +18,6 @@ mod cap_table;
 mod frame_init;
 mod inspect;
 mod inspect_archived;
-mod object_name;
 mod spec;
 
 mod traverse;
@@ -35,7 +33,6 @@ pub use frame_init::{
     FillEntryContent, FillEntryContentBootInfo, FillEntryContentBootInfoId, FrameInit,
     GetEmbeddedFrameOffset, NeverEmbedded,
 };
-pub use object_name::{ArchivedUnnamed, ObjectName, ObjectNamesLevel, Unnamed};
 pub use spec::{
     ArchivedBadge, ArchivedCPtr, ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry,
     ArchivedIrqEntry, ArchivedNamedObject, ArchivedObject, ArchivedObjectId, ArchivedRights,
@@ -51,11 +48,11 @@ pub use when_sel4::*;
 
 // // //
 
-pub type InputSpec = Spec<String, FileContent, NeverEmbedded>;
+pub type InputSpec = Spec<FileContent, NeverEmbedded>;
 
 // TODO make type depend on whether "deflate" is enabled
 #[cfg(feature = "deflate")]
-pub type SpecForInitializer = Spec<Option<String>, DeflatedBytesContent, EmbeddedFrameOffset>;
+pub type SpecForInitializer = Spec<DeflatedBytesContent, EmbeddedFrameOffset>;
 
 // // //
 
