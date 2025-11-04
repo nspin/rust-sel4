@@ -44,7 +44,6 @@ type Result<T> = result::Result<T, CapDLInitializerError>;
 
 pub struct Initializer<
     'a,
-    N: Archive<Archived: ObjectName>,
     D: Archive<Archived: Content>,
     M: Archive<Archived: GetEmbeddedFrameOffset>,
     B,
@@ -52,7 +51,7 @@ pub struct Initializer<
     bootinfo: &'a sel4::BootInfoPtr,
     user_image_bounds: Range<usize>,
     copy_addrs: CopyAddrs,
-    spec: &'a ArchivedSpec<N, D, M>,
+    spec: &'a ArchivedSpec<D, M>,
     embedded_frames_base_addr: usize,
     cslot_allocator: &'a mut CSlotAllocator,
     buffers: &'a mut InitializerBuffers<B>,
@@ -60,16 +59,15 @@ pub struct Initializer<
 
 impl<
     'a,
-    N: Archive<Archived: ObjectName>,
     D: Archive<Archived: Content>,
     M: Archive<Archived: GetEmbeddedFrameOffset>,
     B: BorrowMut<[PerObjectBuffer]>,
-> Initializer<'a, N, D, M, B>
+> Initializer<'a, D, M, B>
 {
     pub fn initialize(
         bootinfo: &sel4::BootInfoPtr,
         user_image_bounds: Range<usize>,
-        spec: &ArchivedSpec<N, D, M>,
+        spec: &ArchivedSpec<D, M>,
         embedded_frames_base_addr: usize,
         buffers: &mut InitializerBuffers<B>,
     ) -> ! {
@@ -96,12 +94,8 @@ impl<
         init_thread::suspend_self()
     }
 
-    fn spec(&self) -> &'a ArchivedSpec<N, D, M> {
+    fn spec(&self) -> &'a ArchivedSpec<D, M> {
         self.spec
-    }
-
-    fn object_name(&self, indirect: &'a N::Archived) -> Option<&'a str> {
-        indirect.object_name()
     }
 
     // // //
@@ -243,7 +237,7 @@ impl<
                                     "Creating kernel object: paddr=0x{:x}, size_bits={} name={:?}",
                                     cur_paddr,
                                     blueprint.physical_size_bits(),
-                                    self.object_name(&named_obj.name).unwrap_or("<none>")
+                                    object_name_or_default(named_obj)
                                 );
                                 self.ut_cap(*i_ut).untyped_retype(
                                     &blueprint,
@@ -290,7 +284,7 @@ impl<
                         "Creating device object: paddr=0x{:x}, size_bits={} name={:?}",
                         cur_paddr,
                         blueprint.physical_size_bits(),
-                        self.object_name(&named_obj.name).unwrap_or("<none>")
+                        object_name_or_default(named_obj)
                     );
                     self.ut_cap(*i_ut).untyped_retype(
                         &blueprint,
@@ -324,8 +318,8 @@ impl<
                 let child = &self.spec().objects[child_obj_id];
                 trace!(
                     "Creating kernel object: name={:?} from {:?}",
-                    self.object_name(&child.name).unwrap_or("<none>"),
-                    self.object_name(&parent.name).unwrap_or("<none>"),
+                    object_name_or_default(child),
+                    object_name_or_default(parent),
                 );
                 parent_cptr.untyped_retype(
                     &child.object.blueprint().unwrap(),
@@ -804,7 +798,7 @@ impl<
 
             sel4::sel4_cfg_if! {
                 if #[sel4_cfg(DEBUG_BUILD)] {
-                    if let Some(name) = self.object_name(self.spec().name(obj_id)) {
+                    if let Some(name) = object_name(self.spec().named_object(obj_id)) {
                         tcb.debug_name(name.as_bytes());
                     }
                 }
@@ -898,6 +892,14 @@ fn cslot_to_absolute_cptr(slot: Slot) -> sel4::AbsoluteCPtr {
 
 fn init_thread_cnode_absolute_cptr() -> sel4::AbsoluteCPtr {
     init_thread::slot::CNODE.cap().absolute_cptr_for_self()
+}
+
+fn object_name<D: Archive, M: Archive>(named_obj: &ArchivedNamedObject<D, M>) -> Option<&str> {
+    named_obj.name.as_ref().map(|x| x.as_str())
+}
+
+fn object_name_or_default<D: Archive, M: Archive>(named_obj: &ArchivedNamedObject<D, M>) -> &str {
+    object_name(named_obj).unwrap_or("<unnamed>")
 }
 
 // TODO rm

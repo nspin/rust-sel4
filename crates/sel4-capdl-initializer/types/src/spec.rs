@@ -5,6 +5,7 @@
 //
 
 use alloc::boxed::Box;
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
 use core::ops::Range;
@@ -41,8 +42,8 @@ pub struct CapTableEntry {
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct Spec<N, D, M> {
-    pub objects: Vec<NamedObject<N, D, M>>,
+pub struct Spec<D, M> {
+    pub objects: Vec<NamedObject<D, M>>,
     pub irqs: Vec<IrqEntry>,
     pub asid_slots: Vec<AsidSlotEntry>,
     pub root_objects: Range<ObjectId>,
@@ -70,8 +71,8 @@ pub struct UntypedCover {
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct NamedObject<N, D, M> {
-    pub name: N,
+pub struct NamedObject<D, M> {
+    pub name: Option<String>,
     pub object: Object<D, M>,
 }
 

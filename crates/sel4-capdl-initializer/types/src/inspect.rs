@@ -4,18 +4,20 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+use alloc::string::String;
+
 use crate::{CramUsize, NamedObject, Object, ObjectId, Spec};
 
-impl<N, D, M> Spec<N, D, M> {
+impl<D, M> Spec<D, M> {
     pub fn num_objects(&self) -> usize {
         self.objects.len()
     }
 
-    pub fn named_object(&self, obj_id: ObjectId) -> &NamedObject<N, D, M> {
+    pub fn named_object(&self, obj_id: ObjectId) -> &NamedObject<D, M> {
         &self.objects[obj_id.into_usize()]
     }
 
-    pub fn name(&self, obj_id: ObjectId) -> &N {
+    pub fn name(&self, obj_id: ObjectId) -> &Option<String> {
         &self.named_object(obj_id).name
     }
 
@@ -23,11 +25,11 @@ impl<N, D, M> Spec<N, D, M> {
         &self.named_object(obj_id).object
     }
 
-    pub fn root_objects(&self) -> &[NamedObject<N, D, M>] {
+    pub fn root_objects(&self) -> &[NamedObject<D, M>] {
         &self.objects[ObjectId::into_usize_range(&self.root_objects)]
     }
 
-    pub fn named_objects(&self) -> impl Iterator<Item = &NamedObject<N, D, M>> {
+    pub fn named_objects(&self) -> impl Iterator<Item = &NamedObject<D, M>> {
         self.objects.iter()
     }
 
