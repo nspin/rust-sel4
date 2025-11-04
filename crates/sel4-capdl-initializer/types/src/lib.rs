@@ -46,8 +46,7 @@ pub use spec::{
     ArchivedBadge, ArchivedCPtr, ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry,
     ArchivedIrqEntry, ArchivedNamedObject, ArchivedObject, ArchivedObjectId, ArchivedRights,
     ArchivedSpec, AsidSlotEntry, Badge, CPtr, Cap, CapSlot, CapTableEntry, IrqEntry, NamedObject,
-    Object, ObjectId, Rights, Spec, TryFromCapError, TryFromObjectError,
-    UntypedCover, cap, object,
+    Object, ObjectId, Rights, Spec, TryFromCapError, TryFromObjectError, UntypedCover, cap, object,
 };
 
 pub use frame_init::{FileContent, FileContentRange};

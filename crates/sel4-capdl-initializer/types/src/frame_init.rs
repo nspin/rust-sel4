@@ -7,6 +7,7 @@
 use alloc::{string::String, vec::Vec};
 use core::fmt;
 use core::ops::Range;
+use serde::{Deserializer, Serializer};
 
 #[cfg(feature = "deflate")]
 use core::iter;
@@ -85,6 +86,26 @@ impl<D> object::Frame<D, NeverEmbedded> {
 
 #[derive(Copy, Clone)]
 pub enum NeverEmbedded {}
+
+impl Serialize for NeverEmbedded {
+    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match *self {}
+    }
+}
+
+impl<'de> Deserialize<'de> for NeverEmbedded {
+    fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Err(serde::de::Error::custom(
+            "cannot deserialize `NeverEmbedded`",
+        ))
+    }
+}
 
 // // //
 
