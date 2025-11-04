@@ -143,5 +143,6 @@
     "hacking/cargo-manifest-management/tool/Cargo.toml"
   ],
   "rust-analyzer.server.path": "rust-analyzer",
-  "rust-analyzer.statusBar.clickAction": "stopServer"
+  "rust-analyzer.statusBar.clickAction": "stopServer",
+  "rust-analyzer.statusBar.showStatusBar": "always"
 }
