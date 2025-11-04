@@ -16,7 +16,6 @@
 , libclangPath
 
 , shell
-, vscodeEnv
 }:
 
 let
@@ -24,7 +23,7 @@ let
 
   topLevelPath = ../../../../..;
 
-  targetDirBase = topLevelPath + "/tmp/vscode-env/world/${hostPlatform.config}";
+  targetDirBase = topLevelPath + "/tmp/vscode-env/${hostPlatform.config}";
 
   relPath = path: lib.replaceStrings [ "${toString topLevelPath}/" ] [ "" ] (toString path);
 
@@ -41,9 +40,15 @@ let
     "sel4-panicking"
     "sel4-reset" # not yet implement for x86
     "sel4-newlib" # requires env
+    "sel4-musl" # requires musl
     "sel4-kernel-loader" # requires env
     "tests-root-task-dafny-core"
   ];
+
+  # TODO extract from .vscode/settings.json or workspace manifest
+  workspaceDefaultMembers = lib.filterAttrs
+    (_name: crate: !(lib.any (bad: lib.hasAttr bad crate.nonOptionalClosure) blockList))
+    crates;
 
   mkEnv =
     { members
@@ -178,7 +183,7 @@ let
         allBuildDepCratesProp = union (lib.mapAttrsToList (_: crate: crate.nonOptionalClosure) allBuildDepCrates);
         allProcMacroCratesProp = union (lib.mapAttrsToList (_: crate: crate.nonOptionalClosure) allProcMacroCrates);
       in
-        vscodeEnv.members // allBuildDepCratesProp // allProcMacroCratesProp;
+        workspaceDefaultMembers // allBuildDepCratesProp // allProcMacroCratesProp;
     extraManifest = {
       patch = globalPatchSection;
     };
