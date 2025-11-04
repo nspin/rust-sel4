@@ -2455,7 +2455,6 @@ dependencies = [
  "sel4",
  "sel4-capdl-initializer-types-derive",
  "serde",
- "serde_json",
 ]
 
 [[package]]

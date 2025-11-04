@@ -230,31 +230,6 @@ pub struct FileContent {
     pub file_offset: u64,
 }
 
-impl FileContent {
-    pub fn with_length(&self, length: u64) -> FileContentRange {
-        FileContentRange {
-            file: self.file.clone(),
-            file_offset: self.file_offset,
-            file_length: length,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct FileContentRange {
-    pub file: String,
-    pub file_offset: u64,
-    pub file_length: u64,
-}
-
-impl FileContentRange {
-    pub fn file_range(&self) -> Range<u64> {
-        self.file_offset..self.file_offset + self.file_length
-    }
-}
-
 // // //
 
 pub trait Content {

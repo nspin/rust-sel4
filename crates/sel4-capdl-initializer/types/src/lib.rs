@@ -8,9 +8,6 @@
 
 extern crate alloc;
 
-#[cfg(feature = "std")]
-extern crate std;
-
 use alloc::string::String;
 use core::ops::Range;
 
@@ -27,9 +24,6 @@ mod spec;
 
 mod traverse;
 
-#[cfg(feature = "std")]
-mod when_std;
-
 #[cfg(feature = "sel4")]
 mod when_sel4;
 
@@ -37,7 +31,7 @@ pub use archived_cap_table::{ArchivedPageTableEntry, HasArchivedCapTable};
 pub use cap_table::{HasCapTable, PageTableEntry};
 pub use frame_init::{
     ArchivedFillEntry, ArchivedFillEntryContent, ArchivedFillEntryContentBootInfoId,
-    ArchivedFrameInit, BytesContent, Content, EmbeddedFrameOffset, Fill, FillEntry,
+    ArchivedFrameInit, BytesContent, Content, EmbeddedFrameOffset, FileContent, Fill, FillEntry,
     FillEntryContent, FillEntryContentBootInfo, FillEntryContentBootInfoId, FrameInit,
     GetEmbeddedFrameOffset, NeverEmbedded,
 };
@@ -49,19 +43,17 @@ pub use spec::{
     Object, ObjectId, Rights, Spec, TryFromCapError, TryFromObjectError, UntypedCover, cap, object,
 };
 
-pub use frame_init::{FileContent, FileContentRange};
-
 #[cfg(feature = "deflate")]
 pub use frame_init::DeflatedBytesContent;
-
-#[cfg(feature = "std")]
-pub use when_std::{FillMap, FillMapBuilder, InputSpec};
 
 #[cfg(feature = "sel4")]
 pub use when_sel4::*;
 
 // // //
 
+pub type InputSpec = Spec<String, FileContent, NeverEmbedded>;
+
+// TODO make type depend on whether "deflate" is enabled
 #[cfg(feature = "deflate")]
 pub type SpecForInitializer = Spec<Option<String>, DeflatedBytesContent, EmbeddedFrameOffset>;
 

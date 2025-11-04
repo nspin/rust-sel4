@@ -9,7 +9,7 @@ use std::fs;
 use anyhow::Result;
 use clap::{Arg, ArgAction, Command};
 
-use sel4_capdl_initializer_types::{InputSpec, ObjectNamesLevel};
+use sel4_capdl_initializer_types::ObjectNamesLevel;
 
 use sel4_capdl_initializer_add_spec::add_spec;
 
@@ -23,7 +23,7 @@ fn main() -> Result<()> {
     let initializer_without_spec_buf = fs::read(&args.initializer_elf_path)?;
 
     let input_spec_json = fs::read_to_string(&args.spec_json_path)?;
-    let input_spec = InputSpec::parse(&input_spec_json);
+    let input_spec = serde_json::from_str(&input_spec_json)?;
 
     let rendered_initializer_elf_buf = add_spec(
         &initializer_without_spec_buf,
