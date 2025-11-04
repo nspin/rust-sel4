@@ -404,8 +404,4 @@ superCallPackage ../rust-utils {} self //
   qemuForSeL4 = callPackage ./qemu {};
   qemuForSeL4Xilinx = callPackage ./qemu/xilinx.nix {};
 
-  ###
-
-  vscodeEnv = callPackage ./vscode-env.nix {};
-
 })
