@@ -6,8 +6,6 @@
 
 { lib }:
 
-{ packages, absolutePath }:
-
 let
 
   filterOutEmptyFeatureList = attrs:
@@ -44,9 +42,79 @@ let
     in
       lib.concatStringsSep "/" relSegs;
 
-in rec {
-  inherit lib;
+  depsOf = manifestValue:
+    let
+      depSectionNames = [
+        "dependencies"
+        "dev-dependencies"
+        "build-dependencies"
+      ];
+      isDep = path:
+        let
+          parent = lib.init path;
+          targIndep = lib.length parent == 1 && lib.elem (lib.last parent) depSectionNames;
+          targDep = lib.length parent == 3 && lib.head parent == "target" && lib.elem (lib.last parent) depSectionNames;
+        in
+          lib.length path > 0 && (targIndep || targDep);
+      depEntries =
+        let
+          go = path: value:
+            if isDep path
+            then [
+              { inherit path value; }
+            ]
+            else if lib.isAttrs value
+            then lib.concatLists (lib.mapAttrsToList (k: v: go (path ++ [k]) v) value)
+            else []
+          ;
+        in
+          go [] manifestValue
+      ;
+    in {
+      byPath = depEntries;
+      byPackage = lib.foldAttrs lib.concat []
+        (lib.forEach depEntries
+          (entry@{ path, value }:
+            let
+              depName = lib.last path;
+              packageName = value.package or depName;
+            in
+              { "${packageName}" = [ entry ]; }
+          ));
+    }
+  ;
 
+  nonOptionalPathDepsOf = manifestValue:
+    let
+      deps = depsOf manifestValue;
+    in
+        lib.mapAttrs (pkgName: _: null)
+          (lib.filterAttrs
+            (_: lib.any (ctx: !(ctx.value.optional or false) && ctx.value ? path))
+            deps.byPackage)
+  ;
+
+in
+
+{ packages, absolutePath }:
+
+rec {
+  inherit lib;
+  inherit packages;
+
+  nonOptionalClosures = lib.fix (self:
+    lib.mapAttrs
+      (pkgName: { manifestValue, ... }: {
+        "${pkgName}" = null;
+      } //
+        lib.foldl'
+          (acc: dep: acc // self.${dep})
+          {}
+          (lib.attrNames (nonOptionalPathDepsOf manifestValue)))
+      packages)
+  ;
+
+  # TODO rename
   localCrates =
     let
       rel = pathBetween absolutePath;
