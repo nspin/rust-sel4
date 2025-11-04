@@ -14,7 +14,7 @@ use crate::{
     ArchivedRights, cap,
 };
 
-impl<D: Archive, M: Archive> ArchivedObject<D, M> {
+impl<D: Archive> ArchivedObject<D> {
     pub fn blueprint(&self) -> Option<ObjectBlueprint> {
         Some(sel4::sel4_cfg_wrap_match! {
             match self {

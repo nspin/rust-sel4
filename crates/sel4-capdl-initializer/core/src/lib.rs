@@ -42,32 +42,21 @@ compile_error!("unsupported configuration");
 
 type Result<T> = result::Result<T, CapDLInitializerError>;
 
-pub struct Initializer<
-    'a,
-    D: Archive<Archived: Content>,
-    M: Archive<Archived: GetEmbeddedFrameOffset>,
-    B,
-> {
+pub struct Initializer<'a, B> {
     bootinfo: &'a sel4::BootInfoPtr,
     user_image_bounds: Range<usize>,
     copy_addrs: CopyAddrs,
-    spec: &'a ArchivedSpec<D, M>,
+    spec: &'a <SpecForInitializer as Archive>::Archived,
     embedded_frames_base_addr: usize,
     cslot_allocator: &'a mut CSlotAllocator,
     buffers: &'a mut InitializerBuffers<B>,
 }
 
-impl<
-    'a,
-    D: Archive<Archived: Content>,
-    M: Archive<Archived: GetEmbeddedFrameOffset>,
-    B: BorrowMut<[PerObjectBuffer]>,
-> Initializer<'a, D, M, B>
-{
+impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     pub fn initialize(
         bootinfo: &sel4::BootInfoPtr,
         user_image_bounds: Range<usize>,
-        spec: &ArchivedSpec<D, M>,
+        spec: &'a <SpecForInitializer as Archive>::Archived,
         embedded_frames_base_addr: usize,
         buffers: &mut InitializerBuffers<B>,
     ) -> ! {
@@ -92,10 +81,6 @@ impl<
         info!("CapDL initializer done, suspending");
 
         init_thread::suspend_self()
-    }
-
-    fn spec(&self) -> &'a ArchivedSpec<D, M> {
-        self.spec
     }
 
     // // //
@@ -142,7 +127,7 @@ impl<
         // Index root objects
 
         let first_obj_without_paddr = self
-            .spec()
+            .spec
             .root_objects()
             .partition_point(|named_obj| named_obj.object.paddr().is_some());
         let num_objs_with_paddr = first_obj_without_paddr;
@@ -150,8 +135,8 @@ impl<
         let mut by_size_start: [usize; sel4::WORD_SIZE] = array::from_fn(|_| 0);
         let mut by_size_end: [usize; sel4::WORD_SIZE] = array::from_fn(|_| 0);
         {
-            for obj_id in first_obj_without_paddr..self.spec().root_objects().len() {
-                let obj = &self.spec().object(ArchivedObjectId::from_usize(obj_id));
+            for obj_id in first_obj_without_paddr..self.spec.root_objects().len() {
+                let obj = &self.spec.object(ArchivedObjectId::from_usize(obj_id));
                 if let Some(blueprint) = obj.blueprint() {
                     by_size_end[blueprint.physical_size_bits()] += 1;
                 }
@@ -191,7 +176,7 @@ impl<
             loop {
                 let target = if next_obj_with_paddr < num_objs_with_paddr {
                     ut_paddr_end.min(
-                        self.spec()
+                        self.spec
                             .object(ArchivedObjectId::from_usize(next_obj_with_paddr))
                             .paddr()
                             .unwrap()
@@ -212,11 +197,11 @@ impl<
                             // Skip embedded frames
                             while *obj_id < by_size_end[size_bits] {
                                 if let ArchivedObject::Frame(obj) =
-                                    self.spec().object(ArchivedObjectId::from_usize(*obj_id))
+                                    self.spec.object(ArchivedObjectId::from_usize(*obj_id))
                                     && let ArchivedFrameInit::Embedded(embedded) = &obj.init
                                 {
                                     let frame_addr = self.embedded_frames_base_addr
-                                        + embedded.get_embedded_frame().offset().into_usize();
+                                        + embedded.offset.into_usize();
                                     self.take_cap_for_embedded_frame(
                                         ArchivedObjectId::from_usize(*obj_id),
                                         frame_addr,
@@ -229,7 +214,7 @@ impl<
                             // Create a largest possible object that would fit
                             if *obj_id < by_size_end[size_bits] {
                                 let named_obj = &self
-                                    .spec()
+                                    .spec
                                     .named_object(ArchivedObjectId::from_usize(*obj_id));
                                 let blueprint = named_obj.object.blueprint().unwrap();
                                 assert_eq!(blueprint.physical_size_bits(), size_bits);
@@ -276,9 +261,7 @@ impl<
                 }
                 if target_is_obj_with_paddr {
                     let obj_id = next_obj_with_paddr;
-                    let named_obj = &self
-                        .spec()
-                        .named_object(ArchivedObjectId::from_usize(obj_id));
+                    let named_obj = &self.spec.named_object(ArchivedObjectId::from_usize(obj_id));
                     let blueprint = named_obj.object.blueprint().unwrap();
                     trace!(
                         "Creating device object: paddr=0x{:x}, size_bits={} name={:?}",
@@ -308,14 +291,14 @@ impl<
 
         // Create child objects
 
-        for cover in self.spec().untyped_covers.iter() {
+        for cover in self.spec.untyped_covers.iter() {
             let parent_obj_id = cover.parent;
-            let parent = self.spec().named_object(parent_obj_id);
+            let parent = self.spec.named_object(parent_obj_id);
             let parent_cptr = self.orig_cap::<cap_type::Untyped>(parent_obj_id);
             for child_obj_id in
                 ArchivedObjectId::into_usize_range(&archived_range_to_range(&cover.children))
             {
-                let child = &self.spec().objects[child_obj_id];
+                let child = &self.spec.objects[child_obj_id];
                 trace!(
                     "Creating kernel object: name={:?} from {:?}",
                     object_name_or_default(child),
@@ -335,7 +318,7 @@ impl<
         // this in order of obj.asid_high, for verification reasons (see
         // upstream C CapDL loader).
         {
-            for obj_id in self.spec().asid_slots.iter() {
+            for obj_id in self.spec.asid_slots.iter() {
                 let ut = self.orig_cap(*obj_id);
                 let slot = self.cslot_alloc_or_panic();
                 init_thread::slot::ASID_CONTROL
@@ -347,10 +330,10 @@ impl<
 
         // Create IrqHandler caps
         {
-            for ArchivedIrqEntry { irq, handler } in self.spec().irqs.iter() {
+            for ArchivedIrqEntry { irq, handler } in self.spec.irqs.iter() {
                 let slot = self.cslot_alloc_or_panic();
                 sel4::sel4_cfg_wrap_match! {
-                    match self.spec().object(*handler) {
+                    match self.spec.object(*handler) {
                         ArchivedObject::Irq(_) => {
                             init_thread::slot::IRQ_CONTROL.cap()
                                 .irq_control_get(irq.into_word(), &cslot_to_absolute_cptr(slot))?;
@@ -418,7 +401,7 @@ impl<
             if #[sel4_cfg(ARCH_X86_64)] {
                 {
                     let ioports = self
-                        .spec()
+                        .spec
                         .filter_objects::<&object::ArchivedIOPorts>()
                         .map(|(obj_id, obj)| (obj_id, obj.start_port, obj.end_port));
 
@@ -437,7 +420,7 @@ impl<
         sel4::sel4_cfg_if! {
             if #[sel4_cfg(all(ARCH_AARCH64, ALLOW_SMC_CALLS))] {
                 let arm_smc_maybe = self
-                    .spec()
+                    .spec
                     .objects()
                     .enumerate()
                     .find(|(_, obj)| {
@@ -468,23 +451,23 @@ impl<
         debug!("Initializing IRQs");
 
         let irq_notifications = self
-            .spec()
+            .spec
             .filter_objects::<&object::ArchivedIrq>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let arm_irq_notifications = self
-            .spec()
+            .spec
             .filter_objects::<&object::ArchivedArmIrq>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let msi_irq_notifications = self
-            .spec()
+            .spec
             .filter_objects::<&object::ArchivedIrqMsi>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let ioapic_irq_notifications = self
-            .spec()
+            .spec
             .filter_objects::<&object::ArchivedIrqIOApic>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let riscv_irq_notifications = self
-            .spec()
+            .spec
             .filter_objects::<&object::ArchivedRiscvIrq>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
 
@@ -515,7 +498,7 @@ impl<
     fn init_asids(&self) -> Result<()> {
         debug!("Initializing ASIDs");
         for (obj_id, _obj) in self
-            .spec()
+            .spec
             .filter_objects_with::<&object::ArchivedPageTable>(|obj| obj.is_root)
         {
             let pgd = self.orig_cap::<cap_type::VSpace>(obj_id);
@@ -526,7 +509,7 @@ impl<
 
     fn init_frames(&mut self) -> Result<()> {
         debug!("Initializing Frames");
-        for (obj_id, obj) in self.spec().filter_objects::<&object::ArchivedFrame<D, M>>() {
+        for (obj_id, obj) in self.spec.filter_objects::<&object::ArchivedFrame<_>>() {
             // TODO make more platform-agnostic
             if let Some(fill) = obj.init.as_fill() {
                 let entries = &fill.entries;
@@ -545,7 +528,7 @@ impl<
         &self,
         frame: sel4::Cap<cap_type::UnspecifiedPage>,
         frame_object_type: sel4::FrameObjectType,
-        fill: &[ArchivedFillEntry<D>],
+        fill: &[ArchivedFillEntry<DeflatedBytesContent>],
     ) -> Result<()> {
         frame.frame_map(
             init_thread::slot::VSPACE.cap(),
@@ -591,7 +574,7 @@ impl<
     fn init_vspaces(&mut self) -> Result<()> {
         debug!("Initializing VSpaces");
         for (obj_id, obj) in self
-            .spec()
+            .spec
             .filter_objects_with::<&object::ArchivedPageTable>(|obj| obj.is_root)
         {
             let vspace = self.orig_cap::<cap_type::VSpace>(obj_id);
@@ -625,7 +608,7 @@ impl<
                             cap.vm_attributes(),
                         )?;
                     let obj = self
-                        .spec()
+                        .spec
                         .lookup_object::<&object::ArchivedPageTable>(cap.object)?;
                     self.init_vspace(vspace, level + 1, vaddr, obj)?;
                 }
@@ -637,10 +620,7 @@ impl<
     #[sel4::sel4_cfg(KERNEL_MCS)]
     fn init_sched_contexts(&self) -> Result<()> {
         debug!("Initializing scheduling contexts");
-        for (obj_id, _obj) in self
-            .spec()
-            .filter_objects::<&object::ArchivedSchedContext>()
-        {
+        for (obj_id, _obj) in self.spec.filter_objects::<&object::ArchivedSchedContext>() {
             self.init_sched_context(obj_id, 0)?;
         }
         Ok(())
@@ -649,7 +629,7 @@ impl<
     #[sel4::sel4_cfg(KERNEL_MCS)]
     fn init_sched_context(&self, obj_id: ArchivedObjectId, affinity: usize) -> Result<()> {
         let obj = self
-            .spec()
+            .spec
             .lookup_object::<&object::ArchivedSchedContext>(obj_id)?;
         let sched_context = self.orig_cap::<cap_type::SchedContext>(obj_id);
         self.bootinfo
@@ -670,7 +650,7 @@ impl<
     fn init_tcbs(&mut self) -> Result<()> {
         debug!("Initializing TCBs");
 
-        for (obj_id, obj) in self.spec().filter_objects::<&object::ArchivedTcb>() {
+        for (obj_id, obj) in self.spec.filter_objects::<&object::ArchivedTcb>() {
             let tcb = self.orig_cap::<cap_type::Tcb>(obj_id);
 
             if let Some(bound_notification) = obj.bound_notification() {
@@ -798,7 +778,7 @@ impl<
 
             sel4::sel4_cfg_if! {
                 if #[sel4_cfg(DEBUG_BUILD)] {
-                    if let Some(name) = object_name(self.spec().named_object(obj_id)) {
+                    if let Some(name) = object_name(self.spec.named_object(obj_id)) {
                         tcb.debug_name(name.as_bytes());
                     }
                 }
@@ -810,7 +790,7 @@ impl<
     fn init_cspaces(&self) -> Result<()> {
         debug!("Initializing CSpaces");
 
-        for (obj_id, obj) in self.spec().filter_objects::<&object::ArchivedCNode>() {
+        for (obj_id, obj) in self.spec.filter_objects::<&object::ArchivedCNode>() {
             let cnode = self.orig_cap::<cap_type::CNode>(obj_id);
             for entry in obj.slots() {
                 let badge = entry.cap.badge();
@@ -833,7 +813,7 @@ impl<
 
     fn start_threads(&self) -> Result<()> {
         debug!("Starting threads");
-        for (obj_id, obj) in self.spec().filter_objects::<&object::ArchivedTcb>() {
+        for (obj_id, obj) in self.spec.filter_objects::<&object::ArchivedTcb>() {
             let tcb = self.orig_cap::<cap_type::Tcb>(obj_id);
             if obj.extra.resume {
                 tcb.tcb_resume()?;
@@ -894,11 +874,11 @@ fn init_thread_cnode_absolute_cptr() -> sel4::AbsoluteCPtr {
     init_thread::slot::CNODE.cap().absolute_cptr_for_self()
 }
 
-fn object_name<D: Archive, M: Archive>(named_obj: &ArchivedNamedObject<D, M>) -> Option<&str> {
+fn object_name(named_obj: &ArchivedNamedObject<FrameInit>) -> Option<&str> {
     named_obj.name.as_ref().map(|x| x.as_str())
 }
 
-fn object_name_or_default<D: Archive, M: Archive>(named_obj: &ArchivedNamedObject<D, M>) -> &str {
+fn object_name_or_default(named_obj: &ArchivedNamedObject<FrameInit>) -> &str {
     object_name(named_obj).unwrap_or("<unnamed>")
 }
 

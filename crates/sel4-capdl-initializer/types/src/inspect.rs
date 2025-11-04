@@ -4,59 +4,66 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use alloc::string::String;
+use core::convert::Infallible;
 
-use crate::{CramUsize, NamedObject, Object, ObjectId, Spec};
+use crate::{CramUsize, NamedObject, Object, ObjectId, Spec, object};
 
-impl<D, M> Spec<D, M> {
-    pub fn num_objects(&self) -> usize {
-        self.objects.len()
-    }
-
-    pub fn named_object(&self, obj_id: ObjectId) -> &NamedObject<D, M> {
-        &self.objects[obj_id.into_usize()]
-    }
-
-    pub fn name(&self, obj_id: ObjectId) -> &Option<String> {
-        &self.named_object(obj_id).name
-    }
-
-    pub fn object(&self, obj_id: ObjectId) -> &Object<D, M> {
-        &self.named_object(obj_id).object
-    }
-
-    pub fn root_objects(&self) -> &[NamedObject<D, M>] {
-        &self.objects[ObjectId::into_usize_range(&self.root_objects)]
-    }
-
-    pub fn named_objects(&self) -> impl Iterator<Item = &NamedObject<D, M>> {
-        self.objects.iter()
-    }
-
-    pub fn objects(&self) -> impl Iterator<Item = &Object<D, M>> {
-        self.named_objects()
-            .map(|named_object| &named_object.object)
-    }
-
-    pub fn filter_objects<'a, O: TryFrom<&'a Object<D, M>>>(
-        &'a self,
-    ) -> impl Iterator<Item = (ObjectId, O)> + 'a {
-        self.objects().enumerate().filter_map(|(obj_id, obj)| {
-            Some((ObjectId::from_usize(obj_id), O::try_from(obj).ok()?))
+impl<D> Spec<D> {
+    pub fn traverse_frame_init_fallible<D1, E>(
+        &self,
+        mut f: impl FnMut(&object::Frame<D>, bool) -> Result<D1, E>,
+    ) -> Result<Spec<D1>, E> {
+        Ok(Spec {
+            objects: self
+                .objects
+                .iter()
+                .enumerate()
+                .map(|(obj_id, named_obj)| {
+                    Ok(NamedObject {
+                        name: named_obj.name.clone(),
+                        object: match &named_obj.object {
+                            Object::Untyped(obj) => Object::Untyped(obj.clone()),
+                            Object::Endpoint => Object::Endpoint,
+                            Object::Notification => Object::Notification,
+                            Object::CNode(obj) => Object::CNode(obj.clone()),
+                            Object::Tcb(obj) => Object::Tcb(obj.clone()),
+                            Object::Irq(obj) => Object::Irq(obj.clone()),
+                            Object::VCpu => Object::VCpu,
+                            Object::Frame(obj) => Object::Frame(object::Frame {
+                                size_bits: obj.size_bits,
+                                paddr: obj.paddr,
+                                init: {
+                                    let is_root = ObjectId::into_usize_range(&self.root_objects)
+                                        .contains(&obj_id);
+                                    f(obj, is_root)?
+                                },
+                            }),
+                            Object::PageTable(obj) => Object::PageTable(obj.clone()),
+                            Object::AsidPool(obj) => Object::AsidPool(obj.clone()),
+                            Object::ArmIrq(obj) => Object::ArmIrq(obj.clone()),
+                            Object::IrqMsi(obj) => Object::IrqMsi(obj.clone()),
+                            Object::IrqIOApic(obj) => Object::IrqIOApic(obj.clone()),
+                            Object::RiscvIrq(obj) => Object::RiscvIrq(obj.clone()),
+                            Object::IOPorts(obj) => Object::IOPorts(obj.clone()),
+                            Object::SchedContext(obj) => Object::SchedContext(obj.clone()),
+                            Object::Reply => Object::Reply,
+                            Object::ArmSmc => Object::ArmSmc,
+                        },
+                    })
+                })
+                .collect::<Result<_, E>>()?,
+            irqs: self.irqs.clone(),
+            asid_slots: self.asid_slots.clone(),
+            root_objects: self.root_objects.clone(),
+            untyped_covers: self.untyped_covers.clone(),
         })
     }
 
-    pub fn filter_objects_with<'a, O: TryFrom<&'a Object<D, M>>>(
-        &'a self,
-        f: impl 'a + Fn(&O) -> bool,
-    ) -> impl Iterator<Item = (ObjectId, O)> + 'a {
-        self.filter_objects().filter(move |(_, obj)| (f)(obj))
-    }
-
-    pub fn lookup_object<'a, O: TryFrom<&'a Object<D, M>>>(
-        &'a self,
-        obj_id: ObjectId,
-    ) -> Result<O, O::Error> {
-        self.object(obj_id).try_into()
+    pub fn traverse_frame_init<D1>(
+        &self,
+        mut f: impl FnMut(&object::Frame<D>, bool) -> D1,
+    ) -> Spec<D1> {
+        self.traverse_frame_init_fallible(|x1, x2| Ok(f(x1, x2)))
+            .unwrap_or_else(|absurdity: Infallible| match absurdity {})
     }
 }

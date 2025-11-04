@@ -13,12 +13,12 @@ use rkyv::string::ArchivedString;
 
 use crate::{ArchivedNamedObject, ArchivedObject, ArchivedObjectId, ArchivedSpec, CramUsize};
 
-impl<D: Archive, M: Archive> ArchivedSpec<D, M> {
+impl<D: Archive> ArchivedSpec<D> {
     pub fn num_objects(&self) -> usize {
         self.objects.len()
     }
 
-    pub fn named_object(&self, obj_id: ArchivedObjectId) -> &ArchivedNamedObject<D, M> {
+    pub fn named_object(&self, obj_id: ArchivedObjectId) -> &ArchivedNamedObject<D> {
         &self.objects[obj_id.into_usize()]
     }
 
@@ -26,25 +26,25 @@ impl<D: Archive, M: Archive> ArchivedSpec<D, M> {
         &self.named_object(obj_id).name
     }
 
-    pub fn object(&self, obj_id: ArchivedObjectId) -> &ArchivedObject<D, M> {
+    pub fn object(&self, obj_id: ArchivedObjectId) -> &ArchivedObject<D> {
         &self.named_object(obj_id).object
     }
 
-    pub fn root_objects(&self) -> &[ArchivedNamedObject<D, M>] {
+    pub fn root_objects(&self) -> &[ArchivedNamedObject<D>] {
         &self.objects
             [ArchivedObjectId::into_usize_range(&archived_range_to_range(&self.root_objects))]
     }
 
-    pub fn named_objects(&self) -> impl Iterator<Item = &ArchivedNamedObject<D, M>> {
+    pub fn named_objects(&self) -> impl Iterator<Item = &ArchivedNamedObject<D>> {
         self.objects.iter()
     }
 
-    pub fn objects(&self) -> impl Iterator<Item = &ArchivedObject<D, M>> {
+    pub fn objects(&self) -> impl Iterator<Item = &ArchivedObject<D>> {
         self.named_objects()
             .map(|named_object| &named_object.object)
     }
 
-    pub fn filter_objects<'a, O: TryFrom<&'a ArchivedObject<D, M>>>(
+    pub fn filter_objects<'a, O: TryFrom<&'a ArchivedObject<D>>>(
         &'a self,
     ) -> impl Iterator<Item = (ArchivedObjectId, O)> + 'a {
         self.objects().enumerate().filter_map(|(obj_id, obj)| {
@@ -52,14 +52,14 @@ impl<D: Archive, M: Archive> ArchivedSpec<D, M> {
         })
     }
 
-    pub fn filter_objects_with<'a, O: TryFrom<&'a ArchivedObject<D, M>>>(
+    pub fn filter_objects_with<'a, O: TryFrom<&'a ArchivedObject<D>>>(
         &'a self,
         f: impl 'a + Fn(&O) -> bool,
     ) -> impl Iterator<Item = (ArchivedObjectId, O)> + 'a {
         self.filter_objects().filter(move |(_, obj)| (f)(obj))
     }
 
-    pub fn lookup_object<'a, O: TryFrom<&'a ArchivedObject<D, M>>>(
+    pub fn lookup_object<'a, O: TryFrom<&'a ArchivedObject<D>>>(
         &'a self,
         obj_id: ArchivedObjectId,
     ) -> Result<O, O::Error> {
