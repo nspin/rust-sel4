@@ -52,26 +52,31 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> ! {
     )
 }
 
+#[allow(non_upper_case_globals)]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 static sel4_capdl_initializer_serialized_spec_data_start: ImmutableCell<*mut u8> =
     ImmutableCell::new(ptr::null_mut());
 
+#[allow(non_upper_case_globals)]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 static sel4_capdl_initializer_serialized_spec_data_size: ImmutableCell<usize> =
     ImmutableCell::new(0);
 
+#[allow(non_upper_case_globals)]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 static sel4_capdl_initializer_embedded_frames_data_start: ImmutableCell<*mut u8> =
     ImmutableCell::new(ptr::null_mut());
 
+#[allow(non_upper_case_globals)]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 static sel4_capdl_initializer_image_start: ImmutableCell<*mut u8> =
     ImmutableCell::new(ptr::null_mut());
 
+#[allow(non_upper_case_globals)]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 static sel4_capdl_initializer_image_end: ImmutableCell<*mut u8> =
