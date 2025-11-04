@@ -5,6 +5,7 @@
 //
 
 {
+    "rust-analyzer.statusBar.showStatusBar": "always",
     "rust-analyzer.statusBar.clickAction": "stopServer",
     "rust-analyzer.server.path": "rust-analyzer",
     "rust-analyzer.cargo.targetDir": true, // use subdir
