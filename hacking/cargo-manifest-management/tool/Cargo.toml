@@ -11,4 +11,5 @@ members = [
     "crates/toml-normalize",
     "crates/manage-cargo-manifests",
     "crates/manage-direct-dependency-allow-list",
+    "crates/manage-vscode-exclude-list",
 ]

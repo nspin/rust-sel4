@@ -14,12 +14,21 @@ run := cargo run \
 run_allowlist := cargo run \
 	$(tools_manifest_path_arg) -p manage-direct-dependency-allow-list --
 
+run_vscode_exclude := cargo run \
+	$(tools_manifest_path_arg) -p manage-vscode-exclude-list --
+
 project_manifest_path_arg := --manifest-path=../../Cargo.toml
 
 allowlist := direct-dependency-allow-list.toml
 
 run_allowlist_check_workspace := $(run_allowlist) check-workspace --allowlist $(allowlist) $(project_manifest_path_arg)
 run_allowlist_update := $(run_allowlist) update --allowlist $(allowlist) -o $(allowlist)
+
+vscode_settings_dir := ../../.vscode
+vscode_args := \
+	$(project_manifest_path_arg) \
+	-i $(vscode_settings_dir)/settings.in.jsonc \
+	-o $(vscode_settings_dir)/settings.json
 
 .PHONY: none
 none:
@@ -35,10 +44,12 @@ $(blueprint):
 .PHONY: update
 update: $(blueprint)
 	$(run) --blueprint $<
+	$(run_vscode_exclude) $(vscode_args)
 
 .PHONY: check
 check: $(blueprint)
 	$(run) --blueprint $< --just-check
+	$(run_vscode_exclude) $(vscode_args) --just-check
 
 .PHONY: check-workspace-direct-dependencies
 check-workspace-direct-dependencies:

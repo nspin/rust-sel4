@@ -14,6 +14,7 @@ let
         "sel4-panicking" # declares lang items
         "sel4-reset" # not yet implement for x86
         "sel4-newlib" # requires newlib
+        "sel4-musl" # requires musl
         "sel4-kernel-loader" # requires input via env
         "tests-root-task-dafny-core" # requires input via env
       ];
