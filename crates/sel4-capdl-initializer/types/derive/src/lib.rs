@@ -63,9 +63,9 @@ fn derive_object_impl(ast: &syn::DeriveInput) -> TokenStream {
     let archived_name = format_ident!("Archived{}", name);
     let generics = &ast.generics;
     quote! {
-        impl<'b, D, M> TryFrom<&'b Object<D, M>> for &'b #name #generics {
+        impl<'b, D> TryFrom<&'b Object<D>> for &'b #name #generics {
             type Error = TryFromObjectError;
-            fn try_from(obj: &'b Object<D, M>) -> Result<Self, Self::Error> {
+            fn try_from(obj: &'b Object<D>) -> Result<Self, Self::Error> {
                 match obj {
                     Object::#name(cap) => Ok(&cap),
                     _ => Err(TryFromObjectError),
@@ -73,15 +73,15 @@ fn derive_object_impl(ast: &syn::DeriveInput) -> TokenStream {
             }
         }
 
-        impl<D, M> Into<Object<D, M>> for #name #generics {
-            fn into(self) -> Object<D, M> {
+        impl<D> Into<Object<D>> for #name #generics {
+            fn into(self) -> Object<D> {
                 Object::#name(self)
             }
         }
 
-        impl<'b, D: Archive, M: Archive> TryFrom<&'b ArchivedObject<D, M>> for &'b #archived_name #generics {
+        impl<'b, D: Archive> TryFrom<&'b ArchivedObject<D>> for &'b #archived_name #generics {
             type Error = TryFromObjectError;
-            fn try_from(obj: &'b ArchivedObject<D, M>) -> Result<Self, Self::Error> {
+            fn try_from(obj: &'b ArchivedObject<D>) -> Result<Self, Self::Error> {
                 match obj {
                     ArchivedObject::#name(cap) => Ok(&cap),
                     _ => Err(TryFromObjectError),
@@ -89,8 +89,8 @@ fn derive_object_impl(ast: &syn::DeriveInput) -> TokenStream {
             }
         }
 
-        impl<D: Archive, M: Archive> Into<ArchivedObject<D, M>> for #archived_name #generics {
-            fn into(self) -> ArchivedObject<D, M> {
+        impl<D: Archive> Into<ArchivedObject<D>> for #archived_name #generics {
+            fn into(self) -> ArchivedObject<D> {
                 ArchivedObject::#name(self)
             }
         }

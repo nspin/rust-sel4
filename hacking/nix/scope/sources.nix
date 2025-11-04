@@ -108,6 +108,7 @@ in rec {
 
   capdlTool = fetchGit (capdlCommon // {
     andThen = "/capDL-tool";
+    useLocal = true;
   });
 
   pythonCapDLTool = fetchGit (capdlCommon // {

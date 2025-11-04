@@ -4,15 +4,14 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use alloc::{string::String, vec::Vec};
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::convert::Infallible;
 use core::fmt;
 use core::ops::Range;
-use serde::{Deserializer, Serializer};
 
 #[cfg(feature = "deflate")]
 use core::iter;
-
-use rkyv::Archive;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -24,20 +23,20 @@ use crate::object;
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub enum FrameInit<D, M> {
-    Fill(Fill<D>),
-    Embedded(M),
+pub enum FrameInit {
+    Fill(Fill<DeflatedBytesContent>),
+    Embedded(EmbeddedFrameOffset),
 }
 
-impl<D, M> FrameInit<D, M> {
-    pub const fn as_fill(&self) -> Option<&Fill<D>> {
+impl FrameInit {
+    pub const fn as_fill(&self) -> Option<&Fill<DeflatedBytesContent>> {
         match self {
             Self::Fill(fill) => Some(fill),
             _ => None,
         }
     }
 
-    pub const fn as_embedded(&self) -> Option<&M> {
+    pub const fn as_embedded(&self) -> Option<&EmbeddedFrameOffset> {
         match self {
             Self::Embedded(embedded) => Some(embedded),
             _ => None,
@@ -53,18 +52,8 @@ impl<D, M> FrameInit<D, M> {
     }
 }
 
-impl<D> FrameInit<D, NeverEmbedded> {
-    #[allow(clippy::explicit_auto_deref)]
-    pub const fn as_fill_infallible(&self) -> &Fill<D> {
-        match self {
-            Self::Fill(fill) => fill,
-            Self::Embedded(absurdity) => match *absurdity {},
-        }
-    }
-}
-
-impl<D: Archive, M: Archive> ArchivedFrameInit<D, M> {
-    pub const fn as_fill(&self) -> Option<&ArchivedFill<D>> {
+impl ArchivedFrameInit {
+    pub const fn as_fill(&self) -> Option<&ArchivedFill<DeflatedBytesContent>> {
         match self {
             Self::Fill(fill) => Some(fill),
             _ => None,
@@ -72,38 +61,13 @@ impl<D: Archive, M: Archive> ArchivedFrameInit<D, M> {
     }
 }
 
-impl<D> object::Frame<D, NeverEmbedded> {
+impl<D> object::Frame<Fill<D>> {
     pub fn can_embed(&self, granule_size_bits: u8, is_root: bool) -> bool {
         is_root
             && self.paddr.is_none()
             && self.size_bits == granule_size_bits
-            && !self.init.as_fill_infallible().is_empty()
-            && !self.init.as_fill_infallible().depends_on_bootinfo()
-    }
-}
-
-// // //
-
-#[derive(Copy, Clone)]
-pub enum NeverEmbedded {}
-
-impl Serialize for NeverEmbedded {
-    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match *self {}
-    }
-}
-
-impl<'de> Deserialize<'de> for NeverEmbedded {
-    fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        Err(serde::de::Error::custom(
-            "cannot deserialize `NeverEmbedded`",
-        ))
+            && !self.init.is_empty()
+            && !self.init.depends_on_bootinfo()
     }
 }
 
@@ -113,37 +77,7 @@ impl<'de> Deserialize<'de> for NeverEmbedded {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct EmbeddedFrameOffset {
-    offset: u64,
-}
-
-impl EmbeddedFrameOffset {
-    pub const fn new(offset: u64) -> Self {
-        Self { offset }
-    }
-
-    pub const fn offset(&self) -> u64 {
-        self.offset
-    }
-}
-
-unsafe impl Sync for EmbeddedFrameOffset {}
-
-pub trait GetEmbeddedFrameOffset {
-    fn get_embedded_frame(&self) -> EmbeddedFrameOffset;
-}
-
-impl GetEmbeddedFrameOffset for EmbeddedFrameOffset {
-    fn get_embedded_frame(&self) -> EmbeddedFrameOffset {
-        *self
-    }
-}
-
-impl GetEmbeddedFrameOffset for ArchivedEmbeddedFrameOffset {
-    fn get_embedded_frame(&self) -> EmbeddedFrameOffset {
-        EmbeddedFrameOffset {
-            offset: self.offset.into(),
-        }
-    }
+    pub offset: u64,
 }
 
 // // //
@@ -156,12 +90,42 @@ pub struct Fill<D> {
 }
 
 impl<D> Fill<D> {
-    pub fn depends_on_bootinfo(&self) -> bool {
+    fn depends_on_bootinfo(&self) -> bool {
         self.entries.iter().any(|entry| entry.content.is_bootinfo())
     }
 
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    pub fn traverse_fallible<D1, E>(
+        &self,
+        mut f: impl FnMut(&Range<u64>, &D) -> Result<D1, E>,
+    ) -> Result<Fill<D1>, E> {
+        Ok(Fill {
+            entries: self
+                .entries
+                .iter()
+                .map(|entry| {
+                    Ok(FillEntry {
+                        range: entry.range.clone(),
+                        content: match &entry.content {
+                            FillEntryContent::BootInfo(content_bootinfo) => {
+                                FillEntryContent::BootInfo(*content_bootinfo)
+                            }
+                            FillEntryContent::Data(content_data) => {
+                                FillEntryContent::Data(f(&entry.range, content_data)?)
+                            }
+                        },
+                    })
+                })
+                .collect::<Result<_, E>>()?,
+        })
+    }
+
+    pub fn traverse<D1>(&self, mut f: impl FnMut(&Range<u64>, &D) -> D1) -> Fill<D1> {
+        self.traverse_fallible(|x1, x2| Ok(f(x1, x2)))
+            .unwrap_or_else(|absurdity: Infallible| match absurdity {})
     }
 }
 

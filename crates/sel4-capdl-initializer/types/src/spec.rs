@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use sel4_capdl_initializer_types_derive::{IsCap, IsObject, IsObjectWithCapTable};
 
-use crate::{FrameInit, HasArchivedCapTable, HasCapTable};
+use crate::{HasArchivedCapTable, HasCapTable};
 
 type PortableWord = u64;
 
@@ -42,8 +42,8 @@ pub struct CapTableEntry {
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct Spec<D, M> {
-    pub objects: Vec<NamedObject<D, M>>,
+pub struct Spec<D> {
+    pub objects: Vec<NamedObject<D>>,
     pub irqs: Vec<IrqEntry>,
     pub asid_slots: Vec<AsidSlotEntry>,
     pub root_objects: Range<ObjectId>,
@@ -71,15 +71,15 @@ pub struct UntypedCover {
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct NamedObject<D, M> {
+pub struct NamedObject<D> {
     pub name: Option<String>,
-    pub object: Object<D, M>,
+    pub object: Object<D>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub enum Object<D, M> {
+pub enum Object<D> {
     Untyped(object::Untyped),
     Endpoint,
     Notification,
@@ -87,7 +87,7 @@ pub enum Object<D, M> {
     Tcb(object::Tcb),
     Irq(object::Irq),
     VCpu,
-    Frame(object::Frame<D, M>),
+    Frame(object::Frame<D>),
     PageTable(object::PageTable),
     AsidPool(object::AsidPool),
     ArmIrq(object::ArmIrq),
@@ -100,7 +100,7 @@ pub enum Object<D, M> {
     ArmSmc,
 }
 
-impl<D, M> Object<D, M> {
+impl<D> Object<D> {
     pub fn paddr(&self) -> Option<u64> {
         match self {
             Object::Untyped(obj) => obj.paddr,
@@ -110,7 +110,7 @@ impl<D, M> Object<D, M> {
     }
 }
 
-impl<D: Archive, M: Archive> ArchivedObject<D, M> {
+impl<D: Archive> ArchivedObject<D> {
     pub fn paddr(&self) -> ArchivedOption<ArchivedU64> {
         match self {
             ArchivedObject::Untyped(obj) => obj.paddr,
@@ -260,10 +260,10 @@ pub mod object {
     #[derive(Debug, Clone, Eq, PartialEq, IsObject)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-    pub struct Frame<D, M> {
+    pub struct Frame<D> {
         pub size_bits: u8,
         pub paddr: Option<u64>,
-        pub init: FrameInit<D, M>,
+        pub init: D,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]

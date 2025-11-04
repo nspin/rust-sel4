@@ -20,8 +20,6 @@ mod inspect;
 mod inspect_archived;
 mod spec;
 
-mod traverse;
-
 #[cfg(feature = "sel4")]
 mod when_sel4;
 
@@ -31,7 +29,6 @@ pub use frame_init::{
     ArchivedFillEntry, ArchivedFillEntryContent, ArchivedFillEntryContentBootInfoId,
     ArchivedFrameInit, BytesContent, Content, EmbeddedFrameOffset, FileContent, Fill, FillEntry,
     FillEntryContent, FillEntryContentBootInfo, FillEntryContentBootInfoId, FrameInit,
-    GetEmbeddedFrameOffset, NeverEmbedded,
 };
 pub use spec::{
     ArchivedBadge, ArchivedCPtr, ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry,
@@ -48,11 +45,11 @@ pub use when_sel4::*;
 
 // // //
 
-pub type InputSpec = Spec<FileContent, NeverEmbedded>;
+pub type InputSpec = Spec<Fill<FileContent>>;
 
 // TODO make type depend on whether "deflate" is enabled
 #[cfg(feature = "deflate")]
-pub type SpecForInitializer = Spec<DeflatedBytesContent, EmbeddedFrameOffset>;
+pub type SpecForInitializer = Spec<FrameInit>;
 
 // // //
 

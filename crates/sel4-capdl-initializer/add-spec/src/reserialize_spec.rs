@@ -28,34 +28,41 @@ pub fn reserialize_spec(
 
     let mut embedded_frames_data = EmbeddedFramesData::new(granule_size);
 
-    let mut output_spec: SpecForInitializer = input_spec
-        .split_embedded_frames(embed_frames, granule_size_bits)
-        .traverse_data_with_length(|data, length| {
-            let mut buf = vec![0; length.into_usize()];
-            filler.read(data, &mut buf);
-            DeflatedBytesContent::pack(&buf)
-        })
-        .traverse_embedded_frames(|fill| {
-            let mut frame = vec![0; granule_size];
-            for entry in fill.entries.iter() {
-                filler.read(
-                    entry.content.as_data().unwrap(),
-                    &mut frame[u64::into_usize_range(&entry.range)],
-                )
-            }
-            embedded_frames_data.align_to(granule_size);
-            let start = embedded_frames_data.append(&frame);
-            EmbeddedFrameOffset::new(start.try_into().unwrap())
-        });
+    let mut output_spec: SpecForInitializer = input_spec.traverse_frame_init(|frame, is_root| {
+        if embed_frames && frame.can_embed(granule_size_bits, is_root) {
+            FrameInit::Embedded({
+                let mut frame_buf = vec![0; granule_size];
+                for entry in frame.init.entries.iter() {
+                    filler.read(
+                        entry.content.as_data().unwrap(),
+                        &mut frame_buf[u64::into_usize_range(&entry.range)],
+                    )
+                }
+                embedded_frames_data.align_to(granule_size);
+                EmbeddedFrameOffset {
+                    offset: embedded_frames_data.append(&frame_buf).try_into().unwrap(),
+                }
+            })
+        } else {
+            FrameInit::Fill({
+                frame.init.traverse(|range, data| {
+                    let length = (range.end - range.start).try_into().unwrap();
+                    let mut buf = vec![0; length];
+                    filler.read(data, &mut buf);
+                    DeflatedBytesContent::pack(&buf)
+                })
+            })
+        }
+    });
 
-    for (name, obj) in output_spec.names_mut() {
+    for named_obj in output_spec.objects.iter_mut() {
         let keep = match object_names_level {
             ObjectNamesLevel::All => true,
-            ObjectNamesLevel::JustTcbs => matches!(obj, Object::Tcb(_)),
+            ObjectNamesLevel::JustTcbs => matches!(named_obj.object, Object::Tcb(_)),
             ObjectNamesLevel::None => false,
         };
         if !keep {
-            *name = None;
+            named_obj.name = None;
         }
     }
 
