@@ -24,11 +24,14 @@ pub fn reserialize_spec(
 ) -> (SpecForInitializer, Vec<Vec<u8>>) {
     let mut filler = Filler::new(fill_dirs);
 
-    let (mut output_spec, embedded_frames_data) =
-        input_spec.embed_fill(embed_frames, granule_size_bits, |d, buf| {
+    let (mut output_spec, embedded_frames_data) = input_spec.embed_fill(
+        granule_size_bits,
+        |_| embed_frames,
+        |d, buf| {
             filler.read(d, buf);
             true
-        });
+        },
+    );
 
     for named_obj in output_spec.objects.iter_mut() {
         let keep = match object_names_level {
