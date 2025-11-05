@@ -44,18 +44,23 @@ fn main() {
 
     let mut obj = parse_file(&args.in_);
 
+    let mut excludes = BTreeSet::new();
+    for pkg in metadata.workspace_packages() {
+        if !default_members.contains(&pkg.id) {
+            excludes.insert(&pkg.name);
+        }
+    }
+
     let extra_args = obj
         .as_object_mut()
         .unwrap()
         .entry("rust-analyzer.cargo.extraArgs")
         .or_insert(Value::Array(vec![]));
-    for pkg in metadata.workspace_packages() {
-        if !default_members.contains(&pkg.id) {
-            extra_args.as_array_mut().unwrap().append(&mut vec![
-                Value::String("--exclude".to_owned()),
-                Value::String(pkg.name.to_owned()),
-            ]);
-        }
+    for pkg_name in excludes {
+        extra_args.as_array_mut().unwrap().append(&mut vec![
+            Value::String("--exclude".to_owned()),
+            Value::String(pkg_name.to_owned()),
+        ]);
     }
 
     if args.just_check {
