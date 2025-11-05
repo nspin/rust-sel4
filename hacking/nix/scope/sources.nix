@@ -34,7 +34,8 @@ let
 
   capdlCommon = {
     url = "https://github.com/coliasgroup/capdl.git";
-    rev = "6ea203e8ebbcf8d786939aa706262b5073aae676"; # branch rust-testing
+    # rev = "6ea203e8ebbcf8d786939aa706262b5073aae676"; # branch rust-testing
+    rev = "0ab1ff22d110c9ddf5f423ebcdd7bdc5b4d316fe"; # branch rust-testing
     local = localRoot + "/capdl";
     extraFilter = path: type:
       lib.hasSuffix "/.stack-work" path || lib.hasSuffix "/stack.yaml.lock" path;
@@ -108,7 +109,7 @@ in rec {
 
   capdlTool = fetchGit (capdlCommon // {
     andThen = "/capDL-tool";
-    useLocal = true;
+    # useLocal = true;
   });
 
   pythonCapDLTool = fetchGit (capdlCommon // {
