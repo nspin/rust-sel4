@@ -15,7 +15,6 @@ use core::ptr;
 use core::slice;
 
 use rkyv::Archive;
-use rkyv::rancor::Error;
 
 use sel4_capdl_initializer_core::{Initializer, InitializerBuffers, PerObjectBuffer};
 use sel4_capdl_initializer_types::SpecForInitializer;
@@ -83,13 +82,12 @@ static sel4_capdl_initializer_image_end: ImmutableCell<*mut u8> =
     ImmutableCell::new(ptr::null_mut());
 
 fn get_spec() -> &'static <SpecForInitializer as Archive>::Archived {
-    let blob = unsafe {
+    SpecForInitializer::access(unsafe {
         slice::from_raw_parts(
             *sel4_capdl_initializer_serialized_spec_data_start.get(),
             *sel4_capdl_initializer_serialized_spec_data_size.get(),
         )
-    };
-    rkyv::access::<_, Error>(blob).unwrap()
+    }).unwrap()
 }
 
 fn user_image_bounds() -> Range<usize> {
