@@ -12,7 +12,6 @@ use core::ops::Range;
 
 use rkyv::Archive;
 use rkyv::option::ArchivedOption;
-use rkyv::primitive::ArchivedU64;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -21,15 +20,77 @@ use sel4_capdl_initializer_types_derive::{IsCap, IsObject, IsObjectWithCapTable}
 
 use crate::{HasArchivedCapTable, HasCapTable};
 
-type PortableWord = u64;
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+#[rkyv(derive(Debug, Copy, Clone, Eq, PartialEq))]
+pub struct ObjectId(pub u32);
 
-// TODO newtype wrappers
-pub type ObjectId = u32;
-pub type ArchivedObjectId = <ObjectId as Archive>::Archived;
+impl From<usize> for ObjectId {
+    fn from(x: usize) -> ObjectId {
+        ObjectId(x.try_into().unwrap())
+    }
+}
 
-// TODO newtype wrappers
-pub type CapSlot = u32;
-pub type ArchivedCapSlot = <CapSlot as Archive>::Archived;
+impl From<usize> for ArchivedObjectId {
+    fn from(x: usize) -> ArchivedObjectId {
+        ArchivedObjectId(x.try_into().unwrap())
+    }
+}
+
+impl From<ObjectId> for usize {
+    fn from(x: ObjectId) -> usize {
+        x.0.try_into().unwrap()
+    }
+}
+
+impl From<ArchivedObjectId> for usize {
+    fn from(x: ArchivedObjectId) -> usize {
+        x.0.try_into().unwrap()
+    }
+}
+
+impl ObjectId {
+    pub fn into_usize_range(range: &Range<ObjectId>) -> Range<usize> {
+        range.start.into()..range.end.into()
+    }
+}
+
+impl ArchivedObjectId {
+    pub fn into_usize_range(range: &Range<ArchivedObjectId>) -> Range<usize> {
+        range.start.into()..range.end.into()
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+#[rkyv(derive(Debug, Copy, Clone, Eq, PartialEq))]
+pub struct CapSlot(pub u32);
+
+impl From<usize> for CapSlot {
+    fn from(x: usize) -> CapSlot {
+        CapSlot(x.try_into().unwrap())
+    }
+}
+
+impl From<usize> for ArchivedCapSlot {
+    fn from(x: usize) -> ArchivedCapSlot {
+        ArchivedCapSlot(x.try_into().unwrap())
+    }
+}
+
+impl From<CapSlot> for usize {
+    fn from(x: CapSlot) -> usize {
+        x.0.try_into().unwrap()
+    }
+}
+
+impl From<ArchivedCapSlot> for usize {
+    fn from(x: ArchivedCapSlot) -> usize {
+        x.0.try_into().unwrap()
+    }
+}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -50,11 +111,17 @@ pub struct Spec<D> {
     pub untyped_covers: Vec<UntypedCover>,
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+#[rkyv(derive(Debug, Copy, Clone, Eq, PartialEq))]
+pub struct Word(pub u64);
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct IrqEntry {
-    pub irq: PortableWord,
+    pub irq: Word,
     pub handler: ObjectId,
 }
 
@@ -114,7 +181,7 @@ impl<D> Object<D> {
         self.as_().ok_or(TryFromObjectError)
     }
 
-    pub fn paddr(&self) -> Option<u64> {
+    pub fn paddr(&self) -> Option<Word> {
         match self {
             Object::Untyped(obj) => obj.paddr,
             Object::Frame(obj) => obj.paddr,
@@ -136,7 +203,7 @@ impl<D: Archive> ArchivedObject<D> {
         self.as_().ok_or(TryFromObjectError)
     }
 
-    pub fn paddr(&self) -> ArchivedOption<ArchivedU64> {
+    pub fn paddr(&self) -> ArchivedOption<ArchivedWord> {
         match self {
             ArchivedObject::Untyped(obj) => obj.paddr,
             ArchivedObject::Frame(obj) => obj.paddr,
@@ -244,27 +311,6 @@ impl ArchivedCap {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct CPtr(pub(crate) PortableWord);
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct Badge(pub(crate) PortableWord);
-
-// TODO Would packing have an actual effect on memory footprint?
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct Rights {
-    pub read: bool,
-    pub write: bool,
-    pub grant: bool,
-    pub grant_reply: bool,
-}
-
 pub mod object {
     use super::*;
 
@@ -273,7 +319,7 @@ pub mod object {
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Untyped {
         pub size_bits: u8,
-        pub paddr: Option<u64>,
+        pub paddr: Option<Word>,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -296,18 +342,18 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct TcbExtraInfo {
-        pub ipc_buffer_addr: PortableWord,
+        pub ipc_buffer_addr: Word,
 
-        pub affinity: PortableWord,
+        pub affinity: Word,
         pub prio: u8,
         pub max_prio: u8,
         pub resume: bool,
 
-        pub ip: PortableWord,
-        pub sp: PortableWord,
-        pub gprs: Vec<PortableWord>,
+        pub ip: Word,
+        pub sp: Word,
+        pub gprs: Vec<Word>,
 
-        pub master_fault_ep: Option<CPtr>,
+        pub master_fault_ep: Option<Word>,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -322,7 +368,7 @@ pub mod object {
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Frame<D> {
         pub size_bits: u8,
-        pub paddr: Option<u64>,
+        pub paddr: Option<Word>,
         pub init: D,
     }
 
@@ -339,7 +385,7 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct AsidPool {
-        pub high: PortableWord,
+        pub high: Word,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -354,8 +400,8 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct ArmIrqExtraInfo {
-        pub trigger: PortableWord,
-        pub target: PortableWord,
+        pub trigger: u8,
+        pub target: Word,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -370,10 +416,10 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IrqMsiExtraInfo {
-        pub handle: PortableWord,
-        pub pci_bus: PortableWord,
-        pub pci_dev: PortableWord,
-        pub pci_func: PortableWord,
+        pub handle: Word,
+        pub pci_bus: Word,
+        pub pci_dev: Word,
+        pub pci_func: Word,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -388,10 +434,10 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IrqIOApicExtraInfo {
-        pub ioapic: PortableWord,
-        pub pin: PortableWord,
-        pub level: PortableWord,
-        pub polarity: PortableWord,
+        pub ioapic: Word,
+        pub pin: Word,
+        pub level: Word,
+        pub polarity: Word,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
@@ -406,15 +452,15 @@ pub mod object {
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct RiscvIrqExtraInfo {
-        pub trigger: PortableWord,
+        pub trigger: u8,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IOPorts {
-        pub start_port: PortableWord,
-        pub end_port: PortableWord,
+        pub start_port: Word,
+        pub end_port: Word,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsObject)]
@@ -431,8 +477,19 @@ pub mod object {
     pub struct SchedContextExtraInfo {
         pub period: u64,
         pub budget: u64,
-        pub badge: Badge,
+        pub badge: Word,
     }
+}
+
+// TODO Would packing have an actual effect on memory footprint?
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+pub struct Rights {
+    pub read: bool,
+    pub write: bool,
+    pub grant: bool,
+    pub grant_reply: bool,
 }
 
 pub mod cap {
@@ -455,7 +512,7 @@ pub mod cap {
         //   enough, or do we ever need to actually use the badge value '0'?
         // TODO
         //   Is it correct that these are ignored in the case of Tcb::SLOT_TEMP_FAULT_EP?
-        pub badge: Badge,
+        pub badge: Word,
         pub rights: Rights,
     }
 
@@ -464,7 +521,7 @@ pub mod cap {
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Notification {
         pub object: ObjectId,
-        pub badge: Badge,
+        pub badge: Word,
         pub rights: Rights,
     }
 
@@ -473,8 +530,8 @@ pub mod cap {
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct CNode {
         pub object: ObjectId,
-        pub guard: PortableWord,
-        pub guard_size: PortableWord,
+        pub guard: Word,
+        pub guard_size: u8,
     }
 
     #[derive(Debug, Clone, Eq, PartialEq, IsCap)]
@@ -594,7 +651,7 @@ impl fmt::Display for TryFromObjectError {
 
 impl fmt::Display for TryFromCapError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "object type mismatch")
+        write!(f, "cap type mismatch")
     }
 }
 
