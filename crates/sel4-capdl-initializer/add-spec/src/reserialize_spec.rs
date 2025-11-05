@@ -21,39 +21,13 @@ pub fn reserialize_spec(
     object_names_level: &ObjectNamesLevel,
     embed_frames: bool,
     granule_size_bits: u8,
-) -> (SpecForInitializer, EmbeddedFramesData) {
-    let granule_size = 1 << granule_size_bits;
-
+) -> (SpecForInitializer, Vec<Vec<u8>>) {
     let mut filler = Filler::new(fill_dirs);
 
-    let mut embedded_frames_data = EmbeddedFramesData::new(granule_size);
-
-    let mut output_spec: SpecForInitializer = input_spec.traverse_frame_init(|frame, is_root| {
-        if embed_frames && frame.can_embed(granule_size_bits, is_root) {
-            FrameInit::Embedded({
-                let mut frame_buf = vec![0; granule_size];
-                for entry in frame.init.entries.iter() {
-                    filler.read(
-                        entry.content.as_data().unwrap(),
-                        &mut frame_buf[u64::into_usize_range(&entry.range)],
-                    )
-                }
-                embedded_frames_data.align_to(granule_size);
-                EmbeddedFrameOffset {
-                    offset: embedded_frames_data.append(&frame_buf).try_into().unwrap(),
-                }
-            })
-        } else {
-            FrameInit::Fill({
-                frame.init.traverse(|range, data| {
-                    let length = (range.end - range.start).try_into().unwrap();
-                    let mut buf = vec![0; length];
-                    filler.read(data, &mut buf);
-                    DeflatedBytesContent::pack(&buf)
-                })
-            })
-        }
-    });
+    let (mut output_spec, embedded_frames_data) =
+        input_spec.embed_fill(embed_frames, granule_size_bits, |d, buf| {
+            filler.read(d, buf)
+        });
 
     for named_obj in output_spec.objects.iter_mut() {
         let keep = match object_names_level {
@@ -107,30 +81,5 @@ impl Filler {
         self.get_handle(&key.file)
             .read_exact_at(buf, key.file_offset)
             .unwrap();
-    }
-}
-
-pub(crate) struct EmbeddedFramesData {
-    pub(crate) alignment: usize,
-    pub(crate) data: Vec<u8>,
-}
-
-impl EmbeddedFramesData {
-    fn new(alignment: usize) -> Self {
-        Self {
-            alignment,
-            data: vec![],
-        }
-    }
-
-    fn align_to(&mut self, align: usize) {
-        assert!(align.is_power_of_two());
-        self.data.resize(self.data.len().next_multiple_of(align), 0);
-    }
-
-    fn append(&mut self, bytes: &[u8]) -> usize {
-        let start = self.data.len();
-        self.data.extend(bytes);
-        start
     }
 }

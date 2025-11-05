@@ -26,9 +26,10 @@ mod when_sel4;
 pub use archived_cap_table::{ArchivedPageTableEntry, HasArchivedCapTable};
 pub use cap_table::{HasCapTable, PageTableEntry};
 pub use frame_init::{
-    ArchivedFillEntry, ArchivedFillEntryContent, ArchivedFillEntryContentBootInfoId,
-    ArchivedFrameInit, BytesContent, Content, EmbeddedFrameOffset, FileContent, Fill, FillEntry,
-    FillEntryContent, FillEntryContentBootInfo, FillEntryContentBootInfoId, FrameInit,
+    ArchivedEmbeddedFrameIndex, ArchivedFillEntry, ArchivedFillEntryContent,
+    ArchivedFillEntryContentBootInfoId, ArchivedFrameInit, BytesContent, Content,
+    EmbeddedFrameIndex, FileContent, Fill, FillEntry, FillEntryContent, FillEntryContentBootInfo,
+    FillEntryContentBootInfoId, FrameInit,
 };
 pub use spec::{
     ArchivedBadge, ArchivedCPtr, ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry,
