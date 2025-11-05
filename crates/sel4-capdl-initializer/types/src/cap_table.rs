@@ -4,9 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::fmt;
-
-use crate::{Cap, CapSlot, CapTableEntry, TryFromCapError, cap, object};
+use crate::{
+    ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry, Cap, CapSlot, CapTableEntry,
+    IsArchivedCap, IsCap, cap, object,
+};
 
 // NOTE
 // Magic constants must be kept in sync with capDL-tool.
@@ -24,160 +25,145 @@ pub trait HasCapTable {
         })
     }
 
-    fn maybe_slot_as<'a, T: TryFrom<&'a Cap>>(&'a self, slot: CapSlot) -> Option<T>
-    where
-        <T as TryFrom<&'a Cap>>::Error: fmt::Debug,
-    {
-        self.maybe_slot(slot).map(|cap| cap.try_into().unwrap())
+    fn maybe_slot_as<T: IsCap>(&self, slot: CapSlot) -> Option<&T> {
+        self.maybe_slot(slot).map(|cap| cap.as_().unwrap())
     }
 
-    fn slot_as<'a, T: TryFrom<&'a Cap>>(&'a self, slot: CapSlot) -> T
-    where
-        <T as TryFrom<&'a Cap>>::Error: fmt::Debug,
-    {
+    fn slot_as<T: IsCap>(&self, slot: CapSlot) -> &T {
         self.maybe_slot_as(slot).unwrap()
     }
-
-    #[allow(clippy::type_complexity)]
-    fn slots_as<'a, T: TryFrom<&'a Cap>>(&'a self) -> impl Iterator<Item = (CapSlot, T)>
-    where
-        <T as TryFrom<&'a Cap>>::Error: fmt::Debug,
-    {
-        self.slots()
-            .iter()
-            .map(|entry| (entry.slot, T::try_from(&entry.cap).unwrap()))
-    }
 }
 
-impl object::Tcb {
-    pub const SLOT_CSPACE: CapSlot = 0;
-    pub const SLOT_VSPACE: CapSlot = 1;
-    pub const SLOT_IPC_BUFFER: CapSlot = 4;
-    pub const SLOT_FAULT_EP: CapSlot = 5;
-    pub const SLOT_SC: CapSlot = 6;
-    pub const SLOT_TEMP_FAULT_EP: CapSlot = 7;
-    pub const SLOT_BOUND_NOTIFICATION: CapSlot = 8;
-    pub const SLOT_VCPU: CapSlot = 9;
+pub trait HasArchivedCapTable {
+    fn slots(&self) -> &[ArchivedCapTableEntry];
 
-    pub fn cspace(&self) -> &cap::CNode {
-        self.slot_as(Self::SLOT_CSPACE)
-    }
-
-    pub fn vspace(&self) -> &cap::PageTable {
-        self.slot_as(Self::SLOT_VSPACE)
-    }
-
-    pub fn ipc_buffer(&self) -> &cap::Frame {
-        self.slot_as(Self::SLOT_IPC_BUFFER)
-    }
-
-    pub fn mcs_fault_ep(&self) -> Option<&cap::Endpoint> {
-        self.maybe_slot_as(Self::SLOT_FAULT_EP)
-    }
-
-    pub fn sc(&self) -> Option<&cap::SchedContext> {
-        self.maybe_slot_as(Self::SLOT_SC)
-    }
-
-    pub fn temp_fault_ep(&self) -> Option<&cap::Endpoint> {
-        self.maybe_slot_as(Self::SLOT_TEMP_FAULT_EP)
-    }
-
-    pub fn bound_notification(&self) -> Option<&cap::Notification> {
-        self.maybe_slot_as(Self::SLOT_BOUND_NOTIFICATION)
-    }
-
-    pub fn vcpu(&self) -> Option<&cap::VCpu> {
-        self.maybe_slot_as(Self::SLOT_VCPU)
-    }
-}
-
-impl object::Irq {
-    pub const SLOT_NOTIFICATION: CapSlot = 0;
-
-    pub fn notification(&self) -> Option<&cap::Notification> {
-        self.maybe_slot_as(Self::SLOT_NOTIFICATION)
-    }
-}
-
-impl object::ArmIrq {
-    pub const SLOT_NOTIFICATION: CapSlot = 0;
-
-    pub fn notification(&self) -> Option<&cap::Notification> {
-        self.maybe_slot_as(Self::SLOT_NOTIFICATION)
-    }
-}
-
-impl object::IrqMsi {
-    pub const SLOT_NOTIFICATION: CapSlot = 0;
-
-    pub fn notification(&self) -> Option<&cap::Notification> {
-        self.maybe_slot_as(Self::SLOT_NOTIFICATION)
-    }
-}
-
-impl object::IrqIOApic {
-    pub const SLOT_NOTIFICATION: CapSlot = 0;
-
-    pub fn notification(&self) -> Option<&cap::Notification> {
-        self.maybe_slot_as(Self::SLOT_NOTIFICATION)
-    }
-}
-
-impl object::RiscvIrq {
-    pub const SLOT_NOTIFICATION: CapSlot = 0;
-
-    pub fn notification(&self) -> Option<&cap::Notification> {
-        self.maybe_slot_as(Self::SLOT_NOTIFICATION)
-    }
-}
-
-// // //
-
-impl object::PageTable {
-    pub fn entries(&self) -> impl Iterator<Item = (CapSlot, PageTableEntry<'_>)> {
-        self.slots_as()
-    }
-
-    pub fn frames(&self) -> impl Iterator<Item = (CapSlot, &cap::Frame)> {
-        self.slots_as()
-    }
-
-    pub fn page_tables(&self) -> impl Iterator<Item = (CapSlot, &cap::PageTable)> {
-        self.slots_as()
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum PageTableEntry<'a> {
-    PageTable(&'a cap::PageTable),
-    Frame(&'a cap::Frame),
-}
-
-impl<'a> PageTableEntry<'a> {
-    pub fn page_table(&self) -> Option<&'a cap::PageTable> {
-        match self {
-            Self::PageTable(cap) => Some(cap),
-            _ => None,
-        }
-    }
-
-    pub fn frame(&self) -> Option<&'a cap::Frame> {
-        match self {
-            Self::Frame(cap) => Some(cap),
-            _ => None,
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Cap> for PageTableEntry<'a> {
-    type Error = TryFromCapError;
-
-    fn try_from(cap: &'a Cap) -> Result<Self, Self::Error> {
-        Ok(match cap {
-            Cap::PageTable(cap) => PageTableEntry::PageTable(cap),
-            Cap::Frame(cap) => PageTableEntry::Frame(cap),
-            _ => return Err(TryFromCapError),
+    fn maybe_slot(&self, slot: ArchivedCapSlot) -> Option<&ArchivedCap> {
+        self.slots().as_ref().iter().find_map(|entry| {
+            if entry.slot == slot {
+                Some(&entry.cap)
+            } else {
+                None
+            }
         })
+    }
+
+    fn maybe_slot_as<T: IsArchivedCap>(&self, slot: ArchivedCapSlot) -> Option<&T> {
+        self.maybe_slot(slot).map(|cap| cap.as_().unwrap())
+    }
+
+    fn slot_as<T: IsArchivedCap>(&self, slot: ArchivedCapSlot) -> &T {
+        self.maybe_slot_as(slot).unwrap()
+    }
+}
+
+trait SlotTarget<'a>: 'a {
+    fn get_slot_target<U: HasCapTable>(table: &'a U, slot: CapSlot) -> Self;
+}
+
+impl<'a, T: IsCap> SlotTarget<'a> for &'a T {
+    fn get_slot_target<U: HasCapTable>(table: &'a U, slot: CapSlot) -> Self {
+        table.slot_as(slot)
+    }
+}
+
+impl<'a, T: IsCap> SlotTarget<'a> for Option<&'a T> {
+    fn get_slot_target<U: HasCapTable>(table: &'a U, slot: CapSlot) -> Self {
+        table.maybe_slot_as(slot)
+    }
+}
+
+trait SlotTargetArchived<'a>: 'a {
+    fn get_slot_target_archived<U: HasArchivedCapTable>(
+        table: &'a U,
+        slot: ArchivedCapSlot,
+    ) -> Self;
+}
+
+impl<'a, T: IsArchivedCap> SlotTargetArchived<'a> for &'a T {
+    fn get_slot_target_archived<U: HasArchivedCapTable>(
+        table: &'a U,
+        slot: ArchivedCapSlot,
+    ) -> Self {
+        table.slot_as(slot)
+    }
+}
+
+impl<'a, T: IsArchivedCap> SlotTargetArchived<'a> for Option<&'a T> {
+    fn get_slot_target_archived<U: HasArchivedCapTable>(
+        table: &'a U,
+        slot: ArchivedCapSlot,
+    ) -> Self {
+        table.maybe_slot_as(slot)
+    }
+}
+
+macro_rules! alias_cap_table {
+    ($obj_ty:ty | $archived_obj_ty:ty {
+        $(
+            $accessor_name:ident: $ty:ty | $archived_ty:ty = $slot_name:ident($n:expr)
+        ),* $(,)?
+    }) => {
+        impl $obj_ty {
+            $(
+                pub const $slot_name: CapSlot = $n;
+
+                pub fn $accessor_name(&self) -> $ty {
+                    <$ty>::get_slot_target(self, Self::$slot_name)
+                }
+            )*
+        }
+
+        impl $archived_obj_ty {
+            $(
+                pub const $slot_name: ArchivedCapSlot = ArchivedCapSlot::from_native($n);
+
+                pub fn $accessor_name(&self) -> $archived_ty {
+                    <$archived_ty>::get_slot_target_archived(self, Self::$slot_name)
+                }
+            )*
+        }
+    };
+}
+
+alias_cap_table! {
+    object::Tcb | object::ArchivedTcb {
+        cspace: &cap::CNode | &cap::ArchivedCNode = SLOT_CSPACE(0),
+        vspace: &cap::PageTable | &cap::ArchivedPageTable = SLOT_VSPACE(1),
+        ipc_buffer: &cap::Frame | &cap::ArchivedFrame = SLOT_IPC_BUFFER(4),
+        mcs_fault_ep: Option<&cap::Endpoint> | Option<&cap::ArchivedEndpoint> = SLOT_FAULT_EP(5),
+        sc: Option<&cap::SchedContext> | Option<&cap::ArchivedSchedContext> = SLOT_SC(6),
+        temp_fault_ep: Option<&cap::Endpoint> | Option<&cap::ArchivedEndpoint> = SLOT_TEMP_FAULT_EP(7),
+        bound_notification: Option<&cap::Notification> | Option<&cap::ArchivedNotification> = SLOT_BOUND_NOTIFICATION(8),
+        vcpu: Option<&cap::VCpu> | Option<&cap::ArchivedVCpu> = SLOT_VCPU(9),
+    }
+}
+
+alias_cap_table! {
+    object::Irq | object::ArchivedIrq {
+        notification: Option<&cap::Notification> | Option<&cap::ArchivedNotification> = SLOT_NOTIFICATION(0),
+    }
+}
+
+alias_cap_table! {
+    object::ArmIrq | object::ArchivedArmIrq {
+        notification: Option<&cap::Notification> | Option<&cap::ArchivedNotification> = SLOT_NOTIFICATION(0),
+    }
+}
+
+alias_cap_table! {
+    object::IrqMsi | object::ArchivedIrqMsi {
+        notification: Option<&cap::Notification> | Option<&cap::ArchivedNotification> = SLOT_NOTIFICATION(0),
+    }
+}
+
+alias_cap_table! {
+    object::IrqIOApic | object::ArchivedIrqIOApic {
+        notification: Option<&cap::Notification> | Option<&cap::ArchivedNotification> = SLOT_NOTIFICATION(0),
+    }
+}
+
+alias_cap_table! {
+    object::RiscvIrq | object::ArchivedRiscvIrq {
+        notification: Option<&cap::Notification> | Option<&cap::ArchivedNotification> = SLOT_NOTIFICATION(0),
     }
 }

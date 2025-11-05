@@ -400,7 +400,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                 {
                     let ioports = self
                         .spec
-                        .filter_objects::<&object::ArchivedIOPorts>()
+                        .filter_objects::<object::ArchivedIOPorts>()
                         .map(|(obj_id, obj)| (obj_id, obj.start_port, obj.end_port));
 
                     for (obj_id, start_port, end_port) in ioports {
@@ -452,23 +452,23 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
         let irq_notifications = self
             .spec
-            .filter_objects::<&object::ArchivedIrq>()
+            .filter_objects::<object::ArchivedIrq>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let arm_irq_notifications = self
             .spec
-            .filter_objects::<&object::ArchivedArmIrq>()
+            .filter_objects::<object::ArchivedArmIrq>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let msi_irq_notifications = self
             .spec
-            .filter_objects::<&object::ArchivedIrqMsi>()
+            .filter_objects::<object::ArchivedIrqMsi>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let ioapic_irq_notifications = self
             .spec
-            .filter_objects::<&object::ArchivedIrqIOApic>()
+            .filter_objects::<object::ArchivedIrqIOApic>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let riscv_irq_notifications = self
             .spec
-            .filter_objects::<&object::ArchivedRiscvIrq>()
+            .filter_objects::<object::ArchivedRiscvIrq>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
 
         let all_irq_notifications = irq_notifications
@@ -499,7 +499,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         debug!("Initializing ASIDs");
         for (obj_id, _obj) in self
             .spec
-            .filter_objects_with::<&object::ArchivedPageTable>(|obj| obj.is_root)
+            .filter_objects_with::<object::ArchivedPageTable>(|obj| obj.is_root)
         {
             let pgd = self.orig_cap::<cap_type::VSpace>(obj_id);
             init_thread::slot::ASID_POOL.cap().asid_pool_assign(pgd)?;
@@ -509,15 +509,15 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
     fn init_frames(&mut self) -> Result<()> {
         debug!("Initializing Frames");
-        for (obj_id, obj) in self.spec.filter_objects::<&object::ArchivedFrame<_>>() {
+        for (obj_id, obj) in self.spec.filter_objects::<object::ArchivedFrame<_>>() {
             // TODO make more platform-agnostic
-            if let ArchivedFrameInit::Fill(fill) = &obj.init {
-                if !fill.entries.is_empty() {
-                    let frame_object_type =
-                        sel4::FrameObjectType::from_bits(obj.size_bits.into()).unwrap();
-                    let frame = self.orig_cap::<cap_type::UnspecifiedPage>(obj_id);
-                    self.fill_frame(frame, frame_object_type, &fill.entries)?;
-                }
+            if let ArchivedFrameInit::Fill(fill) = &obj.init
+                && !fill.entries.is_empty()
+            {
+                let frame_object_type =
+                    sel4::FrameObjectType::from_bits(obj.size_bits.into()).unwrap();
+                let frame = self.orig_cap::<cap_type::UnspecifiedPage>(obj_id);
+                self.fill_frame(frame, frame_object_type, &fill.entries)?;
             }
         }
         Ok(())
@@ -574,7 +574,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         debug!("Initializing VSpaces");
         for (obj_id, obj) in self
             .spec
-            .filter_objects_with::<&object::ArchivedPageTable>(|obj| obj.is_root)
+            .filter_objects_with::<object::ArchivedPageTable>(|obj| obj.is_root)
         {
             let vspace = self.orig_cap::<cap_type::VSpace>(obj_id);
             self.init_vspace(vspace, 0, 0, obj)?;
@@ -592,13 +592,13 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         for (i, entry) in obj.entries() {
             let vaddr = vaddr + (i.into_usize() << sel4::vspace_levels::step_bits(level));
             match entry {
-                ArchivedPageTableEntry::Frame(cap) => {
+                PageTableEntry::Frame(cap) => {
                     let frame = self.orig_cap::<cap_type::UnspecifiedPage>(cap.object);
                     let rights = (&cap.rights).into();
                     self.copy(frame)?
                         .frame_map(vspace, vaddr, rights, cap.vm_attributes())?;
                 }
-                ArchivedPageTableEntry::PageTable(cap) => {
+                PageTableEntry::PageTable(cap) => {
                     self.orig_cap::<cap_type::UnspecifiedIntermediateTranslationTable>(cap.object)
                         .generic_intermediate_translation_table_map(
                             sel4::TranslationTableObjectType::from_level(level + 1).unwrap(),
@@ -608,7 +608,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                         )?;
                     let obj = self
                         .spec
-                        .lookup_object::<&object::ArchivedPageTable>(cap.object)?;
+                        .lookup_object::<object::ArchivedPageTable>(cap.object)?;
                     self.init_vspace(vspace, level + 1, vaddr, obj)?;
                 }
             }
@@ -619,7 +619,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     #[sel4::sel4_cfg(KERNEL_MCS)]
     fn init_sched_contexts(&self) -> Result<()> {
         debug!("Initializing scheduling contexts");
-        for (obj_id, _obj) in self.spec.filter_objects::<&object::ArchivedSchedContext>() {
+        for (obj_id, _obj) in self.spec.filter_objects::<object::ArchivedSchedContext>() {
             self.init_sched_context(obj_id, 0)?;
         }
         Ok(())
@@ -649,7 +649,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     fn init_tcbs(&mut self) -> Result<()> {
         debug!("Initializing TCBs");
 
-        for (obj_id, obj) in self.spec.filter_objects::<&object::ArchivedTcb>() {
+        for (obj_id, obj) in self.spec.filter_objects::<object::ArchivedTcb>() {
             let tcb = self.orig_cap::<cap_type::Tcb>(obj_id);
 
             if let Some(bound_notification) = obj.bound_notification() {
@@ -789,7 +789,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     fn init_cspaces(&self) -> Result<()> {
         debug!("Initializing CSpaces");
 
-        for (obj_id, obj) in self.spec.filter_objects::<&object::ArchivedCNode>() {
+        for (obj_id, obj) in self.spec.filter_objects::<object::ArchivedCNode>() {
             let cnode = self.orig_cap::<cap_type::CNode>(obj_id);
             for entry in obj.slots() {
                 let badge = entry.cap.badge();
@@ -812,7 +812,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
     fn start_threads(&self) -> Result<()> {
         debug!("Starting threads");
-        for (obj_id, obj) in self.spec.filter_objects::<&object::ArchivedTcb>() {
+        for (obj_id, obj) in self.spec.filter_objects::<object::ArchivedTcb>() {
             let tcb = self.orig_cap::<cap_type::Tcb>(obj_id);
             if obj.extra.resume {
                 tcb.tcb_resume()?;

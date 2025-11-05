@@ -11,7 +11,10 @@ use rkyv::ops::ArchivedRange;
 use rkyv::option::ArchivedOption;
 use rkyv::string::ArchivedString;
 
-use crate::{ArchivedNamedObject, ArchivedObject, ArchivedObjectId, ArchivedSpec, CramUsize};
+use crate::{
+    ArchivedNamedObject, ArchivedObject, ArchivedObjectId, ArchivedSpec, CramUsize,
+    TryFromObjectError, spec::IsArchivedObject,
+};
 
 impl<D: Archive> ArchivedSpec<D> {
     pub fn num_objects(&self) -> usize {
@@ -44,26 +47,26 @@ impl<D: Archive> ArchivedSpec<D> {
             .map(|named_object| &named_object.object)
     }
 
-    pub fn filter_objects<'a, O: TryFrom<&'a ArchivedObject<D>>>(
+    pub fn filter_objects<'a, O: IsArchivedObject<D> + 'a>(
         &'a self,
-    ) -> impl Iterator<Item = (ArchivedObjectId, O)> + 'a {
-        self.objects().enumerate().filter_map(|(obj_id, obj)| {
-            Some((ArchivedObjectId::from_usize(obj_id), O::try_from(obj).ok()?))
-        })
+    ) -> impl Iterator<Item = (ArchivedObjectId, &'a O)> + 'a {
+        self.objects()
+            .enumerate()
+            .filter_map(|(obj_id, obj)| Some((ArchivedObjectId::from_usize(obj_id), obj.as_()?)))
     }
 
-    pub fn filter_objects_with<'a, O: TryFrom<&'a ArchivedObject<D>>>(
+    pub fn filter_objects_with<'a, O: IsArchivedObject<D> + 'a>(
         &'a self,
         f: impl 'a + Fn(&O) -> bool,
-    ) -> impl Iterator<Item = (ArchivedObjectId, O)> + 'a {
+    ) -> impl Iterator<Item = (ArchivedObjectId, &'a O)> + 'a {
         self.filter_objects().filter(move |(_, obj)| (f)(obj))
     }
 
-    pub fn lookup_object<'a, O: TryFrom<&'a ArchivedObject<D>>>(
+    pub fn lookup_object<'a, O: IsArchivedObject<D> + 'a>(
         &'a self,
         obj_id: ArchivedObjectId,
-    ) -> Result<O, O::Error> {
-        self.object(obj_id).try_into()
+    ) -> Result<&'a O, TryFromObjectError> {
+        self.object(obj_id).try_as()
     }
 }
 
