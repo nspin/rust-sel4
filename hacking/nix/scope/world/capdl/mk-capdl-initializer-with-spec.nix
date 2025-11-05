@@ -18,6 +18,7 @@
 , fill
 , embedFrames ? true
 , deflate ? true
+, alloc ? true
 }:
 
 let
@@ -26,7 +27,7 @@ let
   };
 
   initializer = sel4-capdl-initializer.override {
-    inherit deflate;
+    inherit deflate alloc;
   };
 
 in lib.fix (self: runCommand "sel4-capdl-initializer-with-spec" {
@@ -39,7 +40,7 @@ in lib.fix (self: runCommand "sel4-capdl-initializer-with-spec" {
     inherit cdl json fill;
     elf = self;
     split = {
-      full = sel4-capdl-initializer.elf;
+      full = initializer.elf;
       min = self;
     };
   };

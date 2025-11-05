@@ -136,6 +136,7 @@ self: with self;
       mkCapDLInitializerWithSpec (spec.specAttrs // {
         inherit embedFrames;
         inherit deflate;
+        inherit alloc;
       }) // {
         inherit spec;
         debuggingLinks = [
