@@ -23,8 +23,6 @@ pub use spec::*;
 #[cfg(feature = "sel4")]
 pub use when_sel4::*;
 
-// // //
-
 pub type InputSpec = Spec<Fill<FillEntryContentFileOffset>>;
 
 pub type SpecForInitializer = Spec<FrameInit>;

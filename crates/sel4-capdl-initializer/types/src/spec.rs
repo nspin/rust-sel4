@@ -167,7 +167,7 @@ pub enum Object<D> {
     ArmSmc,
 }
 
-pub trait IsObject<D>: Sized {
+pub trait IsObject<D> {
     fn into_object(self) -> Object<D>;
     fn try_from_object(obj: &Object<D>) -> Option<&Self>;
 }
@@ -236,7 +236,7 @@ pub enum Cap {
     ArmSmc(cap::ArmSmc),
 }
 
-pub trait IsCap: Sized {
+pub trait IsCap {
     fn into_cap(self) -> Cap;
     fn try_from_cap(cap: &Cap) -> Option<&Self>;
 }
