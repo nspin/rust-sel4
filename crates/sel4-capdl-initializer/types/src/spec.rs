@@ -7,7 +7,6 @@
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::fmt;
 use core::ops::Range;
 
 use rkyv::Archive;
@@ -177,10 +176,6 @@ impl<D> Object<D> {
         T::try_from_object(self)
     }
 
-    pub fn try_as<T: IsObject<D>>(&self) -> Result<&T, TryFromObjectError> {
-        self.as_().ok_or(TryFromObjectError)
-    }
-
     pub fn paddr(&self) -> Option<Word> {
         match self {
             Object::Untyped(obj) => obj.paddr,
@@ -197,10 +192,6 @@ pub trait IsArchivedObject<D: Archive>: Sized {
 impl<D: Archive> ArchivedObject<D> {
     pub fn as_<T: IsArchivedObject<D>>(&self) -> Option<&T> {
         T::try_from_object(self)
-    }
-
-    pub fn try_as<T: IsArchivedObject<D>>(&self) -> Result<&T, TryFromObjectError> {
-        self.as_().ok_or(TryFromObjectError)
     }
 
     pub fn paddr(&self) -> ArchivedOption<ArchivedWord> {
@@ -246,10 +237,6 @@ impl Cap {
         T::try_from_cap(self)
     }
 
-    pub fn try_as<T: IsCap>(&self) -> Result<&T, TryFromCapError> {
-        self.as_().ok_or(TryFromCapError)
-    }
-
     pub fn obj(&self) -> ObjectId {
         match self {
             Cap::Untyped(cap) => cap.object,
@@ -281,10 +268,6 @@ pub trait IsArchivedCap: Sized {
 impl ArchivedCap {
     pub fn as_<T: IsArchivedCap>(&self) -> Option<&T> {
         T::try_from_cap(self)
-    }
-
-    pub fn try_as<T: IsArchivedCap>(&self) -> Result<&T, TryFromCapError> {
-        self.as_().ok_or(TryFromCapError)
     }
 
     pub fn obj(&self) -> ArchivedObjectId {
@@ -634,28 +617,6 @@ pub mod cap {
         pub object: ObjectId,
     }
 }
-
-// // //
-
-#[derive(Debug)]
-pub struct TryFromObjectError;
-
-#[derive(Debug)]
-pub struct TryFromCapError;
-
-impl fmt::Display for TryFromObjectError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "object type mismatch")
-    }
-}
-
-impl fmt::Display for TryFromCapError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "cap type mismatch")
-    }
-}
-
-// // //
 
 pub enum PageTableEntry<'a> {
     PageTable(&'a cap::ArchivedPageTable),
