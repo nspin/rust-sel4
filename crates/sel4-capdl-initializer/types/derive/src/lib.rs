@@ -78,13 +78,13 @@ fn derive_object_impl(ast: &syn::DeriveInput) -> TokenStream {
     .into()
 }
 
-#[proc_macro_derive(IsObjectWithCapTable)]
-pub fn derive_object_with_cap_table(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(HasCapTable)]
+pub fn derive_has_cap_table(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
-    derive_object_with_cap_table_impl(&ast)
+    derive_has_cap_table_impl(&ast)
 }
 
-fn derive_object_with_cap_table_impl(ast: &syn::DeriveInput) -> TokenStream {
+fn derive_has_cap_table_impl(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let archived_name = format_ident!("Archived{}", name);
     let generics = &ast.generics;

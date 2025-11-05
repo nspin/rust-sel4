@@ -15,7 +15,7 @@ use rkyv::option::ArchivedOption;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use sel4_capdl_initializer_types_derive::{IsCap, IsObject, IsObjectWithCapTable};
+use sel4_capdl_initializer_types_derive::{HasCapTable, IsCap, IsObject};
 
 use crate::{HasArchivedCapTable, HasCapTable};
 
@@ -305,7 +305,7 @@ pub mod object {
         pub paddr: Option<Word>,
     }
 
-    #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
+    #[derive(Debug, Clone, Eq, PartialEq, IsObject, HasCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct CNode {
@@ -313,7 +313,7 @@ pub mod object {
         pub slots: Vec<CapTableEntry>,
     }
 
-    #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
+    #[derive(Debug, Clone, Eq, PartialEq, IsObject, HasCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Tcb {
@@ -339,7 +339,7 @@ pub mod object {
         pub master_fault_ep: Option<Word>,
     }
 
-    #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
+    #[derive(Debug, Clone, Eq, PartialEq, IsObject, HasCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct Irq {
@@ -355,7 +355,7 @@ pub mod object {
         pub init: D,
     }
 
-    #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
+    #[derive(Debug, Clone, Eq, PartialEq, IsObject, HasCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct PageTable {
@@ -371,7 +371,7 @@ pub mod object {
         pub high: Word,
     }
 
-    #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
+    #[derive(Debug, Clone, Eq, PartialEq, IsObject, HasCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct ArmIrq {
@@ -387,7 +387,7 @@ pub mod object {
         pub target: Word,
     }
 
-    #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
+    #[derive(Debug, Clone, Eq, PartialEq, IsObject, HasCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IrqMsi {
@@ -405,7 +405,7 @@ pub mod object {
         pub pci_func: Word,
     }
 
-    #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
+    #[derive(Debug, Clone, Eq, PartialEq, IsObject, HasCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct IrqIOApic {
@@ -423,7 +423,7 @@ pub mod object {
         pub polarity: Word,
     }
 
-    #[derive(Debug, Clone, Eq, PartialEq, IsObject, IsObjectWithCapTable)]
+    #[derive(Debug, Clone, Eq, PartialEq, IsObject, HasCapTable)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
     pub struct RiscvIrq {
@@ -625,7 +625,7 @@ pub enum PageTableEntry<'a> {
 
 impl object::ArchivedPageTable {
     pub fn entries(&self) -> impl Iterator<Item = (ArchivedCapSlot, PageTableEntry<'_>)> {
-        self.slots().iter().map(|entry| {
+        self.slots.iter().map(|entry| {
             (
                 entry.slot,
                 match &entry.cap {
