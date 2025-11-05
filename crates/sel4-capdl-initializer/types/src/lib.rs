@@ -16,7 +16,6 @@ use rkyv::primitive::{ArchivedU16, ArchivedU32, ArchivedU64};
 mod cap_table;
 mod embed_fill;
 mod frame_init;
-mod inspect_archived;
 mod spec;
 
 #[cfg(feature = "sel4")]

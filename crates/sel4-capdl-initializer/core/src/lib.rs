@@ -127,7 +127,6 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         // Index root objects
 
         let first_obj_without_paddr = self
-            .spec
             .root_objects()
             .partition_point(|named_obj| named_obj.object.paddr().is_some());
         let num_objs_with_paddr = first_obj_without_paddr;
@@ -135,8 +134,8 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         let mut by_size_start: [usize; sel4::WORD_SIZE] = array::from_fn(|_| 0);
         let mut by_size_end: [usize; sel4::WORD_SIZE] = array::from_fn(|_| 0);
         {
-            for obj_id in first_obj_without_paddr..self.spec.root_objects().len() {
-                let obj = &self.spec.object(ArchivedObjectId::from_usize(obj_id));
+            for obj_id in first_obj_without_paddr..self.root_objects().len() {
+                let obj = &self.object(ArchivedObjectId::from_usize(obj_id));
                 if let Some(blueprint) = obj.blueprint() {
                     by_size_end[blueprint.physical_size_bits()] += 1;
                 }
@@ -176,8 +175,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
             loop {
                 let target = if next_obj_with_paddr < num_objs_with_paddr {
                     ut_paddr_end.min(
-                        self.spec
-                            .object(ArchivedObjectId::from_usize(next_obj_with_paddr))
+                        self.object(ArchivedObjectId::from_usize(next_obj_with_paddr))
                             .paddr()
                             .unwrap()
                             .into_usize(),
@@ -197,7 +195,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                             // Skip embedded frames
                             while *obj_id < by_size_end[size_bits] {
                                 if let ArchivedObject::Frame(obj) =
-                                    self.spec.object(ArchivedObjectId::from_usize(*obj_id))
+                                    self.object(ArchivedObjectId::from_usize(*obj_id))
                                     && let ArchivedFrameInit::Embedded(embedded) = &obj.init
                                 {
                                     self.take_cap_for_embedded_frame(
@@ -211,9 +209,8 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                             }
                             // Create a largest possible object that would fit
                             if *obj_id < by_size_end[size_bits] {
-                                let named_obj = &self
-                                    .spec
-                                    .named_object(ArchivedObjectId::from_usize(*obj_id));
+                                let named_obj =
+                                    &self.named_object(ArchivedObjectId::from_usize(*obj_id));
                                 let blueprint = named_obj.object.blueprint().unwrap();
                                 assert_eq!(blueprint.physical_size_bits(), size_bits);
                                 trace!(
@@ -259,7 +256,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                 }
                 if target_is_obj_with_paddr {
                     let obj_id = next_obj_with_paddr;
-                    let named_obj = &self.spec.named_object(ArchivedObjectId::from_usize(obj_id));
+                    let named_obj = &self.named_object(ArchivedObjectId::from_usize(obj_id));
                     let blueprint = named_obj.object.blueprint().unwrap();
                     trace!(
                         "Creating device object: paddr=0x{:x}, size_bits={} name={:?}",
@@ -291,7 +288,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
         for cover in self.spec.untyped_covers.iter() {
             let parent_obj_id = cover.parent;
-            let parent = self.spec.named_object(parent_obj_id);
+            let parent = self.named_object(parent_obj_id);
             let parent_cptr = self.orig_cap::<cap_type::Untyped>(parent_obj_id);
             for child_obj_id in
                 ArchivedObjectId::into_usize_range(&archived_range_to_range(&cover.children))
@@ -331,7 +328,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
             for ArchivedIrqEntry { irq, handler } in self.spec.irqs.iter() {
                 let slot = self.cslot_alloc_or_panic();
                 sel4::sel4_cfg_wrap_match! {
-                    match self.spec.object(*handler) {
+                    match self.object(*handler) {
                         ArchivedObject::Irq(_) => {
                             init_thread::slot::IRQ_CONTROL.cap()
                                 .irq_control_get(irq.into_word(), &cslot_to_absolute_cptr(slot))?;
@@ -451,23 +448,18 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         debug!("Initializing IRQs");
 
         let irq_notifications = self
-            .spec
             .filter_objects::<object::ArchivedIrq>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let arm_irq_notifications = self
-            .spec
             .filter_objects::<object::ArchivedArmIrq>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let msi_irq_notifications = self
-            .spec
             .filter_objects::<object::ArchivedIrqMsi>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let ioapic_irq_notifications = self
-            .spec
             .filter_objects::<object::ArchivedIrqIOApic>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
         let riscv_irq_notifications = self
-            .spec
             .filter_objects::<object::ArchivedRiscvIrq>()
             .map(|(obj_id, obj)| (obj_id, obj.notification()));
 
@@ -497,9 +489,8 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
     fn init_asids(&self) -> Result<()> {
         debug!("Initializing ASIDs");
-        for (obj_id, _obj) in self
-            .spec
-            .filter_objects_with::<object::ArchivedPageTable>(|obj| obj.is_root)
+        for (obj_id, _obj) in
+            self.filter_objects_with::<object::ArchivedPageTable>(|obj| obj.is_root)
         {
             let pgd = self.orig_cap::<cap_type::VSpace>(obj_id);
             init_thread::slot::ASID_POOL.cap().asid_pool_assign(pgd)?;
@@ -509,7 +500,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
     fn init_frames(&mut self) -> Result<()> {
         debug!("Initializing Frames");
-        for (obj_id, obj) in self.spec.filter_objects::<object::ArchivedFrame<_>>() {
+        for (obj_id, obj) in self.filter_objects::<object::ArchivedFrame<_>>() {
             // TODO make more platform-agnostic
             if let ArchivedFrameInit::Fill(fill) = &obj.init
                 && !fill.entries.is_empty()
@@ -572,9 +563,8 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
     fn init_vspaces(&mut self) -> Result<()> {
         debug!("Initializing VSpaces");
-        for (obj_id, obj) in self
-            .spec
-            .filter_objects_with::<object::ArchivedPageTable>(|obj| obj.is_root)
+        for (obj_id, obj) in
+            self.filter_objects_with::<object::ArchivedPageTable>(|obj| obj.is_root)
         {
             let vspace = self.orig_cap::<cap_type::VSpace>(obj_id);
             self.init_vspace(vspace, 0, 0, obj)?;
@@ -606,9 +596,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                             vaddr,
                             cap.vm_attributes(),
                         )?;
-                    let obj = self
-                        .spec
-                        .lookup_object::<object::ArchivedPageTable>(cap.object)?;
+                    let obj = self.lookup_object::<object::ArchivedPageTable>(cap.object)?;
                     self.init_vspace(vspace, level + 1, vaddr, obj)?;
                 }
             }
@@ -649,7 +637,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     fn init_tcbs(&mut self) -> Result<()> {
         debug!("Initializing TCBs");
 
-        for (obj_id, obj) in self.spec.filter_objects::<object::ArchivedTcb>() {
+        for (obj_id, obj) in self.filter_objects::<object::ArchivedTcb>() {
             let tcb = self.orig_cap::<cap_type::Tcb>(obj_id);
 
             if let Some(bound_notification) = obj.bound_notification() {
@@ -777,7 +765,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
             sel4::sel4_cfg_if! {
                 if #[sel4_cfg(DEBUG_BUILD)] {
-                    if let Some(name) = object_name(self.spec.named_object(obj_id)) {
+                    if let Some(name) = object_name(self.named_object(obj_id)) {
                         tcb.debug_name(name.as_bytes());
                     }
                 }
@@ -789,7 +777,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     fn init_cspaces(&self) -> Result<()> {
         debug!("Initializing CSpaces");
 
-        for (obj_id, obj) in self.spec.filter_objects::<object::ArchivedCNode>() {
+        for (obj_id, obj) in self.filter_objects::<object::ArchivedCNode>() {
             let cnode = self.orig_cap::<cap_type::CNode>(obj_id);
             for entry in obj.slots() {
                 let badge = entry.cap.badge();
@@ -812,13 +800,59 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
     fn start_threads(&self) -> Result<()> {
         debug!("Starting threads");
-        for (obj_id, obj) in self.spec.filter_objects::<object::ArchivedTcb>() {
+        for (obj_id, obj) in self.filter_objects::<object::ArchivedTcb>() {
             let tcb = self.orig_cap::<cap_type::Tcb>(obj_id);
             if obj.extra.resume {
                 tcb.tcb_resume()?;
             }
         }
         Ok(())
+    }
+
+    //
+
+    fn named_object(&self, obj_id: ArchivedObjectId) -> &'a ArchivedNamedObject<FrameInit> {
+        &self.spec.objects[obj_id.into_usize()]
+    }
+
+    fn object(&self, obj_id: ArchivedObjectId) -> &'a ArchivedObject<FrameInit> {
+        &self.named_object(obj_id).object
+    }
+
+    fn root_objects(&self) -> &[ArchivedNamedObject<FrameInit>] {
+        &self.spec.objects
+            [ArchivedObjectId::into_usize_range(&archived_range_to_range(&self.spec.root_objects))]
+    }
+
+    fn named_objects(&self) -> impl Iterator<Item = &'a ArchivedNamedObject<FrameInit>> + 'a {
+        self.spec.objects.iter()
+    }
+
+    fn objects(&self) -> impl Iterator<Item = &'a ArchivedObject<FrameInit>> + 'a {
+        self.named_objects()
+            .map(|named_object| &named_object.object)
+    }
+
+    fn filter_objects<O: IsArchivedObject<FrameInit> + 'a>(
+        &self,
+    ) -> impl Iterator<Item = (ArchivedObjectId, &'a O)> + 'a {
+        self.objects()
+            .enumerate()
+            .filter_map(|(obj_id, obj)| Some((ArchivedObjectId::from_usize(obj_id), obj.as_()?)))
+    }
+
+    fn filter_objects_with<O: IsArchivedObject<FrameInit> + 'a>(
+        &self,
+        f: impl Fn(&'a O) -> bool + 'a,
+    ) -> impl Iterator<Item = (ArchivedObjectId, &'a O)> + 'a {
+        self.filter_objects().filter(move |(_, obj)| (f)(obj))
+    }
+
+    fn lookup_object<O: IsArchivedObject<FrameInit> + 'a>(
+        &self,
+        obj_id: ArchivedObjectId,
+    ) -> Result<&'a O> {
+        Ok(self.object(obj_id).try_as()?)
     }
 
     //
@@ -881,7 +915,6 @@ fn object_name_or_default(named_obj: &ArchivedNamedObject<FrameInit>) -> &str {
     object_name(named_obj).unwrap_or("<unnamed>")
 }
 
-// TODO rm
 fn archived_range_to_range<T: Copy>(archived_range: &ArchivedRange<T>) -> Range<T> {
     archived_range.start..archived_range.end
 }
