@@ -119,8 +119,6 @@
     "--exclude",
     "tests-root-task-musl",
     "--exclude",
-    "sel4-musl",
-    "--exclude",
     "tests-root-task-panicking",
     "--exclude",
     "tests-root-task-ring-test-harness",
