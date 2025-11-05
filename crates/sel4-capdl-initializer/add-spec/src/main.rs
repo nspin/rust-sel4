@@ -29,6 +29,7 @@ fn main() -> Result<()> {
         &[&args.fill_dir_path],
         &args.object_names_level,
         args.embed_frames,
+        args.deflate,
     );
 
     fs::write(&args.out_file_path, rendered_initializer_elf_buf)?;
@@ -43,6 +44,7 @@ pub struct Args {
     pub out_file_path: String,
     pub object_names_level: ObjectNamesLevel,
     pub embed_frames: bool,
+    pub deflate: bool,
     pub verbose: bool,
 }
 
@@ -81,9 +83,13 @@ impl Args {
                     .value_parser(clap::value_parser!(u32).range(..=2)),
             )
             .arg(
-                Arg::new("embed_frames")
-                    .long("embed-frames")
-                    .value_name("EMBED_FRAMES")
+                Arg::new("no_embed_frames")
+                    .long("no-embed-frames")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("no_deflate")
+                    .long("no-deflate")
                     .action(ArgAction::SetTrue),
             )
             .arg(Arg::new("verbose").short('v').action(ArgAction::SetTrue))
@@ -107,7 +113,8 @@ impl Args {
             })
             .unwrap_or(ObjectNamesLevel::JustTcbs);
 
-        let embed_frames = *matches.get_one::<bool>("embed_frames").unwrap();
+        let embed_frames = !*matches.get_one::<bool>("no_embed_frames").unwrap();
+        let deflate = !*matches.get_one::<bool>("no_deflate").unwrap();
 
         let verbose = *matches.get_one::<bool>("verbose").unwrap();
 
@@ -118,6 +125,7 @@ impl Args {
             out_file_path,
             object_names_level,
             embed_frames,
+            deflate,
             verbose,
         })
     }

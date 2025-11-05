@@ -13,9 +13,11 @@ use rkyv::rancor;
 use rkyv::util::AlignedVec;
 
 mod cap_table;
-mod embed_fill;
 mod frame_init;
 mod spec;
+
+#[cfg(feature = "deflate")]
+mod embed_fill;
 
 #[cfg(feature = "sel4")]
 mod when_sel4;

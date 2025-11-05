@@ -394,6 +394,8 @@ in rec {
               };
             };
           };
+          embedFrames = false;
+          deflate = false;
         };
         extraPlatformArgs = lib.optionalAttrs canSimulate {
           canAutomateSimply = true;
