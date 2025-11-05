@@ -154,6 +154,9 @@ let
 
       sh = shell.overrideAttrs (attrs: {
         shellHook = (attrs.shellHook or "") + ''
+          # HACK
+          export D="cd ${dir}/${workspaceName}"
+
           v() {
             mkdir -p ${targetDir} && TMPDIR=/tmp code ${dir}/${workspaceName}
           }
