@@ -511,13 +511,12 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         debug!("Initializing Frames");
         for (obj_id, obj) in self.spec.filter_objects::<&object::ArchivedFrame<_>>() {
             // TODO make more platform-agnostic
-            if let Some(fill) = obj.init.as_fill() {
-                let entries = &fill.entries;
-                if !entries.is_empty() {
+            if let ArchivedFrameInit::Fill(fill) = &obj.init {
+                if !fill.entries.is_empty() {
                     let frame_object_type =
                         sel4::FrameObjectType::from_bits(obj.size_bits.into()).unwrap();
                     let frame = self.orig_cap::<cap_type::UnspecifiedPage>(obj_id);
-                    self.fill_frame(frame, frame_object_type, entries)?;
+                    self.fill_frame(frame, frame_object_type, &fill.entries)?;
                 }
             }
         }
@@ -528,7 +527,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         &self,
         frame: sel4::Cap<cap_type::UnspecifiedPage>,
         frame_object_type: sel4::FrameObjectType,
-        fill: &[ArchivedFillEntry<DeflatedBytesContent>],
+        fill: &[ArchivedFillEntry<Content>],
     ) -> Result<()> {
         frame.frame_map(
             init_thread::slot::VSPACE.cap(),
