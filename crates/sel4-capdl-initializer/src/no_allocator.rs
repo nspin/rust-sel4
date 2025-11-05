@@ -1,3 +1,9 @@
+//
+// Copyright 2025, Colias Group, LLC
+//
+// SPDX-License-Identifier: BSD-2-Clause
+//
+
 use core::alloc::{GlobalAlloc, Layout};
 
 #[global_allocator]
