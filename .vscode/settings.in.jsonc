@@ -9,6 +9,7 @@
     "rust-analyzer.statusBar.clickAction": "stopServer",
     "rust-analyzer.server.path": "rust-analyzer",
     "rust-analyzer.cargo.targetDir": true, // use subdir
+    "rust-analyzer.imports.granularity.group": "module",
     "rust-analyzer.linkedProjects": [
         "Cargo.toml",
         "hacking/cargo-manifest-management/tool/Cargo.toml"
