@@ -74,6 +74,8 @@ let
   settingsFile = writers.writeJSON "settings.json" {
     "rust-analyzer.server.path" = "rust-analyzer";
     "terminal.integrated.cwd" = toString topLevelPath;
+    "rust-analyzer.check.command" = "clippy";
+    "rust-analyzer.imports.granularity.group" = "module";
     "rust-analyzer.cargo.targetDir" = true; # use subdir of outer target-dir
   };
 
