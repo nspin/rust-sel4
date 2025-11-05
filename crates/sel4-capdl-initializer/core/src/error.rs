@@ -8,14 +8,11 @@ use crate::CSlotAllocatorError;
 use core::convert::Infallible;
 use core::fmt;
 use core::num::TryFromIntError;
-use sel4_capdl_initializer_types::*;
 
 #[derive(Debug)]
 pub enum CapDLInitializerError {
     CSlotAllocatorError(CSlotAllocatorError),
     SeL4Error(sel4::Error),
-    TryFromObjectError(TryFromObjectError),
-    TryFromCapError(TryFromCapError),
     TryFromIntError(TryFromIntError),
 }
 
@@ -28,18 +25,6 @@ impl From<CSlotAllocatorError> for CapDLInitializerError {
 impl From<sel4::Error> for CapDLInitializerError {
     fn from(err: sel4::Error) -> Self {
         Self::SeL4Error(err)
-    }
-}
-
-impl From<TryFromObjectError> for CapDLInitializerError {
-    fn from(err: TryFromObjectError) -> Self {
-        Self::TryFromObjectError(err)
-    }
-}
-
-impl From<TryFromCapError> for CapDLInitializerError {
-    fn from(err: TryFromCapError) -> Self {
-        Self::TryFromCapError(err)
     }
 }
 

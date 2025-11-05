@@ -87,7 +87,8 @@ fn get_spec() -> &'static <SpecForInitializer as Archive>::Archived {
             *sel4_capdl_initializer_serialized_spec_data_start.get(),
             *sel4_capdl_initializer_serialized_spec_data_size.get(),
         )
-    }).unwrap()
+    })
+    .unwrap()
 }
 
 fn user_image_bounds() -> Range<usize> {
