@@ -25,7 +25,7 @@ impl<D> Spec<Fill<D>> {
         let mut frame_data = vec![];
         let spec = self.traverse_frame_init_fallible(|frame, is_root| {
             Ok(
-                if embed_frames && frame.can_embed(granule_size_bits, is_root) {
+                if embed_frames && can_embed(granule_size_bits, frame, is_root) {
                     FrameInit::Embedded({
                         let mut frame_buf = vec![0; granule_size];
                         for entry in frame.init.entries.iter() {
@@ -120,25 +120,14 @@ impl<D> Spec<D> {
             untyped_covers: self.untyped_covers.clone(),
         })
     }
-
-    #[allow(unused)]
-    fn traverse_frame_init<D1>(
-        &self,
-        mut f: impl FnMut(&object::Frame<D>, bool) -> D1,
-    ) -> Spec<D1> {
-        self.traverse_frame_init_fallible(|x1, x2| Ok(f(x1, x2)))
-            .unwrap_or_else(|absurdity: Infallible| match absurdity {})
-    }
 }
 
-impl<D> object::Frame<Fill<D>> {
-    pub(crate) fn can_embed(&self, granule_size_bits: u8, is_root: bool) -> bool {
-        is_root
-            && self.paddr.is_none()
-            && self.size_bits == granule_size_bits
-            && !self.init.is_empty()
-            && !self.init.depends_on_bootinfo()
-    }
+fn can_embed<D>(granule_size_bits: u8, frame: &object::Frame<Fill<D>>, is_root: bool) -> bool {
+    is_root
+        && frame.paddr.is_none()
+        && frame.size_bits == granule_size_bits
+        && !frame.init.is_empty()
+        && !frame.init.depends_on_bootinfo()
 }
 
 impl<D> Fill<D> {
@@ -150,7 +139,7 @@ impl<D> Fill<D> {
         self.entries.is_empty()
     }
 
-    pub fn traverse_fallible<D1, E>(
+    fn traverse_fallible<D1, E>(
         &self,
         mut f: impl FnMut(&Range<u64>, &D) -> Result<D1, E>,
     ) -> Result<Fill<D1>, E> {
@@ -173,10 +162,5 @@ impl<D> Fill<D> {
                 })
                 .collect::<Result<_, E>>()?,
         })
-    }
-
-    pub fn traverse<D1>(&self, mut f: impl FnMut(&Range<u64>, &D) -> D1) -> Fill<D1> {
-        self.traverse_fallible(|x1, x2| Ok(f(x1, x2)))
-            .unwrap_or_else(|absurdity: Infallible| match absurdity {})
     }
 }
