@@ -26,7 +26,8 @@ pub fn reserialize_spec(
 
     let (mut output_spec, embedded_frames_data) =
         input_spec.embed_fill(embed_frames, granule_size_bits, |d, buf| {
-            filler.read(d, buf)
+            filler.read(d, buf);
+            true
         });
 
     for named_obj in output_spec.objects.iter_mut() {
@@ -77,7 +78,7 @@ impl Filler {
             .or_insert_with(|| File::open(path).unwrap())
     }
 
-    fn read(&mut self, key: &FileContent, buf: &mut [u8]) {
+    fn read(&mut self, key: &FillEntryContentFileOffset, buf: &mut [u8]) {
         self.get_handle(&key.file)
             .read_exact_at(buf, key.file_offset)
             .unwrap();

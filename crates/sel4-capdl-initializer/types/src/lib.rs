@@ -25,31 +25,16 @@ mod when_sel4;
 
 pub use archived_cap_table::{ArchivedPageTableEntry, HasArchivedCapTable};
 pub use cap_table::{HasCapTable, PageTableEntry};
-pub use frame_init::{
-    ArchivedEmbeddedFrameIndex, ArchivedFillEntry, ArchivedFillEntryContent,
-    ArchivedFillEntryContentBootInfoId, ArchivedFrameInit, BytesContent, Content,
-    EmbeddedFrameIndex, FileContent, Fill, FillEntry, FillEntryContent, FillEntryContentBootInfo,
-    FillEntryContentBootInfoId, FrameInit,
-};
-pub use spec::{
-    ArchivedBadge, ArchivedCPtr, ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry,
-    ArchivedIrqEntry, ArchivedNamedObject, ArchivedObject, ArchivedObjectId, ArchivedRights,
-    ArchivedSpec, AsidSlotEntry, Badge, CPtr, Cap, CapSlot, CapTableEntry, IrqEntry, NamedObject,
-    Object, ObjectId, Rights, Spec, TryFromCapError, TryFromObjectError, UntypedCover, cap, object,
-};
-
-#[cfg(feature = "deflate")]
-pub use frame_init::DeflatedBytesContent;
+pub use frame_init::*;
+pub use spec::*;
 
 #[cfg(feature = "sel4")]
 pub use when_sel4::*;
 
 // // //
 
-pub type InputSpec = Spec<Fill<FileContent>>;
+pub type InputSpec = Spec<Fill<FillEntryContentFileOffset>>;
 
-// TODO make type depend on whether "deflate" is enabled
-#[cfg(feature = "deflate")]
 pub type SpecForInitializer = Spec<FrameInit>;
 
 // // //

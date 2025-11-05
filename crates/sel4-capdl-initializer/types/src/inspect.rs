@@ -7,10 +7,11 @@
 use alloc::vec;
 use alloc::vec::Vec;
 use core::convert::Infallible;
+use core::ops::Range;
 
 use crate::{
-    CramUsize, DeflatedBytesContent, EmbeddedFrameIndex, Fill, FrameInit, NamedObject, Object,
-    ObjectId, Spec, SpecForInitializer, object,
+    BytesContent, Content, CramUsize, DeflatedBytesContent, EmbeddedFrameIndex, Fill, FillEntry,
+    FillEntryContent, FrameInit, NamedObject, Object, ObjectId, Spec, SpecForInitializer, object,
 };
 
 impl<D> Spec<Fill<D>> {
@@ -18,7 +19,7 @@ impl<D> Spec<Fill<D>> {
         &self,
         embed_frames: bool,
         granule_size_bits: u8,
-        mut f: impl FnMut(&D, &mut [u8]) -> Result<(), E>,
+        mut f: impl FnMut(&D, &mut [u8]) -> Result<bool, E>,
     ) -> Result<(SpecForInitializer, Vec<Vec<u8>>), E> {
         let granule_size = 1 << granule_size_bits;
         let mut frame_data = vec![];
@@ -44,8 +45,12 @@ impl<D> Spec<Fill<D>> {
                         frame.init.traverse_fallible(|range, data| {
                             let length = (range.end - range.start).try_into().unwrap();
                             let mut buf = vec![0; length];
-                            f(data, &mut buf)?;
-                            Ok(DeflatedBytesContent::pack(&buf))
+                            let deflate = f(data, &mut buf)?;
+                            Ok(if deflate {
+                                Content::DeflatedBytes(DeflatedBytesContent::pack(&buf))
+                            } else {
+                                Content::Bytes(BytesContent::pack(&buf))
+                            })
                         })?
                     })
                 },
@@ -54,12 +59,11 @@ impl<D> Spec<Fill<D>> {
         Ok((spec, frame_data))
     }
 
-    #[allow(clippy::unit_arg)]
     pub fn embed_fill(
         &self,
         embed_frames: bool,
         granule_size_bits: u8,
-        mut f: impl FnMut(&D, &mut [u8]),
+        mut f: impl FnMut(&D, &mut [u8]) -> bool,
     ) -> (SpecForInitializer, Vec<Vec<u8>>) {
         self.embed_fill_fallible(embed_frames, granule_size_bits, |x1, x2| Ok(f(x1, x2)))
             .unwrap_or_else(|absurdity: Infallible| match absurdity {})
@@ -123,6 +127,56 @@ impl<D> Spec<D> {
         mut f: impl FnMut(&object::Frame<D>, bool) -> D1,
     ) -> Spec<D1> {
         self.traverse_frame_init_fallible(|x1, x2| Ok(f(x1, x2)))
+            .unwrap_or_else(|absurdity: Infallible| match absurdity {})
+    }
+}
+
+impl<D> object::Frame<Fill<D>> {
+    pub(crate) fn can_embed(&self, granule_size_bits: u8, is_root: bool) -> bool {
+        is_root
+            && self.paddr.is_none()
+            && self.size_bits == granule_size_bits
+            && !self.init.is_empty()
+            && !self.init.depends_on_bootinfo()
+    }
+}
+
+impl<D> Fill<D> {
+    fn depends_on_bootinfo(&self) -> bool {
+        self.entries.iter().any(|entry| entry.content.is_bootinfo())
+    }
+
+    fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    pub fn traverse_fallible<D1, E>(
+        &self,
+        mut f: impl FnMut(&Range<u64>, &D) -> Result<D1, E>,
+    ) -> Result<Fill<D1>, E> {
+        Ok(Fill {
+            entries: self
+                .entries
+                .iter()
+                .map(|entry| {
+                    Ok(FillEntry {
+                        range: entry.range.clone(),
+                        content: match &entry.content {
+                            FillEntryContent::BootInfo(content_bootinfo) => {
+                                FillEntryContent::BootInfo(*content_bootinfo)
+                            }
+                            FillEntryContent::Data(content_data) => {
+                                FillEntryContent::Data(f(&entry.range, content_data)?)
+                            }
+                        },
+                    })
+                })
+                .collect::<Result<_, E>>()?,
+        })
+    }
+
+    pub fn traverse<D1>(&self, mut f: impl FnMut(&Range<u64>, &D) -> D1) -> Fill<D1> {
+        self.traverse_fallible(|x1, x2| Ok(f(x1, x2)))
             .unwrap_or_else(|absurdity: Infallible| match absurdity {})
     }
 }
