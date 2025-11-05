@@ -9,9 +9,6 @@ use alloc::vec::Vec;
 use core::fmt;
 use core::ops::Range;
 
-#[cfg(feature = "deflate")]
-use core::iter;
-
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -157,53 +154,57 @@ impl ArchivedBytesContent {
 }
 
 #[cfg(feature = "deflate")]
-#[derive(Clone, Eq, PartialEq, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct DeflatedBytesContent {
-    pub deflated_bytes: Vec<u8>,
-}
+pub use when_deflate::*;
 
 #[cfg(feature = "deflate")]
-impl fmt::Debug for DeflatedBytesContent {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DeflatedBytesContent")
-            .field("deflated_bytes", &Omitted)
-            .finish()
+mod when_deflate {
+    use core::iter;
+
+    use super::*;
+
+    #[derive(Clone, Eq, PartialEq, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+    pub struct DeflatedBytesContent {
+        pub deflated_bytes: Vec<u8>,
     }
-}
 
-#[cfg(feature = "deflate")]
-impl DeflatedBytesContent {
-    pub fn pack(raw_content: &[u8]) -> Self {
-        Self {
-            deflated_bytes: miniz_oxide::deflate::compress_to_vec(raw_content, 10),
+    impl fmt::Debug for DeflatedBytesContent {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.debug_struct("DeflatedBytesContent")
+                .field("deflated_bytes", &Omitted)
+                .finish()
         }
     }
-}
 
-#[cfg(feature = "deflate")]
-impl DeflatedBytesContent {
-    pub fn copy_out(&self, dst: &mut [u8]) {
-        copy_out_deflated(&self.deflated_bytes, dst)
+    impl DeflatedBytesContent {
+        pub fn pack(raw_content: &[u8]) -> Self {
+            Self {
+                deflated_bytes: miniz_oxide::deflate::compress_to_vec(raw_content, 10),
+            }
+        }
     }
-}
 
-#[cfg(feature = "deflate")]
-impl ArchivedDeflatedBytesContent {
-    pub fn copy_out(&self, dst: &mut [u8]) {
-        copy_out_deflated(&self.deflated_bytes, dst)
+    impl DeflatedBytesContent {
+        pub fn copy_out(&self, dst: &mut [u8]) {
+            copy_out_deflated(&self.deflated_bytes, dst)
+        }
     }
-}
 
-#[cfg(feature = "deflate")]
-fn copy_out_deflated(deflated_src: &[u8], dst: &mut [u8]) {
-    let n = miniz_oxide::inflate::decompress_slice_iter_to_slice(
-        dst,
-        iter::once(deflated_src),
-        false, // zlib_header
-        true,  // ignore_adler32
-    )
-    .unwrap();
-    assert_eq!(n, dst.len())
+    impl ArchivedDeflatedBytesContent {
+        pub fn copy_out(&self, dst: &mut [u8]) {
+            copy_out_deflated(&self.deflated_bytes, dst)
+        }
+    }
+
+    fn copy_out_deflated(deflated_src: &[u8], dst: &mut [u8]) {
+        let n = miniz_oxide::inflate::decompress_slice_iter_to_slice(
+            dst,
+            iter::once(deflated_src),
+            false, // zlib_header
+            true,  // ignore_adler32
+        )
+        .unwrap();
+        assert_eq!(n, dst.len())
+    }
 }
 
 // impl Debug helper
