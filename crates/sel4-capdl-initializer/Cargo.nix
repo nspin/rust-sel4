@@ -18,14 +18,17 @@ mk {
       sel4
       sel4-logging
       sel4-immutable-cell
+      sel4-one-ref-cell
     ;
     sel4-root-task = localCrates.sel4-root-task // { features = [ "single-threaded" ]; };
     sel4-capdl-initializer-types = localCrates.sel4-capdl-initializer-types;
   };
   features = {
     default = [
+      "alloc"
       "deflate"
     ];
+    alloc = [];
     deflate = [
       "sel4-capdl-initializer-types/deflate"
     ];

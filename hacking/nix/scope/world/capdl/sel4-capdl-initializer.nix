@@ -14,6 +14,7 @@
 , mkSeL4RustTargetTriple
 
 , deflate ? true
+, alloc ? true
 }:
 
 mkTask {
@@ -25,7 +26,7 @@ mkTask {
   release = true;
 
   noDefaultFeatures = true;
-  features = lib.optional deflate "deflate";
+  features = lib.optional deflate "deflate" ++ lib.optional deflate "alloc";
 
   # layers = [
   #   crateUtils.defaultIntermediateLayer

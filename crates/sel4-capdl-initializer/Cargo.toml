@@ -17,7 +17,8 @@ edition = "2024"
 license = "BSD-2-Clause"
 
 [features]
-default = ["deflate"]
+alloc = []
+default = ["alloc", "deflate"]
 deflate = ["sel4-capdl-initializer-types/deflate"]
 
 [dependencies]
@@ -28,4 +29,5 @@ sel4-capdl-initializer-core = { path = "core" }
 sel4-capdl-initializer-types = { path = "types" }
 sel4-immutable-cell = { path = "../sel4-immutable-cell" }
 sel4-logging = { path = "../sel4-logging" }
+sel4-one-ref-cell = { path = "../sel4-one-ref-cell" }
 sel4-root-task = { path = "../sel4-root-task", features = ["single-threaded"] }
