@@ -115,6 +115,8 @@ let
         "terminal.integrated.cwd" = toString topLevelPath;
         "rust-analyzer.server.path" = "rust-analyzer";
         "rust-analyzer.cargo.allTargets" = false;
+        "rust-analyzer.check.command" = "clippy";
+        "rust-analyzer.imports.granularity.group" = "module";
         "rust-analyzer.cargo.targetDir" = true; # use subdir of outer target-dir
       } // lib.optionalAttrs (optionalTargetTriple != null) {
         # "rust-analyzer.check.workspace" = false;
