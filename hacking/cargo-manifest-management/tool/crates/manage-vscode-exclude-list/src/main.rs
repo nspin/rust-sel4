@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -40,7 +40,7 @@ fn main() {
     let default_members = metadata
         .workspace_default_members
         .iter()
-        .collect::<HashSet<_>>();
+        .collect::<BTreeSet<_>>();
 
     let mut obj = parse_file(&args.in_);
 
