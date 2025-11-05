@@ -20,6 +20,7 @@ pub fn reserialize_spec(
     fill_dirs: &[impl AsRef<Path>],
     object_names_level: &ObjectNamesLevel,
     embed_frames: bool,
+    deflate: bool,
     granule_size_bits: u8,
 ) -> (SpecForInitializer, Vec<Vec<u8>>) {
     let mut filler = Filler::new(fill_dirs);
@@ -29,7 +30,7 @@ pub fn reserialize_spec(
         |_| embed_frames,
         |d, buf| {
             filler.read(d, buf);
-            true
+            deflate
         },
     );
 

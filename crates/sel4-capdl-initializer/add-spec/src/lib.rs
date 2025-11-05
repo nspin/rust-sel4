@@ -24,12 +24,14 @@ pub fn add_spec(
     fill_dirs: &[impl AsRef<Path>],
     object_names_level: &ObjectNamesLevel,
     embed_frames: bool,
+    deflate: bool,
 ) -> Vec<u8> {
     let (output_spec, embedded_frame_data_list) = reserialize_spec::reserialize_spec(
         spec,
         fill_dirs,
         object_names_level,
         embed_frames,
+        deflate,
         GRANULE_SIZE_BITS,
     );
 

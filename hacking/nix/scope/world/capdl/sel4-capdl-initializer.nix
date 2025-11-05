@@ -4,13 +4,16 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ runCommand
+{ lib
+, runCommand
 , capdl-tool
 , objectSizes
 , mkTask, crates
 , crateUtils
 , seL4Modifications
 , mkSeL4RustTargetTriple
+
+, deflate ? true
 }:
 
 mkTask {
@@ -20,6 +23,9 @@ mkTask {
   targetTriple = mkSeL4RustTargetTriple { minimal = true; };
 
   release = true;
+
+  noDefaultFeatures = true;
+  features = lib.optional deflate "deflate";
 
   # layers = [
   #   crateUtils.defaultIntermediateLayer

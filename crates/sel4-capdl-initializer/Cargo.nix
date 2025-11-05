@@ -20,11 +20,14 @@ mk {
       sel4-immutable-cell
     ;
     sel4-root-task = localCrates.sel4-root-task // { features = [ "single-threaded" ]; };
-    sel4-capdl-initializer-types = localCrates.sel4-capdl-initializer-types // { features = [ "serde" "deflate" ]; };
+    sel4-capdl-initializer-types = localCrates.sel4-capdl-initializer-types;
   };
-  # features = {
-  #   deflate = [
-  #     "sel4-capdl-initializer-types/deflate"
-  #   ];
-  # };
+  features = {
+    default = [
+      "deflate"
+    ];
+    deflate = [
+      "sel4-capdl-initializer-types/deflate"
+    ];
+  };
 }

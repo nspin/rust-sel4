@@ -14,11 +14,19 @@
 , sel4-capdl-initializer
 }:
 
-{ cdl, fill }:
+{ cdl
+, fill
+, embedFrames ? true
+, deflate ? true
+}:
 
 let
   json = serializeCapDLSpec {
     inherit cdl;
+  };
+
+  initializer = sel4-capdl-initializer.override {
+    inherit deflate;
   };
 
 in lib.fix (self: runCommand "sel4-capdl-initializer-with-spec" {
@@ -39,10 +47,11 @@ in lib.fix (self: runCommand "sel4-capdl-initializer-with-spec" {
 } ''
   sel4-capdl-initializer-add-spec \
     -v \
-    -e ${sel4-capdl-initializer.elf} \
+    -e ${initializer.elf} \
     -f ${json} \
     -d ${fill} \
     --object-names-level 2 \
-    --embed-frames \
+    ${lib.optionalString (!embedFrames) "--no-embed-frames"} \
+    ${lib.optionalString (!deflate) "--no-deflate"} \
     -o $out
 '')
