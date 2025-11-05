@@ -14,8 +14,8 @@ use rkyv::Archive;
 use rkyv::primitive::{ArchivedU16, ArchivedU32, ArchivedU64};
 
 mod cap_table;
+mod embed_fill;
 mod frame_init;
-mod inspect;
 mod inspect_archived;
 mod spec;
 
