@@ -17,25 +17,25 @@ use crate::{
 impl<D> Spec<Fill<D>> {
     pub fn embed_fill(
         &self,
-        embed_frames: bool,
         granule_size_bits: u8,
+        should_embed: impl FnMut(&Fill<D>) -> bool,
         mut f: impl FnMut(&D, &mut [u8]) -> bool,
     ) -> (SpecForInitializer, Vec<Vec<u8>>) {
-        self.embed_fill_fallible(embed_frames, granule_size_bits, |x1, x2| Ok(f(x1, x2)))
+        self.embed_fill_fallible(granule_size_bits, should_embed, |x1, x2| Ok(f(x1, x2)))
             .unwrap_or_else(|absurdity: Infallible| match absurdity {})
     }
 
     pub fn embed_fill_fallible<E>(
         &self,
-        embed_frames: bool,
         granule_size_bits: u8,
+        mut should_embed: impl FnMut(&Fill<D>) -> bool,
         mut f: impl FnMut(&D, &mut [u8]) -> Result<bool, E>,
     ) -> Result<(SpecForInitializer, Vec<Vec<u8>>), E> {
         let granule_size = 1 << granule_size_bits;
         let mut frame_data = vec![];
         let spec = self.traverse_frame_init_fallible(|frame, is_root| {
             Ok(
-                if embed_frames && can_embed(granule_size_bits, frame, is_root) {
+                if should_embed(&frame.init) && can_embed(granule_size_bits, frame, is_root) {
                     FrameInit::Embedded({
                         let mut frame_buf = vec![0; granule_size];
                         for entry in frame.init.entries.iter() {
