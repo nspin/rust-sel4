@@ -27,7 +27,6 @@ let
     "sel4-config-data"
     "sel4-panicking"
     "sel4-reset" # not yet implement for x86
-    "sel4-newlib" # requires env
     "tests-root-task-dafny-core"
   ];
 

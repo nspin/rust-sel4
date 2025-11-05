@@ -39,8 +39,6 @@
     "--exclude",
     "microkit-http-server-example-server",
     "--exclude",
-    "sel4-newlib",
-    "--exclude",
     "microkit-http-server-example-sp804-driver",
     "--exclude",
     "microkit-http-server-example-virtio-blk-driver",
