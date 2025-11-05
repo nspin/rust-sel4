@@ -44,7 +44,7 @@ let
 
   blockList = [
     "sel4-config-data"
-    "sel4-panicking"
+    "sel4-test-harness"
     "sel4-reset" # not yet implement for x86
     "sel4-newlib" # requires env
     "sel4-kernel-loader" # requires env

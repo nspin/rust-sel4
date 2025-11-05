@@ -11,7 +11,7 @@ let
     let
       blockList = [
         "sel4-config-data"
-        "sel4-panicking" # declares lang items
+        "sel4-test-harness"
         "sel4-reset" # not yet implement for x86
         "sel4-newlib" # requires newlib
         "sel4-musl" # requires musl

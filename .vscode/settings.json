@@ -21,8 +21,6 @@
     "--exclude",
     "sel4-microkit",
     "--exclude",
-    "sel4-panicking",
-    "--exclude",
     "sel4-runtime-common",
     "--exclude",
     "banscii-artist",
