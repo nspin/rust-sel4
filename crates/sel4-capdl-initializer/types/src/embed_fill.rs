@@ -10,7 +10,7 @@ use core::convert::Infallible;
 use core::ops::Range;
 
 use crate::{
-    BytesContent, Content, CramUsize, DeflatedBytesContent, EmbeddedFrameIndex, Fill, FillEntry,
+    BytesContent, Content, DeflatedBytesContent, EmbeddedFrameIndex, Fill, FillEntry,
     FillEntryContent, FrameInit, NamedObject, Object, ObjectId, Spec, SpecForInitializer, object,
 };
 
@@ -31,7 +31,7 @@ impl<D> Spec<Fill<D>> {
                         for entry in frame.init.entries.iter() {
                             f(
                                 entry.content.as_data().unwrap(),
-                                &mut frame_buf[u64::into_usize_range(&entry.range)],
+                                &mut frame_buf[try_into_usize_range(&entry.range).unwrap()],
                             )?;
                         }
                         let ix = frame_data.len();
@@ -163,4 +163,10 @@ impl<D> Fill<D> {
                 .collect::<Result<_, E>>()?,
         })
     }
+}
+
+fn try_into_usize_range<T: TryInto<usize> + Copy>(
+    range: &Range<T>,
+) -> Result<Range<usize>, <T as TryInto<usize>>::Error> {
+    Ok(range.start.try_into()?..range.end.try_into()?)
 }

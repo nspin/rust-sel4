@@ -9,12 +9,11 @@
 use core::array;
 use core::borrow::BorrowMut;
 use core::ops::Range;
-use core::result;
+use core::result::Result as CoreResult;
 use core::slice;
 
 use rkyv::Archive;
 use rkyv::ops::ArchivedRange;
-use rkyv::primitive::ArchivedU64;
 
 #[allow(unused_imports)]
 use log::{debug, info, trace};
@@ -40,7 +39,7 @@ use memory::{CopyAddrs, get_user_image_frame_slot};
 #[sel4::sel4_cfg(all(ARCH_RISCV64, not(PT_LEVELS = "3")))]
 compile_error!("unsupported configuration");
 
-type Result<T> = result::Result<T, CapDLInitializerError>;
+type Result<T> = CoreResult<T, CapDLInitializerError>;
 
 pub struct Initializer<'a, B> {
     bootinfo: &'a sel4::BootInfoPtr,
@@ -135,7 +134,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         let mut by_size_end: [usize; sel4::WORD_SIZE] = array::from_fn(|_| 0);
         {
             for obj_id in first_obj_without_paddr..self.root_objects().len() {
-                let obj = &self.object(ArchivedObjectId::from_usize(obj_id));
+                let obj = &self.object(obj_id.into());
                 if let Some(blueprint) = obj.blueprint() {
                     by_size_end[blueprint.physical_size_bits()] += 1;
                 }
@@ -175,10 +174,12 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
             loop {
                 let target = if next_obj_with_paddr < num_objs_with_paddr {
                     ut_paddr_end.min(
-                        self.object(ArchivedObjectId::from_usize(next_obj_with_paddr))
+                        self.object(next_obj_with_paddr.into())
                             .paddr()
                             .unwrap()
-                            .into_usize(),
+                            .to_sel4()
+                            .try_into()
+                            .unwrap(),
                     )
                 } else {
                     ut_paddr_end
@@ -194,14 +195,10 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                             let obj_id = &mut by_size_start[size_bits];
                             // Skip embedded frames
                             while *obj_id < by_size_end[size_bits] {
-                                if let ArchivedObject::Frame(obj) =
-                                    self.object(ArchivedObjectId::from_usize(*obj_id))
+                                if let ArchivedObject::Frame(obj) = self.object((*obj_id).into())
                                     && let ArchivedFrameInit::Embedded(embedded) = &obj.init
                                 {
-                                    self.take_cap_for_embedded_frame(
-                                        ArchivedObjectId::from_usize(*obj_id),
-                                        embedded,
-                                    )?;
+                                    self.take_cap_for_embedded_frame((*obj_id).into(), embedded)?;
                                     *obj_id += 1;
                                     continue;
                                 }
@@ -209,8 +206,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                             }
                             // Create a largest possible object that would fit
                             if *obj_id < by_size_end[size_bits] {
-                                let named_obj =
-                                    &self.named_object(ArchivedObjectId::from_usize(*obj_id));
+                                let named_obj = &self.named_object((*obj_id).into());
                                 let blueprint = named_obj.object.blueprint().unwrap();
                                 assert_eq!(blueprint.physical_size_bits(), size_bits);
                                 trace!(
@@ -222,8 +218,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                                 self.ut_cap(*i_ut).untyped_retype(
                                     &blueprint,
                                     &init_thread_cnode_absolute_cptr(),
-                                    self.alloc_orig_cslot(ArchivedObjectId::from_usize(*obj_id))
-                                        .index(),
+                                    self.alloc_orig_cslot((*obj_id).into()).index(),
                                     1,
                                 )?;
                                 cur_paddr += 1 << size_bits;
@@ -256,7 +251,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                 }
                 if target_is_obj_with_paddr {
                     let obj_id = next_obj_with_paddr;
-                    let named_obj = &self.named_object(ArchivedObjectId::from_usize(obj_id));
+                    let named_obj = &self.named_object(obj_id.into());
                     let blueprint = named_obj.object.blueprint().unwrap();
                     trace!(
                         "Creating device object: paddr=0x{:x}, size_bits={} name={:?}",
@@ -267,8 +262,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                     self.ut_cap(*i_ut).untyped_retype(
                         &blueprint,
                         &init_thread_cnode_absolute_cptr(),
-                        self.alloc_orig_cslot(ArchivedObjectId::from_usize(obj_id))
-                            .index(),
+                        self.alloc_orig_cslot(obj_id.into()).index(),
                         1,
                     )?;
                     cur_paddr += 1 << blueprint.physical_size_bits();
@@ -302,8 +296,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                 parent_cptr.untyped_retype(
                     &child.object.blueprint().unwrap(),
                     &init_thread_cnode_absolute_cptr(),
-                    self.alloc_orig_cslot(ArchivedObjectId::from_usize(child_obj_id))
-                        .index(),
+                    self.alloc_orig_cslot(child_obj_id.into()).index(),
                     1,
                 )?;
             }
@@ -331,22 +324,22 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                     match self.object(*handler) {
                         ArchivedObject::Irq(_) => {
                             init_thread::slot::IRQ_CONTROL.cap()
-                                .irq_control_get(irq.into_word(), &cslot_to_absolute_cptr(slot))?;
+                                .irq_control_get(irq.to_sel4(), &cslot_to_absolute_cptr(slot))?;
                         }
                         #[sel4_cfg(any(ARCH_AARCH64, ARCH_AARCH32))]
                         ArchivedObject::ArmIrq(obj) => {
                             sel4::sel4_cfg_if! {
                                 if #[sel4_cfg(MAX_NUM_NODES = "1")] {
                                     init_thread::slot::IRQ_CONTROL.cap().irq_control_get_trigger(
-                                        irq.into_word(),
+                                        irq.to_sel4(),
                                         obj.extra.trigger != 0,
                                         &cslot_to_absolute_cptr(slot),
                                     )?;
                                 } else {
                                     init_thread::slot::IRQ_CONTROL.cap().irq_control_get_trigger_core(
-                                        irq.into_word(),
+                                        irq.to_sel4(),
                                         obj.extra.trigger != 0,
-                                        obj.extra.target.into_word(),
+                                        obj.extra.target.to_sel4(),
                                         &cslot_to_absolute_cptr(slot),
                                     )?;
                                 }
@@ -355,29 +348,29 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                         #[sel4_cfg(ARCH_X86_64)]
                         ArchivedObject::IrqMsi(obj) => {
                             init_thread::slot::IRQ_CONTROL.cap().irq_control_get_msi(
-                                obj.extra.pci_bus.into_word(),
-                                obj.extra.pci_dev.into_word(),
-                                obj.extra.pci_func.into_word(),
-                                obj.extra.handle.into_word(),
-                                irq.into_word(),
+                                obj.extra.pci_bus.to_sel4(),
+                                obj.extra.pci_dev.to_sel4(),
+                                obj.extra.pci_func.to_sel4(),
+                                obj.extra.handle.to_sel4(),
+                                irq.to_sel4(),
                                 &cslot_to_absolute_cptr(slot),
                             )?;
                         }
                         #[sel4_cfg(ARCH_X86_64)]
                         ArchivedObject::IrqIOApic(obj) => {
                             init_thread::slot::IRQ_CONTROL.cap().irq_control_get_ioapic(
-                                obj.extra.ioapic.into_word(),
-                                obj.extra.pin.into_word(),
-                                obj.extra.level.into_word(),
-                                obj.extra.polarity.into_word(),
-                                irq.into_word(),
+                                obj.extra.ioapic.to_sel4(),
+                                obj.extra.pin.to_sel4(),
+                                obj.extra.level.to_sel4(),
+                                obj.extra.polarity.to_sel4(),
+                                irq.to_sel4(),
                                 &cslot_to_absolute_cptr(slot),
                             )?;
                         }
                         #[sel4_cfg(any(ARCH_RISCV64, ARCH_RISCV32))]
                         ArchivedObject::RiscvIrq(obj) => {
                             init_thread::slot::IRQ_CONTROL.cap().irq_control_get_trigger(
-                                irq.into_word(),
+                                irq.to_sel4(),
                                 obj.extra.trigger != 0,
                                 &cslot_to_absolute_cptr(slot),
                             )?;
@@ -396,7 +389,6 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
             if #[sel4_cfg(ARCH_X86_64)] {
                 {
                     let ioports = self
-                        .spec
                         .filter_objects::<object::ArchivedIOPorts>()
                         .map(|(obj_id, obj)| (obj_id, obj.start_port, obj.end_port));
 
@@ -404,7 +396,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                         let slot = self.cslot_alloc_or_panic();
                         init_thread::slot::IO_PORT_CONTROL
                             .cap()
-                            .ioport_control_issue(start_port.into_word(), end_port.into_word(), &cslot_to_absolute_cptr(slot))?;
+                            .ioport_control_issue(start_port.to_sel4(), end_port.to_sel4(), &cslot_to_absolute_cptr(slot))?;
                         self.set_orig_cslot(obj_id, slot);
                     }
                 }
@@ -471,13 +463,13 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         for (obj_id, notification) in all_irq_notifications {
             let irq_handler = self.orig_cap::<cap_type::IrqHandler>(obj_id);
             if let Some(logical_nfn_cap) = notification {
-                let nfn = match logical_nfn_cap.badge.into_sel4() {
+                let nfn = match logical_nfn_cap.badge.to_sel4() {
                     0 => self.orig_cap(logical_nfn_cap.object),
                     badge => {
                         let orig_cptr = self.orig_absolute_cptr(logical_nfn_cap.object);
                         let slot = self.cslot_alloc_or_panic();
                         let cptr = cslot_to_absolute_cptr(slot);
-                        cptr.mint(&orig_cptr, CapRights::all(), badge.into_word())?;
+                        cptr.mint(&orig_cptr, CapRights::all(), badge)?;
                         slot.cap().downcast()
                     }
                 };
@@ -527,7 +519,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
             vm_attributes_from_whether_cached(false),
         )?;
         for entry in fill.iter() {
-            let range = ArchivedU64::into_usize_range(&archived_range_to_range(&entry.range));
+            let range = try_into_usize_range(&archived_range_to_range(&entry.range)).unwrap();
             let offset = range.start;
             let length = range.len();
             assert!(range.end <= frame_object_type.bytes());
@@ -540,14 +532,14 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                 ArchivedFillEntryContent::BootInfo(content_bootinfo) => {
                     for extra in self.bootinfo.extra() {
                         if extra.id == (&content_bootinfo.id).into() {
-                            let n = dst.len().min(
-                                extra
-                                    .content_with_header()
-                                    .len()
-                                    .saturating_sub(content_bootinfo.offset.into_usize()),
-                            );
+                            let n =
+                                dst.len()
+                                    .min(extra.content_with_header().len().saturating_sub(
+                                        content_bootinfo.offset.to_native().try_into().unwrap(),
+                                    ));
                             if n > 0 {
-                                let offset = content_bootinfo.offset.into_usize();
+                                let offset =
+                                    content_bootinfo.offset.to_native().try_into().unwrap();
                                 dst[..n].copy_from_slice(
                                     &extra.content_with_header()[offset..(offset + n)],
                                 );
@@ -580,7 +572,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
         obj: &object::ArchivedPageTable,
     ) -> Result<()> {
         for (i, entry) in obj.entries() {
-            let vaddr = vaddr + (i.into_usize() << sel4::vspace_levels::step_bits(level));
+            let vaddr = vaddr + (usize::from(i) << sel4::vspace_levels::step_bits(level));
             match entry {
                 PageTableEntry::Frame(cap) => {
                     let frame = self.orig_cap::<cap_type::UnspecifiedPage>(cap.object);
@@ -607,7 +599,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     #[sel4::sel4_cfg(KERNEL_MCS)]
     fn init_sched_contexts(&self) -> Result<()> {
         debug!("Initializing scheduling contexts");
-        for (obj_id, _obj) in self.spec.filter_objects::<object::ArchivedSchedContext>() {
+        for (obj_id, _obj) in self.filter_objects::<object::ArchivedSchedContext>() {
             self.init_sched_context(obj_id, 0)?;
         }
         Ok(())
@@ -615,9 +607,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
     #[sel4::sel4_cfg(KERNEL_MCS)]
     fn init_sched_context(&self, obj_id: ArchivedObjectId, affinity: usize) -> Result<()> {
-        let obj = self
-            .spec
-            .lookup_object::<&object::ArchivedSchedContext>(obj_id)?;
+        let obj = self.lookup_object::<object::ArchivedSchedContext>(obj_id)?;
         let sched_context = self.orig_cap::<cap_type::SchedContext>(obj_id);
         self.bootinfo
             .sched_control()
@@ -628,7 +618,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                 obj.extra.budget.to_native(),
                 obj.extra.period.to_native(),
                 0,
-                obj.extra.badge.to_native(),
+                obj.extra.badge.to_sel4(),
                 0,
             )?;
         Ok(())
@@ -658,11 +648,11 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
             {
                 let cspace = self.orig_cap(obj.cspace().object);
                 let cspace_root_data = sel4::CNodeCapData::new(
-                    obj.cspace().guard.into_word(),
-                    obj.cspace().guard_size.try_into().unwrap(),
+                    obj.cspace().guard.to_sel4(),
+                    obj.cspace().guard_size.into(),
                 );
                 let vspace = self.orig_cap(obj.vspace().object);
-                let ipc_buffer_addr = obj.extra.ipc_buffer_addr;
+                let ipc_buffer_addr = obj.extra.ipc_buffer_addr.to_sel4();
                 let ipc_buffer_frame = self.orig_cap(obj.ipc_buffer().object);
 
                 let authority = init_thread::slot::TCB.cap();
@@ -670,19 +660,19 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                 let prio = obj.extra.prio.into();
 
                 #[allow(unused_variables)]
-                let affinity: usize = obj.extra.affinity.try_into()?;
+                let affinity = obj.extra.affinity.to_sel4();
 
                 sel4::sel4_cfg_if! {
                     if #[sel4_cfg(KERNEL_MCS)] {
                         if let Some(sched_context_cap) = obj.sc() {
-                            self.init_sched_context(sched_context_cap.object, affinity)?;
+                            self.init_sched_context(sched_context_cap.object, affinity.try_into().unwrap())?;
                         }
 
                         tcb.tcb_configure(
                             cspace,
                             cspace_root_data,
                             vspace,
-                            ipc_buffer_addr.into_word(),
+                            ipc_buffer_addr,
                             ipc_buffer_frame,
                         )?;
 
@@ -695,7 +685,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                             None => init_thread::slot::NULL.cap().cast::<cap_type::Endpoint>(),
                             Some(cap) => {
                                 let orig = self.orig_cap::<cap_type::Endpoint>(cap.object);
-                                let badge = cap.badge;
+                                let badge = cap.badge.to_sel4();
                                 let rights = (&cap.rights).into();
                                 if badge == 0 && rights == CapRights::all() {
                                     orig
@@ -703,7 +693,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                                     let src = init_thread::slot::CNODE.cap().absolute_cptr(orig);
                                     let new = self.cslot_alloc_or_panic().cap();
                                     let dst = init_thread::slot::CNODE.cap().absolute_cptr(new);
-                                    dst.mint(&src, rights, badge.into_word())?;
+                                    dst.mint(&src, rights, badge)?;
                                     new.cast()
                                 }
                             },
@@ -712,7 +702,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                         let temp_fault_ep = match obj.temp_fault_ep() {
                             None => init_thread::slot::NULL.cap().cast::<cap_type::Endpoint>(),
                             Some(cap) => {
-                                assert_eq!(cap.badge, 0); // HACK
+                                assert_eq!(cap.badge.to_sel4(), 0); // HACK
                                 self.orig_cap::<cap_type::Endpoint>(cap.object)
                             },
                         };
@@ -727,14 +717,14 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
                         tcb.tcb_set_timeout_endpoint(temp_fault_ep)?;
                     } else {
-                        let fault_ep = obj.extra.master_fault_ep.as_ref().unwrap().into_sel4();
+                        let fault_ep = sel4::CPtr::from_bits(obj.extra.master_fault_ep.as_ref().unwrap().to_sel4());
 
                         tcb.tcb_configure(
                             fault_ep,
                             cspace,
                             cspace_root_data,
                             vspace,
-                            ipc_buffer_addr.into_word(),
+                            ipc_buffer_addr,
                             ipc_buffer_frame,
                         )?;
 
@@ -746,7 +736,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
                         sel4::sel4_cfg_if! {
                             if #[sel4_cfg(not(MAX_NUM_NODES = "1"))] {
-                                tcb.tcb_set_affinity(affinity.try_into().unwrap())?;
+                                tcb.tcb_set_affinity(affinity)?;
                             }
                         }
                     }
@@ -755,10 +745,10 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
 
             {
                 let mut regs = sel4::UserContext::default();
-                *regs.pc_mut() = obj.extra.ip.into_word();
-                *regs.sp_mut() = obj.extra.sp.into_word();
+                *regs.pc_mut() = obj.extra.ip.to_sel4();
+                *regs.sp_mut() = obj.extra.sp.to_sel4();
                 for (i, value) in obj.extra.gprs.iter().enumerate() {
-                    *regs.c_param_mut(i) = value.into_word();
+                    *regs.c_param_mut(i) = value.to_sel4();
                 }
                 tcb.tcb_write_all_registers(false, &mut regs)?;
             }
@@ -786,12 +776,12 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                     .cap()
                     .absolute_cptr(self.orig_cap::<cap_type::Unspecified>(entry.cap.obj()));
                 let dst = cnode.absolute_cptr_from_bits_with_depth(
-                    entry.slot.into_word(),
+                    usize::from(entry.slot).try_into().unwrap(),
                     obj.size_bits.into(),
                 );
                 match badge {
                     None => dst.copy(&src, rights),
-                    Some(badge) => dst.mint(&src, rights, badge.into_word()),
+                    Some(badge) => dst.mint(&src, rights, badge),
                 }?;
             }
         }
@@ -812,7 +802,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     //
 
     fn named_object(&self, obj_id: ArchivedObjectId) -> &'a ArchivedNamedObject<FrameInit> {
-        &self.spec.objects[obj_id.into_usize()]
+        &self.spec.objects[usize::from(obj_id)]
     }
 
     fn object(&self, obj_id: ArchivedObjectId) -> &'a ArchivedObject<FrameInit> {
@@ -838,7 +828,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     ) -> impl Iterator<Item = (ArchivedObjectId, &'a O)> + 'a {
         self.objects()
             .enumerate()
-            .filter_map(|(obj_id, obj)| Some((ArchivedObjectId::from_usize(obj_id), obj.as_()?)))
+            .filter_map(|(obj_id, obj)| Some((obj_id.into(), obj.as_()?)))
     }
 
     fn filter_objects_with<O: IsArchivedObject<FrameInit> + 'a>(
@@ -871,11 +861,11 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     }
 
     fn set_orig_cslot(&mut self, obj_id: ArchivedObjectId, slot: Slot) {
-        self.buffers.per_obj_mut()[obj_id.into_usize()].orig_slot = Some(slot);
+        self.buffers.per_obj_mut()[usize::from(obj_id)].orig_slot = Some(slot);
     }
 
     fn orig_cslot(&self, obj_id: ArchivedObjectId) -> Slot {
-        self.buffers.per_obj()[obj_id.into_usize()]
+        self.buffers.per_obj()[usize::from(obj_id)]
             .orig_slot
             .unwrap()
     }
@@ -917,4 +907,10 @@ fn object_name_or_default(named_obj: &ArchivedNamedObject<FrameInit>) -> &str {
 
 fn archived_range_to_range<T: Copy>(archived_range: &ArchivedRange<T>) -> Range<T> {
     archived_range.start..archived_range.end
+}
+
+fn try_into_usize_range<T: TryInto<usize> + Copy>(
+    range: &Range<T>,
+) -> CoreResult<Range<usize>, <T as TryInto<usize>>::Error> {
+    Ok(range.start.try_into()?..range.end.try_into()?)
 }

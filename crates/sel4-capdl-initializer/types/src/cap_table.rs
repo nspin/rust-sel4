@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+use rkyv::Archive;
+
 use crate::{
     ArchivedCap, ArchivedCapSlot, ArchivedCapTableEntry, Cap, CapSlot, CapTableEntry,
     IsArchivedCap, IsCap, cap, object,
@@ -105,7 +107,7 @@ macro_rules! alias_cap_table {
     }) => {
         impl $obj_ty {
             $(
-                pub const $slot_name: CapSlot = $n;
+                pub const $slot_name: CapSlot = CapSlot($n);
 
                 pub fn $accessor_name(&self) -> $ty {
                     <$ty>::get_slot_target(self, Self::$slot_name)
@@ -115,7 +117,7 @@ macro_rules! alias_cap_table {
 
         impl $archived_obj_ty {
             $(
-                pub const $slot_name: ArchivedCapSlot = ArchivedCapSlot::from_native($n);
+                pub const $slot_name: ArchivedCapSlot = ArchivedCapSlot(<u32 as Archive>::Archived::from_native($n));
 
                 pub fn $accessor_name(&self) -> $archived_ty {
                     <$archived_ty>::get_slot_target_archived(self, Self::$slot_name)

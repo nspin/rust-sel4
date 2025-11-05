@@ -5,13 +5,12 @@
 //
 
 use rkyv::Archive;
-use rkyv::primitive::{ArchivedU16, ArchivedU32, ArchivedU64};
 
 use sel4::{ObjectBlueprint, VmAttributes};
 
 use crate::{
-    ArchivedBadge, ArchivedCPtr, ArchivedCap, ArchivedFillEntryContentBootInfoId, ArchivedObject,
-    ArchivedRights, cap,
+    ArchivedCap, ArchivedFillEntryContentBootInfoId, ArchivedObject, ArchivedRights, ArchivedWord,
+    cap,
 };
 
 impl<D: Archive> ArchivedObject<D> {
@@ -87,11 +86,10 @@ impl ArchivedCap {
 
     pub fn badge(&self) -> Option<sel4::Badge> {
         Some(match self {
-            ArchivedCap::Endpoint(cap) => cap.badge.into_sel4(),
-            ArchivedCap::Notification(cap) => cap.badge.into_sel4(),
+            ArchivedCap::Endpoint(cap) => cap.badge.to_sel4(),
+            ArchivedCap::Notification(cap) => cap.badge.to_sel4(),
             ArchivedCap::CNode(cap) => {
-                sel4::CNodeCapData::new(cap.guard.into_word(), cap.guard_size.try_into().unwrap())
-                    .into_word()
+                sel4::CNodeCapData::new(cap.guard.to_sel4(), cap.guard_size.into()).into_word()
             }
 
             _ => return None,
@@ -99,15 +97,10 @@ impl ArchivedCap {
     }
 }
 
-impl ArchivedCPtr {
-    pub fn into_sel4(&self) -> sel4::CPtr {
-        sel4::CPtr::from_bits(self.0.into_word())
-    }
-}
-
-impl ArchivedBadge {
-    pub fn into_sel4(&self) -> sel4::Badge {
-        self.0.into_word()
+impl ArchivedWord {
+    #[allow(clippy::useless_conversion)]
+    pub fn to_sel4(&self) -> sel4::Word {
+        self.0.to_native().try_into().unwrap()
     }
 }
 
@@ -161,46 +154,3 @@ pub fn vm_attributes_from_whether_cached(cached: bool) -> VmAttributes {
 fn default_vm_attributes_for_page_table() -> VmAttributes {
     VmAttributes::default()
 }
-
-// // //
-
-pub trait CramWord: Copy {
-    fn into_word(self) -> sel4::Word;
-    fn from_word(x: sel4::Word) -> Self;
-}
-
-macro_rules! impl_cram_word_using_try {
-    ($ty:ty) => {
-        impl CramWord for $ty {
-            fn into_word(self) -> sel4::Word {
-                self.try_into().unwrap_or_else(|_| panic!())
-            }
-
-            fn from_word(x: sel4::Word) -> Self {
-                Self::try_from(x).unwrap_or_else(|_| panic!())
-            }
-        }
-    };
-}
-
-impl_cram_word_using_try!(u16);
-impl_cram_word_using_try!(u32);
-impl_cram_word_using_try!(u64);
-
-macro_rules! impl_cram_word_using_native {
-    ($archived_ty:ty, $native_ty:ty) => {
-        impl CramWord for $archived_ty {
-            fn into_word(self) -> sel4::Word {
-                self.to_native().into_word()
-            }
-
-            fn from_word(x: sel4::Word) -> Self {
-                Self::from_native(<$native_ty as CramWord>::from_word(x))
-            }
-        }
-    };
-}
-
-impl_cram_word_using_native!(ArchivedU16, u16);
-impl_cram_word_using_native!(ArchivedU32, u32);
-impl_cram_word_using_native!(ArchivedU64, u64);
