@@ -113,6 +113,16 @@ impl Content {
     }
 }
 
+impl ArchivedContent {
+    pub fn copy_out(&self, dst: &mut [u8]) {
+        match self {
+            Self::Bytes(bytes) => bytes.copy_out(dst),
+            #[cfg(feature = "deflate")]
+            Self::DeflatedBytes(deflated_bytes) => deflated_bytes.copy_out(dst),
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct BytesContent {
     pub bytes: Vec<u8>,
