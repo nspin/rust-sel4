@@ -25,7 +25,7 @@ use crate::object;
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub enum FrameInit {
     Fill(Fill<DeflatedBytesContent>),
-    Embedded(EmbeddedFrameOffset),
+    Embedded(EmbeddedFrameIndex),
 }
 
 impl FrameInit {
@@ -36,7 +36,7 @@ impl FrameInit {
         }
     }
 
-    pub const fn as_embedded(&self) -> Option<&EmbeddedFrameOffset> {
+    pub const fn as_embedded(&self) -> Option<&EmbeddedFrameIndex> {
         match self {
             Self::Embedded(embedded) => Some(embedded),
             _ => None,
@@ -62,7 +62,7 @@ impl ArchivedFrameInit {
 }
 
 impl<D> object::Frame<Fill<D>> {
-    pub fn can_embed(&self, granule_size_bits: u8, is_root: bool) -> bool {
+    pub(crate) fn can_embed(&self, granule_size_bits: u8, is_root: bool) -> bool {
         is_root
             && self.paddr.is_none()
             && self.size_bits == granule_size_bits
@@ -76,8 +76,8 @@ impl<D> object::Frame<Fill<D>> {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct EmbeddedFrameOffset {
-    pub offset: u64,
+pub struct EmbeddedFrameIndex {
+    pub index: u64,
 }
 
 // // //

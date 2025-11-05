@@ -26,7 +26,7 @@ pub fn add_spec(
     object_names_level: &ObjectNamesLevel,
     embed_frames: bool,
 ) -> Vec<u8> {
-    let (output_spec, embedded_frame_data) = reserialize_spec::reserialize_spec(
+    let (output_spec, embedded_frame_data_list) = reserialize_spec::reserialize_spec(
         spec,
         fill_dirs,
         object_names_level,
@@ -37,11 +37,16 @@ pub fn add_spec(
     let output_spec_data: ArchiveAlignedVec =
         rkyv::to_bytes::<rancor::Error>(&output_spec).unwrap();
 
+    let embedded_frame_data = embedded_frame_data_list
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>();
+
     let render_elf_args = render_elf::RenderElfArgs {
         spec_data: &output_spec_data,
         spec_data_alignment: 1 << ArchiveAlignedVec::ALIGNMENT,
-        embedded_frame_data: &embedded_frame_data.data,
-        embedded_frame_data_alignment: embedded_frame_data.alignment,
+        embedded_frame_data: &embedded_frame_data,
+        embedded_frame_data_alignment: 1 << GRANULE_SIZE_BITS,
     };
 
     match object::File::parse(initializer_without_spec).unwrap() {

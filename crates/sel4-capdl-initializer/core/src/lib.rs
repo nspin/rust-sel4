@@ -200,11 +200,9 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                                     self.spec.object(ArchivedObjectId::from_usize(*obj_id))
                                     && let ArchivedFrameInit::Embedded(embedded) = &obj.init
                                 {
-                                    let frame_addr = self.embedded_frames_base_addr
-                                        + embedded.offset.into_usize();
                                     self.take_cap_for_embedded_frame(
                                         ArchivedObjectId::from_usize(*obj_id),
-                                        frame_addr,
+                                        embedded,
                                     )?;
                                     *obj_id += 1;
                                     continue;
@@ -439,9 +437,11 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
     fn take_cap_for_embedded_frame(
         &mut self,
         obj_id: ArchivedObjectId,
-        frame_addr: usize,
+        frame_index: &ArchivedEmbeddedFrameIndex,
     ) -> Result<()> {
-        assert_eq!(frame_addr % cap_type::Granule::FRAME_OBJECT_TYPE.bytes(), 0);
+        let frame_addr = self.embedded_frames_base_addr
+            + usize::try_from(frame_index.index).unwrap()
+                * cap_type::Granule::FRAME_OBJECT_TYPE.bytes();
         let slot = get_user_image_frame_slot(self.bootinfo, &self.user_image_bounds, frame_addr);
         self.set_orig_cslot(obj_id, slot.upcast());
         Ok(())
