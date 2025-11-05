@@ -80,7 +80,7 @@ impl ArchivedCap {
                 ArchivedCap::Frame(cap) => &cap.rights,
                 _ => return None,
             }
-            .into(),
+            .to_sel4(),
         )
     }
 
@@ -104,16 +104,16 @@ impl ArchivedWord {
     }
 }
 
-impl From<&ArchivedRights> for sel4::CapRights {
-    fn from(rights: &ArchivedRights) -> Self {
-        Self::new(rights.grant_reply, rights.grant, rights.read, rights.write)
+impl ArchivedRights {
+    pub fn to_sel4(&self) -> sel4::CapRights {
+        sel4::CapRights::new(self.grant_reply, self.grant, self.read, self.write)
     }
 }
 
-impl From<&ArchivedFillEntryContentBootInfoId> for sel4::BootInfoExtraId {
-    fn from(id: &ArchivedFillEntryContentBootInfoId) -> Self {
-        match id {
-            ArchivedFillEntryContentBootInfoId::Fdt => sel4::BootInfoExtraId::Fdt,
+impl ArchivedFillEntryContentBootInfoId {
+    pub fn to_sel4(&self) -> sel4::BootInfoExtraId {
+        match self {
+            Self::Fdt => sel4::BootInfoExtraId::Fdt,
         }
     }
 }

@@ -15,6 +15,16 @@ use crate::{
 };
 
 impl<D> Spec<Fill<D>> {
+    pub fn embed_fill(
+        &self,
+        embed_frames: bool,
+        granule_size_bits: u8,
+        mut f: impl FnMut(&D, &mut [u8]) -> bool,
+    ) -> (SpecForInitializer, Vec<Vec<u8>>) {
+        self.embed_fill_fallible(embed_frames, granule_size_bits, |x1, x2| Ok(f(x1, x2)))
+            .unwrap_or_else(|absurdity: Infallible| match absurdity {})
+    }
+
     pub fn embed_fill_fallible<E>(
         &self,
         embed_frames: bool,
@@ -57,16 +67,6 @@ impl<D> Spec<Fill<D>> {
             )
         })?;
         Ok((spec, frame_data))
-    }
-
-    pub fn embed_fill(
-        &self,
-        embed_frames: bool,
-        granule_size_bits: u8,
-        mut f: impl FnMut(&D, &mut [u8]) -> bool,
-    ) -> (SpecForInitializer, Vec<Vec<u8>>) {
-        self.embed_fill_fallible(embed_frames, granule_size_bits, |x1, x2| Ok(f(x1, x2)))
-            .unwrap_or_else(|absurdity: Infallible| match absurdity {})
     }
 }
 
@@ -122,21 +122,13 @@ impl<D> Spec<D> {
     }
 }
 
-fn can_embed<D>(granule_size_bits: u8, frame: &object::Frame<Fill<D>>, is_root: bool) -> bool {
-    is_root
-        && frame.paddr.is_none()
-        && frame.size_bits == granule_size_bits
-        && !frame.init.is_empty()
-        && !frame.init.depends_on_bootinfo()
-}
-
 impl<D> Fill<D> {
-    fn depends_on_bootinfo(&self) -> bool {
-        self.entries.iter().any(|entry| entry.content.is_bootinfo())
-    }
-
     fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    fn depends_on_bootinfo(&self) -> bool {
+        self.entries.iter().any(|entry| entry.content.is_bootinfo())
     }
 
     fn traverse_fallible<D1, E>(
@@ -163,6 +155,14 @@ impl<D> Fill<D> {
                 .collect::<Result<_, E>>()?,
         })
     }
+}
+
+fn can_embed<D>(granule_size_bits: u8, frame: &object::Frame<Fill<D>>, is_root: bool) -> bool {
+    is_root
+        && frame.paddr.is_none()
+        && frame.size_bits == granule_size_bits
+        && !frame.init.is_empty()
+        && !frame.init.depends_on_bootinfo()
 }
 
 fn try_into_usize_range<T: TryInto<usize> + Copy>(

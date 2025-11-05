@@ -11,9 +11,6 @@ use crate::{
     IsArchivedCap, IsCap, cap, object,
 };
 
-// NOTE
-// Magic constants must be kept in sync with capDL-tool.
-
 pub trait HasCapTable {
     fn slots(&self) -> &[CapTableEntry];
 
@@ -126,6 +123,9 @@ macro_rules! alias_cap_table {
         }
     };
 }
+
+// NOTE
+// Magic constants must be kept in sync with capDL-tool.
 
 alias_cap_table! {
     object::Tcb | object::ArchivedTcb {

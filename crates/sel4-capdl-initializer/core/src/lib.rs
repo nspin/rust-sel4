@@ -531,7 +531,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                 }
                 ArchivedFillEntryContent::BootInfo(content_bootinfo) => {
                     for extra in self.bootinfo.extra() {
-                        if extra.id == (&content_bootinfo.id).into() {
+                        if extra.id == content_bootinfo.id.to_sel4() {
                             let n =
                                 dst.len()
                                     .min(extra.content_with_header().len().saturating_sub(
@@ -576,7 +576,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
             match entry {
                 PageTableEntry::Frame(cap) => {
                     let frame = self.orig_cap::<cap_type::UnspecifiedPage>(cap.object);
-                    let rights = (&cap.rights).into();
+                    let rights = cap.rights.to_sel4();
                     self.copy(frame)?
                         .frame_map(vspace, vaddr, rights, cap.vm_attributes())?;
                 }
@@ -686,7 +686,7 @@ impl<'a, B: BorrowMut<[PerObjectBuffer]>> Initializer<'a, B> {
                             Some(cap) => {
                                 let orig = self.orig_cap::<cap_type::Endpoint>(cap.object);
                                 let badge = cap.badge.to_sel4();
-                                let rights = (&cap.rights).into();
+                                let rights = cap.rights.to_sel4();
                                 if badge == 0 && rights == CapRights::all() {
                                     orig
                                 } else {
