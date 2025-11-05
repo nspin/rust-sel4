@@ -17,35 +17,25 @@ fn derive_cap_impl(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let archived_name = format_ident!("Archived{}", name);
     quote! {
-        impl<'b> TryFrom<&'b Cap> for &'b #name {
-            type Error = TryFromCapError;
-            fn try_from(cap: &'b Cap) -> Result<Self, Self::Error> {
-                match cap {
-                    Cap::#name(cap) => Ok(&cap),
-                    _ => Err(TryFromCapError),
-                }
-            }
-        }
-
-        impl Into<Cap> for #name {
-            fn into(self) -> Cap {
+        impl IsCap for #name {
+            fn into_cap(self) -> Cap {
                 Cap::#name(self)
             }
-        }
 
-        impl<'b> TryFrom<&'b ArchivedCap> for &'b #archived_name {
-            type Error = TryFromCapError;
-            fn try_from(cap: &'b ArchivedCap) -> Result<Self, Self::Error> {
+            fn try_from_cap(cap: &Cap) -> Option<&Self> {
                 match cap {
-                    ArchivedCap::#name(cap) => Ok(&cap),
-                    _ => Err(TryFromCapError),
+                    Cap::#name(sub_cap) => Some(&sub_cap),
+                    _ => None,
                 }
             }
         }
 
-        impl Into<ArchivedCap> for #archived_name {
-            fn into(self) -> ArchivedCap {
-                ArchivedCap::#name(self)
+        impl IsArchivedCap for #archived_name {
+            fn try_from_cap(cap: &ArchivedCap) -> Option<&Self> {
+                match cap {
+                    ArchivedCap::#name(sub_cap) => Some(&sub_cap),
+                    _ => None,
+                }
             }
         }
     }
@@ -63,35 +53,25 @@ fn derive_object_impl(ast: &syn::DeriveInput) -> TokenStream {
     let archived_name = format_ident!("Archived{}", name);
     let generics = &ast.generics;
     quote! {
-        impl<'b, D> TryFrom<&'b Object<D>> for &'b #name #generics {
-            type Error = TryFromObjectError;
-            fn try_from(obj: &'b Object<D>) -> Result<Self, Self::Error> {
-                match obj {
-                    Object::#name(cap) => Ok(&cap),
-                    _ => Err(TryFromObjectError),
-                }
-            }
-        }
-
-        impl<D> Into<Object<D>> for #name #generics {
-            fn into(self) -> Object<D> {
+        impl<D> IsObject<D> for #name #generics {
+            fn into_object(self) -> Object<D> {
                 Object::#name(self)
             }
-        }
 
-        impl<'b, D: Archive> TryFrom<&'b ArchivedObject<D>> for &'b #archived_name #generics {
-            type Error = TryFromObjectError;
-            fn try_from(obj: &'b ArchivedObject<D>) -> Result<Self, Self::Error> {
+            fn try_from_object(obj: &Object<D>) -> Option<&Self> {
                 match obj {
-                    ArchivedObject::#name(cap) => Ok(&cap),
-                    _ => Err(TryFromObjectError),
+                    Object::#name(sub_obj) => Some(&sub_obj),
+                    _ => None,
                 }
             }
         }
 
-        impl<D: Archive> Into<ArchivedObject<D>> for #archived_name #generics {
-            fn into(self) -> ArchivedObject<D> {
-                ArchivedObject::#name(self)
+        impl<D: Archive> IsArchivedObject<D> for #archived_name #generics {
+            fn try_from_object(obj: &ArchivedObject<D>) -> Option<&Self> {
+                match obj {
+                    ArchivedObject::#name(sub_obj) => Some(&sub_obj),
+                    _ => None,
+                }
             }
         }
     }

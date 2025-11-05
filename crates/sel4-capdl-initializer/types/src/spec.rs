@@ -100,7 +100,20 @@ pub enum Object<D> {
     ArmSmc,
 }
 
+pub trait IsObject<D>: Sized {
+    fn into_object(self) -> Object<D>;
+    fn try_from_object(obj: &Object<D>) -> Option<&Self>;
+}
+
 impl<D> Object<D> {
+    pub fn as_<T: IsObject<D>>(&self) -> Option<&T> {
+        T::try_from_object(self)
+    }
+
+    pub fn try_as<T: IsObject<D>>(&self) -> Result<&T, TryFromObjectError> {
+        self.as_().ok_or(TryFromObjectError)
+    }
+
     pub fn paddr(&self) -> Option<u64> {
         match self {
             Object::Untyped(obj) => obj.paddr,
@@ -110,7 +123,19 @@ impl<D> Object<D> {
     }
 }
 
+pub trait IsArchivedObject<D: Archive>: Sized {
+    fn try_from_object(obj: &ArchivedObject<D>) -> Option<&Self>;
+}
+
 impl<D: Archive> ArchivedObject<D> {
+    pub fn as_<T: IsArchivedObject<D>>(&self) -> Option<&T> {
+        T::try_from_object(self)
+    }
+
+    pub fn try_as<T: IsArchivedObject<D>>(&self) -> Result<&T, TryFromObjectError> {
+        self.as_().ok_or(TryFromObjectError)
+    }
+
     pub fn paddr(&self) -> ArchivedOption<ArchivedU64> {
         match self {
             ArchivedObject::Untyped(obj) => obj.paddr,
@@ -144,7 +169,20 @@ pub enum Cap {
     ArmSmc(cap::ArmSmc),
 }
 
+pub trait IsCap: Sized {
+    fn into_cap(self) -> Cap;
+    fn try_from_cap(cap: &Cap) -> Option<&Self>;
+}
+
 impl Cap {
+    pub fn as_<T: IsCap>(&self) -> Option<&T> {
+        T::try_from_cap(self)
+    }
+
+    pub fn try_as<T: IsCap>(&self) -> Result<&T, TryFromCapError> {
+        self.as_().ok_or(TryFromCapError)
+    }
+
     pub fn obj(&self) -> ObjectId {
         match self {
             Cap::Untyped(cap) => cap.object,
@@ -169,7 +207,19 @@ impl Cap {
     }
 }
 
+pub trait IsArchivedCap: Sized {
+    fn try_from_cap(obj: &ArchivedCap) -> Option<&Self>;
+}
+
 impl ArchivedCap {
+    pub fn as_<T: IsArchivedCap>(&self) -> Option<&T> {
+        T::try_from_cap(self)
+    }
+
+    pub fn try_as<T: IsArchivedCap>(&self) -> Result<&T, TryFromCapError> {
+        self.as_().ok_or(TryFromCapError)
+    }
+
     pub fn obj(&self) -> ArchivedObjectId {
         match self {
             ArchivedCap::Untyped(cap) => cap.object,
@@ -193,6 +243,16 @@ impl ArchivedCap {
         }
     }
 }
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+pub struct CPtr(pub(crate) PortableWord);
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+pub struct Badge(pub(crate) PortableWord);
 
 // TODO Would packing have an actual effect on memory footprint?
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -518,16 +578,6 @@ pub mod cap {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct CPtr(pub(crate) PortableWord);
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct Badge(pub(crate) PortableWord);
-
 // // //
 
 #[derive(Debug)]
@@ -545,5 +595,27 @@ impl fmt::Display for TryFromObjectError {
 impl fmt::Display for TryFromCapError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "object type mismatch")
+    }
+}
+
+// // //
+
+pub enum PageTableEntry<'a> {
+    PageTable(&'a cap::ArchivedPageTable),
+    Frame(&'a cap::ArchivedFrame),
+}
+
+impl object::ArchivedPageTable {
+    pub fn entries(&self) -> impl Iterator<Item = (ArchivedCapSlot, PageTableEntry<'_>)> {
+        self.slots().iter().map(|entry| {
+            (
+                entry.slot,
+                match &entry.cap {
+                    ArchivedCap::PageTable(cap) => PageTableEntry::PageTable(cap),
+                    ArchivedCap::Frame(cap) => PageTableEntry::Frame(cap),
+                    _ => panic!(),
+                },
+            )
+        })
     }
 }

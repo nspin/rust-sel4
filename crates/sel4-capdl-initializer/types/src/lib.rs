@@ -13,7 +13,6 @@ use core::ops::Range;
 use rkyv::Archive;
 use rkyv::primitive::{ArchivedU16, ArchivedU32, ArchivedU64};
 
-mod archived_cap_table;
 mod cap_table;
 mod frame_init;
 mod inspect;
@@ -23,8 +22,7 @@ mod spec;
 #[cfg(feature = "sel4")]
 mod when_sel4;
 
-pub use archived_cap_table::{ArchivedPageTableEntry, HasArchivedCapTable};
-pub use cap_table::{HasCapTable, PageTableEntry};
+pub use cap_table::{HasArchivedCapTable, HasCapTable};
 pub use frame_init::*;
 pub use spec::*;
 
