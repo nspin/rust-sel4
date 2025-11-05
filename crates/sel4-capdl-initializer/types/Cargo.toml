@@ -18,6 +18,7 @@ license = "BSD-2-Clause"
 
 [features]
 deflate = ["dep:miniz_oxide"]
+fill-utils = ["deflate"]
 
 [dependencies]
 log = "0.4.28"

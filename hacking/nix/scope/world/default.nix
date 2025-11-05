@@ -129,6 +129,7 @@ self: with self;
     , specAttrs ? spec.specAttrs
     , embedFrames ? true
     , deflate ? true
+    , alloc ? true
     , extraDebuggingLinks ? []
     }:
 

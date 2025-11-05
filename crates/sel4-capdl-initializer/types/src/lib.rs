@@ -16,8 +16,8 @@ mod cap_table;
 mod frame_init;
 mod spec;
 
-#[cfg(feature = "deflate")]
-mod embed_fill;
+#[cfg(feature = "fill-utils")]
+mod fill_utils;
 
 #[cfg(feature = "sel4")]
 mod when_sel4;

@@ -20,6 +20,12 @@ mk {
     inherit (localCrates)
       sel4-synthetic-elf
     ;
-    sel4-capdl-initializer-types = localCrates.sel4-capdl-initializer-types // { features = [ "serde" "deflate" ]; };
+    sel4-capdl-initializer-types = localCrates.sel4-capdl-initializer-types // {
+      features = [
+        "serde"
+        "deflate"
+        "fill-utils"
+      ];
+    };
   };
 }
