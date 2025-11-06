@@ -16,6 +16,7 @@ microkit-http-server-example-virtio-net-driver
 sddf
 sddf-sys
 sel4
+sel4-bare-metal-test-runner
 sel4-capdl-initializer
 sel4-capdl-initializer-core
 sel4-config

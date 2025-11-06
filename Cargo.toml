@@ -96,6 +96,7 @@ members = [
     "crates/sel4-backtrace/simple",
     "crates/sel4-backtrace/symbolize",
     "crates/sel4-backtrace/types",
+    "crates/sel4-bare-metal-test-runner",
     "crates/sel4-capdl-initializer",
     "crates/sel4-capdl-initializer/add-spec",
     "crates/sel4-capdl-initializer/core",

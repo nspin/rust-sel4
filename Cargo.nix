@@ -11,6 +11,7 @@ let
     let
       blockList = [
         "sel4-config-data"
+        "sel4-bare-metal-test-runner"
         "sel4-test-harness"
         "sel4-reset" # not yet implement for x86
         "tests-root-task-dafny-core" # requires input via env
