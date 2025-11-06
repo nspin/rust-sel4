@@ -31,7 +31,6 @@ sel4-reset
 sel4-root-task
 sel4-root-task-default-test-harness
 sel4-root-task-with-std
-sel4-runtime-common
 sel4-simple-task-config-types
 sel4-simple-task-rpc
 sel4-simple-task-runtime
