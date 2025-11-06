@@ -14,7 +14,6 @@
     ],
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.cargo.targetDir": true, // use subdir
-    "rust-analyzer.cargo.buildScripts.enable": false,
     "rust-analyzer.procMacro.enable": false,
     "rust-analyzer.procMacro.attributes.enable": false,
     "rust-analyzer.diagnostics.enable": false, // TODO
