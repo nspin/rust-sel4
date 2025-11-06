@@ -199,6 +199,24 @@ rec {
     in
       lib.mapAttrs (lib.const getVersion) table.allow;
 
+  addBareMetalTestRunner = attrs:
+    let
+      harnessPkg = "sel4-bare-metal-test-runner";
+      path = [ "target" "cfg(target_os = \"none\")" "dev-dependencies" ];
+      newAttrs = {
+        test = {
+          package = harnessPkg;
+        } // localCrates.${harnessPkg};
+      };
+      alreadyPresent = lib.hasAttrByPath path attrs;
+    in
+      lib.updateManyAttrsByPath [
+        {
+          inherit path;
+          update = x: (if alreadyPresent then x else {}) // newAttrs;
+        }
+      ] attrs;
+
   zerocopyWith = features: filterOutEmptyFeatureList {
     version = versions.zerocopy;
     inherit features;

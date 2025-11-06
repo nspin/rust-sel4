@@ -2388,6 +2388,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "sel4-bare-metal-test-runner"
+version = "0.1.0"
+dependencies = [
+ "one-shot-mutex",
+ "sel4-dlmalloc",
+ "sel4-immediate-sync-once-cell",
+ "sel4-panicking",
+ "sel4-panicking-env",
+ "sel4-runtime-common",
+ "syscalls",
+]
+
+[[package]]
 name = "sel4-bcm2835-aux-uart-driver"
 version = "0.1.0"
 dependencies = [
@@ -3357,6 +3370,12 @@ dependencies = [
  "syn",
  "unicode-xid",
 ]
+
+[[package]]
+name = "syscalls"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90db46b5b4962319605d435986c775ea45a0ad2561c09e1d5372b89afeb49cf4"
 
 [[package]]
 name = "tests-capdl-threads-components-test"

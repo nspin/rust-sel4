@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, versions }:
+{ mk, versions, addBareMetalTestRunner }:
 
 mk {
   package.name = "sel4-bitfield-ops";
