@@ -6,20 +6,16 @@
 
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use cargo_metadata::MetadataCommand;
 use clap::Parser;
-use serde_json::Value;
 use similar::TextDiff;
 
 #[derive(Debug, Parser)]
 struct Cli {
     #[arg(long)]
     manifest_path: PathBuf,
-
-    #[arg(short = 'i')]
-    in_: PathBuf,
 
     #[arg(short = 'o')]
     out: PathBuf,
@@ -42,42 +38,34 @@ fn main() {
         .iter()
         .collect::<BTreeSet<_>>();
 
-    let mut obj = parse_file(&args.in_);
-
     let mut excludes = BTreeSet::new();
     for pkg in metadata.workspace_packages() {
         if !default_members.contains(&pkg.id) {
-            excludes.insert(&pkg.name);
+            excludes.insert(pkg.name.as_str());
         }
     }
-
-    let extra_args = obj
-        .as_object_mut()
-        .unwrap()
-        .entry("rust-analyzer.cargo.extraArgs")
-        .or_insert(Value::Array(vec![]));
-    for pkg_name in excludes {
-        extra_args.as_array_mut().unwrap().append(&mut vec![
-            Value::String("--exclude".to_owned()),
-            Value::String(pkg_name.to_owned()),
-        ]);
-    }
+    let excludes_str = excludes_to_string(&excludes);
 
     if args.just_check {
-        let existing_obj = parse_file(&args.out);
-        if obj != existing_obj {
-            let pretty_obj = serde_json::to_string_pretty(&obj).unwrap();
-            let pretty_existing_obj = serde_json::to_string_pretty(&existing_obj).unwrap();
+        let existing_excludes_input_str = fs::read_to_string(&args.out).unwrap();
+        let existing_excludes = existing_excludes_input_str.lines().collect::<BTreeSet<_>>();
+        if excludes != existing_excludes {
+            let existing_excludes_str = excludes_to_string(&existing_excludes);
             panic!(
                 "mismatch:\n{}",
-                TextDiff::from_lines(&pretty_obj, &pretty_existing_obj).unified_diff(),
+                TextDiff::from_lines(&excludes_str, &existing_excludes_str).unified_diff(),
             );
         }
     } else {
-        fs::write(args.out, serde_json::to_string_pretty(&obj).unwrap()).unwrap();
+        fs::write(args.out, excludes_str).unwrap();
     }
 }
 
-fn parse_file(path: impl AsRef<Path>) -> Value {
-    serde_json5::from_str::<Value>(&fs::read_to_string(path).unwrap()).unwrap()
+fn excludes_to_string(excludes: &BTreeSet<&str>) -> String {
+    let mut s = String::new();
+    for pkg_name in excludes {
+        s.push_str(pkg_name);
+        s.push('\n');
+    }
+    s
 }
