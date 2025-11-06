@@ -16,10 +16,21 @@
     "rust-analyzer.cargo.targetDir": true, // use subdir
     "rust-analyzer.procMacro.enable": false,
     "rust-analyzer.procMacro.attributes.enable": false,
-    "rust-analyzer.diagnostics.enable": false, // TODO
+    // TODO
+    //   Could be the best solution, as we can't prevent diagnostics from being
+    //   run on non-default workspace members.
+    // "rust-analyzer.diagnostics.enable": false,
     "rust-analyzer.diagnostics.disabled": [
-        "macro-error", // shows errors for excluded crates and build scripts that don't run
-        "incorrect-ident-case", // not aware of no_mangle
+        // shows errors for excluded crates and build scripts that don't run
+        "macro-error",
+        // not aware of no_mangle (incorrect-ident-case not working)
+        "incorrect-ident-case", "non_upper_case_globals",
+        // makes inactive code hard to read
+        "inactive-code",
     ],
+    // TODO not working
+    // "rust-analyzer.diagnostics.warningsAsInfo": [
+    //     "incorrect-ident-case",
+    // ],
     "rust-analyzer.imports.granularity.group": "module",
 }
