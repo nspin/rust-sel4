@@ -110,8 +110,16 @@ superCallPackage ../rust-utils {} self //
     # remove rust-analyzer
     let
       orig = lib.importTOML ../../../rust-toolchain.toml;
+      allowedComponents = [ "rust-src" "rustc-dev" "llvm-tools-preview" ];
       patched = lib.updateManyAttrsByPath [
-        { path = [ "toolchain" "components" ]; update = lib.filter (x: x != "rust-analyzer"); }
+        {
+          path = [ "toolchain" "components" ];
+          update = lib.filter (lib.flip lib.elem allowedComponents);
+        }
+        {
+          path = [ "toolchain" "targets" ];
+          update = _: [];
+        }
       ] orig;
     in {
       path = writers.writeTOML "rust-toolchain.toml" patched;
