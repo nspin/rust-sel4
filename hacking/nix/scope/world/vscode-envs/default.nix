@@ -101,8 +101,6 @@ let
             build-std = [ "core" "alloc" "compiler_builtins" ];
             build-std-features = [
               "compiler-builtins-mem"
-            ] ++ lib.optionals (rustEnvironment.compilerRTSource != null) [
-              "compiler-builtins-c"
             ];
           };
           build = {
@@ -110,9 +108,6 @@ let
           };
           env = {
             RUST_TARGET_PATH = rustEnvironment.mkTargetPath optionalTargetTriple;
-          } // lib.optionalAttrs (rustEnvironment.compilerRTSource != null) {
-            "CC_${targetTriple.name}" = "${stdenv.cc.targetPrefix}gcc";
-            RUST_COMPILER_RT_ROOT = rustEnvironment.compilerRTSource;
           };
         })
       ]);
