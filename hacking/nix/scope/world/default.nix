@@ -14,6 +14,7 @@
 , mkSeL4
 , mkMicrokit
 , sources
+, writers
 }:
 
 let
@@ -221,5 +222,9 @@ self: with self;
   shell = callPackage ./shell.nix {};
 
   vscodeEnvs = callPackage ./vscode-envs {};
+
+  # WIP
+
+  cargoConfig = callPackage ./cargo-config {};
 
 }
