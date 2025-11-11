@@ -36,4 +36,12 @@ mkTask {
   #   }
   # ];
 
+  commonModifications = {
+    modifyManifest = lib.flip lib.recursiveUpdate {
+      profile.release.package.miniz_oxide = {
+        opt-level = 0;
+      };
+    };
+  };
+
 }
