@@ -14,6 +14,7 @@
 , mkSeL4
 , mkMicrokit
 , sources
+, writers
 }:
 
 let
@@ -219,4 +220,9 @@ self: with self;
   docs = callPackage ./docs.nix {};
 
   shell = callPackage ./shell.nix {};
+
+  # WIP
+
+  cargoConfig = callPackage ./cargo-config {};
+
 }
