@@ -24,6 +24,7 @@ let
     , microkitConfig ? null
     , canSimulate ? false
     , platformRequiresLoader ? true
+    , mkQEMUCmd ? null
     , mkPlatformSystemExtension ? _: { attrs = {}; links = []; }
     , ...
     } @ args:
