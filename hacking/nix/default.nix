@@ -23,6 +23,7 @@ in
 
 { nixpkgsPath ? defaultNixpkgsPath
 , nixpkgsFn ? import nixpkgsPath
+, nixpkgsFnArgs ? {}
 , lib ? import (nixpkgsPath + "/lib")
 }:
 
@@ -54,7 +55,7 @@ in let
 
   isCrossSystemActuallyCross =
     let
-      inherit (nixpkgsFn {}) hostPlatform;
+      inherit (nixpkgsFn nixpkgsFnArgs) hostPlatform;
     in
       crossSystem: crossSystem != builtins.intersectAttrs crossSystem hostPlatform;
 
@@ -175,7 +176,7 @@ in let
     let
       concreteArg = arg self;
       pkgs = treeHelpers.untree (treeHelpers.mapLeaves (crossSystem:
-        nixpkgsFn (concreteArg.nixpkgsArgsForCrossSystem crossSystem)
+        nixpkgsFn (nixpkgsFnArgs // concreteArg.nixpkgsArgsForCrossSystem crossSystem)
       ) crossSystemTree);
     in {
       inherit lib pkgs;
