@@ -94,6 +94,7 @@ let
 in
 writers.writeTOML "config-world.toml" (utils.clobberAttrs ([
   {
+    build.target-dir = "foo";
     env = seL4RustEnvVars;
   }
 ] ++ map (configForTarget true) utils.builtinBareMetalTargets
