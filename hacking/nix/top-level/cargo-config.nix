@@ -10,7 +10,7 @@
 let
   inherit (topLevel) lib pkgs;
   inherit (pkgs) build;
-  inherit (build) writers this;
+  inherit (build) writers linkFarm this;
 
   targetsPath = ../../../support/targets;
 
@@ -62,6 +62,12 @@ let
     "riscv32imafc-unknown-none-elf"
   ];
 
+  allTargets = builtinMuslTargets ++ builtinBareMetalTargets ++ seL4Targets;
+
+  hasStd = hasSegment "musl";
+
+  isRustupTarget = targetName: lib.elem targetName builtinMuslTargets && !(lib.hasPrefix "riscv32" (firstSegment targetName));
+
   getPkgsForTarget = target: {
     "x86_64" = pkgs.host.x86_64.none;
     "aarch64" = pkgs.host.aarch64.none;
@@ -101,7 +107,7 @@ let
       }
     ;
 
-in {
+in rec {
   cc = writers.writeTOML "config-cc.toml" (clobberAttrs ([
     {
       env = {
@@ -112,6 +118,29 @@ in {
   ] ++ map (configForTarget true) builtinBareMetalTargets
     ++ map (configForTarget false) seL4Targets
   ));
+
+  byTarget = lib.genAttrs allTargets (target:
+    writers.writeTOML "config-target-${target}.toml" ({
+      build = {
+        target = target;
+      };
+    } // lib.optionalAttrs (!(isRustupTarget target)) {
+      unstable = {
+        build-std = [ "compiler_builtins" "core" "alloc" ] ++ lib.optional (hasStd target) "std";
+        build-std-features = [ "compiler-builtins-mem" ];
+      };
+    })
+  );
+
+  byTargetLinks = linkFarm "by-target" (lib.flip lib.mapAttrs' byTarget (k: v: lib.nameValuePair ("${k}.toml") v));
+
+  byWorldLinks = linkFarm "by-world" {};
+
+  links = linkFarm "generated-config" {
+    "cc.toml" = cc;
+    "by-target" = byTargetLinks;
+    "by-world" = byWorldLinks;
+  };
 
   utils = {
     inherit
