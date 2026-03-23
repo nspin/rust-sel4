@@ -10,7 +10,7 @@
 let
   inherit (topLevel) lib pkgs;
   inherit (pkgs) build;
-  inherit (build) writers linkFarm this;
+  inherit (build) writers linkFarm writeShellApplication this;
   inherit (this) crateUtils;
 
   targetRootDir = toString ../../../target;
@@ -86,6 +86,28 @@ let
     "riscv32imafc" = pkgs.host.riscv32.imafc.none;
   }.${firstSegment target};
 
+  loaderTargetForTarget = target: {
+    "aarch64" = "aarch64-unknown-none";
+    "armv7" = "armv7a-none-eabi";
+    "armv7a" = "armv7a-none-eabi";
+    "riscv64gc" = "riscv64gc-unknown-none-elf";
+    "riscv64imac" = "riscv64imac-unknown-none-elf";
+    "riscv32imac" = "riscv32imac-unknown-none-elf";
+    "riscv32imafc" = "riscv32imafc-unknown-none-elf";
+  }.${firstSegment target};
+
+  # getQEMUSuffixForTarget = target: {
+  #   "x86_64" = "x86_64";
+  #   "aarch64" = "aarch64";
+  #   "armv7" = "arm";
+  #   "armv7a" = "arm";
+  #   "riscv64gc" = "riscv64";
+  #   "riscv64imac" = "riscv64";
+  #   "riscv32gc" = "riscv64";
+  #   "riscv32imac" = "riscv32";
+  #   "riscv32imafc" = "riscv32";
+  # }.${firstSegment target};
+
   ccConfigForTarget = target:
     let
       hostPkgs = getPkgsForTarget target;
@@ -132,7 +154,76 @@ let
     ccConfigCommon
   ] ++ map ccConfigForTarget allTargets));
 
+  rootTaskRunner = target: writeShellApplication {
+    name = "root-task-runner";
+    runtimeInputs = [
+    ];
+    checkPhase = "";
+    text = ''
+      set +x
+
+      root_task="$1"
+
+      target_dir="$WORLD_TARGET_DIR"
+
+      parent="$target_dir/runner/root-task"
+      mkdir -p "$parent"
+      d="$(mktemp -d --tmpdir="$parent")"
+
+      cleanup() {
+        rm -rf "$d"
+      }
+
+      # trap cleanup EXIT
+    '' + (if firstSegment target == "x86_64" then ''
+    '' else ''
+      cargo build \
+        --config ${byTarget.${loaderTargetForTarget target}} \
+        --target-dir "$target_dir" \
+        -p sel4-kernel-loader \
+        --artifact-dir "$d"
+
+      cargo run -p sel4-kernel-loader-add-payload -- \
+        --loader "$d/sel4-kernel-loader" \
+        --sel4-prefix "$SEL4_PREFIX" \
+        --app "$root_task" \
+        -o "$d/image.elf"
+
+      qemu-system-aarch64 \
+        -machine virt,virtualization=on \
+        -cpu cortex-a57 \
+        -smp 2 \
+        -m size=2048M \
+        -nographic \
+        -serial mon:stdio \
+        -kernel "$d/image.elf"
+    '');
+  };
+
+  microkitRunner = writeShellApplication {
+    name = "microkit-runner";
+    runtimeInputs = [
+    ];
+    text = ''
+      echo "running:" "$@"
+    '';
+  };
+
+  testfwRunner = writeShellApplication {
+    name = "testfw-runner";
+    runtimeInputs = [
+    ];
+    text = ''
+      echo "running:" "$@"
+    '';
+  };
+
   byTarget = lib.genAttrs allTargets (target:
+    let
+      mkRunner = script: {
+        target.${target}.runner = "${script}/bin/${script.name}";
+      };
+    in
     writers.writeTOML "${target}.toml" (crateUtils.clobber ([
       {
         build = {
@@ -147,6 +238,15 @@ let
       })
       ccConfigCommon
       (ccConfigForTarget target)
+      (
+        if hasSegment "roottask" target
+        then mkRunner (rootTaskRunner target)
+        else if hasSegment "microkit" target
+        then mkRunner microkitRunner
+        else if hasSegment "testfw" target # HACK
+        then mkRunner testfwRunner
+        else {}
+      )
     ]))
   );
 
@@ -158,9 +258,13 @@ let
   ;
 
   configForWorld = attrPath: world:
-    {
-      build.target-dir = "${targetRootDir}/by-world/${lib.concatStringsSep "." attrPath}";
-      env = world.seL4RustEnvVars;
+    let
+      targetDir = "${targetRootDir}/by-world/${lib.concatStringsSep "." attrPath}";
+    in {
+      build.target-dir = targetDir;
+      env = world.seL4RustEnvVars // {
+        WORLD_TARGET_DIR = targetDir;
+      };
     };
 
   byWorldList = lib.mapAttrsToListRecursiveCond
