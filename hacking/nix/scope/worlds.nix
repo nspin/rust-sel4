@@ -491,7 +491,8 @@ in rec {
         };
     };
 
-  x86_64 = x86 true;
+  # x86_64 = x86 true;
+  x86_64 = {};
   ia32 = x86 false;
 
 }
