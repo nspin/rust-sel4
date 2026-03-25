@@ -31,7 +31,7 @@ let
         in
           if m == null then null else lib.elemAt m 0
       ;
-      targetNames = lib.filter (x: x != null) (map parseTargetName (lib.attrNames(builtins.readDir targetsPath)));
+      targetNames = lib.filter (x: x != null) (map parseTargetName (lib.attrNames (builtins.readDir targetsPath)));
     in
       targetNames
     ;
@@ -163,8 +163,10 @@ let
       set +x
 
       root_task="$1"
+      shift
 
       target_dir="$WORLD_TARGET_DIR"
+      simulate_script="$WORLD_QEMU_SCRIPT"
 
       parent="$target_dir/runner/root-task"
       mkdir -p "$parent"
@@ -189,14 +191,7 @@ let
         --app "$root_task" \
         -o "$d/image.elf"
 
-      qemu-system-aarch64 \
-        -machine virt,virtualization=on \
-        -cpu cortex-a57 \
-        -smp 2 \
-        -m size=2048M \
-        -nographic \
-        -serial mon:stdio \
-        -kernel "$d/image.elf"
+      "$simulate_script" "$d/image.elf" "$@"
     '');
   };
 
@@ -254,8 +249,20 @@ let
 
   worlds = lib.mapAttrs
     (_: attrs: attrs.none.this.worlds or attrs.default.none.this.worlds /* HACK */)
-    pkgs.host
+    (lib.filterAttrs (n: _: n != "ia32") pkgs.host)
   ;
+
+  mkQEMUScript = world: writeShellApplication {
+    name = "simulate";
+    runtimeInputs = [
+    ];
+    checkPhase = "";
+    text = ''
+      image="$1"
+      shift
+      exec ${lib.concatStringsSep " " (world.worldConfig.mkQEMUCmd ''"$image"'')} "$@"
+    '';
+  };
 
   configForWorld = attrPath: world:
     let
@@ -264,6 +271,10 @@ let
       build.target-dir = targetDir;
       env = world.seL4RustEnvVars // {
         WORLD_TARGET_DIR = targetDir;
+      } // lib.optionalAttrs world.worldConfig.canSimulate {
+        WORLD_QEMU_SCRIPT =
+          let script = mkQEMUScript world;
+          in "${script}/bin/${script.name}";
       };
     };
 

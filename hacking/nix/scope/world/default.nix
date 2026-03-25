@@ -36,6 +36,7 @@ let
         microkitConfig
         canSimulate
         platformRequiresLoader
+        mkQEMUCmd
         mkPlatformSystemExtension
       ;
     };
