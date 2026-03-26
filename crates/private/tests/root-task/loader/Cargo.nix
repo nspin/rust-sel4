@@ -9,7 +9,7 @@
 mk {
   package.name = "tests-root-task-loader";
   dependencies = {
-    inherit (versions) fdt;
+    inherit (versions) fdt qemu-exit;
     inherit (localCrates)
       sel4
       sel4-root-task

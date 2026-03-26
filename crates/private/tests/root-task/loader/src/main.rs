@@ -12,6 +12,8 @@
 use sel4_platform_info::PLATFORM_INFO;
 use sel4_root_task::{debug_print, debug_println, root_task};
 
+use qemu_exit::QEMUExit;
+
 #[repr(C, align(8192))]
 struct Y(i32);
 
@@ -65,6 +67,10 @@ fn main(bootinfo: &sel4::BootInfoPtr) -> ! {
     // }
 
     debug_println!("TEST_PASS");
+
+    let h = qemu_exit::AArch64::new();
+    h.exit_failure();
+    debug_println!("no");
 
     sel4::init_thread::suspend_self()
 }

@@ -246,6 +246,7 @@ in rec {
                       "-cpu" cpu "-smp" numCores "-m" "size=1024"
                       "-nographic"
                       "-serial" "mon:stdio"
+                      "-semihosting-config" "enable=on,userspace=on"
                       "-kernel" loader
                   ];
               };
