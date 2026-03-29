@@ -10,15 +10,11 @@
 #
 
 [package]
-name = "tests-root-task-loader"
+name = "sel4-test-sentinels"
 version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
 license = "BSD-2-Clause"
 
 [dependencies]
-fdt = "0.1.5"
-sel4 = { path = "../../../../sel4" }
-sel4-platform-info = { path = "../../../../sel4-platform-info" }
-sel4-root-task = { path = "../../../../sel4-root-task" }
-sel4-test-sentinels = { path = "../../../support/sel4-test-sentinels" }
+sel4-panicking-env = { path = "../../../sel4-panicking/env" }

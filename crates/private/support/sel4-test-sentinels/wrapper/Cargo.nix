@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, localCrates }:
+{ mk, versions }:
 
 mk {
-  package.name = "sel4-test-sentinels";
+  package.name = "sel4-test-sentinels-wrapper";
   dependencies = {
-    inherit (localCrates)
-      sel4-panicking-env
+    inherit (versions)
+      clap
     ;
   };
 }

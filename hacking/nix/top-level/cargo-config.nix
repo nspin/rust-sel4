@@ -176,7 +176,7 @@ let
         rm -rf "$d"
       }
 
-      # trap cleanup EXIT
+      trap cleanup EXIT
     '' + (if firstSegment target == "x86_64" then ''
     '' else ''
       cargo build \
@@ -191,7 +191,7 @@ let
         --app "$root_task" \
         -o "$d/image.elf"
 
-      "$simulate_script" "$d/image.elf" "$@"
+      cargo run -p sel4-test-sentinels-wrapper -- "$simulate_script" "$d/image.elf" "$@"
     '');
   };
 
