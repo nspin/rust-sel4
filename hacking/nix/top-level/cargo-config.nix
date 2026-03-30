@@ -10,8 +10,8 @@
 let
   inherit (topLevel) lib pkgs;
   inherit (pkgs) build;
-  inherit (build) writers linkFarm writeShellApplication this;
-  inherit (this) crateUtils;
+  inherit (build) writers linkFarm writeShellApplication this llvm python312;
+  inherit (this) crateUtils sdfgen;
 
   targetRootDir = toString ../../../target;
 
@@ -154,30 +154,47 @@ let
     ccConfigCommon
   ] ++ map ccConfigForTarget allTargets));
 
+  mkRunner = body: ''
+    set +x
+
+    external_exe="$1"
+    shift
+
+    target_dir="$WORLD_TARGET_DIR"
+    simulate_script="$WORLD_QEMU_SCRIPT"
+
+    parent="$target_dir/runner"
+    mkdir -p "$parent"
+    d="$(mktemp -d --tmpdir="$parent")"
+
+    echo 'd:' >&2
+    echo "$d" >&2
+
+    cleanup() {
+      rm -rf "$d"
+    }
+
+    # trap cleanup EXIT
+
+    exe_name="$(basename "$external_exe")"
+    exe="$d/$exe_name"
+
+    cp "$external_exe" "$exe"
+
+    ${body}
+
+    cargo run -p sel4-test-sentinels-wrapper -- "$simulate_script" "$image" "$@"
+
+    stty echo
+  '';
+
   rootTaskRunner = target: writeShellApplication {
     name = "root-task-runner";
     runtimeInputs = [
     ];
     checkPhase = "";
-    text = ''
-      set +x
-
-      root_task="$1"
-      shift
-
-      target_dir="$WORLD_TARGET_DIR"
-      simulate_script="$WORLD_QEMU_SCRIPT"
-
-      parent="$target_dir/runner/root-task"
-      mkdir -p "$parent"
-      d="$(mktemp -d --tmpdir="$parent")"
-
-      cleanup() {
-        rm -rf "$d"
-      }
-
-      trap cleanup EXIT
-    '' + (if firstSegment target == "x86_64" then ''
+    text = mkRunner (if firstSegment target == "x86_64" then ''
+      image="$exe"
     '' else ''
       cargo build \
         --config ${byTarget.${loaderTargetForTarget target}} \
@@ -188,19 +205,41 @@ let
       cargo run -p sel4-kernel-loader-add-payload -- \
         --loader "$d/sel4-kernel-loader" \
         --sel4-prefix "$SEL4_PREFIX" \
-        --app "$root_task" \
+        --app "$exe" \
         -o "$d/image.elf"
 
-      cargo run -p sel4-test-sentinels-wrapper -- "$simulate_script" "$d/image.elf" "$@"
+      image="$d/image.elf"
     '');
   };
 
   microkitRunner = writeShellApplication {
     name = "microkit-runner";
     runtimeInputs = [
+      llvm
+      (python312.withPackages (_: [
+        sdfgen
+      ]))
     ];
-    text = ''
-      echo "running:" "$@"
+    text = mkRunner ''
+      (
+        llvm-objcopy --dump-section .sdf_xml="$d/system.xml" "$exe" 2>/dev/null
+      ) || (
+        llvm-objcopy --dump-section .sdf_script="$d/system.py" "$exe" \
+          &&
+            PYTHONPATH="${toString ../../src/python}:''${PYTHONPATH:-}" \
+              python3 "$d/system.py" \
+                  --board "$MICROKIT_BOARD" \
+                  -o "$d/system.xml"
+      )
+
+      image="$d/image.elf"
+
+      "$MICROKIT_SDK/bin/microkit" "$d/system.xml" \
+        --search-path "$d" \
+        --board "$MICROKIT_BOARD" \
+        --config "$MICROKIT_CONFIG" \
+        -o "$image" \
+        -r "$d/report.txt"
     '';
   };
 
@@ -271,6 +310,10 @@ let
       build.target-dir = targetDir;
       env = world.seL4RustEnvVars // {
         WORLD_TARGET_DIR = targetDir;
+      } // lib.optionalAttrs world.worldConfig.isMicrokit {
+        MICROKIT_SDK = world.microkit.sdk;
+        MICROKIT_BOARD = world.worldConfig.microkitConfig.board;
+        MICROKIT_CONFIG = world.worldConfig.microkitConfig.config;
       } // lib.optionalAttrs world.worldConfig.canSimulate {
         WORLD_QEMU_SCRIPT =
           let script = mkQEMUScript world;

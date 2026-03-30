@@ -3391,6 +3391,7 @@ name = "tests-microkit-minimal"
 version = "0.1.0"
 dependencies = [
  "sel4-microkit",
+ "sel4-test-sentinels",
 ]
 
 [[package]]
@@ -3460,6 +3461,7 @@ version = "0.1.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
+ "sel4-test-sentinels",
 ]
 
 [[package]]

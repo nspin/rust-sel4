@@ -11,6 +11,8 @@ use std::process::{Command, Stdio, exit};
 const SUCCESS: u8 = 0x06;
 const FAILURE: u8 = 0x15;
 
+// TODO make sure text has passed first
+
 fn main() -> std::io::Result<()> {
     let mut args = env::args_os();
     let _program_name = args.next();
@@ -39,14 +41,13 @@ fn main() -> std::io::Result<()> {
             Ok(1) => {
                 let b = buf[0];
 
-                stdout.write_all(&buf)?;
-                stdout.flush()?;
-
                 let exit_code_opt = if b == SUCCESS {
                     Some(0)
                 } else if b == FAILURE {
                     Some(1)
                 } else {
+                    stdout.write_all(&buf)?;
+                    stdout.flush()?;
                     None
                 };
 
