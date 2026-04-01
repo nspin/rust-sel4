@@ -96,6 +96,17 @@ let
     "riscv32imafc" = "riscv32imafc-unknown-none-elf";
   }.${firstSegment target};
 
+  capdlInitializerTargetForTarget = target: {
+    "aarch64" = "aarch64-sel4-roottask-minimal";
+    "armv7" = "armv7a-sel4-roottask-minimal";
+    "armv7a" = "armv7a-sel4-roottask-minimal";
+    "riscv64gc" = "riscv64gc-sel4-roottask-minimal";
+    "riscv64imac" = "riscv64imac-sel4-roottask-minimal";
+    "riscv32imac" = "riscv32imac-sel4-roottask-minimal";
+    "riscv32imafc" = "riscv32imafc-sel4-roottask-minimal";
+    "x86_64" = "x86_64-sel4-roottask-minimal";
+  }.${firstSegment target};
+
   # getQEMUSuffixForTarget = target: {
   #   "x86_64" = "x86_64";
   #   "aarch64" = "aarch64";
@@ -196,6 +207,8 @@ let
     text = mkRunner (if firstSegment target == "x86_64" then ''
       image="$exe"
     '' else ''
+      image="$d/image.elf"
+
       cargo build \
         --config ${byTarget.${loaderTargetForTarget target}} \
         --target-dir "$target_dir" \
@@ -206,9 +219,7 @@ let
         --loader "$d/sel4-kernel-loader" \
         --sel4-prefix "$SEL4_PREFIX" \
         --app "$exe" \
-        -o "$d/image.elf"
-
-      image="$d/image.elf"
+        -o "$image"
     '');
   };
 
@@ -243,7 +254,7 @@ let
     '';
   };
 
-  testfwRunner = writeShellApplication {
+  testfwRunner = target: writeShellApplication {
     name = "testfw-runner";
     excludeShellChecks = [
       "SC2317"
@@ -273,16 +284,41 @@ let
 
       parse-capDL --object-sizes="$WORLD_OBJECT_SIZES" --json="$d/cdl.json" "$script_out_dir"
 
-      exit 1
-      # image="$d/image.elf"
+      image="$d/image.elf"
+      root_task="$d/root-task.elf"
 
-      # "$MICROKIT_SDK/bin/microkit" "$d/system.xml" \
-      #   --search-path "$d" \
-      #   --board "$MICROKIT_BOARD" \
-      #   --config "$MICROKIT_CONFIG" \
-      #   -o "$image" \
-      #   -r "$d/report.txt"
-    '';
+      cargo build \
+        --config ${byTarget.${capdlInitializerTargetForTarget target}} \
+        --target-dir "$target_dir" \
+        -p sel4-capdl-initializer \
+        --artifact-dir "$d"
+
+      cargo run -p sel4-capdl-initializer-add-spec -- \
+        -v \
+        -e "$d/sel4-capdl-initializer.elf" \
+        -f "$d/cdl.json" \
+        -d "$script_out_dir/links" \
+        --object-names-level 2 \
+        --no-embed-frames \
+        --no-deflate \
+        -o "$root_task"
+    '' + (if firstSegment target == "x86_64" then ''
+      image="$root_task"
+    '' else ''
+      image="$d/image.elf"
+
+      cargo build \
+        --config ${byTarget.${loaderTargetForTarget target}} \
+        --target-dir "$target_dir" \
+        -p sel4-kernel-loader \
+        --artifact-dir "$d"
+
+      cargo run -p sel4-kernel-loader-add-payload -- \
+        --loader "$d/sel4-kernel-loader" \
+        --sel4-prefix "$SEL4_PREFIX" \
+        --app "$root_task" \
+        -o "$image"
+    '');
   };
 
   byTarget = lib.genAttrs allTargets (target:
@@ -311,7 +347,7 @@ let
         else if hasSegment "microkit" target
         then mkRunner microkitRunner
         else if hasSegment "sel4" target # HACK
-        then mkRunner testfwRunner
+        then mkRunner (testfwRunner target)
         else {}
       )
     ]))
