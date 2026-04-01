@@ -152,7 +152,7 @@ class ElfComponent(BaseComponent):
         with path_json.open('r') as f_json:
             with path_bin.open('wb') as f_bin:
                 subprocess.check_call(
-                    ['sel4-simple-task-serialize-runtime-config'], stdin=f_json, stdout=f_bin)
+                    ['cargo', 'run', '-p', 'sel4-simple-task-runtime-config-cli', '--'], stdin=f_json, stdout=f_bin)
 
         self.composition.register_file(path_bin.name, path_bin)
 

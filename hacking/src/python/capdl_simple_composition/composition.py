@@ -41,7 +41,7 @@ class BaseComposition:
         }
 
         kernel_config = KernelConfig(config['kernel_config'])
-        if kernel_config.sel4_arch() == 'x86_64':
+        if kernel_config.sel4_arch() != 'x86_64':
             config['device_tree'] = f'{sel4_prefix}/support/kernel.dtb'
             config['platform_info'] =  f'{sel4_prefix}/support/platform_gen.yaml'
 
