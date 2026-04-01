@@ -245,6 +245,11 @@ let
 
   testfwRunner = writeShellApplication {
     name = "testfw-runner";
+    excludeShellChecks = [
+      "SC2317"
+      "SC2329"
+      "SC2154"
+    ];
     runtimeInputs = [
       llvm
       (python312.withPackages (p: with p; [
@@ -253,12 +258,12 @@ let
         pyyaml pyelftools pyfdt
       ]))
     ];
-    text = ''
+    text = mkRunner ''
       export PYTHONPATH="${toString ../../src/python}:${sources.pythonCapDLTool}:''${PYTHONPATH:-}"
 
       llvm-objcopy --dump-section .capdl_script="$d/system.py" "$exe"
 
-      export OUT_DIR=$d \
+      OUT_DIR=$d \
         python3 "$d/system.py"
 
       exit 1
@@ -298,7 +303,7 @@ let
         then mkRunner (rootTaskRunner target)
         else if hasSegment "microkit" target
         then mkRunner microkitRunner
-        else if hasSegment "testfw" target # HACK
+        else if hasSegment "sel4" target # HACK
         then mkRunner testfwRunner
         else {}
       )
