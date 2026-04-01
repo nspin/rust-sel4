@@ -36,7 +36,7 @@ class BaseComposition:
         config = {
             'kernel_config': f'{sel4_prefix}/libsel4/include/kernel/gen_config.json',
             'object_sizes': args.object_sizes,
-            'compute_ut_covers': True,
+            'compute_ut_covers': False,
             'search_path': Path(args.search_path),
         }
 

@@ -41,7 +41,7 @@ class ElfComponent(BaseComponent):
         self.elf_path = composition.config['search_path'] / elf_path
         self.elf = ELF(str(self.elf_path), elf_fname, self.composition.arch)
 
-        self.composition.register_file(elf_fname, elf_path)
+        self.composition.register_file(elf_fname, self.elf_path)
 
         self.set_cursor(self.first_vaddr_after_elf())
 

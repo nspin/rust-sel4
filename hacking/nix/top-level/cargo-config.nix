@@ -282,7 +282,7 @@ let
         --object-sizes "$WORLD_OBJECT_SIZES" \
         -o "$script_out_dir"
 
-      parse-capDL --object-sizes="$WORLD_OBJECT_SIZES" --json="$d/cdl.json" "$script_out_dir"
+      parse-capDL --object-sizes="$WORLD_OBJECT_SIZES" --json="$d/cdl.json" "$script_out_dir/spec.cdl"
 
       image="$d/image.elf"
       root_task="$d/root-task.elf"
@@ -312,6 +312,8 @@ let
         --target-dir "$target_dir" \
         -p sel4-kernel-loader \
         --artifact-dir "$d"
+
+      echo fooo
 
       cargo run -p sel4-kernel-loader-add-payload -- \
         --loader "$d/sel4-kernel-loader" \
