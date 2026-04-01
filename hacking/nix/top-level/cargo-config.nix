@@ -270,7 +270,7 @@ let
         pyyaml pyelftools pyfdt
       ]))
     ];
-    text = mkRunner ''
+    text = mkRunner (''
       export PYTHONPATH="${toString ../../src/python}:${sources.pythonCapDLTool}:''${PYTHONPATH:-}"
 
       llvm-objcopy --dump-section .capdl_script="$d/system.py" "$exe"
@@ -313,14 +313,12 @@ let
         -p sel4-kernel-loader \
         --artifact-dir "$d"
 
-      echo fooo
-
       cargo run -p sel4-kernel-loader-add-payload -- \
         --loader "$d/sel4-kernel-loader" \
         --sel4-prefix "$SEL4_PREFIX" \
         --app "$root_task" \
         -o "$image"
-    '');
+    ''));
   };
 
   byTarget = lib.genAttrs allTargets (target:
