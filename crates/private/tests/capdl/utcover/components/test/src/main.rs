@@ -14,6 +14,8 @@ use serde::{Deserialize, Serialize};
 use sel4_simple_task_config_types::*;
 use sel4_simple_task_runtime::{debug_println, main_json};
 
+sel4_test_sentinels::embed_capdl_script!("../../system.py");
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub frame: ConfigCPtr<Granule>,
@@ -28,5 +30,5 @@ fn main(config: Config) {
         config.frame.get().frame_get_address().unwrap()
     );
 
-    debug_println!("TEST_PASS");
+    sel4_test_sentinels::indicate_success();
 }

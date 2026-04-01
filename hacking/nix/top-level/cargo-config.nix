@@ -11,7 +11,7 @@ let
   inherit (topLevel) lib pkgs;
   inherit (pkgs) build;
   inherit (build) writers linkFarm writeShellApplication this llvm python312;
-  inherit (this) crateUtils sdfgen;
+  inherit (this) sources crateUtils sdfgen;
 
   targetRootDir = toString ../../../target;
 
@@ -221,15 +221,15 @@ let
       ]))
     ];
     text = mkRunner ''
+      export PYTHONPATH="${toString ../../src/python}:''${PYTHONPATH:-}"
+
       (
         llvm-objcopy --dump-section .sdf_xml="$d/system.xml" "$exe" 2>/dev/null
       ) || (
-        llvm-objcopy --dump-section .sdf_script="$d/system.py" "$exe" \
-          &&
-            PYTHONPATH="${toString ../../src/python}:''${PYTHONPATH:-}" \
-              python3 "$d/system.py" \
-                  --board "$MICROKIT_BOARD" \
-                  -o "$d/system.xml"
+        llvm-objcopy --dump-section .sdf_script="$d/system.py" "$exe"; \
+        python3 "$d/system.py" \
+            --board "$MICROKIT_BOARD" \
+            -o "$d/system.xml"
       )
 
       image="$d/image.elf"
@@ -246,9 +246,30 @@ let
   testfwRunner = writeShellApplication {
     name = "testfw-runner";
     runtimeInputs = [
+      llvm
+      (python312.withPackages (p: with p; [
+        future six
+        aenum sortedcontainers
+        pyyaml pyelftools pyfdt
+      ]))
     ];
     text = ''
-      echo "running:" "$@"
+      export PYTHONPATH="${toString ../../src/python}:${sources.pythonCapDLTool}:''${PYTHONPATH:-}"
+
+      llvm-objcopy --dump-section .capdl_script="$d/system.py" "$exe"
+
+      export OUT_DIR=$d \
+        python3 "$d/system.py"
+
+      exit 1
+      # image="$d/image.elf"
+
+      # "$MICROKIT_SDK/bin/microkit" "$d/system.xml" \
+      #   --search-path "$d" \
+      #   --board "$MICROKIT_BOARD" \
+      #   --config "$MICROKIT_CONFIG" \
+      #   -o "$image" \
+      #   -r "$d/report.txt"
     '';
   };
 
