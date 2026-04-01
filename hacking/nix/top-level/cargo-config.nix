@@ -11,7 +11,7 @@ let
   inherit (topLevel) lib pkgs;
   inherit (pkgs) build;
   inherit (build) writers linkFarm writeShellApplication this llvm python312;
-  inherit (this) sources crateUtils sdfgen;
+  inherit (this) sources crateUtils capdl-tool sdfgen;
 
   targetRootDir = toString ../../../target;
 
@@ -252,6 +252,7 @@ let
     ];
     runtimeInputs = [
       llvm
+      capdl-tool
       (python312.withPackages (p: with p; [
         future six
         aenum sortedcontainers
@@ -269,6 +270,8 @@ let
         --search-path "$d" \
         --object-sizes "$WORLD_OBJECT_SIZES" \
         -o "$script_out_dir"
+
+      parse-capDL --object-sizes="$WORLD_OBJECT_SIZES" --json="$d/cdl.json" "$script_out_dir"
 
       exit 1
       # image="$d/image.elf"
