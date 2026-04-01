@@ -266,6 +266,7 @@ let
       script_out_dir="$d/cdl"
 
       python3 "$d/system.py" \
+        --search-path "$d" \
         --object-sizes "$WORLD_OBJECT_SIZES" \
         -o "$script_out_dir"
 

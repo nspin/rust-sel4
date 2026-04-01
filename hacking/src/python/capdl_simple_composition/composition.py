@@ -27,6 +27,7 @@ class BaseComposition:
     def from_env(cls):
         parser = argparse.ArgumentParser()
         parser.add_argument('--object-sizes', required=True)
+        parser.add_argument('--search-path', required=True)
         parser.add_argument('-o', required=True)
         args = parser.parse_args()
 
@@ -36,6 +37,7 @@ class BaseComposition:
             'kernel_config': f'{sel4_prefix}/libsel4/include/kernel/gen_config.json',
             'object_sizes': args.object_sizes,
             'compute_ut_covers': True,
+            'search_path': Path(args.search_path),
         }
 
         kernel_config = KernelConfig(config['kernel_config'])
