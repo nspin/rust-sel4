@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
+import argparse
 import json
 import os
 import shutil
@@ -24,9 +25,25 @@ class BaseComposition:
 
     @classmethod
     def from_env(cls):
-        with open(os.environ['CONFIG']) as f:
-            config = json.load(f)
-        return cls(out_dir=os.environ['OUT_DIR'], config=config)
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--object-sizes', required=True)
+        parser.add_argument('-o', required=True)
+        args = parser.parse_args()
+
+        sel4_prefix = os.environ['SEL4_PREFIX']
+
+        config = {
+            'kernel_config': f'{sel4_prefix}/libsel4/include/kernel/gen_config.json',
+            'object_sizes': args.object_sizes,
+            'compute_ut_covers': True,
+        }
+
+        kernel_config = KernelConfig(config['kernel_config'])
+        if kernel_config.sel4_arch() == 'x86_64':
+            config['device_tree'] = f'{sel4_prefix}/support/kernel.dtb'
+            config['platform_info'] =  f'{sel4_prefix}/support/platform_gen.yaml'
+
+        return cls(out_dir=args.o, config=config)
 
     def __init__(self, out_dir, config):
         self.out_dir = Path(out_dir)

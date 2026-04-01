@@ -263,8 +263,11 @@ let
 
       llvm-objcopy --dump-section .capdl_script="$d/system.py" "$exe"
 
-      OUT_DIR=$d \
-        python3 "$d/system.py"
+      script_out_dir="$d/cdl"
+
+      python3 "$d/system.py" \
+        --object-sizes "$WORLD_OBJECT_SIZES" \
+        -o "$script_out_dir"
 
       exit 1
       # image="$d/image.elf"
@@ -336,6 +339,7 @@ let
       build.target-dir = targetDir;
       env = world.seL4RustEnvVars // {
         WORLD_TARGET_DIR = targetDir;
+        WORLD_OBJECT_SIZES = world.objectSizes;
       } // lib.optionalAttrs world.worldConfig.isMicrokit {
         MICROKIT_SDK = world.microkit.sdk;
         MICROKIT_BOARD = world.worldConfig.microkitConfig.board;
