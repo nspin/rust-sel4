@@ -360,21 +360,12 @@ let
     (lib.filterAttrs (n: _: n != "ia32") pkgs.host)
   ;
 
-  mkQEMUScript = world: writeShellApplication {
-    name = "simulate";
-    runtimeInputs = [
-    ];
-    checkPhase = "";
-    text = ''
-      image="$1"
-      shift
-      exec ${lib.concatStringsSep " " (world.worldConfig.mkQEMUCmd ''"$image"'')} "$@"
-    '';
-  };
-
   configForWorld = attrPath: world:
     let
       targetDir = "${targetRootDir}/by-world/${lib.concatStringsSep "." attrPath}";
+      simulateScript =
+        let script = world.simulateScript;
+        in "${script}/bin/${script.name}";
     in {
       build.target-dir = targetDir;
       env = world.seL4RustEnvVars // {
@@ -385,9 +376,7 @@ let
         MICROKIT_BOARD = world.worldConfig.microkitConfig.board;
         MICROKIT_CONFIG = world.worldConfig.microkitConfig.config;
       } // lib.optionalAttrs world.worldConfig.canSimulate {
-        WORLD_QEMU_SCRIPT =
-          let script = mkQEMUScript world;
-          in "${script}/bin/${script.name}";
+        WORLD_QEMU_SCRIPT = simulateScript;
       };
     };
 

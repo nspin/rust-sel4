@@ -7,7 +7,7 @@
 { lib
 , stdenv
 , buildPackages
-, runCommand, runCommandCC, linkFarm, writeScript
+, runCommand, runCommandCC, linkFarm, writeScript, writeShellApplication
 , jq
 , symlinkToRegularFile
 , crateUtils
@@ -131,6 +131,16 @@ self: with self;
   serializeCapDLSpec = callPackage ./capdl/serialize-capdl-spec.nix {};
   mkSimpleCompositionCapDLSpec = callPackage ./capdl/mk-simple-composition-capdl-spec.nix {};
   mkCapDLInitializerWithSpec = callPackage ./capdl/mk-capdl-initializer-with-spec.nix {};
+
+  simulateScript = if !worldConfig.canSimulate then null else writeShellApplication {
+    name = "simulate";
+    checkPhase = "";
+    text = ''
+      image="$1"
+      shift
+      exec ${lib.concatStringsSep " " (world.worldConfig.mkQEMUCmd ''"$image"'')} "$@"
+    '';
+  };
 
   mkCapDLInitializer =
     { spec ? null
