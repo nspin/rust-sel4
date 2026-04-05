@@ -72,7 +72,6 @@ in rec {
     url = "https://github.com/au-ts/microkit_sdf_gen";
     rev = "562963f99736f7deeb6091b275f3ef8709ada059"; # main
     local = localRoot + "/microkit_sdf_gen";
-    useLocal = true;
     extraFilter = path: type:
       lib.hasSuffix "/.zig-cache" path || lib.hasSuffix "/zig-out" path || lib.hasSuffix "/result" path;
   };
