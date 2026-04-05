@@ -138,7 +138,7 @@ self: with self;
     text = ''
       image="$1"
       shift
-      exec ${lib.concatStringsSep " " (world.worldConfig.mkQEMUCmd ''"$image"'')} "$@"
+      exec ${lib.concatStringsSep " " (worldConfig.mkQEMUCmd ''"$image"'')} "$@"
     '';
   };
 
