@@ -93,6 +93,7 @@ members = [
     "crates/private/support/sel4-simple-task/runtime/macros",
     "crates/private/support/sel4-simple-task/threading",
     "crates/private/support/sel4-test-harness",
+    "crates/private/support/sel4-test-runner",
     "crates/private/support/sel4-test-sentinels",
     "crates/private/support/sel4-test-sentinels/wrapper",
     "crates/private/tests/capdl/threads/components/test",
