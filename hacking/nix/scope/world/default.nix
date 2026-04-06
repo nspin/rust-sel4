@@ -108,9 +108,11 @@ self: with self;
 
   libsel4 = if worldConfig.isMicrokit then microkitDir else "${seL4ForUserspace}/libsel4";
 
+  seL4ConfigFile = "${seL4IncludeDir}/${seg}/gen_config.json";
+
   seL4Config =
     let
-      f = seg: builtins.fromJSON (builtins.readFile (symlinkToRegularFile "${seg}-gen_config.json" "${seL4IncludeDir}/${seg}/gen_config.json"));
+      f = seg: builtins.fromJSON (builtins.readFile (symlinkToRegularFile "${seg}-gen_config.json" seL4ConfigFile));
     in
       f "kernel" // f "sel4";
 
