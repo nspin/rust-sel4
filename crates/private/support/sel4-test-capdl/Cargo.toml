@@ -10,11 +10,11 @@
 #
 
 [package]
-name = "sel4-test-sentinels-wrapper"
+name = "sel4-test-sentinels"
 version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
 license = "BSD-2-Clause"
 
 [dependencies]
-clap = "4.5.50"
+sel4-panicking-env = { path = "../../../sel4-panicking/env" }
