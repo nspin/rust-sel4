@@ -365,7 +365,7 @@ let
         WORLD_QEMU_SCRIPT = simulateScript;
       };
       # target."cfg(any(target_os = \"none\", target_env = \"musl\"))".runner = "echo xxxx";
-      target."cfg(target_os = \"none\")".runner = "echo xxxx";
+      # target."cfg(target_os = \"none\")".runner = "echo xxxx";
     };
 
   byWorldList = lib.mapAttrsToListRecursiveCond

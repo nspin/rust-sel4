@@ -4,4 +4,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+#![no_std]
+
 pub use sel4_test_sentinels::indicate_success;
