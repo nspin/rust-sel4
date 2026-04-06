@@ -162,6 +162,9 @@ in let
               linux = mkLeafWithGuard {
                 config = "riscv32-unknown-linux-gnu";
               };
+              linuxMusl = mkLeafWithGuard {
+                config = "riscv32-unknown-linux-musl";
+              };
             };
           };
           x86_64 = {
