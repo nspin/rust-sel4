@@ -12,7 +12,7 @@ mk {
     inherit (localCrates)
       sel4
       sel4-root-task
-      sel4-test-sentinels
+      sel4-test-root-task
     ;
   };
 }

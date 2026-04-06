@@ -11,7 +11,7 @@ mk {
   dependencies = {
     inherit (localCrates)
       sel4-microkit
-      sel4-test-sentinels
+      sel4-test-microkit
     ;
   };
 }

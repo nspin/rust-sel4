@@ -9,10 +9,10 @@
 
 use sel4_microkit::{NullHandler, protection_domain};
 
-sel4_test_sentinels::embed_sdf_script!("../../system.py");
+sel4_test_microkit::embed_sdf_script!("../../system.py");
 
 #[protection_domain]
 fn init() -> NullHandler {
-    sel4_test_sentinels::indicate_success();
+    sel4_test_microkit::indicate_success();
     NullHandler::new()
 }
