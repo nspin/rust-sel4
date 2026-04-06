@@ -377,7 +377,7 @@ let
         "--sel4-kernel-config" world.seL4KernelConfigFile
         "--simulate-script" simulateScript
       ] ++ lib.optionals world.worldConfig.isMicrokit [
-        "--microkit-sdk" world.microkit.sdk
+        "--microkit-tool" "${world.microkit.sdk}/bin/microkit"
         "--microkit-board" world.worldConfig.microkitConfig.board
         "--microkit-config" world.worldConfig.microkitConfig.config
       ];
