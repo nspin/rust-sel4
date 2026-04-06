@@ -21,7 +21,6 @@ linker = "rust-lld"
 [target.riscv64gc-unknown-linux-musl]
 rustflags = ["-C", "target-feature=+crt-static"]
 
-# TODO this target doesn't ship with musl
 [target.riscv32gc-unknown-linux-musl]
 rustflags = ["-C", "target-feature=+crt-static"]
 
