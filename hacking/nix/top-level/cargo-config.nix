@@ -74,6 +74,7 @@ let
 
   hasSeL4 = targetName: hasSegment "sel4" targetName || hasSegment "microkit" targetName;
 
+  # TODO depend on whether -musl
   getPkgsForTarget = target: {
     "x86_64" = pkgs.host.x86_64.none;
     "aarch64" = pkgs.host.aarch64.none;
