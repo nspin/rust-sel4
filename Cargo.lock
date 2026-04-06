@@ -3059,12 +3059,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "sel4-test-capdl"
+version = "0.1.0"
+dependencies = [
+ "sel4-test-sentinels",
+]
+
+[[package]]
 name = "sel4-test-harness"
 version = "0.1.0"
 dependencies = [
  "sel4-immediate-sync-once-cell",
  "sel4-panicking",
  "sel4-panicking-env",
+]
+
+[[package]]
+name = "sel4-test-microkit"
+version = "0.1.0"
+dependencies = [
+ "sel4-test-sentinels",
+]
+
+[[package]]
+name = "sel4-test-root-task"
+version = "0.1.0"
+dependencies = [
+ "sel4-test-sentinels",
 ]
 
 [[package]]
@@ -3079,13 +3100,6 @@ name = "sel4-test-sentinels"
 version = "0.1.0"
 dependencies = [
  "sel4-panicking-env",
-]
-
-[[package]]
-name = "sel4-test-sentinels-wrapper"
-version = "0.1.0"
-dependencies = [
- "clap",
 ]
 
 [[package]]
@@ -3399,7 +3413,7 @@ name = "tests-microkit-minimal"
 version = "0.1.0"
 dependencies = [
  "sel4-microkit",
- "sel4-test-sentinels",
+ "sel4-test-microkit",
 ]
 
 [[package]]
@@ -3469,7 +3483,7 @@ version = "0.1.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
- "sel4-test-sentinels",
+ "sel4-test-root-task",
 ]
 
 [[package]]

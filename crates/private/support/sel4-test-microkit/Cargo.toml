@@ -10,11 +10,11 @@
 #
 
 [package]
-name = "sel4-test-sentinels"
+name = "sel4-test-microkit"
 version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
 license = "BSD-2-Clause"
 
 [dependencies]
-sel4-panicking-env = { path = "../../../sel4-panicking/env" }
+sel4-test-sentinels = { path = "../sel4-test-sentinels" }
