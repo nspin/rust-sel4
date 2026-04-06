@@ -322,11 +322,6 @@ let
   };
 
   byTarget = lib.genAttrs allTargets (target:
-    let
-      mkRunner = script: {
-        target.${target}.runner = "${script}/bin/${script.name}";
-      };
-    in
     writers.writeTOML "${target}.toml" (crateUtils.clobber ([
       {
         build = {
@@ -341,15 +336,6 @@ let
       })
       ccConfigCommon
       (ccConfigForTarget target)
-      (
-        if hasSegment "roottask" target
-        then mkRunner (rootTaskRunner target)
-        else if hasSegment "microkit" target
-        then mkRunner microkitRunner
-        else if hasSegment "sel4" target # HACK
-        then mkRunner (testfwRunner target)
-        else {}
-      )
     ]))
   );
 
@@ -378,6 +364,7 @@ let
       } // lib.optionalAttrs world.worldConfig.canSimulate {
         WORLD_QEMU_SCRIPT = simulateScript;
       };
+      target."cfg(any(target_os = \"none\", target_env = \"musl\"))".runner = "echo xxxx";
     };
 
   byWorldList = lib.mapAttrsToListRecursiveCond
