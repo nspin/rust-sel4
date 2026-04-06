@@ -352,10 +352,11 @@ let
       simulateScript =
         let script = world.simulateScript;
         in "${script}/bin/${script.name}";
-      runnerArgs = [
+      runner = [
+        "cargo" "run" "-p" "sel4-test-runner" "--"
         "--target-dir" targetDir
         "--object-sizes" world.objectSizes
-        "--sel4-config" world.sel4ConfigFile
+        "--sel4-kernel-config" world.seL4KernelConfigFile
       ] ++ lib.optionals world.worldConfig.canSimulate [
         "--simulate-script" simulateScript
       ] ++ lib.optionals world.worldConfig.isMicrokit [
@@ -366,6 +367,7 @@ let
     in {
       build.target-dir = targetDir;
       env = world.seL4RustEnvVars;
+      target."cfg(all())".runner = runner;
     };
 
   byWorldList = lib.mapAttrsToListRecursiveCond

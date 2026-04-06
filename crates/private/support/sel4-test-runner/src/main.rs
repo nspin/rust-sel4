@@ -6,12 +6,8 @@
 
 use std::env;
 use std::io::{Read, Write};
-use std::process::{Command, Stdio, exit};
+use std::process::{Command, Stdio, exit, ExitCode};
 
-const SUCCESS: u8 = 0x06;
-const FAILURE: u8 = 0x15;
-
-// TODO make sure text has passed first
-
-fn main() -> Result<ExitCode> {
+fn main() -> ExitCode {
+    ExitCode::SUCCESS
 }
