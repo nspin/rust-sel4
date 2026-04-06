@@ -352,20 +352,20 @@ let
       simulateScript =
         let script = world.simulateScript;
         in "${script}/bin/${script.name}";
+      runnerArgs = [
+        "--target-dir" targetDir
+        "--object-sizes" world.objectSizes
+        "--sel4-config" world.sel4ConfigFile
+      ] ++ lib.optionals world.worldConfig.canSimulate [
+        "--simulate-script" simulateScript
+      ] ++ lib.optionals world.worldConfig.isMicrokit [
+        "--microkit-sdk" world.microkit.sdk
+        "--microkit-board" world.worldConfig.microkitConfig.board
+        "--microkit-config" world.worldConfig.microkitConfig.config
+      ];
     in {
       build.target-dir = targetDir;
-      env = world.seL4RustEnvVars // {
-        WORLD_TARGET_DIR = targetDir;
-        WORLD_OBJECT_SIZES = world.objectSizes;
-      } // lib.optionalAttrs world.worldConfig.isMicrokit {
-        MICROKIT_SDK = world.microkit.sdk;
-        MICROKIT_BOARD = world.worldConfig.microkitConfig.board;
-        MICROKIT_CONFIG = world.worldConfig.microkitConfig.config;
-      } // lib.optionalAttrs world.worldConfig.canSimulate {
-        WORLD_QEMU_SCRIPT = simulateScript;
-      };
-      # target."cfg(any(target_os = \"none\", target_env = \"musl\"))".runner = "echo xxxx";
-      # target."cfg(target_os = \"none\")".runner = "echo xxxx";
+      env = world.seL4RustEnvVars;
     };
 
   byWorldList = lib.mapAttrsToListRecursiveCond
