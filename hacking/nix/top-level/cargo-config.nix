@@ -375,7 +375,6 @@ let
         "--target-dir" targetDir
         "--object-sizes" world.objectSizes
         "--sel4-kernel-config" world.seL4KernelConfigFile
-      ] ++ lib.optionals world.worldConfig.canSimulate [
         "--simulate-script" simulateScript
       ] ++ lib.optionals world.worldConfig.isMicrokit [
         "--microkit-sdk" world.microkit.sdk
@@ -385,6 +384,7 @@ let
     in {
       build.target-dir = targetDir;
       env = world.seL4RustEnvVars;
+    } // lib.optionalAttrs world.worldConfig.canSimulate {
       target."cfg(all())".runner = runner;
     };
 
