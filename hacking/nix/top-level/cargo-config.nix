@@ -136,7 +136,7 @@ let
           then {
             env = {
               "CFLAGS_${target}" = "-nostdlib ${mkIncludeArg muslForSeL4}";
-              "BINDGEN_EXTRA_CLANG_ARGS_${target}" = mkIncludeArg muslForSeL4;
+              "BINDGEN_EXTRA_CLANG_ARGS_${target}" = mkIncludeArg muslForSeL4; # TODO necessary?
             };
             target.${target} = {
               rustflags = [
@@ -145,9 +145,18 @@ let
               ];
             };
           }
+          # special case, not included in rustup
+          else if target == "riscv32gc-unknown-linux-musl"
+          then {
+            target.${target} = {
+              rustflags = [
+                "-L${pkgs.host.riscv32.gc.linux.musl}/lib"
+              ];
+            };
+          }
           else {
             env = {
-              "BINDGEN_EXTRA_CLANG_ARGS_${target}" = mkIncludeArg (getNewlibDir stdenv);
+              "BINDGEN_EXTRA_CLANG_ARGS_${target}" = mkIncludeArg (getNewlibDir stdenv); # TODO necessary?
             };
           }
         )
