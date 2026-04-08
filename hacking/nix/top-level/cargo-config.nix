@@ -385,7 +385,7 @@ let
       build.target-dir = targetDir;
       env = world.seL4RustEnvVars;
     } // lib.optionalAttrs world.worldConfig.canSimulate {
-      target."cfg(all())".runner = runner;
+      target."cfg(not(any()))".runner = runner;
     };
 
   byWorldList = lib.mapAttrsToListRecursiveCond
