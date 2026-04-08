@@ -16,12 +16,12 @@ macro_rules! embed_file {
             #[unsafe(link_section = $section_name)]
             pub static DATA: [u8; include_bytes!($path).len()] = *include_bytes!($path);
         };
-    }
+    };
 }
 
 #[macro_export]
 macro_rules! embed_capdl_script {
     ($path:literal) => {
         $crate::embed_file!(".capdl_script", $path);
-    }
+    };
 }

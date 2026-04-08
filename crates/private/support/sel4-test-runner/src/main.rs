@@ -6,7 +6,7 @@
 
 use std::env;
 use std::io::{Read, Write};
-use std::process::{Command, Stdio, exit, ExitCode};
+use std::process::{Command, ExitCode, Stdio, exit};
 
 fn main() -> ExitCode {
     ExitCode::SUCCESS
