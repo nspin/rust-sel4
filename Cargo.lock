@@ -3091,9 +3091,6 @@ dependencies = [
 [[package]]
 name = "sel4-test-runner"
 version = "0.1.0"
-dependencies = [
- "clap",
-]
 
 [[package]]
 name = "sel4-test-sentinels"
