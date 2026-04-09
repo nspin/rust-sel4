@@ -45,5 +45,8 @@ fn main() -> Result<ExitCode, Error> {
     eprintln!("tmp:");
     eprintln!("{}", d.path().display());
 
+    let exe = d.path().join(cli.exe.file_name().unwrap());
+    fs::copy(&cli.exe, &exe)?;
+
     Ok(ExitCode::SUCCESS)
 }
