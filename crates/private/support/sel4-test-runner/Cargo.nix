@@ -9,6 +9,6 @@
 mk {
   package.name = "sel4-test-runner";
   dependencies = {
-    # clap = { version = versions.clap; features = [ "derive" ]; };
+    clap = { version = versions.clap; features = [ "derive" ]; };
   };
 }
