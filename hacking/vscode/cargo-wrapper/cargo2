@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+declare -a args
+declare -i seen_check_command=0
+
+args+=("--config" "/home/x/i/rust-sel4/.cargo/gen/target/aarch64-sel4-microkit.toml")
+args+=("--config" "/home/x/i/rust-sel4/.cargo/gen/world/aarch64.microkitDefault.toml")
+
+
+for arg in "$@"; do
+    args+=("$arg")
+done
+
+# readarray -t excludes < /home/x/i/rust-sel4/hacking/vscode/excludes.txt
+# for exclude in "${excludes[@]}"; do
+#     args+=("--exclude" "$exclude")
+# done
+
+# echo "cargo $*" >> "$__RUST_ANALYZER_WRAPPER__LOG"
+# echo "cargo ${args[*]}" >> "$__RUST_ANALYZER_WRAPPER__LOG"
+
+# echo "cargo" "${args[@]}"
+exec "cargo" "${args[@]}"
