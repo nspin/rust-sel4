@@ -23,3 +23,9 @@ cargo tree --workspace \
 | cut -d ' ' -f 1 \
 | sort -u \
 > $here/excludes.txt
+
+
+# cargo tree --workspace \
+#     --invert sel4-config-data \
+#     --depth 1 \
+#     --prefix none --format '{p}'
