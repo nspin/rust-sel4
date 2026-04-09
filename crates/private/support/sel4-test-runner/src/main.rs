@@ -57,10 +57,23 @@ fn main() -> Result<ExitCode, Error> {
     let data = fs::read(&exe)?;
     let file = object::File::parse(&*data)?;
 
-    let image = if let Architecture::X86_64 = file.architecture() {
+    let arch = file.architecture();
+
+    let image = if let Architecture::X86_64 = arch {
         exe.clone()
     } else {
         let image = d.path().join("image.elf");
+
+        let loader_target = "aarch64-unknown-none";
+
+        assert!(Command::new("cargo")
+        .arg("build")
+        .arg("--config")
+        .arg(loader_target)
+        .arg("--target-dir").arg(&cli.target_dir)
+        .arg("-p").arg("sel4-kernel-loader")
+        .arg("--artifact-dir").arg(d.path())
+        .status()?.success());
 
         image
     };
