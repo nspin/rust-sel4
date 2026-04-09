@@ -217,7 +217,12 @@ let
   };
 
 in {
-  inherit links;
+  inherit
+    links
+    cc
+    byTarget
+    byWorldList
+  ;
 }
 
 # -nostdlib
