@@ -21,6 +21,16 @@ let
 
   isRustupTarget = targetName: lib.elem targetName rustupTargets;
 
+  allTargets = builtinTargets ++ customTargets;
+
+  builtinTargets = rustupTargets ++ [
+    "riscv32gc-unknown-linux-musl"
+  ];
+
+  builtinMuslTargets = lib.filter hasMusl builtinTargets;
+
+  builtinBareMetalTargets = lib.filter (target: !(hasMusl target)) builtinTargets;
+
   targetsPath = ../../../support/targets;
 
   customTargets =
@@ -36,39 +46,9 @@ let
       targetNames
     ;
 
-  hasSegment = seg: targetName: lib.elem seg (lib.splitString "-" targetName);
-
   firstSegment = targetName: lib.head (lib.splitString "-" targetName);
 
-  getCCExePath = stdenv:
-    let
-      inherit (stdenv) cc;
-    in
-      "${cc}/bin/${cc.targetPrefix}gcc";
-
-  getNewlibDir = stdenv: "${stdenv.cc.libc}/${stdenv.hostPlatform.config}";
-
-  mkIncludeArg = d: "-I${d}/include";
-
-  builtinMuslTargets = [
-    "x86_64-unknown-linux-musl"
-    "aarch64-unknown-linux-musl"
-    "armv7-unknown-linux-musleabi"
-    "riscv64gc-unknown-linux-musl"
-    "riscv32gc-unknown-linux-musl"
-  ];
-
-  builtinBareMetalTargets = [
-    "x86_64-unknown-none"
-    "aarch64-unknown-none"
-    "armv7a-none-eabi"
-    "riscv64imac-unknown-none-elf"
-    "riscv64gc-unknown-none-elf"
-    "riscv32imac-unknown-none-elf"
-    "riscv32imafc-unknown-none-elf"
-  ];
-
-  allTargets = builtinMuslTargets ++ builtinBareMetalTargets ++ customTargets;
+  hasSegment = seg: targetName: lib.elem seg (lib.splitString "-" targetName);
 
   hasMusl = hasSegment "musl";
 
@@ -108,17 +88,22 @@ let
     "x86_64" = "x86_64-sel4-roottask-minimal";
   }.${firstSegment target};
 
-  # getQEMUSuffixForTarget = target: {
-  #   "x86_64" = "x86_64";
-  #   "aarch64" = "aarch64";
-  #   "armv7" = "arm";
-  #   "armv7a" = "arm";
-  #   "riscv64gc" = "riscv64";
-  #   "riscv64imac" = "riscv64";
-  #   "riscv32gc" = "riscv64";
-  #   "riscv32imac" = "riscv32";
-  #   "riscv32imafc" = "riscv32";
-  # }.${firstSegment target};
+  getCCExePath = stdenv:
+    let
+      inherit (stdenv) cc;
+    in
+      "${cc}/bin/${cc.targetPrefix}gcc";
+
+  getNewlibDir = stdenv: "${stdenv.cc.libc}/${stdenv.hostPlatform.config}";
+
+  mkIncludeArg = d: "-I${d}/include";
+
+  ccConfigCommon = {
+    env = {
+      HOST_CC = getCCExePath build.stdenv;
+      LIBCLANG_PATH = build.this.libclangPath;
+    };
+  };
 
   ccConfigForTarget = target:
     let
@@ -172,12 +157,6 @@ let
       ])
     ;
 
-  ccConfigCommon = {
-    env = {
-      HOST_CC = getCCExePath build.stdenv;
-      LIBCLANG_PATH = build.this.libclangPath;
-    };
-  };
 
   cc = writers.writeTOML "cc.toml" (crateUtils.clobber ([
     ccConfigCommon
