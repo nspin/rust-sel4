@@ -212,8 +212,8 @@ let
 
   links = linkFarm "generated-config" {
     "cc.toml" = cc;
-    "by-target" = byTargetLinks;
-    "by-world" = byWorldLinks;
+    "target" = byTargetLinks;
+    "world" = byWorldLinks;
   };
 
 in {
