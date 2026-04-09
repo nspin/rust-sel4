@@ -4,12 +4,14 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::env;
+use std::{env, fs};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::process::{Command, ExitCode, Stdio, exit};
 
+use anyhow::Error;
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use tempfile::TempDir;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -31,8 +33,17 @@ struct Cli {
     microkit_config: Option<String>,
 }
 
-fn main() {
+fn main() -> Result<ExitCode, Error> {
     let cli = Cli::parse();
-
     println!("{:?}", cli);
+
+    let parent = cli.target_dir.join("runner");
+    fs::create_dir_all(&parent)?;
+    let mut d = TempDir::with_prefix_in("run-", parent)?;
+    d.disable_cleanup(true);
+
+    eprintln!("tmp:");
+    eprintln!("{}", d.path().display());
+
+    Ok(ExitCode::SUCCESS)
 }
