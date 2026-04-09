@@ -92,11 +92,11 @@ let
       inherit (hostPkgs.this) muslForSeL4 dummyLibunwind;
     in
       crateUtils.clobber ([
-        {
+        (lib.optionalAttrs (!(hasMusl target) || hasSeL4 target) {
           env = {
             "CC_${target}" = getCCExePath stdenv;
           };
-        }
+        })
         (
           if !(hasMusl target)
           then {
@@ -136,7 +136,6 @@ let
         )
       ])
     ;
-
 
   cc = writers.writeTOML "cc.toml" (crateUtils.clobber ([
     ccConfigCommon
