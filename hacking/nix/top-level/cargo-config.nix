@@ -64,7 +64,9 @@ let
     "riscv32gc" = riscv32.gc;
     "riscv32imac" = riscv32.imac;
     "riscv32imafc" = riscv32.imafc;
-  }.${firstSegment target}.${if hasMusl target then "linuxMusl" else "none"};
+  }.${firstSegment target}.none;
+  # TODO
+  # ${if hasMusl target then "linuxMusl" else "none"}
 
   getCCExePath = stdenv:
     let
