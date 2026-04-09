@@ -10,7 +10,6 @@
 #
 
 [workspace]
-default-members = []
 resolver = "3"
 members = [
     "crates/drivers/bcm2835-aux-uart",
@@ -162,6 +161,7 @@ members = [
     "crates/sel4/config/types",
     "crates/sel4/sys",
 ]
+default-members = []
 
 [patch.crates-io.ring]
 git = "https://github.com/coliasgroup/ring.git"
