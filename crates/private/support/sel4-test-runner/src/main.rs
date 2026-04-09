@@ -7,11 +7,11 @@
 use std::ffi::OsStr;
 use std::io::{Read, Write};
 use std::path::PathBuf;
-use std::process::{Command, ExitCode, Stdio, exit};
+use std::process::{Command, ExitCode, Stdio};
 use std::{env, fs, io, iter};
 
-use anyhow::{Error, bail};
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use anyhow::Error;
+use clap::Parser;
 use object::{Architecture, Object};
 use tempfile::TempDir;
 
