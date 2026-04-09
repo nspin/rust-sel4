@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 #![feature(custom_inner_attributes)]
+#![allow(unused_features)]
 #![rustfmt::skip]
 
 #![feature(exclusive_wrapper)]
