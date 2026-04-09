@@ -14,6 +14,7 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
+    exe: PathBuf,
     #[arg(long)]
     target_dir: PathBuf,
     #[arg(long)]
