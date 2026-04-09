@@ -8,11 +8,11 @@ use std::env;
 use std::io::{Read, Write};
 use std::process::{Command, ExitCode, Stdio, exit};
 
-use clap::Parser;
+use clap::{Parser, Args, Subcommand, ValueEnum};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-struct Args {
+struct Cli {
     #[arg(long)]
     target_dir: PathBuf,
     #[arg(long)]
@@ -24,13 +24,13 @@ struct Args {
     #[arg(long)]
     microkit_tool: Option<PathBuf>,
     #[arg(long)]
-    microkit_board: String,
+    microkit_board: Option<String>,
     #[arg(long)]
-    microkit_config: String,
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
+    microkit_config: Option<String>,
 }
 
-fn main() -> ExitCode {
-    ExitCode::SUCCESS
+fn main() {
+    let cli = Cli::parse();
+
+    println!("{:?}", cli);
 }
