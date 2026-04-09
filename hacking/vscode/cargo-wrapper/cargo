@@ -5,6 +5,7 @@ set -eu -o pipefail
 declare -a args
 declare -i seen_check_command=0
 
+args+=("--config" "/home/x/i/rust-sel4/.cargo/config.toml")
 args+=("--config" "/home/x/i/rust-sel4/.cargo/gen/target/aarch64-sel4-microkit.toml")
 args+=("--config" "/home/x/i/rust-sel4/.cargo/gen/world/aarch64.microkitDefault.toml")
 
