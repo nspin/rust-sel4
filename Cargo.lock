@@ -3196,6 +3196,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "object",
+ "sel4-config-types",
+ "serde_json",
  "tempfile",
 ]
 

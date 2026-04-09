@@ -13,7 +13,7 @@ const FAILURE: u8 = 0x15;
 
 // TODO make sure text has passed first
 
-fn main() -> std::io::Result<()> {
+fn run() -> std::io::Result<()> {
     let mut args = env::args_os();
     let _program_name = args.next();
 
