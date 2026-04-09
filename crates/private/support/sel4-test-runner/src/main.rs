@@ -65,12 +65,14 @@ fn main() -> Result<ExitCode, Error> {
         image
     };
 
-    run(
+    let code = run(
         &cli.simulate_script,
         iter::once(image.as_os_str()).chain(cli.simulate_args.iter().map(AsRef::as_ref)),
-    )
+    )?;
 
-    // cargo run -p sel4-test-sentinels-wrapper -- "$simulate_script" "$image" "$@"
+    assert!(Command::new("stty").arg("echo").status()?.success());
+
+    Ok(code)
 }
 
 //
