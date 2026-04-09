@@ -22,7 +22,7 @@ cargo tree --workspace \
     --prefix none --format '{p}' \
 | cut -d ' ' -f 1 \
 | sort -u \
-> $here/excludes.txt
+> $here/../excludes.txt
 
 
 # cargo tree --workspace \
