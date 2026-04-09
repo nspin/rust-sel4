@@ -75,12 +75,6 @@ fn main() -> Result<ExitCode, Error> {
     Ok(code)
 }
 
-//
-// Copyright 2026, Colias Group, LLC
-//
-// SPDX-License-Identifier: BSD-2-Clause
-//
-
 const SUCCESS: u8 = 0x06;
 const FAILURE: u8 = 0x15;
 
