@@ -15,8 +15,6 @@ use clap::Parser;
 use object::{Architecture, Object};
 use tempfile::TempDir;
 
-mod wrapper;
-
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
