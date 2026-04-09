@@ -17,6 +17,8 @@ for arg in "$@"; do
                 for exclude in "${excludes[@]}"; do
                     args+=("--exclude" "$exclude")
                 done
+                args+=("--config" ".cargo/gen/target/aarch64-sel4-microkit.toml")
+                args+=("--config" ".cargo/gen/world/aarch64.microkitDefault.toml")
             fi
             ;;
     esac
