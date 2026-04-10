@@ -7,7 +7,7 @@
 { mk, localCrates, serdeWith }:
 
 mk {
-  package.name = "tests-capdl-utcover-components-test";
+  package.name = "tests-capdl-utcover";
   dependencies = {
     serde = serdeWith [ "alloc" "derive" ];
     inherit (localCrates)
