@@ -106,23 +106,19 @@ impl<'a> Runner<'a> {
     }
 
     fn get_sel4_test_kind(&self) -> Option<SeL4TestKind> {
-        if self
-            .file
-            .symbol_by_name("sel4_test_kind_root_task")
-            .is_some()
-        {
+        if self.check_sel4_test_kind("sel4_test_kind_root_task") {
             Some(SeL4TestKind::RootTask)
-        } else if self
-            .file
-            .symbol_by_name("sel4_test_kind_microkit")
-            .is_some()
-        {
+        } else if self.check_sel4_test_kind("sel4_test_kind_microkit") {
             Some(SeL4TestKind::Microkit)
-        } else if self.file.symbol_by_name("sel4_test_kind_capdl").is_some() {
+        } else if self.check_sel4_test_kind("sel4_test_kind_capdl") {
             Some(SeL4TestKind::CapDL)
         } else {
             None
         }
+    }
+
+    fn check_sel4_test_kind(&self, symbol: &str) -> bool {
+        self.file.symbol_by_name(symbol).is_some()
     }
 
     fn run_not_sel4(&self) -> anyhow::Result<()> {
