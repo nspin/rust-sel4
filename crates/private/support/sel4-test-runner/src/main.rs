@@ -131,7 +131,7 @@ impl<'a> Runner<'a> {
 
             let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
 
-            assert!(
+            ensure!(
                 Command::new("cargo")
                     .arg("build")
                     .arg("--config")
@@ -146,7 +146,7 @@ impl<'a> Runner<'a> {
                     .success()
             );
 
-            assert!(
+            ensure!(
                 Command::new("cargo")
                     .arg("run")
                     .arg("-p")
@@ -175,7 +175,7 @@ impl<'a> Runner<'a> {
         } else if let Some(sec) = self.file.section_by_name(".sdf_script") {
             let system_py = self.d.join("system.py");
             fs::write(&system_py, sec.data()?)?;
-            assert!(
+            ensure!(
                 Command::new("python3")
                     .arg(&system_py)
                     .arg("--board")
@@ -191,7 +191,7 @@ impl<'a> Runner<'a> {
 
         let image = self.d.join("image.elf");
 
-        assert!(
+        ensure!(
             Command::new(self.cli.microkit_tool.as_ref().unwrap())
                 .arg(&system_xml)
                 .arg("--search-path")
@@ -229,7 +229,7 @@ impl<'a> Runner<'a> {
                         .chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
                 )?;
 
-                assert!(Command::new("stty").arg("echo").status()?.success());
+                ensure!(Command::new("stty").arg("echo").status()?.success());
 
                 match outcome {
                     SentinelsOutcome::Sentinel(success) => ensure!(success),
