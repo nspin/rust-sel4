@@ -3197,8 +3197,7 @@ dependencies = [
  "anyhow",
  "clap",
  "object",
- "sel4-config-types",
- "serde_json",
+ "sel4-test-sentinels-wrapper",
  "tempfile",
 ]
 
@@ -3207,6 +3206,13 @@ name = "sel4-test-sentinels"
 version = "0.1.0"
 dependencies = [
  "sel4-panicking-env",
+]
+
+[[package]]
+name = "sel4-test-sentinels-wrapper"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
 ]
 
 [[package]]
