@@ -201,7 +201,7 @@ let
                     --microkit-board ${world.worldConfig.microkitConfig.board} \
                     --microkit-config ${world.worldConfig.microkitConfig.config} \
                   '' else ''
-                    --kernel ${world.sel4} \
+                    --kernel ${world.seL4} \
                   ''} \
                   "$@"
             '';
