@@ -4,11 +4,9 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::ffi::OsStr;
-use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-use std::{env, fs, io, iter};
+use std::process::Command;
+use std::{env, fs, iter};
 
 use anyhow::{Error, ensure};
 use clap::Parser;
@@ -87,7 +85,7 @@ impl<'a> Runner<'a> {
                     SeL4TestKind::CapDL => self.mk_capdl_image()?,
                 };
 
-                let outcome = wrap_with_sentinels(
+                let outcome = sel4_test_sentinels_wrapper::run(
                     &self.cli.simulate_script,
                     iter::once(image.as_os_str())
                         .chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
@@ -95,12 +93,7 @@ impl<'a> Runner<'a> {
 
                 ensure!(Command::new("stty").arg("echo").status()?.success());
 
-                match outcome {
-                    SentinelsOutcome::Sentinel(success) => ensure!(success),
-                    SentinelsOutcome::Exit(success) => ensure!(success),
-                }
-
-                Ok(())
+                outcome.success_ok()
             }
         }
     }
@@ -336,64 +329,4 @@ impl<'a> Runner<'a> {
 
         self.mk_root_task_image(&root_task)
     }
-}
-
-const SUCCESS: u8 = 0x06;
-const FAILURE: u8 = 0x15;
-
-// TODO make sure text has passed first
-
-#[derive(Debug)]
-enum SentinelsOutcome {
-    Sentinel(bool),
-    Exit(bool),
-}
-
-fn wrap_with_sentinels(
-    child_program: impl AsRef<OsStr>,
-    child_args: impl IntoIterator<Item = impl AsRef<OsStr>>,
-) -> Result<SentinelsOutcome, Error> {
-    let mut child = Command::new(child_program.as_ref())
-        .args(child_args)
-        .stdout(Stdio::piped())
-        .spawn()?;
-
-    let mut child_stdout = child.stdout.take().unwrap();
-
-    let mut stdout = io::stdout().lock();
-
-    loop {
-        let mut buf = [0u8; 1];
-
-        match child_stdout.read(&mut buf) {
-            Ok(0) => break,
-            Ok(1) => {
-                let b = buf[0];
-
-                let exit_code_opt = if b == SUCCESS {
-                    Some(true)
-                } else if b == FAILURE {
-                    Some(false)
-                } else {
-                    stdout.write_all(&buf)?;
-                    stdout.flush()?;
-                    None
-                };
-
-                if let Some(success) = exit_code_opt {
-                    let _ = child.kill();
-                    let _ = child.wait();
-                    return Ok(SentinelsOutcome::Sentinel(success));
-                }
-            }
-            Ok(_) => unreachable!(),
-            Err(e) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                return Err(e.into());
-            }
-        }
-    }
-
-    Ok(SentinelsOutcome::Exit(child.wait()?.success()))
 }

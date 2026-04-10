@@ -5,9 +5,9 @@
 //
 
 use std::ffi::OsStr;
+use std::io;
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
-use std::io;
 
 use anyhow::{Error, bail};
 
@@ -27,7 +27,7 @@ impl SentinelsOutcome {
         match self {
             Self::Sentinel(false) => bail!("failure via sentinel"),
             Self::Exit(false) => bail!("failure via exit code"),
-            _ => Ok(())
+            _ => Ok(()),
         }
     }
 }
