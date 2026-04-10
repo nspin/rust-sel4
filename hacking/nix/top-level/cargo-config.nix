@@ -169,10 +169,16 @@ let
   configForWorld = attrPath: world:
     let
       targetDir = "${targetRootDir}/by-world/${lib.concatStringsSep "." attrPath}";
-      simulateScript =
-        let script = world.simulateScript;
-        in "${script}/bin/${script.name}";
-      runner = [
+    in {
+      build.target-dir = targetDir;
+      env = world.seL4RustEnvVars;
+    } // lib.optionalAttrs world.worldConfig.canSimulate {
+      target."cfg(not(any()))".runner =
+      let
+        simulateScript =
+          let script = world.simulateScript;
+          in "${script}/bin/${script.name}";
+      in [
         "cargo" "run" "-p" "sel4-test-runner" "--"
         "--target-dir" targetDir
         "--object-sizes" world.objectSizes
@@ -182,11 +188,6 @@ let
         "--microkit-board" world.worldConfig.microkitConfig.board
         "--microkit-config" world.worldConfig.microkitConfig.config
       ];
-    in {
-      build.target-dir = targetDir;
-      env = world.seL4RustEnvVars;
-    } // lib.optionalAttrs world.worldConfig.canSimulate {
-      target."cfg(not(any()))".runner = runner;
     };
 
   byWorldList = lib.mapAttrsToListRecursiveCond
