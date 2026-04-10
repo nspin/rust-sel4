@@ -303,8 +303,7 @@ impl<'a> Runner<'a> {
                 .arg(self.get_capdl_initializer_target_config())
                 .arg("--target-dir")
                 .arg(&self.cli.target_dir)
-                .arg("-p")
-                .arg("sel4-capdl-initializer")
+                .arg("-p=sel4-capdl-initializer")
                 .arg("--artifact-dir")
                 .arg(self.d)
                 .status()?
