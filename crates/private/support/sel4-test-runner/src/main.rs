@@ -12,7 +12,7 @@ use std::{env, fs, io, iter};
 
 use anyhow::Error;
 use clap::Parser;
-use object::{Architecture, Object};
+use object::{Architecture, Object, ObjectSection as _};
 use tempfile::TempDir;
 
 #[derive(Parser, Debug)]
@@ -104,7 +104,45 @@ fn main() -> Result<ExitCode, Error> {
                 image
             }
         } else if is_microkit {
-            todo!()
+            let system_xml = d.path().join("system.xml");
+            if let Some(sec) = file.section_by_name(".sdf_xml") {
+                fs::write(&system_xml, sec.data()?)?;
+            } else if let Some(sec) = file.section_by_name(".sdf_script") {
+                let system_py = d.path().join("system.py");
+                fs::write(&system_py, sec.data()?)?;
+                assert!(
+                    Command::new("python3")
+                        .arg(&system_py)
+                        .arg("--board")
+                        .arg(cli.microkit_board.as_ref().unwrap())
+                        .arg("-o")
+                        .arg(&system_xml)
+                        .status()?
+                        .success()
+                );
+            } else {
+                panic!("missing sdf")
+            }
+
+            let image = d.path().join("image.elf");
+            assert!(
+                Command::new(cli.microkit_tool.as_ref().unwrap())
+                    .arg(&system_xml)
+                    .arg("--search-path")
+                    .arg(d.path())
+                    .arg("--board")
+                    .arg(cli.microkit_board.as_ref().unwrap())
+                    .arg("--config")
+                    .arg(cli.microkit_config.as_ref().unwrap())
+                    .arg("-o")
+                    .arg(&image)
+                    .arg("-r")
+                    .arg(d.path().join("report.txt"))
+                    .status()?
+                    .success()
+            );
+
+            image
         } else if is_capdl {
             todo!()
         } else {
