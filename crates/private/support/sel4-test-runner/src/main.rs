@@ -6,11 +6,11 @@
 
 use std::ffi::OsStr;
 use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, Stdio};
 use std::{env, fs, io, iter};
 
-use anyhow::Error;
+use anyhow::{Error, ensure};
 use clap::Parser;
 use object::{Architecture, File, Object, ObjectSection as _};
 use tempfile::TempDir;
@@ -42,29 +42,175 @@ enum SeL4TestKind {
     CapDL,
 }
 
-fn get_sel4_test_kind(file: &File) -> Option<SeL4TestKind> {
-    if file.symbol_by_name("sel4_test_kind_root_task").is_some() {
-        Some(SeL4TestKind::RootTask)
-    } else if file.symbol_by_name("sel4_test_kind_microkit").is_some() {
-        Some(SeL4TestKind::Microkit)
-    } else if file.symbol_by_name("sel4_test_kind_capdl").is_some() {
-        Some(SeL4TestKind::CapDL)
-    } else {
-        None
-    }
+
+struct Runner<'a> {
+    cli: &'a Cli,
+    d: &'a Path,
+    exe: &'a Path,
+    file: &'a File<'a>,
 }
 
-fn get_qemu_exe(file: &File) -> String {
-    let qemu_arch = match file.architecture() {
-        Architecture::Aarch64 => "aarch64",
-        Architecture::Arm => "arm",
-        Architecture::X86_64 => "x86_64",
-        Architecture::X86_64_X32 => "i386",
-        Architecture::Riscv32 => "riscv32",
-        Architecture::Riscv64 => "riscv64",
-        _ => todo!(),
-    };
-    format!("qemu-{qemu_arch}")
+impl<'a> Runner<'a> {
+    fn get_qemu_exe(&self) -> String {
+        let qemu_arch = match self.file.architecture() {
+            Architecture::Aarch64 => "aarch64",
+            Architecture::Arm => "arm",
+            Architecture::X86_64 => "x86_64",
+            Architecture::X86_64_X32 => "i386",
+            Architecture::Riscv32 => "riscv32",
+            Architecture::Riscv64 => "riscv64",
+            _ => todo!(),
+        };
+        format!("qemu-{qemu_arch}")
+    }
+
+    fn get_sel4_test_kind(&self) -> Option<SeL4TestKind> {
+        if self.file.symbol_by_name("sel4_test_kind_root_task").is_some() {
+            Some(SeL4TestKind::RootTask)
+        } else if self.file.symbol_by_name("sel4_test_kind_microkit").is_some() {
+            Some(SeL4TestKind::Microkit)
+        } else if self.file.symbol_by_name("sel4_test_kind_capdl").is_some() {
+            Some(SeL4TestKind::CapDL)
+        } else {
+            None
+        }
+    }
+
+    fn run_not_sel4(&self) -> anyhow::Result<()> {
+        ensure!(
+            Command::new(self.get_qemu_exe())
+                .args(
+                    iter::once(self.exe.as_os_str())
+                        .chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
+                )
+                .status()?
+                .success()
+        );
+        Ok(())
+    }
+
+    fn mk_root_task_image(&self) -> anyhow::Result<PathBuf> {
+        Ok(if let Architecture::X86_64 = self.file.architecture() {
+            self.exe.to_owned()
+        } else {
+            let image = self.d.join("image.elf");
+
+            let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
+
+            assert!(
+                Command::new("cargo")
+                    .arg("build")
+                    .arg("--config")
+                    .arg(loader_target_config)
+                    .arg("--target-dir")
+                    .arg(&self.cli.target_dir)
+                    .arg("-p")
+                    .arg("sel4-kernel-loader")
+                    .arg("--artifact-dir")
+                    .arg(self.d)
+                    .status()?
+                    .success()
+            );
+
+            assert!(
+                Command::new("cargo")
+                    .arg("run")
+                    .arg("-p")
+                    .arg("sel4-kernel-loader-add-payload")
+                    .arg("--")
+                    .arg("--loader")
+                    .arg(self.d.join("sel4-kernel-loader"))
+                    .arg("--sel4-prefix")
+                    .arg(env::var("SEL4_PREFIX").unwrap())
+                    .arg("--app")
+                    .arg(self.exe)
+                    .arg("-o")
+                    .arg(&image)
+                    .status()?
+                    .success()
+            );
+
+            image
+        })
+    }
+
+    fn mk_microkit_image(&self) -> anyhow::Result<PathBuf> {
+        let system_xml = self.d.join("system.xml");
+        if let Some(sec) = self.file.section_by_name(".sdf_xml") {
+            fs::write(&system_xml, sec.data()?)?;
+        } else if let Some(sec) = self.file.section_by_name(".sdf_script") {
+            let system_py = self.d.join("system.py");
+            fs::write(&system_py, sec.data()?)?;
+            assert!(
+                Command::new("python3")
+                    .arg(&system_py)
+                    .arg("--board")
+                    .arg(self.cli.microkit_board.as_ref().unwrap())
+                    .arg("-o")
+                    .arg(&system_xml)
+                    .status()?
+                    .success()
+            );
+        } else {
+            panic!("missing sdf")
+        }
+
+        let image = self.d.join("image.elf");
+
+        assert!(
+            Command::new(self.cli.microkit_tool.as_ref().unwrap())
+                .arg(&system_xml)
+                .arg("--search-path")
+                .arg(self.d)
+                .arg("--board")
+                .arg(self.cli.microkit_board.as_ref().unwrap())
+                .arg("--config")
+                .arg(self.cli.microkit_config.as_ref().unwrap())
+                .arg("-o")
+                .arg(&image)
+                .arg("-r")
+                .arg(self.d.join("report.txt"))
+                .status()?
+                .success()
+        );
+
+        Ok(image)
+    }
+
+    fn run(&self) -> anyhow::Result<()> {
+        match self.get_sel4_test_kind() {
+            None => {
+                self.run_not_sel4()
+            }
+            Some(kind) => {
+                let image = match kind {
+                    SeL4TestKind::RootTask => {
+                        self.mk_root_task_image()?
+                    }
+                    SeL4TestKind::Microkit => {
+                        self.mk_microkit_image()?
+                    }
+                    SeL4TestKind::CapDL => {
+                        todo!()
+                    }
+                };
+
+                let outcome = run(
+                    &self.cli.simulate_script,
+                    iter::once(image.as_os_str()).chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
+                )?;
+
+                assert!(Command::new("stty").arg("echo").status()?.success());
+
+                match outcome {
+                    RunOutcome::Sentinel(success) => ensure!(success),
+                    RunOutcome::Exit(success) => ensure!(success),
+                }
+
+                Ok(())
+            }
+        }
+    }
 }
 
 fn main() -> Result<(), Error> {
@@ -85,126 +231,12 @@ fn main() -> Result<(), Error> {
     let data = fs::read(&exe)?;
     let file = object::File::parse(&*data)?;
 
-    match get_sel4_test_kind(&file) {
-        None => {
-            assert!(
-                Command::new(get_qemu_exe(&file))
-                    .args(
-                        iter::once(exe.as_os_str())
-                            .chain(cli.simulate_args.iter().map(AsRef::as_ref)),
-                    )
-                    .status()?
-                    .success()
-            );
-        }
-        Some(kind) => {
-            let image = match kind {
-                SeL4TestKind::RootTask => {
-                    if let Architecture::X86_64 = file.architecture() {
-                        exe.clone()
-                    } else {
-                        let image = d.path().join("image.elf");
-
-                        let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
-
-                        assert!(
-                            Command::new("cargo")
-                                .arg("build")
-                                .arg("--config")
-                                .arg(loader_target_config)
-                                .arg("--target-dir")
-                                .arg(&cli.target_dir)
-                                .arg("-p")
-                                .arg("sel4-kernel-loader")
-                                .arg("--artifact-dir")
-                                .arg(d.path())
-                                .status()?
-                                .success()
-                        );
-
-                        assert!(
-                            Command::new("cargo")
-                                .arg("run")
-                                .arg("-p")
-                                .arg("sel4-kernel-loader-add-payload")
-                                .arg("--")
-                                .arg("--loader")
-                                .arg(d.path().join("sel4-kernel-loader"))
-                                .arg("--sel4-prefix")
-                                .arg(env::var("SEL4_PREFIX").unwrap())
-                                .arg("--app")
-                                .arg(&exe)
-                                .arg("-o")
-                                .arg(&image)
-                                .status()?
-                                .success()
-                        );
-
-                        image
-                    }
-                }
-                SeL4TestKind::Microkit => {
-                    let system_xml = d.path().join("system.xml");
-                    if let Some(sec) = file.section_by_name(".sdf_xml") {
-                        fs::write(&system_xml, sec.data()?)?;
-                    } else if let Some(sec) = file.section_by_name(".sdf_script") {
-                        let system_py = d.path().join("system.py");
-                        fs::write(&system_py, sec.data()?)?;
-                        assert!(
-                            Command::new("python3")
-                                .arg(&system_py)
-                                .arg("--board")
-                                .arg(cli.microkit_board.as_ref().unwrap())
-                                .arg("-o")
-                                .arg(&system_xml)
-                                .status()?
-                                .success()
-                        );
-                    } else {
-                        panic!("missing sdf")
-                    }
-
-                    let image = d.path().join("image.elf");
-
-                    assert!(
-                        Command::new(cli.microkit_tool.as_ref().unwrap())
-                            .arg(&system_xml)
-                            .arg("--search-path")
-                            .arg(d.path())
-                            .arg("--board")
-                            .arg(cli.microkit_board.as_ref().unwrap())
-                            .arg("--config")
-                            .arg(cli.microkit_config.as_ref().unwrap())
-                            .arg("-o")
-                            .arg(&image)
-                            .arg("-r")
-                            .arg(d.path().join("report.txt"))
-                            .status()?
-                            .success()
-                    );
-
-                    image
-                }
-                SeL4TestKind::CapDL => {
-                    todo!()
-                }
-            };
-
-            let outcome = run(
-                &cli.simulate_script,
-                iter::once(image.as_os_str()).chain(cli.simulate_args.iter().map(AsRef::as_ref)),
-            )?;
-
-            assert!(Command::new("stty").arg("echo").status()?.success());
-
-            match outcome {
-                RunOutcome::Sentinel(success) => assert!(success),
-                RunOutcome::Exit(success) => assert!(success),
-            }
-        }
-    }
-
-    Ok(())
+    Runner {
+        cli: &cli,
+        d: d.path(),
+        exe: &exe,
+        file: &file,
+    }.run()
 }
 
 const SUCCESS: u8 = 0x06;
