@@ -77,17 +77,32 @@ struct Runner<'a> {
 }
 
 impl<'a> Runner<'a> {
-    fn get_qemu_exe(&self) -> String {
-        let qemu_arch = match self.file.architecture() {
-            Architecture::Aarch64 => "aarch64",
-            Architecture::Arm => "arm",
-            Architecture::X86_64 => "x86_64",
-            Architecture::X86_64_X32 => "i386",
-            Architecture::Riscv32 => "riscv32",
-            Architecture::Riscv64 => "riscv64",
-            _ => todo!(),
-        };
-        format!("qemu-{qemu_arch}")
+    fn run(&self) -> anyhow::Result<()> {
+        match self.get_sel4_test_kind() {
+            None => self.run_not_sel4(),
+            Some(kind) => {
+                let image = match kind {
+                    SeL4TestKind::RootTask => self.mk_root_task_image()?,
+                    SeL4TestKind::Microkit => self.mk_microkit_image()?,
+                    SeL4TestKind::CapDL => self.mk_capdl_image()?,
+                };
+
+                let outcome = wrap_with_sentinels(
+                    &self.cli.simulate_script,
+                    iter::once(image.as_os_str())
+                        .chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
+                )?;
+
+                ensure!(Command::new("stty").arg("echo").status()?.success());
+
+                match outcome {
+                    SentinelsOutcome::Sentinel(success) => ensure!(success),
+                    SentinelsOutcome::Exit(success) => ensure!(success),
+                }
+
+                Ok(())
+            }
+        }
     }
 
     fn get_sel4_test_kind(&self) -> Option<SeL4TestKind> {
@@ -121,6 +136,19 @@ impl<'a> Runner<'a> {
                 .success()
         );
         Ok(())
+    }
+
+    fn get_qemu_exe(&self) -> String {
+        let qemu_arch = match self.file.architecture() {
+            Architecture::Aarch64 => "aarch64",
+            Architecture::Arm => "arm",
+            Architecture::X86_64 => "x86_64",
+            Architecture::X86_64_X32 => "i386",
+            Architecture::Riscv32 => "riscv32",
+            Architecture::Riscv64 => "riscv64",
+            _ => todo!(),
+        };
+        format!("qemu-{qemu_arch}")
     }
 
     fn mk_root_task_image(&self) -> anyhow::Result<PathBuf> {
@@ -211,34 +239,47 @@ impl<'a> Runner<'a> {
         Ok(image)
     }
 
-    fn run(&self) -> anyhow::Result<()> {
-        match self.get_sel4_test_kind() {
-            None => self.run_not_sel4(),
-            Some(kind) => {
-                let image = match kind {
-                    SeL4TestKind::RootTask => self.mk_root_task_image()?,
-                    SeL4TestKind::Microkit => self.mk_microkit_image()?,
-                    SeL4TestKind::CapDL => {
-                        todo!()
-                    }
-                };
-
-                let outcome = wrap_with_sentinels(
-                    &self.cli.simulate_script,
-                    iter::once(image.as_os_str())
-                        .chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
-                )?;
-
-                ensure!(Command::new("stty").arg("echo").status()?.success());
-
-                match outcome {
-                    SentinelsOutcome::Sentinel(success) => ensure!(success),
-                    SentinelsOutcome::Exit(success) => ensure!(success),
-                }
-
-                Ok(())
-            }
+    fn mkcapdl_image(&self) -> anyhow::Result<PathBuf> {
+        let system_xml = self.d.join("system.xml");
+        if let Some(sec) = self.file.section_by_name(".sdf_xml") {
+            fs::write(&system_xml, sec.data()?)?;
+        } else if let Some(sec) = self.file.section_by_name(".sdf_script") {
+            let system_py = self.d.join("system.py");
+            fs::write(&system_py, sec.data()?)?;
+            ensure!(
+                Command::new("python3")
+                    .arg(&system_py)
+                    .arg("--board")
+                    .arg(self.cli.microkit_board.as_ref().unwrap())
+                    .arg("-o")
+                    .arg(&system_xml)
+                    .status()?
+                    .success()
+            );
+        } else {
+            panic!("missing sdf")
         }
+
+        let image = self.d.join("image.elf");
+
+        ensure!(
+            Command::new(self.cli.microkit_tool.as_ref().unwrap())
+                .arg(&system_xml)
+                .arg("--search-path")
+                .arg(self.d)
+                .arg("--board")
+                .arg(self.cli.microkit_board.as_ref().unwrap())
+                .arg("--config")
+                .arg(self.cli.microkit_config.as_ref().unwrap())
+                .arg("-o")
+                .arg(&image)
+                .arg("-r")
+                .arg(self.d.join("report.txt"))
+                .status()?
+                .success()
+        );
+
+        Ok(image)
     }
 }
 
