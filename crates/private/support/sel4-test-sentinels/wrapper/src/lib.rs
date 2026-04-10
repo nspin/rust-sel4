@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::ffi::OsStr;
 use std::io;
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
@@ -33,11 +32,9 @@ impl SentinelsOutcome {
 }
 
 pub fn run(
-    child_program: impl AsRef<OsStr>,
-    child_args: impl IntoIterator<Item = impl AsRef<OsStr>>,
+    mut cmd: Command,
 ) -> Result<SentinelsOutcome, Error> {
-    let mut child = Command::new(child_program.as_ref())
-        .args(child_args)
+    let mut child = cmd
         // .stderr(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;

@@ -97,14 +97,11 @@ impl<'a> Runner<'a> {
                     );
                     Ok(())
                 } else {
-                    let outcome = sel4_test_sentinels_wrapper::run(
-                        &self.cli.simulate_script,
-                        iter::once(image.as_os_str())
-                            .chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
-                    )?;
-
+                    let mut cmd = Command::new(&self.cli.simulate_script);
+                    cmd.arg(image);
+                    cmd.args(self.cli.simulate_args.iter());
+                    let outcome = sel4_test_sentinels_wrapper::run(cmd)?;
                     ensure!(Command::new("stty").arg("echo").status()?.success());
-
                     outcome.success_ok()
                 }
             }

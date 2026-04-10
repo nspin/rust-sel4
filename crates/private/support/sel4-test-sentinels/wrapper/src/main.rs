@@ -5,6 +5,7 @@
 //
 
 use std::env;
+use std::process::Command;
 
 use anyhow::Error;
 
@@ -13,5 +14,7 @@ fn main() -> Result<(), Error> {
     let _program_name = args.next();
     let child_program = args.next().expect("usage: wrapper <program> [args...]");
     let child_args = args.collect::<Vec<_>>();
-    sel4_test_sentinels_wrapper::run(child_program, child_args)?.success_ok()
+    let mut cmd = Command::new(child_program);
+    cmd.args(child_args);
+    sel4_test_sentinels_wrapper::run(cmd)?.success_ok()
 }
