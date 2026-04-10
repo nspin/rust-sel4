@@ -24,7 +24,5 @@ fn main(_: &sel4::BootInfoPtr) -> ! {
         }
     }
 
-    sel4_test_root_task::indicate_success();
-
-    sel4::init_thread::suspend_self()
+    sel4_test_root_task::indicate_success()
 }
