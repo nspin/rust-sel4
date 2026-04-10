@@ -86,7 +86,6 @@ impl<'a> Runner<'a> {
                     SeL4TestKind::Microkit => self.mk_microkit_image()?,
                     SeL4TestKind::CapDL => self.mk_capdl_image()?,
                 };
-
                 if self.cli.interactive {
                     ensure!(
                         Command::new(&self.cli.simulate_script)
