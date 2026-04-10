@@ -117,13 +117,6 @@ macro_rules! rodata {
     };
 }
 
-// macro_rules! rodata {
-//     ($ident:ident) => {
-//         #[allow(non_upper_case_globals)]
-//         static $ident: usize = 0;
-//     };
-// }
-
 rodata!(sel4_reset_regions_start);
 rodata!(sel4_reset_regions_meta_offset);
 rodata!(sel4_reset_regions_meta_count);
