@@ -186,7 +186,7 @@ let
               ]))
             ];
             text = ''
-              PYTHONPATH="${toString ../../src/python}:''${PYTHONPATH:-}" \
+              PYTHONPATH="${toString ../../src/python}:${sources.pythonCapDLTool}:''${PYTHONPATH:-}" \
                 cargo run -p sel4-test-runner -- \
                   --target-dir ${targetDir} \
                   --object-sizes ${world.objectSizes} \
