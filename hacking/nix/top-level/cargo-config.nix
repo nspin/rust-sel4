@@ -174,20 +174,30 @@ let
       env = world.seL4RustEnvVars;
     } // lib.optionalAttrs world.worldConfig.canSimulate {
       target."cfg(not(any()))".runner =
-      let
-        simulateScript =
-          let script = world.simulateScript;
-          in "${script}/bin/${script.name}";
-      in [
-        "cargo" "run" "-p" "sel4-test-runner" "--"
-        "--target-dir" targetDir
-        "--object-sizes" world.objectSizes
-        "--simulate-script" simulateScript
-      ] ++ lib.optionals world.worldConfig.isMicrokit [
-        "--microkit-tool" "${world.microkit.sdk}/bin/microkit"
-        "--microkit-board" world.worldConfig.microkitConfig.board
-        "--microkit-config" world.worldConfig.microkitConfig.config
-      ];
+        let
+          simulateScript =
+            let script = world.simulateScript;
+            in "${script}/bin/${script.name}";
+          runScript = writeShellApplication {
+            name = "run";
+            runtimeInputs = [
+              (python312.withPackages (_: [
+                  sdfgen
+                ]))
+            ];
+            text = ''
+              PYTHONPATH="${toString ../../src/python}:''${PYTHONPATH:-}" \
+                cargo run -p sel4-test-runner -- \
+                  --target-dir ${targetDir} \
+                  --object-sizes ${world.objectSizes} \
+                  --simulate-script ${simulateScript} \
+                  ${lib.optionalString world.worldConfig.isMicrokit ''
+                    --microkit-tool ${world.microkit.sdk}/bin/microkit \
+                    --microkit-board ${world.worldConfig.microkitConfig.board} \
+                    --microkit-config ${world.worldConfig.microkitConfig.config} \
+                  ''}
+            '';
+          };
     };
 
   byWorldList = lib.mapAttrsToListRecursiveCond
