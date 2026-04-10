@@ -181,7 +181,11 @@ let
           runScript = writeShellApplication {
             name = "run";
             runtimeInputs = [
-              (python312.withPackages (_: [
+              capdl-tool
+              (python312.withPackages (p: with p; [
+                future six
+                aenum sortedcontainers
+                pyyaml pyelftools pyfdt
                 sdfgen
               ]))
             ];

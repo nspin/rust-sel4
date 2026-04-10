@@ -22,7 +22,7 @@ struct Cli {
     #[arg(long)]
     target_dir: PathBuf,
     #[arg(long)]
-    object_sizes: Option<PathBuf>,
+    object_sizes: PathBuf,
     #[arg(long)]
     simulate_script: PathBuf,
     #[arg(long)]
@@ -82,7 +82,7 @@ impl<'a> Runner<'a> {
             None => self.run_not_sel4(),
             Some(kind) => {
                 let image = match kind {
-                    SeL4TestKind::RootTask => self.mk_root_task_image()?,
+                    SeL4TestKind::RootTask => self.mk_root_task_image(self.exe)?,
                     SeL4TestKind::Microkit => self.mk_microkit_image()?,
                     SeL4TestKind::CapDL => self.mk_capdl_image()?,
                 };
@@ -146,24 +146,47 @@ impl<'a> Runner<'a> {
             Architecture::X86_64_X32 => "i386",
             Architecture::Riscv32 => "riscv32",
             Architecture::Riscv64 => "riscv64",
-            _ => todo!(),
+            _ => unimplemented!(),
         };
         format!("qemu-{qemu_arch}")
     }
 
-    fn mk_root_task_image(&self) -> anyhow::Result<PathBuf> {
+    fn get_kernel_loader_target_config(&self) -> String {
+        let target = match self.file.architecture() {
+            Architecture::Aarch64 => "aarch64-unknown-none",
+            Architecture::Arm => "armv7a-none-eabi",
+            Architecture::X86_64 => "x86_64",
+            Architecture::Riscv32 => "riscv32imac-unknown-none-elf", // TODO imac?
+            Architecture::Riscv64 => "riscv64imac-unknown-none-elf", // TODO imac?
+            _ => unimplemented!(),
+        };
+        format!(".cargo/gen/target/{target}.toml")
+    }
+
+    fn get_capdl_initializer_target_config(&self) -> String {
+        let arch = match self.file.architecture() {
+            Architecture::Aarch64 => "aarch64",
+            Architecture::Arm => "armv7a",
+            Architecture::X86_64 => "x86_64",
+            Architecture::Riscv32 => "riscv32imac", // TODO imac?
+            Architecture::Riscv64 => "riscv64imac", // TODO imac?
+            _ => unimplemented!(),
+        };
+        let target = format!("{arch}-sel4-roottask-minimal");
+        format!(".cargo/gen/target/{target}.toml")
+    }
+
+    fn mk_root_task_image(&self, root_task: &Path) -> anyhow::Result<PathBuf> {
         Ok(if let Architecture::X86_64 = self.file.architecture() {
-            self.exe.to_owned()
+            root_task.to_owned()
         } else {
             let image = self.d.join("image.elf");
-
-            let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
 
             ensure!(
                 Command::new("cargo")
                     .arg("build")
                     .arg("--config")
-                    .arg(loader_target_config)
+                    .arg(self.get_kernel_loader_target_config())
                     .arg("--target-dir")
                     .arg(&self.cli.target_dir)
                     .arg("-p")
@@ -185,7 +208,7 @@ impl<'a> Runner<'a> {
                     .arg("--sel4-prefix")
                     .arg(env::var("SEL4_PREFIX").unwrap())
                     .arg("--app")
-                    .arg(self.exe)
+                    .arg(&root_task)
                     .arg("-o")
                     .arg(&image)
                     .status()?
@@ -239,47 +262,77 @@ impl<'a> Runner<'a> {
         Ok(image)
     }
 
-    fn mkcapdl_image(&self) -> anyhow::Result<PathBuf> {
-        let system_xml = self.d.join("system.xml");
-        if let Some(sec) = self.file.section_by_name(".sdf_xml") {
-            fs::write(&system_xml, sec.data()?)?;
-        } else if let Some(sec) = self.file.section_by_name(".sdf_script") {
-            let system_py = self.d.join("system.py");
-            fs::write(&system_py, sec.data()?)?;
-            ensure!(
-                Command::new("python3")
-                    .arg(&system_py)
-                    .arg("--board")
-                    .arg(self.cli.microkit_board.as_ref().unwrap())
-                    .arg("-o")
-                    .arg(&system_xml)
-                    .status()?
-                    .success()
-            );
-        } else {
-            panic!("missing sdf")
-        }
-
-        let image = self.d.join("image.elf");
-
+    fn mk_capdl_image(&self) -> anyhow::Result<PathBuf> {
+        let script_out_dir = self.d.join("cdl");
+        let sec = self.file.section_by_name(".capdl_script").expect("missing script");
+        let system_py = self.d.join("system.py");
+        fs::write(&system_py, sec.data()?)?;
         ensure!(
-            Command::new(self.cli.microkit_tool.as_ref().unwrap())
-                .arg(&system_xml)
+            Command::new("python3")
+                .arg(&system_py)
                 .arg("--search-path")
                 .arg(self.d)
-                .arg("--board")
-                .arg(self.cli.microkit_board.as_ref().unwrap())
-                .arg("--config")
-                .arg(self.cli.microkit_config.as_ref().unwrap())
+                .arg("--object-sizes")
+                .arg(&self.cli.object_sizes)
                 .arg("-o")
-                .arg(&image)
-                .arg("-r")
-                .arg(self.d.join("report.txt"))
+                .arg(&script_out_dir)
+                .status()?
+                .success()
+        );
+        
+        let json = self.d.join("cdl.json");
+
+        ensure!(
+            Command::new("parse-capDL")
+                .arg("--object-sizes")
+                .arg(&self.cli.object_sizes)
+                .arg("--json")
+                .arg(&json)
+                .arg(script_out_dir.join("spec.cdl"))
                 .status()?
                 .success()
         );
 
-        Ok(image)
+        ensure!(
+            Command::new("cargo")
+                .arg("build")
+                .arg("--config")
+                .arg(self.get_capdl_initializer_target_config())
+                .arg("--target-dir")
+                .arg(&self.cli.target_dir)
+                .arg("-p")
+                .arg("sel4-capdl-initializer")
+                .arg("--artifact-dir")
+                .arg(self.d)
+                .status()?
+                .success()
+        );
+
+        let root_task = self.d.join("root-task.elf");
+
+        ensure!(
+            Command::new("cargo")
+                .arg("run")
+                .arg("-p")
+                .arg("sel4-capdl-initializer-add-spec")
+                .arg("--")
+                .arg("-e")
+                .arg(self.d.join("sel4-capdl-initializer.elf"))
+                .arg("-f")
+                .arg(&json)
+                .arg("-d")
+                .arg(script_out_dir.join("links"))
+                .arg("--object-names-level=2")
+                .arg("--no-embed-frames")
+                .arg("--no-deflate")
+                .arg("-o")
+                .arg(&root_task)
+                .status()?
+                .success()
+        );
+
+
+        self.mk_root_task_image(&root_task)
     }
 }
 
