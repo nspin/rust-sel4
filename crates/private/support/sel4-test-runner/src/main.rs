@@ -7,7 +7,7 @@
 use std::ffi::OsStr;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, ExitCode, Stdio};
+use std::process::{Command, Stdio};
 use std::{env, fs, io, iter};
 
 use anyhow::{Error, ensure};
