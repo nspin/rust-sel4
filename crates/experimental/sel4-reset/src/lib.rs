@@ -89,6 +89,16 @@ macro_rules! rodata {
             r#"
                 .section .rodata
                 .global {ident}
+            "#,
+            #[cfg(target_pointer_width = "64")]
+            r#"
+                .p2align 8
+            "#,
+            #[cfg(target_pointer_width = "32")]
+            r#"
+                .p2align 4
+            "#,
+            r#"
                 {ident}:
             "#,
             #[cfg(target_pointer_width = "64")]
@@ -97,7 +107,7 @@ macro_rules! rodata {
             "#,
             #[cfg(target_pointer_width = "32")]
             r#"
-                    .word 0
+                    .dword 0
             "#,
             r#"
                 .size {ident}, .-{ident}
@@ -106,6 +116,13 @@ macro_rules! rodata {
         }
     };
 }
+
+// macro_rules! rodata {
+//     ($ident:ident) => {
+//         #[allow(non_upper_case_globals)]
+//         static $ident: usize = 0;
+//     };
+// }
 
 rodata!(sel4_reset_regions_start);
 rodata!(sel4_reset_regions_meta_offset);
