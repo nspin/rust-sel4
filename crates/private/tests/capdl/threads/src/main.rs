@@ -18,6 +18,8 @@ use sel4_simple_task_config_types::*;
 use sel4_simple_task_runtime::{debug_println, main_json};
 use sel4_sync::{RawNotificationMutex, lock_api::Mutex};
 
+sel4_test_capdl::embed_capdl_script!("../cdl.py");
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub lock_nfn: ConfigCPtr<Notification>,
