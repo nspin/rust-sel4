@@ -60,47 +60,55 @@ fn main() -> Result<ExitCode, Error> {
     let is_sel4 = is_root_task || is_microkit || is_capdl;
 
     Ok(if is_sel4 {
-        let image = if let Architecture::X86_64 = arch {
-            exe.clone()
+        let image = if is_root_task {
+            if let Architecture::X86_64 = arch {
+                exe.clone()
+            } else {
+                let image = d.path().join("image.elf");
+
+                let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
+
+                assert!(
+                    Command::new("cargo")
+                        .arg("build")
+                        .arg("--config")
+                        .arg(loader_target_config)
+                        .arg("--target-dir")
+                        .arg(&cli.target_dir)
+                        .arg("-p")
+                        .arg("sel4-kernel-loader")
+                        .arg("--artifact-dir")
+                        .arg(d.path())
+                        .status()?
+                        .success()
+                );
+
+                assert!(
+                    Command::new("cargo")
+                        .arg("run")
+                        .arg("-p")
+                        .arg("sel4-kernel-loader-add-payload")
+                        .arg("--")
+                        .arg("--loader")
+                        .arg(d.path().join("sel4-kernel-loader"))
+                        .arg("--sel4-prefix")
+                        .arg(env::var("SEL4_PREFIX").unwrap())
+                        .arg("--app")
+                        .arg(&exe)
+                        .arg("-o")
+                        .arg(&image)
+                        .status()?
+                        .success()
+                );
+
+                image
+            }
+        } else if is_microkit {
+            todo!()
+        } else if is_capdl {
+            todo!()
         } else {
-            let image = d.path().join("image.elf");
-
-            let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
-
-            assert!(
-                Command::new("cargo")
-                    .arg("build")
-                    .arg("--config")
-                    .arg(loader_target_config)
-                    .arg("--target-dir")
-                    .arg(&cli.target_dir)
-                    .arg("-p")
-                    .arg("sel4-kernel-loader")
-                    .arg("--artifact-dir")
-                    .arg(d.path())
-                    .status()?
-                    .success()
-            );
-
-            assert!(
-                Command::new("cargo")
-                    .arg("run")
-                    .arg("-p")
-                    .arg("sel4-kernel-loader-add-payload")
-                    .arg("--")
-                    .arg("--loader")
-                    .arg(d.path().join("sel4-kernel-loader"))
-                    .arg("--sel4-prefix")
-                    .arg(env::var("SEL4_PREFIX").unwrap())
-                    .arg("--app")
-                    .arg(&exe)
-                    .arg("-o")
-                    .arg(&image)
-                    .status()?
-                    .success()
-            );
-
-            image
+            unreachable!()
         };
 
         let code = run(
