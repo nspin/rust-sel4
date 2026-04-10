@@ -52,60 +52,86 @@ fn main() -> Result<ExitCode, Error> {
 
     let data = fs::read(&exe)?;
     let file = object::File::parse(&*data)?;
-
     let arch = file.architecture();
 
-    let image = if let Architecture::X86_64 = arch {
-        exe.clone()
+    let is_root_task = file.symbol_by_name("sel4_test_kind_root_task").is_some();
+    let is_microkit = file.symbol_by_name("sel4_test_kind_microkit").is_some();
+    let is_capdl = file.symbol_by_name("sel4_test_kind_capdl").is_some();
+    let is_sel4 = is_root_task || is_microkit || is_capdl;
+
+    Ok(if is_sel4 {
+        let image = if let Architecture::X86_64 = arch {
+            exe.clone()
+        } else {
+            let image = d.path().join("image.elf");
+
+            let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
+
+            assert!(
+                Command::new("cargo")
+                    .arg("build")
+                    .arg("--config")
+                    .arg(loader_target_config)
+                    .arg("--target-dir")
+                    .arg(&cli.target_dir)
+                    .arg("-p")
+                    .arg("sel4-kernel-loader")
+                    .arg("--artifact-dir")
+                    .arg(d.path())
+                    .status()?
+                    .success()
+            );
+
+            assert!(
+                Command::new("cargo")
+                    .arg("run")
+                    .arg("-p")
+                    .arg("sel4-kernel-loader-add-payload")
+                    .arg("--")
+                    .arg("--loader")
+                    .arg(d.path().join("sel4-kernel-loader"))
+                    .arg("--sel4-prefix")
+                    .arg(env::var("SEL4_PREFIX").unwrap())
+                    .arg("--app")
+                    .arg(&exe)
+                    .arg("-o")
+                    .arg(&image)
+                    .status()?
+                    .success()
+            );
+
+            image
+        };
+
+        let code = run(
+            &cli.simulate_script,
+            iter::once(image.as_os_str()).chain(cli.simulate_args.iter().map(AsRef::as_ref)),
+        )?;
+
+        assert!(Command::new("stty").arg("echo").status()?.success());
+
+        code
     } else {
-        let image = d.path().join("image.elf");
-
-        let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
-
+        let qemu_arch = match arch {
+            Architecture::Aarch64 => "aarch64",
+            Architecture::Arm => "arm",
+            Architecture::X86_64 => "x86_64",
+            Architecture::X86_64_X32 => "i386",
+            Architecture::Riscv32 => "riscv32",
+            Architecture::Riscv64 => "riscv64",
+            _ => todo!(),
+        };
+        let qemu_exe = format!("qemu-{qemu_arch}");
         assert!(
-            Command::new("cargo")
-                .arg("build")
-                .arg("--config")
-                .arg(loader_target_config)
-                .arg("--target-dir")
-                .arg(&cli.target_dir)
-                .arg("-p")
-                .arg("sel4-kernel-loader")
-                .arg("--artifact-dir")
-                .arg(d.path())
+            Command::new(qemu_exe)
+                .args(
+                    iter::once(exe.as_os_str()).chain(cli.simulate_args.iter().map(AsRef::as_ref)),
+                )
                 .status()?
                 .success()
         );
-
-        assert!(
-            Command::new("cargo")
-                .arg("run")
-                .arg("-p")
-                .arg("sel4-kernel-loader-add-payload")
-                .arg("--")
-                .arg("--loader")
-                .arg(d.path().join("sel4-kernel-loader"))
-                .arg("--sel4-prefix")
-                .arg(env::var("SEL4_PREFIX").unwrap())
-                .arg("--app")
-                .arg(&exe)
-                .arg("-o")
-                .arg(&image)
-                .status()?
-                .success()
-        );
-
-        image
-    };
-
-    let code = run(
-        &cli.simulate_script,
-        iter::once(image.as_os_str()).chain(cli.simulate_args.iter().map(AsRef::as_ref)),
-    )?;
-
-    assert!(Command::new("stty").arg("echo").status()?.success());
-
-    Ok(code)
+        ExitCode::SUCCESS
+    })
 }
 
 const SUCCESS: u8 = 0x06;

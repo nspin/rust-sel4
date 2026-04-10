@@ -7,6 +7,9 @@
 [target."cfg(all(any(target_os = \"none\", target_env = \"musl\"), target_arch = \"x86_64\"))"]
 runner = "qemu-x86_64"
 
+[target."cfg(all(any(target_os = \"none\", target_env = \"musl\"), target_arch = \"x86\"))"]
+runner = "qemu-i386"
+
 [target."cfg(all(any(target_os = \"none\", target_env = \"musl\"), target_arch = \"aarch64\"))"]
 runner = "qemu-aarch64"
 
