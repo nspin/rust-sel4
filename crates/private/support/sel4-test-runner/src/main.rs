@@ -6,7 +6,8 @@
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{env, fs, iter};
+use std::{any, env, fs, iter};
+use std::os::unix;
 
 use anyhow::{Error, ensure};
 use clap::Parser;
@@ -22,13 +23,17 @@ struct Cli {
     #[arg(long)]
     object_sizes: PathBuf,
     #[arg(long)]
-    microkit_tool: Option<PathBuf>,
+    kernel: Option<PathBuf>,
+    #[arg(long)]
+    microkit_sdk: Option<PathBuf>,
     #[arg(long)]
     microkit_board: Option<String>,
     #[arg(long)]
     microkit_config: Option<String>,
     #[arg(short, long)]
     interactive: bool,
+    #[arg(short, long)]
+    dry_run: bool,
     #[arg(long)]
     simulate_script: PathBuf,
     #[arg(last = true)]
@@ -86,6 +91,7 @@ impl<'a> Runner<'a> {
                     SeL4TestKind::Microkit => self.mk_microkit_image()?,
                     SeL4TestKind::CapDL => self.mk_capdl_image()?,
                 };
+                self.create_debugging_links()?;
                 if self.cli.interactive {
                     ensure!(
                         Command::new(&self.cli.simulate_script)
@@ -103,6 +109,19 @@ impl<'a> Runner<'a> {
                 }
             }
         }
+    }
+
+    fn create_debugging_links(&self) -> anyhow::Result<()> {
+        let debug_bin = if let Some(kernel) = &self.cli.kernel {
+            kernel.join("bin")
+        } else if let Some(sdk) = &self.cli.microkit_sdk {
+            sdk.join("board").join(self.cli.microkit_board.as_ref().unwrap()).join(self.cli.microkit_config.as_ref().unwrap()).join("elf")
+        } else {
+            panic!()
+        };
+        unix::fs::symlink(debug_bin, self.d.join("debug-bin"))?;
+        unix::fs::symlink(&self.cli.simulate_script, self.d.join("simulate"))?;
+        Ok(())
     }
 
     fn get_sel4_test_kind(&self) -> Option<SeL4TestKind> {
@@ -276,7 +295,7 @@ impl<'a> Runner<'a> {
         let image = self.d.join("image.elf");
 
         ensure!(
-            Command::new(self.cli.microkit_tool.as_ref().unwrap())
+            Command::new(self.cli.microkit_sdk.as_ref().unwrap().join("bin").join("microkit"))
                 .arg(&system_xml)
                 .arg("--search-path")
                 .arg(self.d)

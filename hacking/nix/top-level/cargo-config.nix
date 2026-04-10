@@ -196,10 +196,12 @@ let
                   --target-dir ${targetDir} \
                   --object-sizes ${world.objectSizes} \
                   --simulate-script ${simulateScript} \
-                  ${lib.optionalString world.worldConfig.isMicrokit ''
-                    --microkit-tool ${world.microkit.sdk}/bin/microkit \
+                  ${if world.worldConfig.isMicrokit then ''
+                    --microkit-sdk ${world.microkit.sdk} \
                     --microkit-board ${world.worldConfig.microkitConfig.board} \
                     --microkit-config ${world.worldConfig.microkitConfig.config} \
+                  '' else ''
+                    --kernel ${world.sel4} \
                   ''} \
                   "$@"
             '';
