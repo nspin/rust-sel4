@@ -24,8 +24,6 @@ struct Cli {
     #[arg(long)]
     object_sizes: Option<PathBuf>,
     #[arg(long)]
-    sel4_kernel_config: Option<PathBuf>,
-    #[arg(long)]
     simulate_script: PathBuf,
     #[arg(long)]
     microkit_tool: Option<PathBuf>,

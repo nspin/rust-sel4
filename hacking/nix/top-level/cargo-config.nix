@@ -176,7 +176,6 @@ let
         "cargo" "run" "-p" "sel4-test-runner" "--"
         "--target-dir" targetDir
         "--object-sizes" world.objectSizes
-        "--sel4-kernel-config" world.seL4KernelConfigFile
         "--simulate-script" simulateScript
       ] ++ lib.optionals world.worldConfig.isMicrokit [
         "--microkit-tool" "${world.microkit.sdk}/bin/microkit"
