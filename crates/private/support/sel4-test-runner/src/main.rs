@@ -264,7 +264,10 @@ impl<'a> Runner<'a> {
 
     fn mk_capdl_image(&self) -> anyhow::Result<PathBuf> {
         let script_out_dir = self.d.join("cdl");
-        let sec = self.file.section_by_name(".capdl_script").expect("missing script");
+        let sec = self
+            .file
+            .section_by_name(".capdl_script")
+            .expect("missing script");
         let system_py = self.d.join("system.py");
         fs::write(&system_py, sec.data()?)?;
         ensure!(
@@ -279,7 +282,7 @@ impl<'a> Runner<'a> {
                 .status()?
                 .success()
         );
-        
+
         let json = self.d.join("cdl.json");
 
         ensure!(
@@ -330,7 +333,6 @@ impl<'a> Runner<'a> {
                 .status()?
                 .success()
         );
-
 
         self.mk_root_task_image(&root_task)
     }
