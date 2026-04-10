@@ -30,5 +30,5 @@ fn main(config: Config) {
         config.frame.get().frame_get_address().unwrap()
     );
 
-    sel4_test_capdl::indicate_success();
+    sel4_test_capdl::indicate_success()
 }

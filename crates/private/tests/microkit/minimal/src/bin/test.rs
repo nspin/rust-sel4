@@ -7,12 +7,11 @@
 #![no_std]
 #![no_main]
 
-use sel4_microkit::{NullHandler, protection_domain};
+use sel4_microkit::{protection_domain, Never};
 
 sel4_test_microkit::embed_sdf_script!("../../system.py");
 
 #[protection_domain]
-fn init() -> NullHandler {
-    sel4_test_microkit::indicate_success();
-    NullHandler::new()
+fn init() -> Never {
+    sel4_test_microkit::indicate_success()
 }
