@@ -32,10 +32,7 @@ impl SentinelsOutcome {
 }
 
 pub fn run(mut cmd: Command) -> Result<SentinelsOutcome, Error> {
-    let mut child = cmd
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .spawn()?;
+    let mut child = cmd.stdin(Stdio::null()).stdout(Stdio::piped()).spawn()?;
 
     let mut child_stdout = child.stdout.take().unwrap();
 
