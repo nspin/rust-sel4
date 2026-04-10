@@ -3670,6 +3670,7 @@ dependencies = [
  "cfg-if",
  "sel4",
  "sel4-root-task",
+ "sel4-test-root-task",
 ]
 
 [[package]]
