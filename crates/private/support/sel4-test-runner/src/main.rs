@@ -125,6 +125,7 @@ fn main() -> Result<ExitCode, Error> {
             }
 
             let image = d.path().join("image.elf");
+
             assert!(
                 Command::new(cli.microkit_tool.as_ref().unwrap())
                     .arg(&system_xml)
