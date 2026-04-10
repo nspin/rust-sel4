@@ -6,7 +6,7 @@
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{any, env, fs, iter};
+use std::{env, fs, iter};
 use std::os::unix;
 
 use anyhow::{Error, ensure};
@@ -32,8 +32,8 @@ struct Cli {
     microkit_config: Option<String>,
     #[arg(short, long)]
     interactive: bool,
-    #[arg(short, long)]
-    dry_run: bool,
+    #[arg(long)]
+    no_run: bool,
     #[arg(long)]
     simulate_script: PathBuf,
     #[arg(last = true)]
@@ -92,7 +92,9 @@ impl<'a> Runner<'a> {
                     SeL4TestKind::CapDL => self.mk_capdl_image()?,
                 };
                 self.create_debugging_links()?;
-                if self.cli.interactive {
+                if self.cli.no_run {
+                    println!("{}", self.d.display());
+                } else if self.cli.interactive {
                     ensure!(
                         Command::new(&self.cli.simulate_script)
                             .arg(image)
@@ -100,13 +102,13 @@ impl<'a> Runner<'a> {
                             .status()?
                             .success()
                     );
-                    Ok(())
                 } else {
                     let mut cmd = Command::new(&self.cli.simulate_script);
                     cmd.arg(image);
                     cmd.args(self.cli.simulate_args.iter());
-                    sel4_test_sentinels_wrapper::run(cmd)?.success_ok()
+                    sel4_test_sentinels_wrapper::run(cmd)?.success_ok()?;
                 }
+                Ok(())
             }
         }
     }
