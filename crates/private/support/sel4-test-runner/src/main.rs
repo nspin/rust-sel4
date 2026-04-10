@@ -22,13 +22,15 @@ struct Cli {
     #[arg(long)]
     object_sizes: PathBuf,
     #[arg(long)]
-    simulate_script: PathBuf,
-    #[arg(long)]
     microkit_tool: Option<PathBuf>,
     #[arg(long)]
     microkit_board: Option<String>,
     #[arg(long)]
     microkit_config: Option<String>,
+    #[arg(short, long)]
+    interactive: bool,
+    #[arg(long)]
+    simulate_script: PathBuf,
     #[arg(last = true)]
     simulate_args: Option<String>,
 }
@@ -85,15 +87,26 @@ impl<'a> Runner<'a> {
                     SeL4TestKind::CapDL => self.mk_capdl_image()?,
                 };
 
-                let outcome = sel4_test_sentinels_wrapper::run(
-                    &self.cli.simulate_script,
-                    iter::once(image.as_os_str())
-                        .chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
-                )?;
+                if self.cli.interactive {
+                    ensure!(
+                        Command::new(&self.cli.simulate_script)
+                            .arg(image)
+                            .args(self.cli.simulate_args.iter())
+                            .status()?
+                            .success()
+                    );
+                    Ok(())
+                } else {
+                    let outcome = sel4_test_sentinels_wrapper::run(
+                        &self.cli.simulate_script,
+                        iter::once(image.as_os_str())
+                            .chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
+                    )?;
 
-                ensure!(Command::new("stty").arg("echo").status()?.success());
+                    ensure!(Command::new("stty").arg("echo").status()?.success());
 
-                outcome.success_ok()
+                    outcome.success_ok()
+                }
             }
         }
     }
