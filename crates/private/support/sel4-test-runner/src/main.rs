@@ -171,6 +171,15 @@ impl<'a> Runner<'a> {
                     .status()?
                     .success()
             );
+            let sup = self.exe.with_extension("sup.elf");
+            ensure!(
+                Command::new("llvm-objcopy")
+                    .arg("--only-keep-debug")
+                    .arg(&orig)
+                    .arg(&sup)
+                    .status()?
+                    .success()
+            );
         }
         Ok(())
     }

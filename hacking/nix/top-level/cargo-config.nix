@@ -181,6 +181,7 @@ let
           runScript = writeShellApplication {
             name = "run";
             runtimeInputs = [
+              llvm
               capdl-tool
               (python312.withPackages (p: with p; [
                 future six
