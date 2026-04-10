@@ -31,9 +31,7 @@ impl SentinelsOutcome {
     }
 }
 
-pub fn run(
-    mut cmd: Command,
-) -> Result<SentinelsOutcome, Error> {
+pub fn run(mut cmd: Command) -> Result<SentinelsOutcome, Error> {
     let mut child = cmd
         // .stderr(Stdio::piped())
         .stdout(Stdio::piped())
