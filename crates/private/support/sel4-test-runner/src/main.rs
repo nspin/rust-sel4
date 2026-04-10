@@ -101,7 +101,7 @@ impl<'a> Runner<'a> {
                     cmd.arg(image);
                     cmd.args(self.cli.simulate_args.iter());
                     let outcome = sel4_test_sentinels_wrapper::run(cmd)?;
-                    ensure!(Command::new("stty").arg("echo").status()?.success());
+                    // ensure!(Command::new("stty").arg("echo").status()?.success());
                     outcome.success_ok()
                 }
             }
