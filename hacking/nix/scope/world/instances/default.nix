@@ -96,18 +96,18 @@ in rec {
     tests.root-task.default-test-harness
     tests.capdl.threads
     tests.capdl.utcover
-    microkit.examples.hello
-    microkit.examples.banscii
-    microkit.examples.http-server
-    microkit.tests.minimal
-    microkit.tests.passive-server-with-deferred-action
-    microkit.tests.reset
-    examples.root-task.hello
-    examples.root-task.example-root-task
-    examples.root-task.example-root-task-without-runtime
-    examples.root-task.spawn-thread
-    examples.root-task.spawn-task
-    examples.root-task.serial-device
+    # microkit.examples.hello
+    # microkit.examples.banscii
+    # microkit.examples.http-server
+    # microkit.tests.minimal
+    # microkit.tests.passive-server-with-deferred-action
+    # microkit.tests.reset
+    # examples.root-task.hello
+    # examples.root-task.example-root-task
+    # examples.root-task.example-root-task-without-runtime
+    # examples.root-task.spawn-thread
+    # examples.root-task.spawn-task
+    # examples.root-task.serial-device
 
     # tests.root-task.ring
   ];

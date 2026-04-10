@@ -3520,6 +3520,7 @@ dependencies = [
  "sel4-simple-task-config-types",
  "sel4-simple-task-runtime",
  "sel4-sync",
+ "sel4-test-capdl",
  "serde",
 ]
 
@@ -3578,6 +3579,7 @@ dependencies = [
  "sel4",
  "sel4-alloca",
  "sel4-root-task",
+ "sel4-test-root-task",
 ]
 
 [[package]]
@@ -3590,6 +3592,7 @@ dependencies = [
  "sel4-backtrace-simple",
  "sel4-backtrace-types",
  "sel4-root-task",
+ "sel4-test-root-task",
 ]
 
 [[package]]
@@ -3601,6 +3604,7 @@ dependencies = [
  "sel4",
  "sel4-newlib",
  "sel4-root-task",
+ "sel4-test-root-task",
 ]
 
 [[package]]
@@ -3628,6 +3632,7 @@ version = "0.1.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
+ "sel4-test-root-task",
  "tests-root-task-dafny-core",
 ]
 
@@ -3661,6 +3666,7 @@ dependencies = [
  "sel4-linux-syscall-types",
  "sel4-musl",
  "sel4-root-task-with-std",
+ "sel4-test-root-task",
 ]
 
 [[package]]
@@ -3691,6 +3697,7 @@ version = "0.1.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
+ "sel4-test-root-task",
 ]
 
 [[package]]
@@ -3708,6 +3715,7 @@ version = "0.1.0"
 dependencies = [
  "sel4",
  "sel4-root-task",
+ "sel4-test-root-task",
  "tests-root-task-verus-core",
 ]
 

@@ -64,5 +64,5 @@ fn main(config: Config) {
 
     debug_println!("primary thread");
 
-    debug_println!("TEST_PASS");
+    sel4_test_capdl::indicate_success()
 }
