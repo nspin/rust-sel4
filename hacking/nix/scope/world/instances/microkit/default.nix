@@ -180,7 +180,7 @@ in {
                 "test.elf" = pd.patched;
               })
               (linkFarm "pd" {
-                "test.sup.elf" = pd.sup;
+                "test.orig.elf" = pd.sup;
               })
             ];
             systemXML = sources.srcRoot + "/crates/private/tests/microkit/reset/x.system";
