@@ -7,7 +7,7 @@
 #![no_std]
 #![no_main]
 
-use sel4_microkit::{protection_domain, Never};
+use sel4_microkit::{Never, protection_domain};
 
 sel4_test_microkit::embed_sdf_script!("../../system.py");
 
