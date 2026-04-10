@@ -47,7 +47,7 @@ impl Regions<'_> {
 
 // // //
 
-const STACK_SIZE: usize = 4096;
+const STACK_SIZE: usize = 16 * 1024;
 
 #[unsafe(link_section = ".persistent")]
 static STACK: Stack<STACK_SIZE> = Stack::new();
