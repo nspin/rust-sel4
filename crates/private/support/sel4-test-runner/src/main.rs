@@ -208,7 +208,7 @@ impl<'a> Runner<'a> {
                     .arg("--sel4-prefix")
                     .arg(env::var("SEL4_PREFIX").unwrap())
                     .arg("--app")
-                    .arg(&root_task)
+                    .arg(root_task)
                     .arg("-o")
                     .arg(&image)
                     .status()?
