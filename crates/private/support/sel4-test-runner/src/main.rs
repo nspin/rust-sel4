@@ -10,7 +10,7 @@ use std::{env, fs, iter};
 
 use anyhow::{Error, ensure};
 use clap::Parser;
-use object::{Architecture, File, Object, ObjectSection as _};
+use object::{Architecture, File, Object, ObjectSection as _, ObjectSymbol};
 use tempfile::TempDir;
 
 #[derive(Parser, Debug)]
@@ -80,6 +80,7 @@ impl<'a> Runner<'a> {
         match self.get_sel4_test_kind() {
             None => self.run_not_sel4(),
             Some(kind) => {
+                self.mk_resettable()?;
                 let image = match kind {
                     SeL4TestKind::RootTask => self.mk_root_task_image(self.exe)?,
                     SeL4TestKind::Microkit => self.mk_microkit_image()?,
@@ -144,6 +145,34 @@ impl<'a> Runner<'a> {
             _ => unimplemented!(),
         };
         format!("qemu-{qemu_arch}")
+    }
+
+    fn is_resettable(&self) -> bool {
+        if let Some(sym) = self.file.symbol_by_name("_reset") {
+            self.file.entry() == sym.address()
+        } else {
+            false
+        }
+    }
+
+    fn mk_resettable(&self) -> anyhow::Result<()> {
+        if self.is_resettable() {
+            let orig = self.exe.with_extension("orig.elf");
+            fs::rename(self.exe, &orig)?;
+            ensure!(
+                Command::new("cargo")
+                    .arg("run")
+                    .arg("-p")
+                    .arg("sel4-reset-cli")
+                    .arg("--")
+                    .arg(&orig)
+                    .arg("-o")
+                    .arg(self.exe)
+                    .status()?
+                    .success()
+            );
+        }
+        Ok(())
     }
 
     fn get_kernel_loader_target_config(&self) -> String {
