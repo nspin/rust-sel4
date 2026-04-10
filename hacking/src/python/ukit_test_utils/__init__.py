@@ -28,6 +28,11 @@ BOARDS: List[Board] = [
         arch=SystemDescription.Arch.AARCH64,
         paddr_top=0x6_0000_000,
     ),
+    Board(
+        name='x86_64_generic',
+        arch=SystemDescription.Arch.X86_64,
+        paddr_top=0,
+    ),
 ]
 
 def run_script(f):
