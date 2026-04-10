@@ -12,7 +12,7 @@ use std::{env, fs, io, iter};
 
 use anyhow::Error;
 use clap::Parser;
-use object::{Architecture, Object, ObjectSection as _};
+use object::{Architecture, File, Object, ObjectSection as _};
 use tempfile::TempDir;
 
 #[derive(Parser, Debug)]
@@ -35,7 +35,39 @@ struct Cli {
     simulate_args: Option<String>,
 }
 
-fn main() -> Result<ExitCode, Error> {
+#[derive(Debug)]
+enum SeL4TestKind {
+    RootTask,
+    Microkit,
+    CapDL,
+}
+
+fn get_sel4_test_kind(file: &File) -> Option<SeL4TestKind> {
+    if file.symbol_by_name("sel4_test_kind_root_task").is_some() {
+        Some(SeL4TestKind::RootTask)
+    } else if file.symbol_by_name("sel4_test_kind_microkit").is_some() {
+        Some(SeL4TestKind::Microkit)
+    } else if file.symbol_by_name("sel4_test_kind_capdl").is_some() {
+        Some(SeL4TestKind::CapDL)
+    } else {
+        None
+    }
+}
+
+fn get_qemu_exe(file: &File) -> String {
+    let qemu_arch = match file.architecture() {
+        Architecture::Aarch64 => "aarch64",
+        Architecture::Arm => "arm",
+        Architecture::X86_64 => "x86_64",
+        Architecture::X86_64_X32 => "i386",
+        Architecture::Riscv32 => "riscv32",
+        Architecture::Riscv64 => "riscv64",
+        _ => todo!(),
+    };
+    format!("qemu-{qemu_arch}")
+}
+
+fn main() -> Result<(), Error> {
     let cli = Cli::parse();
     println!("{:?}", cli);
 
@@ -52,133 +84,127 @@ fn main() -> Result<ExitCode, Error> {
 
     let data = fs::read(&exe)?;
     let file = object::File::parse(&*data)?;
-    let arch = file.architecture();
 
-    let is_root_task = file.symbol_by_name("sel4_test_kind_root_task").is_some();
-    let is_microkit = file.symbol_by_name("sel4_test_kind_microkit").is_some();
-    let is_capdl = file.symbol_by_name("sel4_test_kind_capdl").is_some();
-    let is_sel4 = is_root_task || is_microkit || is_capdl;
-
-    Ok(if is_sel4 {
-        let image = if is_root_task {
-            if let Architecture::X86_64 = arch {
-                exe.clone()
-            } else {
-                let image = d.path().join("image.elf");
-
-                let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
-
-                assert!(
-                    Command::new("cargo")
-                        .arg("build")
-                        .arg("--config")
-                        .arg(loader_target_config)
-                        .arg("--target-dir")
-                        .arg(&cli.target_dir)
-                        .arg("-p")
-                        .arg("sel4-kernel-loader")
-                        .arg("--artifact-dir")
-                        .arg(d.path())
-                        .status()?
-                        .success()
-                );
-
-                assert!(
-                    Command::new("cargo")
-                        .arg("run")
-                        .arg("-p")
-                        .arg("sel4-kernel-loader-add-payload")
-                        .arg("--")
-                        .arg("--loader")
-                        .arg(d.path().join("sel4-kernel-loader"))
-                        .arg("--sel4-prefix")
-                        .arg(env::var("SEL4_PREFIX").unwrap())
-                        .arg("--app")
-                        .arg(&exe)
-                        .arg("-o")
-                        .arg(&image)
-                        .status()?
-                        .success()
-                );
-
-                image
-            }
-        } else if is_microkit {
-            let system_xml = d.path().join("system.xml");
-            if let Some(sec) = file.section_by_name(".sdf_xml") {
-                fs::write(&system_xml, sec.data()?)?;
-            } else if let Some(sec) = file.section_by_name(".sdf_script") {
-                let system_py = d.path().join("system.py");
-                fs::write(&system_py, sec.data()?)?;
-                assert!(
-                    Command::new("python3")
-                        .arg(&system_py)
-                        .arg("--board")
-                        .arg(cli.microkit_board.as_ref().unwrap())
-                        .arg("-o")
-                        .arg(&system_xml)
-                        .status()?
-                        .success()
-                );
-            } else {
-                panic!("missing sdf")
-            }
-
-            let image = d.path().join("image.elf");
-
+    match get_sel4_test_kind(&file) {
+        None => {
             assert!(
-                Command::new(cli.microkit_tool.as_ref().unwrap())
-                    .arg(&system_xml)
-                    .arg("--search-path")
-                    .arg(d.path())
-                    .arg("--board")
-                    .arg(cli.microkit_board.as_ref().unwrap())
-                    .arg("--config")
-                    .arg(cli.microkit_config.as_ref().unwrap())
-                    .arg("-o")
-                    .arg(&image)
-                    .arg("-r")
-                    .arg(d.path().join("report.txt"))
+                Command::new(get_qemu_exe(&file))
+                    .args(
+                        iter::once(exe.as_os_str())
+                            .chain(cli.simulate_args.iter().map(AsRef::as_ref)),
+                    )
                     .status()?
                     .success()
             );
+        }
+        Some(kind) => {
+            let image = match kind {
+                SeL4TestKind::RootTask => {
+                    if let Architecture::X86_64 = file.architecture() {
+                        exe.clone()
+                    } else {
+                        let image = d.path().join("image.elf");
 
-            image
-        } else if is_capdl {
-            todo!()
-        } else {
-            unreachable!()
-        };
+                        let loader_target_config = ".cargo/gen/target/aarch64-unknown-none.toml";
 
-        let code = run(
-            &cli.simulate_script,
-            iter::once(image.as_os_str()).chain(cli.simulate_args.iter().map(AsRef::as_ref)),
-        )?;
+                        assert!(
+                            Command::new("cargo")
+                                .arg("build")
+                                .arg("--config")
+                                .arg(loader_target_config)
+                                .arg("--target-dir")
+                                .arg(&cli.target_dir)
+                                .arg("-p")
+                                .arg("sel4-kernel-loader")
+                                .arg("--artifact-dir")
+                                .arg(d.path())
+                                .status()?
+                                .success()
+                        );
 
-        assert!(Command::new("stty").arg("echo").status()?.success());
+                        assert!(
+                            Command::new("cargo")
+                                .arg("run")
+                                .arg("-p")
+                                .arg("sel4-kernel-loader-add-payload")
+                                .arg("--")
+                                .arg("--loader")
+                                .arg(d.path().join("sel4-kernel-loader"))
+                                .arg("--sel4-prefix")
+                                .arg(env::var("SEL4_PREFIX").unwrap())
+                                .arg("--app")
+                                .arg(&exe)
+                                .arg("-o")
+                                .arg(&image)
+                                .status()?
+                                .success()
+                        );
 
-        code
-    } else {
-        let qemu_arch = match arch {
-            Architecture::Aarch64 => "aarch64",
-            Architecture::Arm => "arm",
-            Architecture::X86_64 => "x86_64",
-            Architecture::X86_64_X32 => "i386",
-            Architecture::Riscv32 => "riscv32",
-            Architecture::Riscv64 => "riscv64",
-            _ => todo!(),
-        };
-        let qemu_exe = format!("qemu-{qemu_arch}");
-        assert!(
-            Command::new(qemu_exe)
-                .args(
-                    iter::once(exe.as_os_str()).chain(cli.simulate_args.iter().map(AsRef::as_ref)),
-                )
-                .status()?
-                .success()
-        );
-        ExitCode::SUCCESS
-    })
+                        image
+                    }
+                }
+                SeL4TestKind::Microkit => {
+                    let system_xml = d.path().join("system.xml");
+                    if let Some(sec) = file.section_by_name(".sdf_xml") {
+                        fs::write(&system_xml, sec.data()?)?;
+                    } else if let Some(sec) = file.section_by_name(".sdf_script") {
+                        let system_py = d.path().join("system.py");
+                        fs::write(&system_py, sec.data()?)?;
+                        assert!(
+                            Command::new("python3")
+                                .arg(&system_py)
+                                .arg("--board")
+                                .arg(cli.microkit_board.as_ref().unwrap())
+                                .arg("-o")
+                                .arg(&system_xml)
+                                .status()?
+                                .success()
+                        );
+                    } else {
+                        panic!("missing sdf")
+                    }
+
+                    let image = d.path().join("image.elf");
+
+                    assert!(
+                        Command::new(cli.microkit_tool.as_ref().unwrap())
+                            .arg(&system_xml)
+                            .arg("--search-path")
+                            .arg(d.path())
+                            .arg("--board")
+                            .arg(cli.microkit_board.as_ref().unwrap())
+                            .arg("--config")
+                            .arg(cli.microkit_config.as_ref().unwrap())
+                            .arg("-o")
+                            .arg(&image)
+                            .arg("-r")
+                            .arg(d.path().join("report.txt"))
+                            .status()?
+                            .success()
+                    );
+
+                    image
+                }
+                SeL4TestKind::CapDL => {
+                    todo!()
+                }
+            };
+
+            let outcome = run(
+                &cli.simulate_script,
+                iter::once(image.as_os_str()).chain(cli.simulate_args.iter().map(AsRef::as_ref)),
+            )?;
+
+            assert!(Command::new("stty").arg("echo").status()?.success());
+
+            match outcome {
+                RunOutcome::Sentinel(success) => assert!(success),
+                RunOutcome::Exit(success) => assert!(success),
+            }
+        }
+    }
+
+    Ok(())
 }
 
 const SUCCESS: u8 = 0x06;
@@ -186,10 +212,16 @@ const FAILURE: u8 = 0x15;
 
 // TODO make sure text has passed first
 
+#[derive(Debug)]
+enum RunOutcome {
+    Sentinel(bool),
+    Exit(bool),
+}
+
 fn run(
     child_program: impl AsRef<OsStr>,
     child_args: impl IntoIterator<Item = impl AsRef<OsStr>>,
-) -> Result<ExitCode, Error> {
+) -> Result<RunOutcome, Error> {
     let mut child = Command::new(child_program.as_ref())
         .args(child_args)
         .stdout(Stdio::piped())
@@ -208,19 +240,19 @@ fn run(
                 let b = buf[0];
 
                 let exit_code_opt = if b == SUCCESS {
-                    Some(ExitCode::SUCCESS)
+                    Some(true)
                 } else if b == FAILURE {
-                    Some(ExitCode::FAILURE)
+                    Some(false)
                 } else {
                     stdout.write_all(&buf)?;
                     stdout.flush()?;
                     None
                 };
 
-                if let Some(code) = exit_code_opt {
+                if let Some(success) = exit_code_opt {
                     let _ = child.kill();
                     let _ = child.wait();
-                    return Ok(code);
+                    return Ok(RunOutcome::Sentinel(success));
                 }
             }
             Ok(_) => unreachable!(),
@@ -232,9 +264,5 @@ fn run(
         }
     }
 
-    Ok(if child.wait()?.success() {
-        ExitCode::SUCCESS
-    } else {
-        ExitCode::FAILURE
-    })
+    Ok(RunOutcome::Exit(child.wait()?.success()))
 }
