@@ -42,6 +42,32 @@ enum SeL4TestKind {
     CapDL,
 }
 
+fn main() -> Result<(), Error> {
+    let cli = Cli::parse();
+    println!("{:?}", cli);
+
+    let parent = cli.target_dir.join("runner");
+    fs::create_dir_all(&parent)?;
+    let mut d = TempDir::with_prefix_in("run-", parent)?;
+    d.disable_cleanup(true);
+
+    eprintln!("tmp:");
+    eprintln!("{}", d.path().display());
+
+    let exe = d.path().join(cli.exe.file_name().unwrap());
+    fs::copy(&cli.exe, &exe)?;
+
+    let data = fs::read(&exe)?;
+    let file = object::File::parse(&*data)?;
+
+    Runner {
+        cli: &cli,
+        d: d.path(),
+        exe: &exe,
+        file: &file,
+    }
+    .run()
+}
 
 struct Runner<'a> {
     cli: &'a Cli,
@@ -65,9 +91,17 @@ impl<'a> Runner<'a> {
     }
 
     fn get_sel4_test_kind(&self) -> Option<SeL4TestKind> {
-        if self.file.symbol_by_name("sel4_test_kind_root_task").is_some() {
+        if self
+            .file
+            .symbol_by_name("sel4_test_kind_root_task")
+            .is_some()
+        {
             Some(SeL4TestKind::RootTask)
-        } else if self.file.symbol_by_name("sel4_test_kind_microkit").is_some() {
+        } else if self
+            .file
+            .symbol_by_name("sel4_test_kind_microkit")
+            .is_some()
+        {
             Some(SeL4TestKind::Microkit)
         } else if self.file.symbol_by_name("sel4_test_kind_capdl").is_some() {
             Some(SeL4TestKind::CapDL)
@@ -179,32 +213,27 @@ impl<'a> Runner<'a> {
 
     fn run(&self) -> anyhow::Result<()> {
         match self.get_sel4_test_kind() {
-            None => {
-                self.run_not_sel4()
-            }
+            None => self.run_not_sel4(),
             Some(kind) => {
                 let image = match kind {
-                    SeL4TestKind::RootTask => {
-                        self.mk_root_task_image()?
-                    }
-                    SeL4TestKind::Microkit => {
-                        self.mk_microkit_image()?
-                    }
+                    SeL4TestKind::RootTask => self.mk_root_task_image()?,
+                    SeL4TestKind::Microkit => self.mk_microkit_image()?,
                     SeL4TestKind::CapDL => {
                         todo!()
                     }
                 };
 
-                let outcome = run(
+                let outcome = wrap_with_sentinels(
                     &self.cli.simulate_script,
-                    iter::once(image.as_os_str()).chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
+                    iter::once(image.as_os_str())
+                        .chain(self.cli.simulate_args.iter().map(AsRef::as_ref)),
                 )?;
 
                 assert!(Command::new("stty").arg("echo").status()?.success());
 
                 match outcome {
-                    RunOutcome::Sentinel(success) => ensure!(success),
-                    RunOutcome::Exit(success) => ensure!(success),
+                    SentinelsOutcome::Sentinel(success) => ensure!(success),
+                    SentinelsOutcome::Exit(success) => ensure!(success),
                 }
 
                 Ok(())
@@ -213,47 +242,21 @@ impl<'a> Runner<'a> {
     }
 }
 
-fn main() -> Result<(), Error> {
-    let cli = Cli::parse();
-    println!("{:?}", cli);
-
-    let parent = cli.target_dir.join("runner");
-    fs::create_dir_all(&parent)?;
-    let mut d = TempDir::with_prefix_in("run-", parent)?;
-    d.disable_cleanup(true);
-
-    eprintln!("tmp:");
-    eprintln!("{}", d.path().display());
-
-    let exe = d.path().join(cli.exe.file_name().unwrap());
-    fs::copy(&cli.exe, &exe)?;
-
-    let data = fs::read(&exe)?;
-    let file = object::File::parse(&*data)?;
-
-    Runner {
-        cli: &cli,
-        d: d.path(),
-        exe: &exe,
-        file: &file,
-    }.run()
-}
-
 const SUCCESS: u8 = 0x06;
 const FAILURE: u8 = 0x15;
 
 // TODO make sure text has passed first
 
 #[derive(Debug)]
-enum RunOutcome {
+enum SentinelsOutcome {
     Sentinel(bool),
     Exit(bool),
 }
 
-fn run(
+fn wrap_with_sentinels(
     child_program: impl AsRef<OsStr>,
     child_args: impl IntoIterator<Item = impl AsRef<OsStr>>,
-) -> Result<RunOutcome, Error> {
+) -> Result<SentinelsOutcome, Error> {
     let mut child = Command::new(child_program.as_ref())
         .args(child_args)
         .stdout(Stdio::piped())
@@ -284,7 +287,7 @@ fn run(
                 if let Some(success) = exit_code_opt {
                     let _ = child.kill();
                     let _ = child.wait();
-                    return Ok(RunOutcome::Sentinel(success));
+                    return Ok(SentinelsOutcome::Sentinel(success));
                 }
             }
             Ok(_) => unreachable!(),
@@ -296,5 +299,5 @@ fn run(
         }
     }
 
-    Ok(RunOutcome::Exit(child.wait()?.success()))
+    Ok(SentinelsOutcome::Exit(child.wait()?.success()))
 }
