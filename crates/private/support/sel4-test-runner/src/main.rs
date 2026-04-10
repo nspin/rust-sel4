@@ -44,7 +44,6 @@ enum SeL4TestKind {
 
 fn main() -> Result<(), Error> {
     let cli = Cli::parse();
-    println!("{:?}", cli);
 
     let parent = cli.target_dir.join("runner");
     fs::create_dir_all(&parent)?;
