@@ -12,12 +12,8 @@ mk {
     inherit (versions)
       anyhow
       tempfile
-      serde_json
       object
     ;
     clap = { version = versions.clap; features = [ "derive" ]; };
-    sel4-config-types = localCrates.sel4-config-types // {
-      features = [ "serde" ];
-    };
   };
 }
