@@ -182,8 +182,8 @@ let
             name = "run";
             runtimeInputs = [
               (python312.withPackages (_: [
-                  sdfgen
-                ]))
+                sdfgen
+              ]))
             ];
             text = ''
               PYTHONPATH="${toString ../../src/python}:''${PYTHONPATH:-}" \
@@ -198,6 +198,8 @@ let
                   ''}
             '';
           };
+        in
+          "${runScript}/bin/${runScript.name}";
     };
 
   byWorldList = lib.mapAttrsToListRecursiveCond
