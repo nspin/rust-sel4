@@ -3525,7 +3525,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tests-capdl-utcover-components-test"
+name = "tests-capdl-utcover"
 version = "0.1.0"
 dependencies = [
  "sel4",
