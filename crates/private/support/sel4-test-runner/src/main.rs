@@ -337,7 +337,7 @@ impl<'a> Runner<'a> {
         ensure!(
             Command::new("python3")
                 .arg(&system_py)
-                .arg("--search-path")
+                .arg("--search-dir")
                 .arg(self.d)
                 .arg("--kernel")
                 .arg(self.cli.kernel.as_ref().unwrap())

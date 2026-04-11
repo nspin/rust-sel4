@@ -38,7 +38,7 @@ class ElfComponent(BaseComponent):
         self.update_guard_size = update_guard_size
 
         elf_fname = '{}.elf'.format(self.name)
-        self.elf_path = composition.search_path / elf_path
+        self.elf_path = composition.find_in_search_dirs(elf_path)
         self.elf = ELF(str(self.elf_path), elf_fname, self.composition.arch)
 
         self.composition.register_file(elf_fname, self.elf_path)
@@ -152,7 +152,8 @@ class ElfComponent(BaseComponent):
         with path_json.open('r') as f_json:
             with path_bin.open('wb') as f_bin:
                 subprocess.check_call(
-                    ['cargo', 'run', '-p', 'sel4-simple-task-runtime-config-cli', '--'], stdin=f_json, stdout=f_bin)
+                    # ['cargo', 'run', '-p', 'sel4-simple-task-runtime-config-cli', '--'], stdin=f_json, stdout=f_bin)
+                    ['sel4-simple-task-serialize-runtime-config'], stdin=f_json, stdout=f_bin)
 
         self.composition.register_file(path_bin.name, path_bin)
 

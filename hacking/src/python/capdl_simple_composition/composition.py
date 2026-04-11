@@ -28,7 +28,7 @@ class BaseComposition:
         parser = argparse.ArgumentParser()
         parser.add_argument('--kernel', required=True, type=Path)
         parser.add_argument('--object-sizes', required=True, type=Path)
-        parser.add_argument('--search-path', required=True, type=Path)
+        parser.add_argument('--search-dir', required=True, type=Path, action ='append')
         parser.add_argument('-o', required=True, type=Path)
         args = parser.parse_args()
 
@@ -36,7 +36,7 @@ class BaseComposition:
             out_dir=args.o,
             kernel=args.kernel,
             object_sizes=args.object_sizes,
-            search_path=args.search_path,
+            search_dirs=args.search_dir,
         )
 
     def __init__(
@@ -44,14 +44,14 @@ class BaseComposition:
         out_dir,
         kernel,
         object_sizes,
-        search_path,
+        search_dirs,
         compute_ut_covers=False,
     ):
         self.out_dir = out_dir
 
         self.kernel_config = KernelConfig(f'{kernel}/libsel4/include/kernel/gen_config.json')
 
-        self.search_path = search_path
+        self.search_dirs = search_dirs
 
         self.device_tree = None
         self.platform_info = None
@@ -147,6 +147,13 @@ class BaseComposition:
         d.mkdir()
         for fname, path in self.files.items():
             (d / fname).symlink_to(path)
+
+    def find_in_search_dirs(self, fname):
+        for d in self.search_dirs:
+            path = d / fname
+            if path.exists():
+                return path
+        raise Exception('could not find {fname} in search dirs')
 
     def complete(self):
         self.finalize()

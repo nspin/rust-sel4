@@ -388,11 +388,9 @@ in rec {
         rootTask = mkCapDLInitializer {
           spec = mkSimpleCompositionCapDLSpec {
             script = sources.srcRoot + "/crates/private/tests/capdl/utcover/cdl.py";
-            config = {
-              components = {
-                example_component.image = test.elf;
-              };
-            };
+            searchDirs = [
+              test
+            ];
           };
           embedFrames = false;
           deflate = false;
