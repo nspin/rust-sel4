@@ -19,7 +19,6 @@
     "tier": null
   },
   "plt-by-default": false,
-  "position-independent-executables": true,
   "pre-link-args": {
     "gnu-lld": [
       "--no-rosegment"
@@ -31,7 +30,6 @@
   "stack-probes": {
     "kind": "inline"
   },
-  "static-position-independent-executables": true,
   "supported-sanitizers": [
     "kcfi",
     "kernel-address"
