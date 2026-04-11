@@ -359,7 +359,7 @@ in rec {
     capdl = {
       threads = maybe (haveFullRuntime && haveCapDLInitializer) (mkInstance rec {
         test = mkTask {
-          rootCrate = crates.tests-capdl-threads-components-test;
+          rootCrate = crates.tests-capdl-threads;
           targetTriple = mkSeL4RustTargetTriple { unwind = haveUnwindingSupport; };
           release = true; # test optimizations
         };
@@ -380,7 +380,7 @@ in rec {
 
       utcover = maybe (haveFullRuntime && haveCapDLInitializer) (mkInstance rec {
         test = mkTask {
-          rootCrate = crates.tests-capdl-utcover-components-test;
+          rootCrate = crates.tests-capdl-utcover;
           targetTriple = mkSeL4RustTargetTriple { unwind = haveUnwindingSupport; };
           # release = false;
           release = true;
