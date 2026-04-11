@@ -52,6 +52,7 @@ const STACK_SIZE: usize = 16 * 1024;
 #[unsafe(link_section = ".persistent")]
 static STACK: Stack<STACK_SIZE> = Stack::new();
 
+// #[unsafe(link_section = ".rodata")]
 #[unsafe(no_mangle)]
 static __sel4_reset__stack_bottom: StackBottom = STACK.bottom();
 

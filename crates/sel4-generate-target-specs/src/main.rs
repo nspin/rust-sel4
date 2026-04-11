@@ -111,8 +111,8 @@ impl Config {
                 options.relocation_model = RelocModel::Static;
                 options.relro_level = RelroLevel::Off;
                 options.code_model = Some(CodeModel::Small); // TODO necessary?
-                options.position_independent_executables = false;
-                options.static_position_independent_executables = false;
+                options.position_independent_executables = false; // TODO necessary?
+                options.static_position_independent_executables = false; // TODO necessary?
                 target
             }
         };
