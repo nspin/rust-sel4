@@ -33,4 +33,5 @@
     //     "incorrect-ident-case",
     // ],
     "rust-analyzer.imports.granularity.group": "module",
+    "rust-analyzer.rustc.source": "discover",
 }

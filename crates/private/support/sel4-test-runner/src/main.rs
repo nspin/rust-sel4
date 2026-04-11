@@ -4,10 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+use std::os::unix;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs, iter};
-use std::os::unix;
 
 use anyhow::{Error, ensure};
 use clap::Parser;
@@ -117,7 +117,10 @@ impl<'a> Runner<'a> {
         let debug_bin = if let Some(kernel) = &self.cli.kernel {
             kernel.join("bin")
         } else if let Some(sdk) = &self.cli.microkit_sdk {
-            sdk.join("board").join(self.cli.microkit_board.as_ref().unwrap()).join(self.cli.microkit_config.as_ref().unwrap()).join("elf")
+            sdk.join("board")
+                .join(self.cli.microkit_board.as_ref().unwrap())
+                .join(self.cli.microkit_config.as_ref().unwrap())
+                .join("elf")
         } else {
             panic!()
         };
@@ -297,20 +300,27 @@ impl<'a> Runner<'a> {
         let image = self.d.join("image.elf");
 
         ensure!(
-            Command::new(self.cli.microkit_sdk.as_ref().unwrap().join("bin").join("microkit"))
-                .arg(&system_xml)
-                .arg("--search-path")
-                .arg(self.d)
-                .arg("--board")
-                .arg(self.cli.microkit_board.as_ref().unwrap())
-                .arg("--config")
-                .arg(self.cli.microkit_config.as_ref().unwrap())
-                .arg("-o")
-                .arg(&image)
-                .arg("-r")
-                .arg(self.d.join("report.txt"))
-                .status()?
-                .success()
+            Command::new(
+                self.cli
+                    .microkit_sdk
+                    .as_ref()
+                    .unwrap()
+                    .join("bin")
+                    .join("microkit")
+            )
+            .arg(&system_xml)
+            .arg("--search-path")
+            .arg(self.d)
+            .arg("--board")
+            .arg(self.cli.microkit_board.as_ref().unwrap())
+            .arg("--config")
+            .arg(self.cli.microkit_config.as_ref().unwrap())
+            .arg("-o")
+            .arg(&image)
+            .arg("-r")
+            .arg(self.d.join("report.txt"))
+            .status()?
+            .success()
         );
 
         Ok(image)
