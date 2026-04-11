@@ -7,7 +7,7 @@
 #![no_std]
 #![no_main]
 
-use sel4_root_task::{debug_println, root_task};
+use sel4_root_task::root_task;
 
 #[root_task(heap_size = 1024 * 1024)]
 fn main(_: &sel4::BootInfoPtr) -> ! {
