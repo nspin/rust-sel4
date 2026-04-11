@@ -339,6 +339,8 @@ impl<'a> Runner<'a> {
                 .arg(&system_py)
                 .arg("--search-path")
                 .arg(self.d)
+                .arg("--kernel")
+                .arg(self.cli.kernel.as_ref().unwrap())
                 .arg("--object-sizes")
                 .arg(&self.cli.object_sizes)
                 .arg("-o")

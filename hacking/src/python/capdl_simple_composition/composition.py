@@ -26,46 +26,45 @@ class BaseComposition:
     @classmethod
     def from_env(cls):
         parser = argparse.ArgumentParser()
-        parser.add_argument('--object-sizes', required=True)
-        parser.add_argument('--search-path', required=True)
-        parser.add_argument('-o', required=True)
+        parser.add_argument('--kernel', required=True, type=Path)
+        parser.add_argument('--object-sizes', required=True, type=Path)
+        parser.add_argument('--search-path', required=True, type=Path)
+        parser.add_argument('-o', required=True, type=Path)
         args = parser.parse_args()
 
-        sel4_prefix = os.environ['SEL4_PREFIX']
+        return cls(
+            out_dir=args.o,
+            kernel=args.kernel,
+            object_sizes=args.object_sizes,
+            search_path=args.search_path,
+        )
 
-        config = {
-            'kernel_config': f'{sel4_prefix}/libsel4/include/kernel/gen_config.json',
-            'object_sizes': args.object_sizes,
-            'compute_ut_covers': False,
-            'search_path': Path(args.search_path),
-        }
+    def __init__(
+        self,
+        out_dir,
+        kernel,
+        object_sizes,
+        search_path,
+        compute_ut_covers=False,
+    ):
+        self.out_dir = out_dir
 
-        kernel_config = KernelConfig(config['kernel_config'])
-        if kernel_config.sel4_arch() != 'x86_64':
-            config['device_tree'] = f'{sel4_prefix}/support/kernel.dtb'
-            config['platform_info'] =  f'{sel4_prefix}/support/platform_gen.yaml'
+        self.kernel_config = KernelConfig(f'{kernel}/libsel4/include/kernel/gen_config.json')
 
-        return cls(out_dir=args.o, config=config)
+        self.search_path = search_path
 
-    def __init__(self, out_dir, config):
-        self.out_dir = Path(out_dir)
-        self.config = config
-
-        self.kernel_config = KernelConfig(config['kernel_config'])
-
-        config_device_tree = config.get('device_tree')
-        self.device_tree = None if config_device_tree is None else DeviceTree(config_device_tree)
-
-        platform_info = config.get('platform_info', None)
-        if platform_info is not None:
-            with open(platform_info) as f:
+        self.device_tree = None
+        self.platform_info = None
+        if self.kernel_config.sel4_arch() != 'x86_64':
+            device_tree_path = f'{kernel}/support/kernel.dtb'
+            self.device_tree = DeviceTree(device_tree_path)
+            platform_info_path = f'{kernel}/support/platform_gen.yaml'
+            with open(platform_info_path) as f:
                 self.platform_info = yaml.load(f, Loader=yaml.FullLoader)
-        else:
-            self.platform_info = None
 
-        with open(config['object_sizes']) as f:
+        with open(object_sizes) as f:
             object_sizes = yaml.load(f, Loader=yaml.FullLoader)
-        register_object_sizes(object_sizes)
+            register_object_sizes(object_sizes)
 
         self.arch = self.kernel_config.sel4_arch()
         self.capdl_arch = self.kernel_config.capdl_arch()
@@ -75,7 +74,7 @@ class BaseComposition:
         self.render_state = RenderState(obj_space=obj_space)
 
         # TODO
-        self.compute_ut_covers = config.get('compute_ut_covers', False)
+        self.compute_ut_covers = compute_ut_covers
 
         self.components = set()
         self.files = {}

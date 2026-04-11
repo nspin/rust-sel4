@@ -62,6 +62,18 @@ let
         "README.md"
       ];
     };
+    tests-capdl-utcover = {
+      resolveLinks = true;
+      extraPaths = [
+        "cdl.py"
+      ];
+    };
+    tests-capdl-threads = {
+      resolveLinks = true;
+      extraPaths = [
+        "cdl.py"
+      ];
+    };
   };
 
   unAugmentedCrates = lib.listToAttrs (lib.forEach workspaceMemberPaths (cratePath: rec {

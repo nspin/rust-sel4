@@ -38,7 +38,7 @@ class ElfComponent(BaseComponent):
         self.update_guard_size = update_guard_size
 
         elf_fname = '{}.elf'.format(self.name)
-        self.elf_path = composition.config['search_path'] / elf_path
+        self.elf_path = composition.search_path / elf_path
         self.elf = ELF(str(self.elf_path), elf_fname, self.composition.arch)
 
         self.composition.register_file(elf_fname, self.elf_path)
