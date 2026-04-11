@@ -366,11 +366,9 @@ in rec {
         rootTask = mkCapDLInitializer {
           spec = mkSimpleCompositionCapDLSpec {
             script = sources.srcRoot + "/crates/private/tests/capdl/threads/cdl.py";
-            config = {
-              components = {
-                example_component.image = test.elf;
-              };
-            };
+            searchDirs = [
+              test
+            ];
           };
         };
         extraPlatformArgs = lib.optionalAttrs canSimulate {
