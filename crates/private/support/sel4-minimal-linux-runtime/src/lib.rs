@@ -8,7 +8,7 @@
 
 use core::panic::UnwindSafe;
 
-pub use sel4_minimal_linux_syscalls::exit;
+pub use sel4_minimal_linux_syscalls::exit_success;
 pub use sel4_panicking::catch_unwind;
 pub use sel4_panicking_env::{abort, debug_println};
 
@@ -90,7 +90,7 @@ where
 {
     let r = catch_unwind(move || f());
     match r {
-        Ok(()) => exit(0),
+        Ok(()) => exit_success(),
         Err(()) => abort!("uncaught panic in main"),
     }
 }
