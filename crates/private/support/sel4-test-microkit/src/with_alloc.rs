@@ -3,9 +3,11 @@ use core::error::Error;
 
 use sel4_microkit::{Channel, ChannelSet, Child, DeferredAction, Handler, MessageInfo, Never};
 
+pub type UpcastedHandler = Box<dyn Handler<Error = Box<dyn Error>> + 'static>;
+
 pub fn upcast_handler<E: Error + 'static>(
     handler: impl Handler<Error = E> + 'static,
-) -> Box<dyn Handler<Error = Box<dyn Error>> + 'static> {
+) -> UpcastedHandler {
     Box::new(DynErrorHandlerWrapper(handler))
 }
 
