@@ -4,11 +4,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use sel4_microkit::{Channel, ChannelSet, Handler, Infallible, debug_println};
+use sel4_microkit::{Channel, ChannelSet, Handler, Infallible};
 
 const SERVER: Channel = Channel::new(0);
 
-fn init() -> impl Handler {
+pub(crate) fn init() -> impl Handler<Error = Infallible> + 'static {
     SERVER.notify();
     HandlerImpl {}
 }
@@ -19,7 +19,6 @@ impl Handler for HandlerImpl {
     type Error = Infallible;
 
     fn notified(&mut self, _channels: ChannelSet) -> Result<(), Self::Error> {
-        debug_println!("TEST_PASS");
-        Ok(())
+        sel4_test_microkit::indicate_success()
     }
 }

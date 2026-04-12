@@ -8,7 +8,7 @@ use sel4_microkit::{Channel, ChannelSet, DeferredAction, DeferredActionSlot, Han
 
 const CLIENT: Channel = Channel::new(0);
 
-fn init() -> impl Handler {
+pub(crate) fn init() -> impl Handler<Error = Infallible> + 'static {
     HandlerImpl {
         deferred_action: DeferredActionSlot::new(),
     }
