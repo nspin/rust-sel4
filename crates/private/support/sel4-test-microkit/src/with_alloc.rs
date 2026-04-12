@@ -1,21 +1,19 @@
-
+use alloc::boxed::Box;
 use core::error::Error;
 
-use sel4_microkit::{Handler, ChannelSet, Event};
-
+use sel4_microkit::{Channel, ChannelSet, Child, DeferredAction, Handler, MessageInfo, Never};
 
 // pub fn upcast_handler<E: Error>(impl Handler<Error = E> + 'static) -> Box<dyn Handler<Error = Box<dyn Error>> + 'static> {
 
 // }
 
-
 struct DynErrorHandlerWrapper<T>(T);
 
-impl<T: Handler + ?Sized> Handler for Box<T> {
+impl<T: Handler> Handler for DynErrorHandlerWrapper<T> {
     type Error = T::Error;
 
     fn notified(&mut self, channels: ChannelSet) -> Result<(), Self::Error> {
-        (**self).notified(channels)
+        self.0.notified(channels).map_err(Into::into)
     }
 
     fn protected(
@@ -23,7 +21,7 @@ impl<T: Handler + ?Sized> Handler for Box<T> {
         channel: Channel,
         msg_info: MessageInfo,
     ) -> Result<MessageInfo, Self::Error> {
-        (**self).protected(channel, msg_info)
+        self.0.protected(channel, msg_info).map_err(Into::into)
     }
 
     fn fault(
@@ -31,15 +29,15 @@ impl<T: Handler + ?Sized> Handler for Box<T> {
         child: Child,
         msg_info: MessageInfo,
     ) -> Result<Option<MessageInfo>, Self::Error> {
-        (**self).fault(child, msg_info)
+        self.0.fault(child, msg_info).map_err(Into::into)
     }
 
     fn take_deferred_action(&mut self) -> Option<DeferredAction> {
-        (**self).take_deferred_action()
+        self.0.take_deferred_action()
     }
 
     #[doc(hidden)]
     fn run(&mut self) -> Result<Never, Self::Error> {
-        (**self).run()
+        self.0.run().map_err(Into::into)
     }
 }
