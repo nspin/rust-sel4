@@ -129,20 +129,14 @@ in {
       let
         mkCrateName = role: "tests-microkit-passive-server-with-deferred-action-pds-${role}";
 
-        pds = {
-          client = mkPD rec {
-            rootCrate = crates.${mkCrateName "client"};
-          };
-          server = mkPD rec {
-            rootCrate = crates.${mkCrateName "server"};
-          };
+        pd = mkPD {
+          rootCrate = crates.tests-microkit-passive-server-with-deferred-action;
         };
       in
         callPlatform {
           system = microkit.mkSystem {
             searchPath = [
-              "${pds.client}/bin"
-              "${pds.server}/bin"
+              "${pd}/bin"
             ];
             systemXML = sources.srcRoot + "/crates/private/tests/microkit/passive-server-with-deferred-action/x.system";
           };
@@ -150,7 +144,7 @@ in {
             canAutomateSimply = true;
           };
         } // {
-          inherit pds;
+          inherit pd;
         }
     );
 

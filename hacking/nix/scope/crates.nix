@@ -92,6 +92,12 @@ let
         "x.system"
       ];
     };
+    tests-microkit-passive-server-with-deferred-action = {
+      resolveLinks = true;
+      extraPaths = [
+        "x.system"
+      ];
+    };
   };
 
   unAugmentedCrates = lib.listToAttrs (lib.forEach workspaceMemberPaths (cratePath: rec {
