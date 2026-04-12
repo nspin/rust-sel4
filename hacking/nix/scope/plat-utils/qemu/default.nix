@@ -33,8 +33,9 @@ in rec {
         runtimeInputs = [
           selfTopLevel.pkgs.build.this.sel4-test-sentinels-wrapper
         ];
+        # -f to allow ctrl-c
         text = ''
-          timeout \
+          timeout -f \
             ${toString timeout}s \
             sel4-test-sentinels-wrapper ${simulate}
         '';
