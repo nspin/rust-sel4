@@ -29,6 +29,11 @@ BOARDS: List[Board] = [
         paddr_top=0x6_0000_000,
     ),
     Board(
+        name='qemu_virt_riscv64',
+        arch=SystemDescription.Arch.RISCV64,
+        paddr_top=0x6_0000_000,
+    ),
+    Board(
         name='x86_64_generic',
         arch=SystemDescription.Arch.X86_64,
         paddr_top=0,
