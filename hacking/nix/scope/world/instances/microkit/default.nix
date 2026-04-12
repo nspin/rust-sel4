@@ -115,9 +115,7 @@ in {
             searchPath = [
               "${pd}/bin"
             ];
-            systemXML = genSDF {
-              script = sources.srcRoot + "/crates/private/tests/microkit/unwind/system.py";
-            };
+            systemXML = sources.srcRoot + "/crates/private/tests/microkit/unwind/system.xml";
           };
           extraPlatformArgs = lib.optionalAttrs canSimulate  {
             canAutomateSimply = true;

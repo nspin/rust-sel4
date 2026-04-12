@@ -80,6 +80,12 @@ let
         "system.py"
       ];
     };
+    tests-microkit-unwind = {
+      resolveLinks = true;
+      extraPaths = [
+        "system.xml"
+      ];
+    };
     tests-microkit-reset = {
       resolveLinks = true;
       extraPaths = [
