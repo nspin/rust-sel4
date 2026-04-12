@@ -6,7 +6,16 @@
 
 #![no_std]
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
 pub use sel4_test_sentinels::indicate_success;
+
+#[cfg(feature = "alloc")]
+mod with_alloc;
+
+#[cfg(feature = "alloc")]
+pub use with_alloc::*;
 
 #[used]
 #[unsafe(no_mangle)]

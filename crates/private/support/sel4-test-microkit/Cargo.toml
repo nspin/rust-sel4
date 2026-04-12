@@ -16,5 +16,9 @@ authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
 license = "BSD-2-Clause"
 
+[features]
+alloc = ["sel4-microkit/alloc"]
+
 [dependencies]
+sel4-microkit = { path = "../../../sel4-microkit" }
 sel4-test-sentinels = { path = "../sel4-test-sentinels" }

@@ -10,8 +10,8 @@ mk {
   package.name = "tests-microkit-passive-server-with-deferred-action";
   dependencies = {
     inherit (localCrates)
-      sel4-test-microkit
+      sel4-microkit
     ;
-    sel4-microkit = localCrates.sel4-microkit // { features = [ "alloc" ]; };
+    sel4-test-microkit = localCrates.sel4-test-microkit // { features = [ "alloc" ]; };
   };
 }

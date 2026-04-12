@@ -8,12 +8,12 @@ use sel4_microkit::{Channel, ChannelSet, Handler, Infallible};
 
 const SERVER: Channel = Channel::new(0);
 
-pub(crate) fn init() -> impl Handler<Error = Infallible> + 'static {
+pub(crate) fn init() -> HandlerImpl {
     SERVER.notify();
     HandlerImpl {}
 }
 
-struct HandlerImpl {}
+pub(crate) struct HandlerImpl {}
 
 impl Handler for HandlerImpl {
     type Error = Infallible;

@@ -10,7 +10,11 @@ mk {
   package.name = "sel4-test-microkit";
   dependencies = {
     inherit (localCrates)
+      sel4-microkit
       sel4-test-sentinels
     ;
+  };
+  features = {
+    alloc = [ "sel4-microkit/alloc" ];
   };
 }
