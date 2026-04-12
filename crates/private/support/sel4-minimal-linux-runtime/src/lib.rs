@@ -5,7 +5,6 @@
 //
 
 #![no_std]
-#![feature(never_type)]
 
 use core::panic::UnwindSafe;
 
