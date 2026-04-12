@@ -19,7 +19,7 @@ pub fn indicate_success() -> ! {
     core::intrinsics::abort()
 }
 
-fn indicate_failure() -> ! {
+pub fn indicate_failure() -> ! {
     debug_println!("INDICATE_FAILURE\n{FAILURE}\n");
     debug_println!("sentinel fallthrough");
     core::intrinsics::abort()
