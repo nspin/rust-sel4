@@ -134,6 +134,8 @@ self: with self;
   mkSimpleCompositionCapDLSpec = callPackage ./capdl/mk-simple-composition-capdl-spec.nix {};
   mkCapDLInitializerWithSpec = callPackage ./capdl/mk-capdl-initializer-with-spec.nix {};
 
+  genSDF = callPackage ./gen-sdf.nix {};
+
   simulateScript = if !worldConfig.canSimulate then null else buildPackages.writeShellApplication {
     name = "simulate";
     checkPhase = "";

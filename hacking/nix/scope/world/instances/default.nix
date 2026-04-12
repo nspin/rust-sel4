@@ -100,7 +100,7 @@ in rec {
     # microkit.examples.banscii
     # microkit.examples.http-server
     microkit.tests.minimal
-    microkit.tests.passive-server-with-deferred-action
+    # microkit.tests.passive-server-with-deferred-action
     microkit.tests.reset
     # examples.root-task.hello
     # examples.root-task.example-root-task

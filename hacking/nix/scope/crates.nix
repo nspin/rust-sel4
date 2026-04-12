@@ -74,6 +74,18 @@ let
         "cdl.py"
       ];
     };
+    tests-microkit-minimal = {
+      resolveLinks = true;
+      extraPaths = [
+        "system.py"
+      ];
+    };
+    tests-microkit-reset = {
+      resolveLinks = true;
+      extraPaths = [
+        "system.py"
+      ];
+    };
   };
 
   unAugmentedCrates = lib.listToAttrs (lib.forEach workspaceMemberPaths (cratePath: rec {

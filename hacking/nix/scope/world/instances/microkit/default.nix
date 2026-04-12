@@ -19,6 +19,7 @@
 , seL4Config
 , callPlatform
 , verus
+, genSDF
 
 , maybe
 , canSimulate
@@ -90,7 +91,9 @@ in {
             searchPath = [
               "${pd}/bin"
             ];
-            systemXML = sources.srcRoot + "/crates/private/tests/microkit/minimal/x.system";
+            systemXML = genSDF {
+              script = sources.srcRoot + "/crates/private/tests/microkit/minimal/system.py";
+            };
           };
           extraPlatformArgs = lib.optionalAttrs canSimulate  {
             canAutomateSimply = true;
