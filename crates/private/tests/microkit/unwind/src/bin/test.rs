@@ -26,8 +26,7 @@ fn init() -> NullHandler {
         r.err().unwrap().downcast::<Foo>().ok().unwrap(),
         Foo(1337)
     ));
-    debug_println!("TEST_PASS");
-    NullHandler::new()
+    sel4_test_microkit::indicate_success()
 }
 
 fn f1() {
