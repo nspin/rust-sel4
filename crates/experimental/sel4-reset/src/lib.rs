@@ -166,4 +166,4 @@ global_asm! {
     "#,
 }
 
-// TODO save important part of initial reg file before anything else
+// TODO save important part of initial reg file before anything else if first reset
