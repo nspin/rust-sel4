@@ -5,6 +5,7 @@
 //
 
 #![feature(rustc_private)]
+#![allow(unused_imports)]
 
 extern crate rustc_driver;
 extern crate rustc_target;
@@ -97,9 +98,9 @@ impl Config {
                 let options = &mut target.options;
                 options.relocation_model = RelocModel::Static;
                 options.relro_level = RelroLevel::Off;
-                options.code_model = Some(CodeModel::Small); // TODO necessary?
-                options.position_independent_executables = false; // TODO necessary?
-                options.static_position_independent_executables = false; // TODO necessary?
+                // options.code_model = Some(CodeModel::Small); // TODO necessary?
+                // options.position_independent_executables = false; // TODO necessary?
+                // options.static_position_independent_executables = false; // TODO necessary?
                 target
             }
         };

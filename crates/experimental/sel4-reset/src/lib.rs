@@ -164,3 +164,5 @@ global_asm! {
             jmp _start
     "#,
 }
+
+// TODO save important part of initial reg file before anything else
