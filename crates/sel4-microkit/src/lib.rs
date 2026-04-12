@@ -76,6 +76,7 @@ pub use printing::{debug_print, debug_println};
 /// link-time error.
 pub use sel4_microkit_macros::protection_domain;
 
+// TODO add support for specifying stack size for reset case
 #[doc(hidden)]
 #[macro_export]
 macro_rules! declare_protection_domain {
