@@ -11,18 +11,27 @@ pub fn upcast_handler<E: Error + 'static>(
     Box::new(DynErrorHandlerWrapper(handler))
 }
 
+#[macro_export]
 macro_rules! match_handler {
     {
-        $(#[$attr:meta]*)?
-        $(fn_vis:vis)? fn $fn_ident:indent {
+        $(#[$attr:meta])*
+        $fn_vis:vis fn $fn_ident:ident {
+            $($pd_name:literal => $pd_init:expr,)*
         }
     } => {
-        match $crate::_private::pd_name().unwrap() {
-            "client" => $crate::upcast_handler(client::init()),
-            "server" => $crate::upcast_handler(server::init()),
-            _ => unreachable!(),
+        $(#[$attr])*
+        $fn_vis fn $fn_ident() -> $crate::UpcastedHandler {
+            match $crate::_with_alloc_private::pd_name().unwrap() {
+                $($pd_name => $crate::upcast_handler($pd_init),)*
+                _ => unreachable!(),
+            }
         }
     };
+}
+
+#[doc(hidden)]
+pub mod _with_alloc_private {
+    pub use sel4_microkit::pd_name;
 }
 
 struct DynErrorHandlerWrapper<T>(T);
