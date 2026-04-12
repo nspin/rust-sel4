@@ -83,7 +83,7 @@ let
     tests-microkit-reset = {
       resolveLinks = true;
       extraPaths = [
-        "system.py"
+        "x.system"
       ];
     };
   };
