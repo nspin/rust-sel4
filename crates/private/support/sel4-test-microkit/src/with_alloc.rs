@@ -11,6 +11,20 @@ pub fn upcast_handler<E: Error + 'static>(
     Box::new(DynErrorHandlerWrapper(handler))
 }
 
+macro_rules! match_handler {
+    {
+        $(#[$attr:meta]*)?
+        $(fn_vis:vis)? fn $fn_ident:indent {
+        }
+    } => {
+        match $crate::_private::pd_name().unwrap() {
+            "client" => $crate::upcast_handler(client::init()),
+            "server" => $crate::upcast_handler(server::init()),
+            _ => unreachable!(),
+        }
+    };
+}
+
 struct DynErrorHandlerWrapper<T>(T);
 
 impl<T: Handler<Error: Error + 'static>> Handler for DynErrorHandlerWrapper<T> {
