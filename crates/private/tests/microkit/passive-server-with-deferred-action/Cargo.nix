@@ -7,10 +7,11 @@
 { mk, localCrates }:
 
 mk {
-  package.name = "tests-microkit-passive-server-with-deferred-action-pds-server";
+  package.name = "tests-microkit-passive-server-with-deferred-action";
   dependencies = {
     inherit (localCrates)
       sel4-microkit
+      sel4-test-microkit
     ;
   };
 }

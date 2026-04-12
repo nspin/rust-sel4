@@ -4,16 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-#![no_std]
-#![no_main]
-
-use sel4_microkit::{
-    Channel, ChannelSet, DeferredAction, DeferredActionSlot, Handler, Infallible, protection_domain,
-};
+use sel4_microkit::{Channel, ChannelSet, DeferredAction, DeferredActionSlot, Handler, Infallible};
 
 const CLIENT: Channel = Channel::new(0);
 
-#[protection_domain]
 fn init() -> impl Handler {
     HandlerImpl {
         deferred_action: DeferredActionSlot::new(),

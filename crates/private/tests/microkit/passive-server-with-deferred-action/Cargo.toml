@@ -10,11 +10,12 @@
 #
 
 [package]
-name = "tests-microkit-passive-server-with-deferred-action-pds-server"
+name = "tests-microkit-passive-server-with-deferred-action"
 version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
 license = "BSD-2-Clause"
 
 [dependencies]
-sel4-microkit = { path = "../../../../../../sel4-microkit" }
+sel4-microkit = { path = "../../../../sel4-microkit" }
+sel4-test-microkit = { path = "../../../support/sel4-test-microkit" }

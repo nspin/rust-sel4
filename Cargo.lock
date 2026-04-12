@@ -3545,17 +3545,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "tests-microkit-passive-server-with-deferred-action-pds-client"
+name = "tests-microkit-passive-server-with-deferred-action"
 version = "0.1.0"
 dependencies = [
  "sel4-microkit",
-]
-
-[[package]]
-name = "tests-microkit-passive-server-with-deferred-action-pds-server"
-version = "0.1.0"
-dependencies = [
- "sel4-microkit",
+ "sel4-test-microkit",
 ]
 
 [[package]]
