@@ -3,14 +3,14 @@ use core::error::Error;
 
 use sel4_microkit::{Channel, ChannelSet, Child, DeferredAction, Handler, MessageInfo, Never};
 
-// pub fn upcast_handler<E: Error>(impl Handler<Error = E> + 'static) -> Box<dyn Handler<Error = Box<dyn Error>> + 'static> {
+pub fn upcast_handler<E: Error>(impl Handler<Error = E> + 'static) -> Box<dyn Handler<Error = Box<dyn Error>> + 'static> {
 
-// }
+}
 
 struct DynErrorHandlerWrapper<T>(T);
 
-impl<T: Handler> Handler for DynErrorHandlerWrapper<T> {
-    type Error = T::Error;
+impl<T: Handler<Error: Error + 'static>> Handler for DynErrorHandlerWrapper<T> {
+    type Error = Box<dyn Error>;
 
     fn notified(&mut self, channels: ChannelSet) -> Result<(), Self::Error> {
         self.0.notified(channels).map_err(Into::into)
