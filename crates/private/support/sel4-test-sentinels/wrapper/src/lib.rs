@@ -100,7 +100,7 @@ pub enum WrapperResult<T> {
 }
 
 impl<T> WrapperResult<T> {
-    fn map<U>(self, f: impl FnOnce(T) -> U) -> WrapperResult<U> {
+    pub fn map<U>(self, f: impl FnOnce(T) -> U) -> WrapperResult<U> {
         match self {
             Self::Sentinel(v) => WrapperResult::Sentinel(f(v)),
             Self::Exit(c) => WrapperResult::Exit(c),
