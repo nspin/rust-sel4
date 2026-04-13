@@ -149,10 +149,12 @@ impl<'a> Runner<'a> {
             Some(SeL4TestKind::CapDL)
         } else {
             // HACK
-            if self.check_sel4_test_kind_hack("__sel4_root_task__main") {
+            if self.check_sel4_test_kind_hack1("__sel4_root_task__main") {
                 Some(SeL4TestKind::RootTask)
-            } else if self.check_sel4_test_kind("__sel4_microkit__main") {
+            } else if self.check_sel4_test_kind_hack1("__sel4_microkit__main") {
                 Some(SeL4TestKind::Microkit)
+            } else if self.check_sel4_test_kind_hack2("seL4_DebugPutChar") {
+                Some(SeL4TestKind::RootTask)
             } else {
                 None
             }
@@ -163,9 +165,15 @@ impl<'a> Runner<'a> {
         self.file.symbol_by_name(symbol).is_some()
     }
 
-    fn check_sel4_test_kind_hack(&self, symbol: &str) -> bool {
+    fn check_sel4_test_kind_hack1(&self, symbol: &str) -> bool {
         // impl happens to be same as above
         self.file.symbol_by_name(symbol).is_some()
+    }
+
+    fn check_sel4_test_kind_hack2(&self, suffix: &str) -> bool {
+        self.file.symbols().any(|symbol| {
+            symbol.name().unwrap().ends_with(suffix)
+        })
     }
 
     fn run_not_sel4(&self) -> anyhow::Result<()> {
