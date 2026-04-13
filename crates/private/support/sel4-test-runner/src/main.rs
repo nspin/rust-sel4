@@ -103,7 +103,10 @@ impl<'a> Runner<'a> {
                             .success()
                     );
                 } else {
-                    let mut cmd = Command::new(&self.cli.simulate_script);
+                    let mut cmd = Command::new("timeout");
+                    cmd.arg("-f");
+                    cmd.arg(format!("{}s", 3));
+                    cmd.arg(&self.cli.simulate_script);
                     cmd.arg(image);
                     cmd.args(self.cli.simulate_args.iter());
                     sel4_test_sentinels_wrapper::default_sentinels()
@@ -139,7 +142,8 @@ impl<'a> Runner<'a> {
         } else if self.check_sel4_test_kind("sel4_test_kind_capdl") {
             Some(SeL4TestKind::CapDL)
         } else {
-            None
+            Some(SeL4TestKind::RootTask)
+            // None
         }
     }
 
