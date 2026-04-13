@@ -18,5 +18,7 @@ fn main() -> Result<(), Error> {
     cmd.args(child_args);
     sel4_test_sentinels_wrapper::default_sentinels()
         .wrap(cmd)?
-        .success_ok()
+        .success_ok()?;
+    println!();
+    Ok(())
 }
