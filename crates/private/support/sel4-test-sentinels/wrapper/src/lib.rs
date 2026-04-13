@@ -46,7 +46,7 @@ impl<T> Observer<T> {
             }
         }
         None
-    }    
+    }
 }
 
 fn default_sentinels() -> Sentinels<bool> {
