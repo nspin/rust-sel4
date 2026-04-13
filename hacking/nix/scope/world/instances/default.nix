@@ -96,7 +96,7 @@ in rec {
     tests.root-task.default-test-harness
     tests.capdl.threads
     tests.capdl.utcover
-    # microkit.examples.hello
+    microkit.examples.hello
     microkit.examples.banscii
     microkit.examples.http-server
     microkit.tests.minimal
