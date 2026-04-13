@@ -17,8 +17,11 @@ pub struct Sentinels<T> {
 pub struct Sequence<T> {
     pub contiguous: bool,
     pub bytes: Vec<u8>,
+    pub suppress: SuppressFn,
     pub value: T,
 }
+
+type SuppressFn = Box<dyn Fn(&[u8], usize) -> bool>;
 
 struct Observer<'a, T> {
     sentinels: &'a Sentinels<T>,
@@ -34,63 +37,66 @@ impl<'a, T> Observer<'a, T> {
         }
     }
 
-    fn observe(&mut self, b: u8) -> Option<&'a T> {
-        for (sequence, i) in self.sentinels.sequences.iter().zip(self.states.iter_mut()) {
-            if b == sequence.bytes[*i] {
-                *i += 1;
-                if *i == sequence.bytes.len() {
-                    return Some(&sequence.value);
+    fn observe(&mut self, b: u8) -> (Option<&'a T>, bool) {
+        let mut suppress = false;
+        let value_opt = self
+            .sentinels
+            .sequences
+            .iter()
+            .zip(self.states.iter_mut())
+            .find_map(|(sequence, i)| {
+                if b == sequence.bytes[*i] {
+                    suppress |= (sequence.suppress)(&sequence.bytes, *i);
+                    *i += 1;
+                    if *i == sequence.bytes.len() {
+                        return Some(&sequence.value);
+                    }
+                } else if sequence.contiguous {
+                    *i = 0;
                 }
-            } else if sequence.contiguous {
-                *i = 0;
-            }
-        }
-        None
+                None
+            });
+        (value_opt, suppress)
     }
 }
 
-pub struct SentinelValueWithWhetherEchoLast<T> {
-    pub value: T,
-    pub echo_last: bool,
-}
-
-pub fn default_sentinels() -> Sentinels<SentinelValueWithWhetherEchoLast<bool>> {
+pub fn default_sentinels() -> Sentinels<bool> {
     Sentinels {
         sequences: vec![
             Sequence {
                 contiguous: false,
                 bytes: b"INDICATE_SUCCESS\n\x06".to_vec(),
-                value: SentinelValueWithWhetherEchoLast {
-                    value: true,
-                    echo_last: false,
-                },
+                suppress: Box::new(suppress_last),
+                value: true,
             },
             Sequence {
                 contiguous: false,
                 bytes: b"INDICATE_FAILURE\n\x15".to_vec(),
-                value: SentinelValueWithWhetherEchoLast {
-                    value: false,
-                    echo_last: false,
-                },
+                suppress: Box::new(suppress_last),
+                value: false,
             },
             Sequence {
                 contiguous: true,
                 bytes: b"TEST_PASS".to_vec(),
-                value: SentinelValueWithWhetherEchoLast {
-                    value: true,
-                    echo_last: true,
-                },
+                suppress: Box::new(never_suppress),
+                value: true,
             },
             Sequence {
                 contiguous: true,
                 bytes: b"TEST_FAIL".to_vec(),
-                value: SentinelValueWithWhetherEchoLast {
-                    value: false,
-                    echo_last: true,
-                },
+                suppress: Box::new(never_suppress),
+                value: false,
             },
         ],
     }
+}
+
+fn suppress_last(sequence_bytes: &[u8], i: usize) -> bool {
+    i == sequence_bytes.len() - 1
+}
+
+fn never_suppress(_sequence_bytes: &[u8], _i: usize) -> bool {
+    false
 }
 
 #[derive(Debug)]
@@ -99,16 +105,7 @@ pub enum WrapperResult<T> {
     Exit(ExitStatus),
 }
 
-impl<T> WrapperResult<T> {
-    pub fn map<U>(self, f: impl FnOnce(T) -> U) -> WrapperResult<U> {
-        match self {
-            Self::Sentinel(v) => WrapperResult::Sentinel(f(v)),
-            Self::Exit(c) => WrapperResult::Exit(c),
-        }
-    }
-}
-
-impl WrapperResult<bool> {
+impl WrapperResult<&bool> {
     pub fn success_ok(&self) -> Result<(), Error> {
         match self {
             Self::Sentinel(false) => bail!("failure via sentinel"),
@@ -123,7 +120,7 @@ impl WrapperResult<bool> {
     }
 }
 
-impl<T> Sentinels<SentinelValueWithWhetherEchoLast<T>> {
+impl<T> Sentinels<T> {
     pub fn wrap(&self, mut cmd: Command) -> Result<WrapperResult<&T>, Error> {
         let mut observer = Observer::new(self);
 
@@ -139,17 +136,17 @@ impl<T> Sentinels<SentinelValueWithWhetherEchoLast<T>> {
                 Ok(1) => {
                     let b = buf[0];
 
-                    let opt = observer.observe(b);
+                    let (value_opt, suppress) = observer.observe(b);
 
-                    if opt.map(|v| v.echo_last).unwrap_or(true) {
+                    if !suppress {
                         stdout.write_all(&buf)?;
                         stdout.flush()?;
                     }
 
-                    if let Some(v) = opt {
+                    if let Some(v) = value_opt {
                         let _ = child.kill();
                         let _ = child.wait();
-                        return Ok(WrapperResult::Sentinel(&v.value));
+                        return Ok(WrapperResult::Sentinel(v));
                     }
                 }
                 Ok(_) => unreachable!(),
