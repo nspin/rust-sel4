@@ -41,7 +41,7 @@ impl<'a, T> Observer<'a, T> {
                 if *i == sequence.bytes.len() {
                     return Some(&sequence.value);
                 }
-            } else if !sequence.contiguous {
+            } else if sequence.contiguous {
                 *i = 0;
             }
         }

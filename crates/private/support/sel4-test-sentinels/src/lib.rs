@@ -10,17 +10,14 @@
 
 use sel4_panicking_env::{debug_println, register_abort_trap};
 
-const SUCCESS: char = '\u{0006}';
-const FAILURE: char = '\u{0015}';
-
 pub fn indicate_success() -> ! {
-    debug_println!("INDICATE_SUCCESS\n{SUCCESS}\n");
+    debug_println!("INDICATE_SUCCESS\n\x06\n");
     debug_println!("sentinel fallthrough");
     core::intrinsics::abort()
 }
 
 pub fn indicate_failure() -> ! {
-    debug_println!("INDICATE_FAILURE\n{FAILURE}\n");
+    debug_println!("INDICATE_FAILURE\n\x15\n");
     debug_println!("sentinel fallthrough");
     core::intrinsics::abort()
 }
