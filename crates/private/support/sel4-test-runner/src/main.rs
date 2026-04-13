@@ -108,7 +108,6 @@ impl<'a> Runner<'a> {
                     cmd.args(self.cli.simulate_args.iter());
                     sel4_test_sentinels_wrapper::default_sentinels()
                         .wrap(cmd)?
-                        .map(|v| *v)
                         .success_ok()?;
                 }
                 Ok(())
