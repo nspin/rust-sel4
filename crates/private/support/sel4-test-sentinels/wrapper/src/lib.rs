@@ -10,6 +10,45 @@ use std::process::{Command, Stdio};
 
 use anyhow::{Error, bail};
 
+struct Sentinels<T> {
+    sequences: Vec<Sequence<T>>,
+}
+
+struct Sequence<T> {
+    contiguous: bool,
+    bytes: Vec<u8>,
+    value: T,
+}
+
+struct Observer<T> {
+    sentinels: Sentinels<T>,
+    states: Vec<usize>,
+}
+
+impl<T> Observer<T> {
+    fn new(sentinels: Sentinels<T>) -> Self {
+        let n = sentinels.sequences.len();
+        Self {
+            sentinels,
+            states: vec![0, n],
+        }
+    }
+
+    fn observe(&mut self, b: u8) -> Option<&T> {
+        for (sequence, i) in self.sentinels.sequences.iter_mut().zip(self.states.iter_mut()) {
+            if b == sequence.bytes[*i] {
+                *i += 1;
+                if *i == sequence.bytes.len() {
+                    return Some(&sequence.value)
+                }
+            } else if !sequence.contiguous {
+                *i = 0;
+            }
+        }
+        None
+    }    
+}
+
 const SUCCESS: u8 = 0x06;
 const FAILURE: u8 = 0x15;
 
