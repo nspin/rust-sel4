@@ -36,11 +36,14 @@ struct Cli {
     no_run: bool,
     #[arg(long)]
     simulate_script: PathBuf,
-    #[arg(long, short = 't', default_value = "3")]
-    timeout: u32,
+    #[arg(long, short = 't')]
+    timeout: Option<u32>,
     #[arg(last = true)]
     simulate_args: Option<String>,
 }
+
+// TODO allow specifying timeout by embedding in file
+const DEFAULT_TIMEOUT: u32 = 3;
 
 #[derive(Debug)]
 enum SeL4TestKind {
@@ -107,7 +110,7 @@ impl<'a> Runner<'a> {
                 } else {
                     let mut cmd = Command::new("timeout");
                     cmd.arg("-f");
-                    cmd.arg(format!("{}s", self.cli.timeout));
+                    cmd.arg(format!("{}s", self.cli.timeout.unwrap_or(DEFAULT_TIMEOUT)));
                     cmd.arg(&self.cli.simulate_script);
                     cmd.arg(image);
                     cmd.args(self.cli.simulate_args.iter());
