@@ -6,7 +6,7 @@
 
 use std::io;
 use std::io::{Read, Write};
-use std::process::{Command, Stdio};
+use std::process::{Command, ExitStatus, Stdio};
 
 use anyhow::{Error, bail};
 
@@ -49,22 +49,53 @@ impl<T> Observer<T> {
     }    
 }
 
-const SUCCESS: u8 = 0x06;
-const FAILURE: u8 = 0x15;
-
-// TODO make sure text has passed first
-
-#[derive(Debug)]
-pub enum SentinelsOutcome {
-    Sentinel(bool),
-    Exit(bool),
+fn default_sentinels() -> Sentinels<bool> {
+    Sentinels {
+        sequences: vec![
+            Sequence {
+                contiguous: false,
+                bytes: b"INDICATE_SUCCESS\n\x06".to_vec(),
+                value: true,
+            },
+            Sequence {
+                contiguous: false,
+                bytes: b"INDICATE_FAILURE\n\x15".to_vec(),
+                value: true,
+            },
+            Sequence {
+                contiguous: true,
+                bytes: b"TEST_PASS".to_vec(),
+                value: true,
+            },
+            Sequence {
+                contiguous: true,
+                bytes: b"TEST_FAIL".to_vec(),
+                value: true,
+            },
+        ],
+    }
 }
 
-impl SentinelsOutcome {
+#[derive(Debug)]
+pub enum WrapperResult<T> {
+    Sentinel(T),
+    Exit(ExitStatus),
+}
+
+impl<T> WrapperResult<T> {
+    fn map<U>(self, f: impl FnOnce(T) -> U) -> WrapperResult<U> {
+        match self {
+            Self::Sentinel(v) => WrapperResult::Sentinel(f(v)),
+            Self::Exit(c) => WrapperResult::Exit(c)
+        }
+    }
+}
+
+impl WrapperResult<bool> {
     pub fn success_ok(&self) -> Result<(), Error> {
         match self {
             Self::Sentinel(false) => bail!("failure via sentinel"),
-            Self::Exit(false) => bail!("failure via exit code"),
+            Self::Exit(c) if !c.success() => bail!("failure via exit code (code: {})", c.code().map(|i| i.to_string()).unwrap_or("unknown".to_owned())),
             _ => Ok(()),
         }
     }
