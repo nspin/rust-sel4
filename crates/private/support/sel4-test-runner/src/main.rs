@@ -117,6 +117,7 @@ impl<'a> Runner<'a> {
                     sel4_test_sentinels_wrapper::default_sentinels()
                         .wrap(cmd)?
                         .success_ok()?;
+                    println!();
                 }
                 Ok(())
             }
