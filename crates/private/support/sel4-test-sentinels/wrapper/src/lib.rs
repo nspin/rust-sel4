@@ -39,7 +39,7 @@ impl<'a, T> Observer<'a, T> {
             if b == sequence.bytes[*i] {
                 *i += 1;
                 if *i == sequence.bytes.len() {
-                    return Some(&sequence.value)
+                    return Some(&sequence.value);
                 }
             } else if !sequence.contiguous {
                 *i = 0;
@@ -103,7 +103,7 @@ impl<T> WrapperResult<T> {
     fn map<U>(self, f: impl FnOnce(T) -> U) -> WrapperResult<U> {
         match self {
             Self::Sentinel(v) => WrapperResult::Sentinel(f(v)),
-            Self::Exit(c) => WrapperResult::Exit(c)
+            Self::Exit(c) => WrapperResult::Exit(c),
         }
     }
 }
@@ -112,7 +112,12 @@ impl WrapperResult<bool> {
     pub fn success_ok(&self) -> Result<(), Error> {
         match self {
             Self::Sentinel(false) => bail!("failure via sentinel"),
-            Self::Exit(c) if !c.success() => bail!("failure via exit code (code: {})", c.code().map(|i| i.to_string()).unwrap_or("unknown".to_owned())),
+            Self::Exit(c) if !c.success() => bail!(
+                "failure via exit code (code: {})",
+                c.code()
+                    .map(|i| i.to_string())
+                    .unwrap_or("unknown".to_owned())
+            ),
             _ => Ok(()),
         }
     }
