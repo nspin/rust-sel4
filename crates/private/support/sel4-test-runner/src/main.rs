@@ -30,12 +30,14 @@ struct Cli {
     microkit_board: Option<String>,
     #[arg(long)]
     microkit_config: Option<String>,
-    #[arg(short, long)]
+    #[arg(long, short = 'i')]
     interactive: bool,
     #[arg(long)]
     no_run: bool,
     #[arg(long)]
     simulate_script: PathBuf,
+    #[arg(long, short = 't', default_value = "3")]
+    timeout: u32,
     #[arg(last = true)]
     simulate_args: Option<String>,
 }
@@ -105,7 +107,7 @@ impl<'a> Runner<'a> {
                 } else {
                     let mut cmd = Command::new("timeout");
                     cmd.arg("-f");
-                    cmd.arg(format!("{}s", 3));
+                    cmd.arg(format!("{}s", self.cli.timeout));
                     cmd.arg(&self.cli.simulate_script);
                     cmd.arg(image);
                     cmd.args(self.cli.simulate_args.iter());
