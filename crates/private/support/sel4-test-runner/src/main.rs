@@ -106,7 +106,7 @@ impl<'a> Runner<'a> {
                     let mut cmd = Command::new(&self.cli.simulate_script);
                     cmd.arg(image);
                     cmd.args(self.cli.simulate_args.iter());
-                    sel4_test_sentinels_wrapper::run(cmd)?.success_ok()?;
+                    default_sentinels().wrap(cmd)?.map(|v| *v).success_ok()
                 }
                 Ok(())
             }
