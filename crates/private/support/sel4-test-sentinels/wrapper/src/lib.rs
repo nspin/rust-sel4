@@ -15,8 +15,8 @@ pub struct Sentinels<T> {
 }
 
 pub struct Sequence<T> {
-    pub contiguous: bool,
     pub bytes: Vec<u8>,
+    pub contiguous: bool,
     pub suppress: SuppressFn,
     pub value: T,
 }
@@ -33,7 +33,7 @@ impl<'a, T> Observer<'a, T> {
         let n = sentinels.sequences.len();
         Self {
             sentinels,
-            states: vec![0, n],
+            states: vec![0; n],
         }
     }
 
@@ -64,26 +64,26 @@ pub fn default_sentinels() -> Sentinels<bool> {
     Sentinels {
         sequences: vec![
             Sequence {
-                contiguous: false,
                 bytes: b"INDICATE_SUCCESS\n\x06".to_vec(),
+                contiguous: false,
                 suppress: Box::new(suppress_last),
                 value: true,
             },
             Sequence {
-                contiguous: false,
                 bytes: b"INDICATE_FAILURE\n\x15".to_vec(),
+                contiguous: false,
                 suppress: Box::new(suppress_last),
                 value: false,
             },
             Sequence {
-                contiguous: true,
                 bytes: b"TEST_PASS".to_vec(),
+                contiguous: true,
                 suppress: Box::new(never_suppress),
                 value: true,
             },
             Sequence {
-                contiguous: true,
                 bytes: b"TEST_FAIL".to_vec(),
+                contiguous: true,
                 suppress: Box::new(never_suppress),
                 value: false,
             },
