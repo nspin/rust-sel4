@@ -108,7 +108,7 @@ in rec {
     examples.root-task.example-root-task-without-runtime
     examples.root-task.spawn-thread
     # examples.root-task.spawn-task
-    # examples.root-task.serial-device
+    examples.root-task.serial-device
 
     # tests.root-task.ring
   ];
