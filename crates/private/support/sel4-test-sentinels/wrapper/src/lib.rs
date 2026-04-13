@@ -64,13 +64,13 @@ pub fn default_sentinels() -> Sentinels<bool> {
     Sentinels {
         sequences: vec![
             Sequence {
-                bytes: b"INDICATE_SUCCESS\n\x06".to_vec(),
+                bytes: b"INDICATE_SUCCESS\x06".to_vec(),
                 contiguous: false,
                 suppress: Box::new(suppress_last),
                 value: true,
             },
             Sequence {
-                bytes: b"INDICATE_FAILURE\n\x15".to_vec(),
+                bytes: b"INDICATE_FAILURE\x15".to_vec(),
                 contiguous: false,
                 suppress: Box::new(suppress_last),
                 value: false,
