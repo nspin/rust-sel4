@@ -97,8 +97,8 @@ in rec {
     tests.capdl.threads
     tests.capdl.utcover
     # microkit.examples.hello
-    # microkit.examples.banscii
-    # microkit.examples.http-server
+    microkit.examples.banscii
+    microkit.examples.http-server
     microkit.tests.minimal
     microkit.tests.passive-server-with-deferred-action
     microkit.tests.reset

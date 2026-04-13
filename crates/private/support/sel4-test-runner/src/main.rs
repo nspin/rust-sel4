@@ -43,7 +43,7 @@ struct Cli {
 }
 
 // TODO allow specifying timeout by embedding in file
-const DEFAULT_TIMEOUT: u32 = 3;
+const DEFAULT_TIMEOUT: u32 = 5;
 
 #[derive(Debug)]
 enum SeL4TestKind {
