@@ -171,9 +171,9 @@ impl<'a> Runner<'a> {
     }
 
     fn check_sel4_test_kind_hack2(&self, suffix: &str) -> bool {
-        self.file.symbols().any(|symbol| {
-            symbol.name().unwrap().ends_with(suffix)
-        })
+        self.file
+            .symbols()
+            .any(|symbol| symbol.name().unwrap().ends_with(suffix))
     }
 
     fn run_not_sel4(&self) -> anyhow::Result<()> {
