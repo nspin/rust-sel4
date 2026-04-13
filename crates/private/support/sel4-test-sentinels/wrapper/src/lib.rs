@@ -10,14 +10,14 @@ use std::process::{Command, ExitStatus, Stdio};
 
 use anyhow::{Error, bail};
 
-struct Sentinels<T> {
-    sequences: Vec<Sequence<T>>,
+pub struct Sentinels<T> {
+    pub sequences: Vec<Sequence<T>>,
 }
 
-struct Sequence<T> {
-    contiguous: bool,
-    bytes: Vec<u8>,
-    value: T,
+pub struct Sequence<T> {
+    pub contiguous: bool,
+    pub bytes: Vec<u8>,
+    pub value: T,
 }
 
 struct Observer<T> {
@@ -49,7 +49,7 @@ impl<T> Observer<T> {
     }
 }
 
-fn default_sentinels() -> Sentinels<bool> {
+pub fn default_sentinels() -> Sentinels<bool> {
     Sentinels {
         sequences: vec![
             Sequence {
@@ -101,45 +101,47 @@ impl WrapperResult<bool> {
     }
 }
 
-pub fn run(mut cmd: Command) -> Result<SentinelsOutcome, Error> {
-    let mut child = cmd.stdin(Stdio::null()).stdout(Stdio::piped()).spawn()?;
+impl<T> Sentinels<T> {
+    pub fn wrap(&self, mut cmd: Command) -> Result<WrapperResult<&T>, Error> {
+        let mut child = cmd.stdin(Stdio::null()).stdout(Stdio::piped()).spawn()?;
 
-    let mut child_stdout = child.stdout.take().unwrap();
+        let mut child_stdout = child.stdout.take().unwrap();
 
-    let mut stdout = io::stdout().lock();
+        let mut stdout = io::stdout().lock();
 
-    loop {
-        let mut buf = [0u8; 1];
+        loop {
+            let mut buf = [0u8; 1];
 
-        match child_stdout.read(&mut buf) {
-            Ok(0) => break,
-            Ok(1) => {
-                let b = buf[0];
+            match child_stdout.read(&mut buf) {
+                Ok(0) => break,
+                Ok(1) => {
+                    let b = buf[0];
 
-                let exit_code_opt = if b == SUCCESS {
-                    Some(true)
-                } else if b == FAILURE {
-                    Some(false)
-                } else {
-                    stdout.write_all(&buf)?;
-                    stdout.flush()?;
-                    None
-                };
+                    let exit_code_opt = if b == SUCCESS {
+                        Some(true)
+                    } else if b == FAILURE {
+                        Some(false)
+                    } else {
+                        stdout.write_all(&buf)?;
+                        stdout.flush()?;
+                        None
+                    };
 
-                if let Some(success) = exit_code_opt {
+                    if let Some(success) = exit_code_opt {
+                        let _ = child.kill();
+                        let _ = child.wait();
+                        return Ok(SentinelsOutcome::Sentinel(success));
+                    }
+                }
+                Ok(_) => unreachable!(),
+                Err(e) => {
                     let _ = child.kill();
                     let _ = child.wait();
-                    return Ok(SentinelsOutcome::Sentinel(success));
+                    return Err(e.into());
                 }
             }
-            Ok(_) => unreachable!(),
-            Err(e) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                return Err(e.into());
-            }
         }
-    }
 
-    Ok(SentinelsOutcome::Exit(child.wait()?.success()))
+        Ok(SentinelsOutcome::Exit(child.wait()?.success()))
+    }
 }
