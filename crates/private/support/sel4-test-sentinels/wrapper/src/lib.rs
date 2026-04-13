@@ -20,13 +20,13 @@ pub struct Sequence<T> {
     pub value: T,
 }
 
-struct Observer<T> {
-    sentinels: Sentinels<T>,
+struct Observer<'a, T> {
+    sentinels: &'a Sentinels<T>,
     states: Vec<usize>,
 }
 
-impl<T> Observer<T> {
-    fn new(sentinels: Sentinels<T>) -> Self {
+impl<'a, T> Observer<'a, T> {
+    fn new(sentinels: &'a Sentinels<T>) -> Self {
         let n = sentinels.sequences.len();
         Self {
             sentinels,
@@ -34,8 +34,8 @@ impl<T> Observer<T> {
         }
     }
 
-    fn observe(&mut self, b: u8) -> Option<&T> {
-        for (sequence, i) in self.sentinels.sequences.iter_mut().zip(self.states.iter_mut()) {
+    fn observe(&mut self, b: u8) -> Option<&'a T> {
+        for (sequence, i) in self.sentinels.sequences.iter().zip(self.states.iter_mut()) {
             if b == sequence.bytes[*i] {
                 *i += 1;
                 if *i == sequence.bytes.len() {
@@ -49,28 +49,45 @@ impl<T> Observer<T> {
     }
 }
 
-pub fn default_sentinels() -> Sentinels<bool> {
+pub struct SentinelValueWithWhetherEchoLast<T> {
+    pub value: T,
+    pub echo_last: bool,
+}
+
+pub fn default_sentinels() -> Sentinels<SentinelValueWithWhetherEchoLast<bool>> {
     Sentinels {
         sequences: vec![
             Sequence {
                 contiguous: false,
                 bytes: b"INDICATE_SUCCESS\n\x06".to_vec(),
-                value: true,
+                value: SentinelValueWithWhetherEchoLast {
+                    value: true,
+                    echo_last: false,
+                },
             },
             Sequence {
                 contiguous: false,
                 bytes: b"INDICATE_FAILURE\n\x15".to_vec(),
-                value: true,
+                value: SentinelValueWithWhetherEchoLast {
+                    value: false,
+                    echo_last: false,
+                },
             },
             Sequence {
                 contiguous: true,
                 bytes: b"TEST_PASS".to_vec(),
-                value: true,
+                value: SentinelValueWithWhetherEchoLast {
+                    value: true,
+                    echo_last: true,
+                },
             },
             Sequence {
                 contiguous: true,
                 bytes: b"TEST_FAIL".to_vec(),
-                value: true,
+                value: SentinelValueWithWhetherEchoLast {
+                    value: false,
+                    echo_last: true,
+                },
             },
         ],
     }
@@ -101,12 +118,12 @@ impl WrapperResult<bool> {
     }
 }
 
-impl<T> Sentinels<T> {
+impl<T> Sentinels<SentinelValueWithWhetherEchoLast<T>> {
     pub fn wrap(&self, mut cmd: Command) -> Result<WrapperResult<&T>, Error> {
+        let mut observer = Observer::new(self);
+
         let mut child = cmd.stdin(Stdio::null()).stdout(Stdio::piped()).spawn()?;
-
         let mut child_stdout = child.stdout.take().unwrap();
-
         let mut stdout = io::stdout().lock();
 
         loop {
@@ -117,20 +134,17 @@ impl<T> Sentinels<T> {
                 Ok(1) => {
                     let b = buf[0];
 
-                    let exit_code_opt = if b == SUCCESS {
-                        Some(true)
-                    } else if b == FAILURE {
-                        Some(false)
-                    } else {
+                    let opt = observer.observe(b);
+
+                    if opt.map(|v| v.echo_last).unwrap_or(true) {
                         stdout.write_all(&buf)?;
                         stdout.flush()?;
-                        None
-                    };
+                    }
 
-                    if let Some(success) = exit_code_opt {
+                    if let Some(v) = opt {
                         let _ = child.kill();
                         let _ = child.wait();
-                        return Ok(SentinelsOutcome::Sentinel(success));
+                        return Ok(WrapperResult::Sentinel(&v.value));
                     }
                 }
                 Ok(_) => unreachable!(),
@@ -142,6 +156,6 @@ impl<T> Sentinels<T> {
             }
         }
 
-        Ok(SentinelsOutcome::Exit(child.wait()?.success()))
+        Ok(WrapperResult::Exit(child.wait()?))
     }
 }
