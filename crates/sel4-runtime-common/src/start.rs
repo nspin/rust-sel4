@@ -7,31 +7,6 @@
 use core::arch::global_asm;
 
 #[macro_export]
-macro_rules! declare_rust_entrypoint {
-    {
-        $f:ident($( $i:ident: $t:ty ),* $(,)?)
-    } => {
-        $crate::declare_entrypoint! {
-            $f($($i: $t,)*)
-            global_init if true
-        }
-    };
-    {
-        $f:ident($( $i:ident: $t:ty ),* $(,)?)
-        global_init if $global_init_cond:expr
-    } => {
-        const _: () = {
-            #[unsafe(no_mangle)]
-            unsafe extern "C" fn __sel4_runtime_common__rust_entrypoint($($i: $t,)*) -> ! {
-                $crate::_private::_run_entrypoint($global_init_cond, || {
-                    $f($($i,)*)
-                });
-            }
-        };
-    };
-};
-
-#[macro_export]
 macro_rules! declare_entrypoint {
     () => {
         $crate::_private::global_asm! {
