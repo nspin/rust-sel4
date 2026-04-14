@@ -47,9 +47,7 @@ impl Regions<'_> {
 
 // // //
 
-// TODO inflated because impl doesn't save sp
-const STACK_SIZE: usize = 1024;
-// const STACK_SIZE: usize = 16 * 1024;
+const STACK_SIZE: usize = 4096;
 
 #[unsafe(link_section = ".persistent")]
 static STACK: Stack<STACK_SIZE> = Stack::new();
@@ -166,5 +164,3 @@ global_asm! {
             jmp _start
     "#,
 }
-
-// TODO save important part of initial reg file before anything else if first reset
