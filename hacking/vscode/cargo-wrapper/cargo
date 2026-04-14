@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+declare -a args
+declare -i seen_check_command=0
+
+args+=("--config" "/home/x/i/rust-sel4/.cargo/config.toml")
+# args+=("--config" "/home/x/i/rust-sel4/.cargo/gen/target/aarch64-sel4-microkit.toml")
+# args+=("--config" "/home/x/i/rust-sel4/.cargo/gen/world/aarch64.microkitDefault.toml")
+
+for arg in "$@"; do
+    args+=("$arg")
+    case "$arg" in
+        check|clippy)
+            (( seen_check_command+= 1 ))
+            ;;
+        --workspace)
+            if [[ $seen_check_command -eq 1 ]]; then
+                readarray -t excludes < $__RUST_ANALYZER_WRAPPER__EXCLUDES
+                for exclude in "${excludes[@]}"; do
+                    args+=("--exclude" "$exclude")
+                done
+            fi
+            ;;
+    esac
+done
+
+# echo "cargo $*" >> "$__RUST_ANALYZER_WRAPPER__LOG"
+# echo "cargo ${args[*]}" >> "$__RUST_ANALYZER_WRAPPER__LOG"
+
+exec "$__RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED" "${args[@]}"
