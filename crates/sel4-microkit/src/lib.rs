@@ -112,7 +112,9 @@ macro_rules! declare_protection_domain {
 pub mod _private {
     pub use crate::heap::_private as heap;
 
-    pub use sel4_runtime_common::{declare_stack, declare_entrypoint, declare_entrypoint_with_stack_init};
+    pub use sel4_runtime_common::{
+        declare_entrypoint, declare_entrypoint_with_stack_init, declare_stack,
+    };
 
     pub use crate::{declare_heap, declare_init, declare_protection_domain, entry::run_main};
 }
