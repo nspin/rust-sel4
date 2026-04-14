@@ -1,0 +1,18 @@
+#
+# Copyright 2024, Colias Group, LLC
+#
+# SPDX-License-Identifier: BSD-2-Clause
+#
+
+[package]
+name = "manage-vscode-exclude-list"
+version = "0.1.0"
+authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
+edition = "2024"
+license = "BSD-2-Clause"
+
+[dependencies]
+anyhow = "1.0.75"
+cargo_metadata = "0.18.1"
+clap = { version = "4.4.6", features = [ "derive" ] }
+similar = "2.3"
