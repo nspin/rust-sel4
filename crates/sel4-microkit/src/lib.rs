@@ -101,7 +101,7 @@ macro_rules! declare_protection_domain {
     } => {
         $crate::_private::declare_heap!($heap_size);
         $crate::_private::declare_protection_domain! {
-            main = $main,
+            init = $init,
             $(stack_size = $stack_size,)?
         }
     };
