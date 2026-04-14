@@ -87,6 +87,13 @@ macro_rules! declare_protection_domain {
     };
     {
         init = $init:expr,
+        stack_size = $stack_size:expr $(,)?
+    } => {
+        $crate::_private::declare_main!($main);
+        $crate::_private::declare_stack!($stack_size);
+    };
+    {
+        init = $init:expr,
         heap_size = $heap_size:expr $(,)?
     } => {
         $crate::_private::declare_init!($init);
