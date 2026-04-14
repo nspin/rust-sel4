@@ -124,7 +124,7 @@ macro_rules! declare_rust_entrypoint {
             }
         };
     };
-};
+}
 
 #[doc(hidden)]
 pub mod _private {
