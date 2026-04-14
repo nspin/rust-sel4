@@ -12,7 +12,7 @@ use core::slice;
 
 use sel4_stack::{Stack, StackBottom};
 
-#[cfg(not(any(target_arch = "aarch64",)))]
+#[cfg(not(any(target_arch = "aarch64", target_arch = "x86_64")))]
 compile_error!("unsupported architecture");
 
 // // //
@@ -89,6 +89,16 @@ macro_rules! rodata {
             r#"
                 .section .rodata
                 .global {ident}
+            "#,
+            #[cfg(target_pointer_width = "64")]
+            r#"
+                .p2align 8
+            "#,
+            #[cfg(target_pointer_width = "32")]
+            r#"
+                .p2align 4
+            "#,
+            r#"
                 {ident}:
             "#,
             #[cfg(target_pointer_width = "64")]
@@ -97,7 +107,7 @@ macro_rules! rodata {
             "#,
             #[cfg(target_pointer_width = "32")]
             r#"
-                    .word 0
+                    .dword 0
             "#,
             r#"
                 .size {ident}, .-{ident}
@@ -143,7 +153,14 @@ global_asm! {
             mov sp, x9
             bl __sel4_reset__reset_memory
             b _start
-
-        1:  b 1b
+    "#,
+    #[cfg(target_arch = "x86_64")]
+    r#"
+            mov rsp, __sel4_reset__stack_bottom
+            mov rbp, rsp
+            sub rsp, 0x8 // Stack must be 16-byte aligned before call
+            push rbp
+            call __sel4_reset__reset_memory
+            jmp _start
     "#,
 }
