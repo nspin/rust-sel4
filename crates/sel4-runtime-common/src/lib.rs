@@ -106,7 +106,7 @@ macro_rules! declare_rust_entrypoint {
     {
         $f:ident($( $i:ident: $t:ty ),* $(,)?)
     } => {
-        $crate::declare_entrypoint! {
+        $crate::declare_rust_entrypoint! {
             $f($($i: $t,)*)
             global_init if true
         }
