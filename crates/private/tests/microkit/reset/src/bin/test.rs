@@ -24,7 +24,6 @@ static mut PERSISTENT: usize = INIT;
 static mut RESET_COUNT: usize = 0;
 
 #[protection_domain(stack_size = 16 * 1024)]
-// #[protection_domain]
 fn init() -> NullHandler {
     unsafe {
         debug_println!("NOT_PERSISTENT: {NOT_PERSISTENT}");
