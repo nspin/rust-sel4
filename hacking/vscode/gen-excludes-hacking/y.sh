@@ -17,11 +17,14 @@ here="$(dirname $0)"
 cargo tree --workspace \
     --invert sel4-config-data \
     --invert sel4-test-harness \
-    --invert sel4-reset \
     --invert tests-root-task-dafny-core \
+    --invert lionsos-sys \
+    --invert sddf-sys \
+    --invert sel4-newlib \
     --prefix none --format '{p}' \
 | cut -d ' ' -f 1 \
 | sort -u \
+| grep . \
 > $here/../excludes.txt
 
 
