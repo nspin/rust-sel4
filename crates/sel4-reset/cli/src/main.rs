@@ -74,7 +74,6 @@ where
                 let relevant_persistent_ranges = RangeSet::from_iter(
                     persistent_ranges.intersection(&RangeSet::from_iter([segment_range.clone()])),
                 );
-                eprintln!("XXX {vaddr:x} {memsz:x}");
                 for ephermal in relevant_persistent_ranges.gaps(&segment_range) {
                     let region_memsz = ephermal.end - ephermal.start;
                     let region_offset_in_segment = ephermal.start - vaddr;
