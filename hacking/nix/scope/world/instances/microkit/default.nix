@@ -155,7 +155,6 @@ in {
             rootCrate = crates.tests-microkit-reset;
             targetTriple = mkSeL4RustTargetTriple {
               microkit = true;
-              resettable = true;
               minimal = false;
             };
             release = false;
