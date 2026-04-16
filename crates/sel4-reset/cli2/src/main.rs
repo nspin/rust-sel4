@@ -13,7 +13,7 @@ use clap::Parser;
 
 use anyhow::{Error, ensure};
 use num::{NumCast, ToPrimitive};
-use object::elf::{FileHeader32, FileHeader64, PT_PHDR, ProgramHeader32, ProgramHeader64};
+use object::elf::{FileHeader32, FileHeader64, PF_R, PT_PHDR, ProgramHeader32, ProgramHeader64};
 use object::elf::{PF_W, PT_LOAD};
 use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
 use object::{Endian, File, Object, ObjectSegment, ObjectSymbol, U32, U64, pod};
@@ -153,6 +153,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         data_align: u64,
         data: &[u8],
     ) -> T::ProgramHeader {
+        assert!(data_align <= p_align);
         self.align_data_cursor(data_align);
         let p_offset = self.data.len().try_into().unwrap();
         let p_filesz = data.len().try_into().unwrap();
@@ -167,20 +168,6 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             p_memsz,
             p_align,
         })
-    }
-
-    fn add_blank_segment(
-        &mut self,
-        p_type: u32,
-        p_flags: u32,
-        p_memsz: u64,
-        p_align: u64,
-        data_align: u64,
-        data_size: usize,
-    ) -> (T::ProgramHeader, &mut [u8]) {
-        let data = vec![0; data_size];
-        let phdr = self.add_segment(p_type, p_flags, p_memsz, p_align, data_align, &data);
-        (phdr, self.segment_data(&phdr))
     }
 
     fn add_segment_raw(&mut self, mut phdr: GenericProgramHeader) -> T::ProgramHeader {
@@ -241,12 +228,23 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     }
 
     fn add_all_phdrs(&mut self) -> T::ProgramHeader {
-        let align = align_of::<T::ProgramHeader>().try_into().unwrap();
-        self.align_data_cursor(align);
-        let offset = self.data.len();
-        let vaddr = self.next_aligned_vaddr(align.try_into().unwrap());
-        let eventual_n = self.phdrs.len() + 1;
-        let size = eventual_n * size_of::<T::ProgramHeader>();
+        let phdr = {
+            let data_align = align_of::<T::ProgramHeader>().try_into().unwrap();
+            let eventual_n = self.phdrs.len() + 1;
+            let data_size = eventual_n * size_of::<T::ProgramHeader>();
+            self.add_segment(
+                PT_LOAD,
+                PF_R,
+                data_size.try_into().unwrap(),
+                data_align,
+                data_align,
+                &vec![0; data_size],
+            )
+        };
+        self.phdrs.push(phdr);
+        self.data[phdr.p_offset(self.endian()).to_usize().unwrap()..]
+            [..phdr.p_filesz(self.endian()).to_usize().unwrap()]
+            .copy_from_slice(pod::bytes_of_slice(&self.phdrs));
         // let phdr_common = GenericProgramHeader {
         //     p_type: 0,
         //     p_flags: (),
