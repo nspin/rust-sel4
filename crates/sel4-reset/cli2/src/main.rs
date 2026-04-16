@@ -134,11 +134,11 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         &mut self.data[offset..][..filesz]
     }
 
-    fn add_segment(&mut self, p_type: u32, p_flags: u32, p_memsz: u64, p_align: u64, segment_data: &[u8]) -> T::ProgramHeader {
-        self.align_data_cursor(p_align);
+    fn add_segment(&mut self, p_type: u32, p_flags: u32, p_memsz: u64, p_align: u64, data: &[u8], data_align: u64) -> T::ProgramHeader {
+        self.align_data_cursor(data_align);
         let p_offset = self.data.len().try_into().unwrap();
-        let p_filesz = segment_data.len().try_into().unwrap();
-        self.data.extend_from_slice(segment_data);
+        let p_filesz = data.len().try_into().unwrap();
+        self.data.extend_from_slice(data);
         self.add_segment_raw(GenericProgramHeader {
             p_type,
             p_flags,
