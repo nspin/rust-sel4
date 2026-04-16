@@ -358,7 +358,6 @@ impl<E: Endian> PatchPhoff for FileHeader64<E> {
         self.e_phoff.set(self.endian().unwrap(), e_phoff);
         self.e_phnum
             .set(self.endian().unwrap(), e_phnum.try_into().unwrap());
-        // self.e_phentsize.set(self.endian().unwrap(), (e_phnum * size_of::<Self::ProgramHeader>()).try_into().unwrap());
     }
 
     fn convert_phdr(endian: Self::Endian, generic: &GenericProgramHeader) -> Self::ProgramHeader {
