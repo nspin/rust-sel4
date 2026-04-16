@@ -4,13 +4,15 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fs;
+use std::fmt;
+use std::ops::Range;
 use std::path::{Path, PathBuf};
+use std::{any, fs};
 
 use clap::Parser;
 
 use anyhow::{Error, ensure};
-use num::NumCast;
+use num::{NumCast, ToPrimitive};
 use object::elf::{PF_W, PT_LOAD};
 use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
 use object::{Endian, File, Object, ObjectSegment, ObjectSymbol};
@@ -56,7 +58,7 @@ where
 struct X<'a, T: FileHeader> {
     orig_elf: &'a ElfFile<'a, T>,
     data: Vec<u8>,
-    region_meta: Vec<RegionMeta<T>>,
+    regions: Vec<RegionMeta<T>>,
     new_phdrs: Vec<T::ProgramHeader>,
 }
 
@@ -97,7 +99,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue>> X<'a, T> {
         Self {
             orig_elf,
             data: orig_elf.data().to_vec(),
-            region_meta: vec![],
+            regions: vec![],
             new_phdrs: vec![],
         }
     }
@@ -108,6 +110,25 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue>> X<'a, T> {
 
     fn size(&self) -> usize {
         self.data.len()
+    }
+
+    fn all_phdrs(&self) -> impl Iterator<Item = &T::ProgramHeader> {
+        self.orig_elf
+            .elf_program_headers()
+            .iter()
+            .chain(self.new_phdrs.iter())
+    }
+
+    fn footprint(&self) -> Option<Range<u64>> {
+        let start = self
+            .all_phdrs()
+            .map(|phdr| phdr.p_vaddr(self.endian()).into())
+            .min()?;
+        let end = self
+            .all_phdrs()
+            .map(|phdr| phdr.p_vaddr(self.endian()).into() + phdr.p_memsz(self.endian()).into())
+            .max()?;
+        Some(start..end)
     }
 
     fn align(&mut self, align: usize) {
@@ -141,7 +162,29 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue>> X<'a, T> {
             .copy_from_slice(&value_bytes);
     }
 
-    fn finalize(self) -> Vec<u8> {
-        todo!()
+    pub fn patch_word_with_cast(
+        &mut self,
+        symbol_name: &str,
+        value: impl ToPrimitive + fmt::Debug + Copy,
+    ) where
+        T::Word: PatchValue + NumCast,
+    {
+        self.patch_word(
+            symbol_name,
+            <T::Word as NumCast>::from(value).unwrap_or_else(|| {
+                panic!(
+                    "value {:#x?} out of bounds for word type {}",
+                    value,
+                    any::type_name::<T::Word>()
+                )
+            }),
+        )
+    }
+
+    fn finalize(mut self) -> Vec<u8> {
+        self.align(align_of::<T::Word>());
+        // self.patch_word_with_cast("sel4_reset_regions_meta_vaddr", todo!());
+        self.patch_word_with_cast("sel4_reset_regions_meta_count", self.regions.len());
+        self.data
     }
 }
