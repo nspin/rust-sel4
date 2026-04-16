@@ -230,6 +230,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             let data_align = align_of::<T::ProgramHeader>().try_into().unwrap();
             let eventual_n = self.phdrs.len() + 1;
             let data_size = eventual_n * size_of::<T::ProgramHeader>();
+            eprintln!("data_size {data_size:?}");
             self.add_segment(
                 PT_LOAD,
                 PF_R,
@@ -239,7 +240,6 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
                 &vec![0; data_size],
             )
         };
-        self.phdrs.push(phdrs_load_phdr);
         for phdr in self.phdrs.iter_mut() {
             if phdr.p_type(endian) == PT_PHDR {
                 *phdr = phdrs_load_phdr;
@@ -247,6 +247,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             }
         }
         {
+            assert_eq!(size_of::<T::ProgramHeader>() * self.phdrs.len(), phdrs_load_phdr.p_filesz(endian).to_usize().unwrap());
             let offset = phdrs_load_phdr.p_offset(endian).to_usize().unwrap();
             let filesz = phdrs_load_phdr.p_filesz(endian).to_usize().unwrap();
             self.data[offset..][..filesz].copy_from_slice(pod::bytes_of_slice(&self.phdrs));
@@ -306,7 +307,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         let endian = self.endian();
         let all_phdrs_phdr = self.add_all_phdrs();
         let (ehdr, _) = pod::from_bytes_mut::<T>(&mut self.data).unwrap();
-        ehdr.patch_phoff(all_phdrs_phdr.p_offset(endian));
+        ehdr.patch_header(all_phdrs_phdr.p_offset(endian), self.phdrs.len());
         self.data
     }
 }
@@ -324,14 +325,16 @@ pub struct GenericProgramHeader {
 }
 
 trait PatchPhoff: FileHeader {
-    fn patch_phoff(&mut self, phoff: Self::Word);
+    fn patch_header(&mut self, e_phoff: Self::Word, e_phnum: usize);
     fn convert_phdr(endian: Self::Endian, generic: &GenericProgramHeader) -> Self::ProgramHeader;
     fn set_p_type(phdr: &mut Self::ProgramHeader, endian: Self::Endian, p_type: u32);
 }
 
 impl<E: Endian> PatchPhoff for FileHeader32<E> {
-    fn patch_phoff(&mut self, phoff: Self::Word) {
-        self.e_phoff.set(self.endian().unwrap(), phoff);
+    fn patch_header(&mut self, e_phoff: Self::Word, e_phnum: usize) {
+        self.e_phoff.set(self.endian().unwrap(), e_phoff);
+        self.e_phnum.set(self.endian().unwrap(), e_phnum.try_into().unwrap());
+        self.e_phnum.set(self.endian().unwrap(), (e_phnum * size_of::<Self::ProgramHeader>()).try_into().unwrap());
     }
 
     fn convert_phdr(endian: Self::Endian, generic: &GenericProgramHeader) -> Self::ProgramHeader {
@@ -353,8 +356,10 @@ impl<E: Endian> PatchPhoff for FileHeader32<E> {
 }
 
 impl<E: Endian> PatchPhoff for FileHeader64<E> {
-    fn patch_phoff(&mut self, phoff: Self::Word) {
-        self.e_phoff.set(self.endian().unwrap(), phoff);
+    fn patch_header(&mut self, e_phoff: Self::Word, e_phnum: usize) {
+        self.e_phoff.set(self.endian().unwrap(), e_phoff);
+        self.e_phnum.set(self.endian().unwrap(), e_phnum.try_into().unwrap());
+        // self.e_phentsize.set(self.endian().unwrap(), (e_phnum * size_of::<Self::ProgramHeader>()).try_into().unwrap());
     }
 
     fn convert_phdr(endian: Self::Endian, generic: &GenericProgramHeader) -> Self::ProgramHeader {
