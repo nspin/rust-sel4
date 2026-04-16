@@ -119,6 +119,14 @@ let
 
         dontFixup = true;
 
+        # TODO HACK
+        postPatch = ''
+          substituteInPlace build_sdk.py \
+            --replace \
+              'cargo build --release --locked --target' \
+              'cargo build --locked --target'
+        '';
+
         configurePhase = ''
           cat ${vendored}/.cargo/config.toml >> .cargo/config.toml
         '';
