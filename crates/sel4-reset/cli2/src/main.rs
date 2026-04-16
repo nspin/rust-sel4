@@ -169,6 +169,20 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         })
     }
 
+    fn add_blank_segment(
+        &mut self,
+        p_type: u32,
+        p_flags: u32,
+        p_memsz: u64,
+        p_align: u64,
+        data_align: u64,
+        data_size: usize,
+    ) -> (T::ProgramHeader, &mut [u8]) {
+        let data = vec![0; data_size];
+        let phdr = self.add_segment(p_type, p_flags, p_memsz, p_align, data_align, &data);
+        (phdr, self.segment_data(&phdr))
+    }
+
     fn add_segment_raw(&mut self, mut phdr: GenericProgramHeader) -> T::ProgramHeader {
         let p_vaddr = self.next_aligned_vaddr(phdr.p_align) + phdr.p_offset % phdr.p_align;
         phdr.p_vaddr = p_vaddr;
