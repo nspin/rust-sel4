@@ -134,23 +134,29 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         &mut self.data[offset..][..filesz]
     }
 
-    fn add_segment(&mut self, p_type: u32, p_flags: u32, p_align: u64, p_memsz: u64, segment_data: &[u8]) -> T::ProgramHeader {
-        let endian = self.endian();
+    fn add_segment(&mut self, p_type: u32, p_flags: u32, p_memsz: u64, p_align: u64, segment_data: &[u8]) -> T::ProgramHeader {
         self.align_data_cursor(p_align);
         let p_offset = self.data.len().try_into().unwrap();
+        let p_filesz = segment_data.len().try_into().unwrap();
         self.data.extend_from_slice(segment_data);
-        let p_vaddr = self
-            .next_aligned_vaddr(p_align);
-        let phdr = T::convert_phdr(endian, &GenericProgramHeader {
+        self.add_segment_raw(GenericProgramHeader {
             p_type,
             p_flags,
             p_offset,
-            p_vaddr,
-            p_paddr: p_vaddr,
-            p_filesz: segment_data.len().try_into().unwrap(),
+            p_vaddr: 0,
+            p_paddr: 0,
+            p_filesz,
             p_memsz,
             p_align,
-        });
+        })
+    }
+
+    fn add_segment_raw(&mut self, mut phdr: GenericProgramHeader) -> T::ProgramHeader {
+        let p_vaddr = self
+            .next_aligned_vaddr(phdr.p_align) + phdr.p_offset % phdr.p_align;
+        phdr.p_vaddr = p_vaddr;
+        phdr.p_paddr = p_vaddr;
+        let phdr = T::convert_phdr(self.endian(), &phdr);
         self.phdrs.push(phdr);
         phdr
     }
