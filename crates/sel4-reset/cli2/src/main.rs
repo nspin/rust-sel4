@@ -123,7 +123,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         Some(start..end)
     }
 
-    pub fn next_aligned_vaddr(&self, align: u64) -> u64 {
+    fn next_aligned_vaddr(&self, align: u64) -> u64 {
         self.footprint()
             .map(|footprint| footprint.end)
             .unwrap_or(0)
