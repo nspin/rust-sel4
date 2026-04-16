@@ -249,7 +249,6 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     }
 
     fn add_regions(&mut self) {
-        eprintln!("X1 0x{:x?}", self.data.len());
         let endian = self.endian();
         let mut regions: Vec<RegionMeta<T>> = vec![];
         for phdr in self.orig_elf.elf_program_headers() {
@@ -289,7 +288,6 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             align_of::<RegionMeta<T>>().try_into().unwrap(),
             &regions_meta_data,
         );
-        eprintln!("X2 0x{:x?}", self.data.len());
         self.patch_word_with_cast(
             "sel4_reset_regions_meta_vaddr",
             regions_meta_phdr.p_vaddr(endian),
