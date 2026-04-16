@@ -192,11 +192,12 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         let align = align_of::<T::ProgramHeader>();
         self.align(align);
         let offset = self.size();
-        let vaddr = self.next_vaddr().next_multiple_of(align.try_into().unwrap());
-        let n = self.orig_elf
-            .elf_program_headers().len() + self.new_phdrs.len() + 1;
+        let vaddr = self
+            .next_vaddr()
+            .next_multiple_of(align.try_into().unwrap());
+        let n = self.orig_elf.elf_program_headers().len() + self.new_phdrs.len() + 1;
         let size = n * size_of::<T::ProgramHeader>();
-        // let phdr = 
+        // let phdr =
         todo!()
     }
 
@@ -267,13 +268,13 @@ impl<E: Endian> PatchPhoff for FileHeader64<E> {
     fn convert_phdr(endian: Self::Endian, generic: &GenericProgramHeader) -> Self::ProgramHeader {
         ProgramHeader64 {
             p_type: U32::new(endian, generic.p_type),
-            p_offset: U64::new(endian, generic.p_offset.try_into().unwrap()),
-            p_vaddr: U64::new(endian, generic.p_vaddr.try_into().unwrap()),
-            p_paddr: U64::new(endian, generic.p_paddr.try_into().unwrap()),
-            p_filesz: U64::new(endian, generic.p_filesz.try_into().unwrap()),
-            p_memsz: U64::new(endian, generic.p_memsz.try_into().unwrap()),
             p_flags: U32::new(endian, generic.p_flags),
-            p_align: U64::new(endian, generic.p_align.try_into().unwrap()),
+            p_offset: U64::new(endian, generic.p_offset),
+            p_vaddr: U64::new(endian, generic.p_vaddr),
+            p_paddr: U64::new(endian, generic.p_paddr),
+            p_filesz: U64::new(endian, generic.p_filesz),
+            p_memsz: U64::new(endian, generic.p_memsz),
+            p_align: U64::new(endian, generic.p_align),
         }
     }
 }
