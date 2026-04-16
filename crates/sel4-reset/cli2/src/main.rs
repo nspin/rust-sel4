@@ -4,21 +4,18 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fmt;
 use std::ops::Range;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::{any, fs};
 
 use clap::Parser;
 
-use anyhow::{Error, ensure};
+use anyhow::Error;
 use num::{NumCast, ToPrimitive};
 use object::elf::{FileHeader32, FileHeader64, PF_R, PT_PHDR, ProgramHeader32, ProgramHeader64};
 use object::elf::{PF_W, PT_LOAD};
 use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
 use object::{Endian, File, Object, ObjectSegment, ObjectSymbol, U32, U64, pod};
-use object::{Endianness, ObjectSection, ReadCache, ReadRef};
-use rangemap::RangeSet;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -61,7 +58,6 @@ struct X<'a, T: FileHeader> {
     orig_elf: &'a ElfFile<'a, T>,
     phdrs: Vec<T::ProgramHeader>,
     data: Vec<u8>,
-    regions: Vec<RegionMeta<T>>,
 }
 
 pub trait PatchValue {
@@ -102,7 +98,6 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             orig_elf,
             phdrs: orig_elf.elf_program_headers().to_vec(),
             data: orig_elf.data().to_vec(),
-            regions: vec![],
         }
     }
 
@@ -250,15 +245,15 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             let filesz = phdrs_load_phdr.p_filesz(endian).to_usize().unwrap();
             self.data[offset..][..filesz].copy_from_slice(pod::bytes_of_slice(&self.phdrs));
         }
-
         phdrs_load_phdr
     }
 
     fn add_regions(&mut self) {
+        eprintln!("X1 0x{:x?}", self.data.len());
         let endian = self.endian();
         let mut regions: Vec<RegionMeta<T>> = vec![];
         for phdr in self.orig_elf.elf_program_headers() {
-            if phdr.p_flags(endian) & PF_W != 0 {
+            if phdr.p_type(endian) == PT_LOAD && phdr.p_flags(endian) & PF_W != 0 {
                 let p_align = phdr.p_align(endian).into();
                 let p_filesz = phdr.p_filesz(endian).into();
                 let alt_phdr = self.add_segment_raw(GenericProgramHeader {
@@ -294,11 +289,12 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             align_of::<RegionMeta<T>>().try_into().unwrap(),
             &regions_meta_data,
         );
+        eprintln!("X2 0x{:x?}", self.data.len());
         self.patch_word_with_cast(
             "sel4_reset_regions_meta_vaddr",
             regions_meta_phdr.p_vaddr(endian),
         );
-        self.patch_word_with_cast("sel4_reset_regions_meta_count", self.regions.len());
+        self.patch_word_with_cast("sel4_reset_regions_meta_count", regions.len());
     }
 
     fn finalize(mut self) -> Vec<u8> {
