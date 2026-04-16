@@ -140,6 +140,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         );
     }
 
+    #[allow(dead_code)]
     fn segment_data(&mut self, phdr: &T::ProgramHeader) -> &mut [u8] {
         let endian = self.endian();
         let offset = phdr.p_offset(endian).to_usize().unwrap();
