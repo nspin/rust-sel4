@@ -124,7 +124,10 @@ let
           substituteInPlace build_sdk.py \
             --replace \
               'cargo build --release --locked --target' \
-              'cargo build --locked --target'
+              'cargo build --locked --target' \
+            --replace \
+              'tool_output = f"./target/{target_triple}/release/microkit"' \
+              'tool_output = f"./target/{target_triple}/debug/microkit"'
         '';
 
         configurePhase = ''

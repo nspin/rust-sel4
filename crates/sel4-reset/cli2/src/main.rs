@@ -17,6 +17,9 @@ use object::elf::{PF_W, PT_LOAD};
 use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
 use object::{Endian, File, Object, ObjectSegment, ObjectSymbol, U32, U64, pod};
 
+// HACK
+const PAGE_SIZE: u64 = 4096;
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
@@ -229,7 +232,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
                 PT_LOAD,
                 PF_R,
                 data_size.try_into().unwrap(),
-                data_align,
+                PAGE_SIZE,
                 data_align,
                 &vec![0; data_size],
             )
@@ -284,7 +287,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             PT_LOAD,
             PF_R,
             regions_meta_data.len().try_into().unwrap(),
-            align_of::<RegionMeta<T>>().try_into().unwrap(),
+            PAGE_SIZE,
             align_of::<RegionMeta<T>>().try_into().unwrap(),
             &regions_meta_data,
         );
