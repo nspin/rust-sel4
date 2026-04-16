@@ -13,9 +13,10 @@ use clap::Parser;
 
 use anyhow::{Error, ensure};
 use num::{NumCast, ToPrimitive};
+use object::elf::{FileHeader32, FileHeader64};
 use object::elf::{PF_W, PT_LOAD};
 use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
-use object::{Endian, File, Object, ObjectSegment, ObjectSymbol};
+use object::{Endian, File, Object, ObjectSegment, ObjectSymbol, pod};
 use object::{Endianness, ObjectSection, ReadCache, ReadRef};
 use rangemap::RangeSet;
 
@@ -94,7 +95,7 @@ impl<T: FileHeader<Word: PatchValue>> RegionMeta<T> {
     }
 }
 
-impl<'a, T: FileHeader<Word: NumCast + PatchValue>> X<'a, T> {
+impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     fn new(orig_elf: &'a ElfFile<'a, T>) -> Self {
         Self {
             orig_elf,
@@ -187,15 +188,47 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue>> X<'a, T> {
         todo!()
     }
 
+    fn add_all_phdrs(&mut self) -> T::ProgramHeader {
+        self.align(align_of::<T::ProgramHeader>());
+        todo!()
+    }
+
     // fn
 
     fn finalize(mut self) -> Vec<u8> {
-        let region_meta_vaddr = self.add_region_meta();
-        self.patch_word_with_cast(
-            "sel4_reset_regions_meta_vaddr",
-            region_meta_vaddr.p_vaddr(self.endian()),
-        );
-        self.patch_word_with_cast("sel4_reset_regions_meta_count", self.regions.len());
+        let endian = self.endian();
+
+        {
+            let region_meta_phdr = self.add_region_meta();
+            self.patch_word_with_cast(
+                "sel4_reset_regions_meta_vaddr",
+                region_meta_phdr.p_vaddr(endian),
+            );
+            self.patch_word_with_cast("sel4_reset_regions_meta_count", self.regions.len());
+        }
+
+        {
+            let all_phdrs_phdr = self.add_all_phdrs();
+            let (ehdr, _) = pod::from_bytes_mut::<T>(&mut self.data).unwrap();
+            ehdr.patch_phoff(all_phdrs_phdr.p_offset(endian));
+        }
+
         self.data
+    }
+}
+
+trait PatchPhoff: FileHeader {
+    fn patch_phoff(&mut self, phoff: Self::Word);
+}
+
+impl<E: Endian> PatchPhoff for FileHeader32<E> {
+    fn patch_phoff(&mut self, phoff: Self::Word) {
+        self.e_phoff.set(self.endian().unwrap(), phoff);
+    }
+}
+
+impl<E: Endian> PatchPhoff for FileHeader64<E> {
+    fn patch_phoff(&mut self, phoff: Self::Word) {
+        self.e_phoff.set(self.endian().unwrap(), phoff);
     }
 }
