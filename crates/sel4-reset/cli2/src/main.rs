@@ -13,7 +13,7 @@ use clap::Parser;
 
 use anyhow::{Error, ensure};
 use num::{NumCast, ToPrimitive};
-use object::elf::{FileHeader32, FileHeader64, ProgramHeader32, ProgramHeader64};
+use object::elf::{FileHeader32, FileHeader64, PT_PHDR, ProgramHeader32, ProgramHeader64};
 use object::elf::{PF_W, PT_LOAD};
 use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
 use object::{Endian, File, Object, ObjectSegment, ObjectSymbol, U32, U64, pod};
@@ -58,9 +58,9 @@ where
 
 struct X<'a, T: FileHeader> {
     orig_elf: &'a ElfFile<'a, T>,
+    phdrs: Vec<T::ProgramHeader>,
     data: Vec<u8>,
     regions: Vec<RegionMeta<T>>,
-    new_phdrs: Vec<T::ProgramHeader>,
 }
 
 pub trait PatchValue {
@@ -99,9 +99,9 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     fn new(orig_elf: &'a ElfFile<'a, T>) -> Self {
         Self {
             orig_elf,
+            phdrs: vec![],
             data: orig_elf.data().to_vec(),
             regions: vec![],
-            new_phdrs: vec![],
         }
     }
 
@@ -109,35 +109,22 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         self.orig_elf.endian()
     }
 
-    fn size(&self) -> usize {
-        self.data.len()
-    }
-
-    fn all_phdrs(&self) -> impl Iterator<Item = &T::ProgramHeader> {
-        self.orig_elf
-            .elf_program_headers()
-            .iter()
-            .chain(self.new_phdrs.iter())
-    }
-
     fn footprint(&self) -> Option<Range<u64>> {
-        let start = self
-            .all_phdrs()
+        let start = self.phdrs.iter()
             .map(|phdr| phdr.p_vaddr(self.endian()).into())
             .min()?;
-        let end = self
-            .all_phdrs()
+        let end = self.phdrs.iter()
             .map(|phdr| phdr.p_vaddr(self.endian()).into() + phdr.p_memsz(self.endian()).into())
             .max()?;
         Some(start..end)
     }
 
-    pub fn next_vaddr(&self) -> u64 {
-        self.footprint().map(|footprint| footprint.end).unwrap_or(0)
+    pub fn next_aligned_vaddr(&self, align: u64) -> u64 {
+        self.footprint().map(|footprint| footprint.end).unwrap_or(0).next_multiple_of(align)
     }
 
-    fn align(&mut self, align: usize) {
-        self.data.resize(self.size().next_multiple_of(align), 0);
+    fn align_data_cursor(&mut self, align: u64) {
+        self.data.resize(self.data.len().next_multiple_of(align.try_into().unwrap()), 0);
     }
 
     fn patch_word(&mut self, symbol_name: &str, value: T::Word) {
@@ -184,21 +171,43 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     }
 
     fn add_region_meta(&mut self) -> T::ProgramHeader {
-        self.align(align_of::<T::Word>());
+        // self.align_data_cursor(align_of::<T::Word>());
         todo!()
     }
 
     fn add_all_phdrs(&mut self) -> T::ProgramHeader {
-        let align = align_of::<T::ProgramHeader>();
-        self.align(align);
-        let offset = self.size();
+        let align = align_of::<T::ProgramHeader>().try_into().unwrap();
+        self.align_data_cursor(align);
+        let offset = self.data.len();
         let vaddr = self
-            .next_vaddr()
-            .next_multiple_of(align.try_into().unwrap());
-        let n = self.orig_elf.elf_program_headers().len() + self.new_phdrs.len() + 1;
-        let size = n * size_of::<T::ProgramHeader>();
-        // let phdr =
-        todo!()
+            .next_aligned_vaddr(align.try_into().unwrap());
+        let eventual_n = self.phdrs.len() + 1;
+        let size = eventual_n * size_of::<T::ProgramHeader>();
+        // let phdr_common = GenericProgramHeader {
+        //     p_type: 0,
+        //     p_flags: (),
+        //     p_offset: (),
+        //     p_vaddr: (),
+        //     p_paddr: (),
+        //     p_filesz: (),
+        //     p_memsz: (),
+        //     p_align: (),
+        // };
+        // let phdr_phdr = {
+        //     let mut phdr = phdr_common.clone();
+        //     phdr.p_type = PT_PHDR;
+        //     phdr
+        // };
+        // let load_phdr = {
+        //     let mut phdr = phdr_common.clone();
+        //     phdr.p_type = PT_LOAD;
+        //     phdr
+        // };
+        // let phdr = T::convert_phdr(
+        //     self.endian(),
+        //     &phdr_phdr
+        // );
+        phdr
     }
 
     // fn
@@ -225,6 +234,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct GenericProgramHeader {
     pub p_type: u32,
     pub p_flags: u32,
