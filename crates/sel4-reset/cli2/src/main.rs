@@ -42,7 +42,7 @@ fn main() -> Result<(), Error> {
 
     fs::write(cli.out_file_path, &out_bytes)?;
 
-    todo!()
+    Ok(())
 }
 
 fn continue_with_type<'a, T>(orig_elf: &'a ElfFile<'a, T>) -> Result<Vec<u8>, Error>
