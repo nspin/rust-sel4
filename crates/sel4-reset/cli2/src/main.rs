@@ -26,8 +26,6 @@ struct Cli {
     in_file_path: PathBuf,
     #[arg(short = 'o')]
     out_file_path: PathBuf,
-    #[arg(long, short = 'v')]
-    interactive: bool,
 }
 
 fn main() -> Result<(), Error> {
@@ -130,7 +128,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         self.footprint()
             .map(|footprint| footprint.end)
             .unwrap_or(0)
-            .next_multiple_of(align)
+            .next_multiple_of(align.max(1))
     }
 
     fn align_data_cursor(&mut self, align: u64) {
@@ -175,7 +173,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     }
 
     fn add_segment_raw(&mut self, mut phdr: GenericProgramHeader) -> T::ProgramHeader {
-        let p_vaddr = self.next_aligned_vaddr(phdr.p_align) + phdr.p_offset % phdr.p_align;
+        let p_vaddr = self.next_aligned_vaddr(phdr.p_align) + phdr.p_offset % phdr.p_align.max(1);
         phdr.p_vaddr = p_vaddr;
         phdr.p_paddr = p_vaddr;
         let phdr = T::convert_phdr(self.endian(), &phdr);
