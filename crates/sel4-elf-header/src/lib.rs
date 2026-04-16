@@ -81,6 +81,7 @@ pub const PT_TLS: u32 = 7;
 pub const PT_GNU_EH_FRAME: u32 = 0x6474_e550;
 
 impl ProgramHeader {
+    // TODO not robust against overflow. Use RangeInclusive?
     pub fn vaddr_range(&self) -> Range<usize> {
         let start = self.p_vaddr;
         let end = start + self.p_memsz;
