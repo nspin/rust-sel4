@@ -45,9 +45,7 @@ unsafe fn reset_memory(regions: &'static [RegionMeta]) {
 unsafe fn get_regions() -> &'static [RegionMeta] {
     let meta_vaddr = *rodata_static!(sel4_reset_regions_meta_vaddr: usize);
     let meta_count = *rodata_static!(sel4_reset_regions_meta_count: usize);
-    unsafe {
-        slice::from_raw_parts(meta_vaddr as *const _, meta_count)
-    }
+    unsafe { slice::from_raw_parts(meta_vaddr as *const _, meta_count) }
 }
 
 // // //
