@@ -5,15 +5,15 @@
 #
 
 { lib, runCommand
-, sel4-reset-cli
+, sel4-reset-cli2
 }:
 
 elf:
 
 runCommand "elf" {
   nativeBuildInputs = [
-    sel4-reset-cli
+    sel4-reset-cli2
   ];
 } ''
-  sel4-reset-cli ${elf} -o $out
+  sel4-reset-cli2 ${elf} -o $out
 ''

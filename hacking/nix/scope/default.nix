@@ -315,6 +315,7 @@ superCallPackage ../rust-utils {} self //
   sel4-simple-task-runtime-config-cli = mkTool crates.sel4-simple-task-runtime-config-cli;
   sel4-kernel-loader-add-payload = mkTool crates.sel4-kernel-loader-add-payload;
   sel4-reset-cli = mkTool crates.sel4-reset-cli;
+  sel4-reset-cli2 = mkTool crates.sel4-reset-cli2;
   sel4-test-sentinels-wrapper = mkTool crates.sel4-test-sentinels-wrapper;
 
   mkGenerateTargetSpecs = callBuildBuildPackage ./generate-target-specs.nix {};

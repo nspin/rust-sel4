@@ -64,6 +64,7 @@ in rec {
     url = "https://github.com/seL4/microkit.git";
     rev = "27e7b6784664a5e62c11b49559995d266dece3c3"; # 2.2.0
     local = localRoot + "/microkit";
+    # useLocal = true;
     extraFilter = path: type:
       lib.hasSuffix "/target" path;
   };
