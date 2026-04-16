@@ -131,6 +131,10 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue>> X<'a, T> {
         Some(start..end)
     }
 
+    pub fn next_vaddr(&self) -> u64 {
+        self.footprint().map(|footprint| footprint.end).unwrap_or(0)
+    }
+
     fn align(&mut self, align: usize) {
         self.data.resize(self.size().next_multiple_of(align), 0);
     }
@@ -162,28 +166,35 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue>> X<'a, T> {
             .copy_from_slice(&value_bytes);
     }
 
-    pub fn patch_word_with_cast(
-        &mut self,
-        symbol_name: &str,
-        value: impl ToPrimitive + fmt::Debug + Copy,
-    ) where
+    pub fn patch_word_with_cast(&mut self, symbol_name: &str, value: impl ToPrimitive + Clone)
+    where
         T::Word: PatchValue + NumCast,
     {
         self.patch_word(
             symbol_name,
-            <T::Word as NumCast>::from(value).unwrap_or_else(|| {
+            <T::Word as NumCast>::from(value.clone()).unwrap_or_else(|| {
                 panic!(
                     "value {:#x?} out of bounds for word type {}",
-                    value,
+                    value.to_u64().unwrap(),
                     any::type_name::<T::Word>()
                 )
             }),
         )
     }
 
-    fn finalize(mut self) -> Vec<u8> {
+    fn add_region_meta(&mut self) -> T::ProgramHeader {
         self.align(align_of::<T::Word>());
-        // self.patch_word_with_cast("sel4_reset_regions_meta_vaddr", todo!());
+        todo!()
+    }
+
+    // fn
+
+    fn finalize(mut self) -> Vec<u8> {
+        let region_meta_vaddr = self.add_region_meta();
+        self.patch_word_with_cast(
+            "sel4_reset_regions_meta_vaddr",
+            region_meta_vaddr.p_vaddr(self.endian()),
+        );
         self.patch_word_with_cast("sel4_reset_regions_meta_count", self.regions.len());
         self.data
     }
