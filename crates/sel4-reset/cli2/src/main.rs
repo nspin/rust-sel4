@@ -51,9 +51,12 @@ fn main() -> Result<(), Error> {
 
 fn continue_with_type<'a, T>(orig_elf: &'a ElfFile<'a, T>) -> Result<Vec<u8>, Error>
 where
-    T: FileHeader<Word: NumCast + PatchValue>,
+    T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff,
 {
-    Ok(vec![])
+    let mut x = X::new(orig_elf);
+    x.add_regions();
+    let data = x.finalize();
+    Ok(data)
 }
 
 struct X<'a, T: FileHeader> {
@@ -222,11 +225,6 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         )
     }
 
-    fn add_region_meta(&mut self) -> T::ProgramHeader {
-        // self.align_data_cursor(align_of::<T::Word>());
-        todo!()
-    }
-
     fn add_all_phdrs(&mut self) -> T::ProgramHeader {
         let endian = self.endian();
         let phdrs_load_phdr = {
@@ -258,26 +256,21 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         phdrs_load_phdr
     }
 
-    // fn
+    fn add_regions(&mut self) {
+        let endian = self.endian();
+        let region_meta_phdr: T::ProgramHeader = todo!();
+        self.patch_word_with_cast(
+            "sel4_reset_regions_meta_vaddr",
+            region_meta_phdr.p_vaddr(endian),
+        );
+        self.patch_word_with_cast("sel4_reset_regions_meta_count", self.regions.len());
+    }
 
     fn finalize(mut self) -> Vec<u8> {
         let endian = self.endian();
-
-        {
-            let region_meta_phdr = self.add_region_meta();
-            self.patch_word_with_cast(
-                "sel4_reset_regions_meta_vaddr",
-                region_meta_phdr.p_vaddr(endian),
-            );
-            self.patch_word_with_cast("sel4_reset_regions_meta_count", self.regions.len());
-        }
-
-        {
-            let all_phdrs_phdr = self.add_all_phdrs();
-            let (ehdr, _) = pod::from_bytes_mut::<T>(&mut self.data).unwrap();
-            ehdr.patch_phoff(all_phdrs_phdr.p_offset(endian));
-        }
-
+        let all_phdrs_phdr = self.add_all_phdrs();
+        let (ehdr, _) = pod::from_bytes_mut::<T>(&mut self.data).unwrap();
+        ehdr.patch_phoff(all_phdrs_phdr.p_offset(endian));
         self.data
     }
 }
