@@ -10,7 +10,6 @@ use std::path::{Path, PathBuf};
 use clap::Parser;
 
 use anyhow::{Error, ensure};
-use anyhow::Result;
 use num::NumCast;
 use object::elf::{PF_W, PT_LOAD};
 use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
@@ -29,5 +28,27 @@ struct Cli {
 
 fn main() -> Result<(), Error> {
     let cli = Cli::parse();
+
+    let in_bytes = fs::read(&cli.in_file_path)?;
+    let in_file = File::parse(in_bytes.as_slice())?;
+
+    let out_bytes = match in_file {
+        File::Elf32(elf) => continue_with_type(&elf),
+        File::Elf64(elf) => continue_with_type(&elf),
+        _ => {
+            panic!()
+        }
+    }?;
+
+    fs::write(cli.out_file_path, &out_bytes)?;
+
     todo!()
+}
+
+fn continue_with_type<'a, T, R>(orig_elf: &'a ElfFile<'a, T, R>) -> Result<Vec<u8>, Error>
+where
+    R: ReadRef<'a>,
+    T: FileHeader<Word: NumCast>,
+{
+    Ok(vec![])
 }
