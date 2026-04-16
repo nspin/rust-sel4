@@ -110,21 +110,31 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     }
 
     fn footprint(&self) -> Option<Range<u64>> {
-        let start = self.phdrs.iter()
+        let start = self
+            .phdrs
+            .iter()
             .map(|phdr| phdr.p_vaddr(self.endian()).into())
             .min()?;
-        let end = self.phdrs.iter()
+        let end = self
+            .phdrs
+            .iter()
             .map(|phdr| phdr.p_vaddr(self.endian()).into() + phdr.p_memsz(self.endian()).into())
             .max()?;
         Some(start..end)
     }
 
     pub fn next_aligned_vaddr(&self, align: u64) -> u64 {
-        self.footprint().map(|footprint| footprint.end).unwrap_or(0).next_multiple_of(align)
+        self.footprint()
+            .map(|footprint| footprint.end)
+            .unwrap_or(0)
+            .next_multiple_of(align)
     }
 
     fn align_data_cursor(&mut self, align: u64) {
-        self.data.resize(self.data.len().next_multiple_of(align.try_into().unwrap()), 0);
+        self.data.resize(
+            self.data.len().next_multiple_of(align.try_into().unwrap()),
+            0,
+        );
     }
 
     fn segment_data(&mut self, phdr: &T::ProgramHeader) -> &mut [u8] {
@@ -134,7 +144,15 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         &mut self.data[offset..][..filesz]
     }
 
-    fn add_segment(&mut self, p_type: u32, p_flags: u32, p_memsz: u64, p_align: u64, data: &[u8], data_align: u64) -> T::ProgramHeader {
+    fn add_segment(
+        &mut self,
+        p_type: u32,
+        p_flags: u32,
+        p_memsz: u64,
+        p_align: u64,
+        data: &[u8],
+        data_align: u64,
+    ) -> T::ProgramHeader {
         self.align_data_cursor(data_align);
         let p_offset = self.data.len().try_into().unwrap();
         let p_filesz = data.len().try_into().unwrap();
@@ -152,8 +170,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     }
 
     fn add_segment_raw(&mut self, mut phdr: GenericProgramHeader) -> T::ProgramHeader {
-        let p_vaddr = self
-            .next_aligned_vaddr(phdr.p_align) + phdr.p_offset % phdr.p_align;
+        let p_vaddr = self.next_aligned_vaddr(phdr.p_align) + phdr.p_offset % phdr.p_align;
         phdr.p_vaddr = p_vaddr;
         phdr.p_paddr = p_vaddr;
         let phdr = T::convert_phdr(self.endian(), &phdr);
@@ -213,8 +230,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         let align = align_of::<T::ProgramHeader>().try_into().unwrap();
         self.align_data_cursor(align);
         let offset = self.data.len();
-        let vaddr = self
-            .next_aligned_vaddr(align.try_into().unwrap());
+        let vaddr = self.next_aligned_vaddr(align.try_into().unwrap());
         let eventual_n = self.phdrs.len() + 1;
         let size = eventual_n * size_of::<T::ProgramHeader>();
         // let phdr_common = GenericProgramHeader {
