@@ -214,7 +214,7 @@ impl<'a> Runner<'a> {
                 Command::new("cargo")
                     .arg("run")
                     .arg("-p")
-                    .arg("sel4-reset-cli")
+                    .arg("sel4-reset-cli2")
                     .arg("--")
                     .arg(&orig)
                     .arg("-o")

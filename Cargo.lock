@@ -2924,6 +2924,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sel4-reset-cli2"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "num",
+ "object",
+ "rangemap",
+]
+
+[[package]]
 name = "sel4-reset-tests"
 version = "0.1.0"
 dependencies = [
