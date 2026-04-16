@@ -100,7 +100,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     fn new(orig_elf: &'a ElfFile<'a, T>) -> Self {
         Self {
             orig_elf,
-            phdrs: vec![],
+            phdrs: orig_elf.elf_program_headers().to_vec(),
             data: orig_elf.data().to_vec(),
             regions: vec![],
         }
