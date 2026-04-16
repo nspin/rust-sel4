@@ -150,8 +150,8 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         p_flags: u32,
         p_memsz: u64,
         p_align: u64,
-        data: &[u8],
         data_align: u64,
+        data: &[u8],
     ) -> T::ProgramHeader {
         self.align_data_cursor(data_align);
         let p_offset = self.data.len().try_into().unwrap();
