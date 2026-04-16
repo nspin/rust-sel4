@@ -254,32 +254,8 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             let filesz = phdrs_load_phdr.p_filesz(endian).to_usize().unwrap();
             self.data[offset..][..filesz].copy_from_slice(pod::bytes_of_slice(&self.phdrs));
         }
-        // let phdr_common = GenericProgramHeader {
-        //     p_type: 0,
-        //     p_flags: (),
-        //     p_offset: (),
-        //     p_vaddr: (),
-        //     p_paddr: (),
-        //     p_filesz: (),
-        //     p_memsz: (),
-        //     p_align: (),
-        // };
-        // let phdr_phdr = {
-        //     let mut phdr = phdr_common.clone();
-        //     phdr.p_type = PT_PHDR;
-        //     phdr
-        // };
-        // let load_phdr = {
-        //     let mut phdr = phdr_common.clone();
-        //     phdr.p_type = PT_LOAD;
-        //     phdr
-        // };
-        // let phdr = T::convert_phdr(
-        //     self.endian(),
-        //     &phdr_phdr
-        // );
-        // phdr
-        todo!()
+
+        phdrs_load_phdr
     }
 
     // fn
