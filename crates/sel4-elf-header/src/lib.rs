@@ -119,6 +119,7 @@ pub const PT_GNU_EH_FRAME: u32 = 0x6474_e550;
 pub const PT_SEL4_RESET_REGIONS: u32 = 0x64c3_4001;
 
 impl ProgramHeader {
+    // TODO not robust against overflow. Use RangeInclusive?
     pub fn vaddr_range(&self) -> Range<usize> {
         let start = self.p_vaddr;
         let end = start + self.p_memsz;
