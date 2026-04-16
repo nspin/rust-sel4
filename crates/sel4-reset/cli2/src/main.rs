@@ -230,7 +230,6 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             let data_align = align_of::<T::ProgramHeader>().try_into().unwrap();
             let eventual_n = self.phdrs.len() + 1;
             let data_size = eventual_n * size_of::<T::ProgramHeader>();
-            eprintln!("data_size {data_size:?}");
             self.add_segment(
                 PT_LOAD,
                 PF_R,
@@ -247,7 +246,6 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             }
         }
         {
-            assert_eq!(size_of::<T::ProgramHeader>() * self.phdrs.len(), phdrs_load_phdr.p_filesz(endian).to_usize().unwrap());
             let offset = phdrs_load_phdr.p_offset(endian).to_usize().unwrap();
             let filesz = phdrs_load_phdr.p_filesz(endian).to_usize().unwrap();
             self.data[offset..][..filesz].copy_from_slice(pod::bytes_of_slice(&self.phdrs));
