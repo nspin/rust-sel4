@@ -228,7 +228,8 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
     }
 
     fn add_all_phdrs(&mut self) -> T::ProgramHeader {
-        let phdr = {
+        let endian = self.endian();
+        let phdrs_load_phdr = {
             let data_align = align_of::<T::ProgramHeader>().try_into().unwrap();
             let eventual_n = self.phdrs.len() + 1;
             let data_size = eventual_n * size_of::<T::ProgramHeader>();
@@ -241,10 +242,18 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
                 &vec![0; data_size],
             )
         };
-        self.phdrs.push(phdr);
-        self.data[phdr.p_offset(self.endian()).to_usize().unwrap()..]
-            [..phdr.p_filesz(self.endian()).to_usize().unwrap()]
-            .copy_from_slice(pod::bytes_of_slice(&self.phdrs));
+        self.phdrs.push(phdrs_load_phdr);
+        for phdr in self.phdrs.iter_mut() {
+            if phdr.p_type(endian) == PT_PHDR {
+                *phdr = phdrs_load_phdr;
+                T::set_p_type(phdr, endian, PT_PHDR);
+            }
+        }
+        {
+            let offset = phdrs_load_phdr.p_offset(endian).to_usize().unwrap();
+            let filesz = phdrs_load_phdr.p_filesz(endian).to_usize().unwrap();
+            self.data[offset..][..filesz].copy_from_slice(pod::bytes_of_slice(&self.phdrs));
+        }
         // let phdr_common = GenericProgramHeader {
         //     p_type: 0,
         //     p_flags: (),
@@ -312,6 +321,7 @@ pub struct GenericProgramHeader {
 trait PatchPhoff: FileHeader {
     fn patch_phoff(&mut self, phoff: Self::Word);
     fn convert_phdr(endian: Self::Endian, generic: &GenericProgramHeader) -> Self::ProgramHeader;
+    fn set_p_type(phdr: &mut Self::ProgramHeader, endian: Self::Endian, p_type: u32);
 }
 
 impl<E: Endian> PatchPhoff for FileHeader32<E> {
@@ -331,6 +341,10 @@ impl<E: Endian> PatchPhoff for FileHeader32<E> {
             p_align: U32::new(endian, generic.p_align.try_into().unwrap()),
         }
     }
+
+    fn set_p_type(phdr: &mut Self::ProgramHeader, endian: Self::Endian, p_type: u32) {
+        phdr.p_type.set(endian, p_type)
+    }
 }
 
 impl<E: Endian> PatchPhoff for FileHeader64<E> {
@@ -349,5 +363,9 @@ impl<E: Endian> PatchPhoff for FileHeader64<E> {
             p_memsz: U64::new(endian, generic.p_memsz),
             p_align: U64::new(endian, generic.p_align),
         }
+    }
+
+    fn set_p_type(phdr: &mut Self::ProgramHeader, endian: Self::Endian, p_type: u32) {
+        phdr.p_type.set(endian, p_type)
     }
 }
