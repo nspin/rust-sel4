@@ -127,6 +127,34 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         self.data.resize(self.data.len().next_multiple_of(align.try_into().unwrap()), 0);
     }
 
+    fn segment_data(&mut self, phdr: &T::ProgramHeader) -> &mut [u8] {
+        let endian = self.endian();
+        let offset = phdr.p_offset(endian).to_usize().unwrap();
+        let filesz = phdr.p_filesz(endian).to_usize().unwrap();
+        &mut self.data[offset..][..filesz]
+    }
+
+    fn add_segment(&mut self, p_type: u32, p_flags: u32, p_align: u64, p_memsz: u64, segment_data: &[u8]) -> T::ProgramHeader {
+        let endian = self.endian();
+        self.align_data_cursor(p_align);
+        let p_offset = self.data.len().try_into().unwrap();
+        self.data.extend_from_slice(segment_data);
+        let p_vaddr = self
+            .next_aligned_vaddr(p_align);
+        let phdr = T::convert_phdr(endian, &GenericProgramHeader {
+            p_type,
+            p_flags,
+            p_offset,
+            p_vaddr,
+            p_paddr: p_vaddr,
+            p_filesz: segment_data.len().try_into().unwrap(),
+            p_memsz,
+            p_align,
+        });
+        self.phdrs.push(phdr);
+        phdr
+    }
+
     fn patch_word(&mut self, symbol_name: &str, value: T::Word) {
         let value_bytes = value.to_bytes(self.endian());
         let symbol = self.orig_elf.symbol_by_name(symbol_name).unwrap();
@@ -207,7 +235,8 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
         //     self.endian(),
         //     &phdr_phdr
         // );
-        phdr
+        // phdr
+        todo!()
     }
 
     // fn
