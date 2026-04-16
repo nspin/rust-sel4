@@ -258,10 +258,47 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
 
     fn add_regions(&mut self) {
         let endian = self.endian();
-        let region_meta_phdr: T::ProgramHeader = todo!();
+        let mut regions: Vec<RegionMeta<T>> = vec![];
+        for phdr in self.orig_elf.elf_program_headers() {
+            if phdr.p_flags(endian) & PF_W != 0 {
+                let p_align = phdr.p_align(endian).into();
+                let p_filesz = phdr.p_filesz(endian).into();
+                let alt_phdr = self.add_segment_raw(GenericProgramHeader {
+                    p_type: PT_LOAD,
+                    p_flags: PF_R,
+                    p_offset: phdr.p_offset(endian).into(),
+                    p_vaddr: 0,
+                    p_paddr: 0,
+                    p_filesz,
+                    p_memsz: p_filesz,
+                    p_align,
+                });
+                regions.push(RegionMeta {
+                    dst_vaddr: phdr.p_vaddr(endian),
+                    dst_size: phdr.p_memsz(endian),
+                    src_vaddr: alt_phdr.p_vaddr(endian),
+                    src_size: phdr.p_filesz(endian),
+                });
+            }
+        }
+        let regions_meta_data = {
+            let mut v = vec![];
+            for m in regions.iter() {
+                m.pack(endian, &mut v);
+            }
+            v
+        };
+        let regions_meta_phdr = self.add_segment(
+            PT_LOAD,
+            PF_R,
+            regions_meta_data.len().try_into().unwrap(),
+            align_of::<RegionMeta<T>>().try_into().unwrap(),
+            align_of::<RegionMeta<T>>().try_into().unwrap(),
+            &regions_meta_data,
+        );
         self.patch_word_with_cast(
             "sel4_reset_regions_meta_vaddr",
-            region_meta_phdr.p_vaddr(endian),
+            regions_meta_phdr.p_vaddr(endian),
         );
         self.patch_word_with_cast("sel4_reset_regions_meta_count", self.regions.len());
     }
