@@ -45,9 +45,8 @@ fn main() -> Result<(), Error> {
     todo!()
 }
 
-fn continue_with_type<'a, T, R>(orig_elf: &'a ElfFile<'a, T, R>) -> Result<Vec<u8>, Error>
+fn continue_with_type<'a, T>(orig_elf: &'a ElfFile<'a, T>) -> Result<Vec<u8>, Error>
 where
-    R: ReadRef<'a>,
     T: FileHeader<Word: NumCast>,
 {
     Ok(vec![])
