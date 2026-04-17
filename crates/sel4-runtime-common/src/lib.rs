@@ -10,6 +10,7 @@
 #![feature(core_intrinsics)]
 #![feature(linkage)]
 #![allow(internal_features)]
+#![feature(used_with_arg)]
 
 use core::sync::atomic::{AtomicBool, Ordering};
 
@@ -64,16 +65,24 @@ pub fn global_init_complete() -> bool {
     GLOBAL_INIT_COMPLETE.load(Ordering::Acquire)
 }
 
+unsafe extern "C" {
+    static __ehdr_start: ElfHeader;
+}
+
+#[used(linker)]
+#[unsafe(no_mangle)]
+static HACK__ehdr_start: &ElfHeader = unsafe {
+    &__ehdr_start
+};
+
 #[allow(dead_code)]
 fn locate_phdrs() -> &'static [ProgramHeader] {
-    unsafe extern "C" {
-        static __ehdr_start: ElfHeader;
-    }
+    let hdr = HACK__ehdr_start;
     unsafe {
-        if !__ehdr_start.is_magic_valid() {
+        if !hdr.is_magic_valid() {
             abort!("ELF header magic mismatch")
         }
-        __ehdr_start.locate_phdrs()
+        hdr.locate_phdrs()
     }
 }
 
