@@ -71,9 +71,7 @@ unsafe extern "C" {
 
 #[used(linker)]
 #[unsafe(no_mangle)]
-static HACK__ehdr_start: &ElfHeader = unsafe {
-    &__ehdr_start
-};
+static HACK__ehdr_start: &ElfHeader = unsafe { &__ehdr_start };
 
 #[allow(dead_code)]
 fn locate_phdrs() -> &'static [ProgramHeader] {

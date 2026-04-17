@@ -181,7 +181,10 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
 
     fn patch_word(&mut self, symbol_name: &str, value: T::Word) {
         let value_bytes = value.to_bytes(self.endian());
-        let symbol = self.orig_elf.symbol_by_name(symbol_name).expect(&format!("{symbol_name}"));
+        let symbol = self
+            .orig_elf
+            .symbol_by_name(symbol_name)
+            .expect(&format!("{symbol_name}"));
         let symbol_vaddr = symbol.address();
         assert_eq!(usize::try_from(symbol.size()).unwrap(), value_bytes.len());
         let offset_in_file = self
@@ -241,7 +244,11 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             if phdr.p_type(endian) == PT_PHDR {
                 *phdr = phdrs_load_phdr;
                 T::set_p_type(phdr, endian, PT_PHDR);
-                T::take_offset(phdr, endian, <T::Word as NumCast>::from(size_of::<T>()).unwrap());
+                T::take_offset(
+                    phdr,
+                    endian,
+                    <T::Word as NumCast>::from(size_of::<T>()).unwrap(),
+                );
             }
         }
         {
@@ -379,7 +386,8 @@ impl<E: Endian> PatchPhoff for FileHeader32<E> {
         phdr.p_offset.set(endian, phdr.p_offset.get(endian) + n);
         phdr.p_vaddr.set(endian, phdr.p_vaddr.get(endian) + n);
         phdr.p_paddr.set(endian, phdr.p_paddr.get(endian) + n);
-        phdr.p_filesz.set(endian, phdr.p_filesz.get(endian).saturating_sub(n));
+        phdr.p_filesz
+            .set(endian, phdr.p_filesz.get(endian).saturating_sub(n));
         phdr.p_memsz.set(endian, phdr.p_memsz.get(endian) - n);
     }
 }
@@ -423,7 +431,8 @@ impl<E: Endian> PatchPhoff for FileHeader64<E> {
         phdr.p_offset.set(endian, phdr.p_offset.get(endian) + n);
         phdr.p_vaddr.set(endian, phdr.p_vaddr.get(endian) + n);
         phdr.p_paddr.set(endian, phdr.p_paddr.get(endian) + n);
-        phdr.p_filesz.set(endian, phdr.p_filesz.get(endian).saturating_sub(n));
+        phdr.p_filesz
+            .set(endian, phdr.p_filesz.get(endian).saturating_sub(n));
         phdr.p_memsz.set(endian, phdr.p_memsz.get(endian) - n);
     }
 }
