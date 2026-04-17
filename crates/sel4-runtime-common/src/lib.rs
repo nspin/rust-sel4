@@ -15,6 +15,7 @@
 use core::sync::atomic::{AtomicBool, Ordering};
 
 use sel4_elf_header::{ElfHeader, ProgramHeader};
+use sel4_immutable_cell::ImmutableCell;
 use sel4_panicking_env::abort;
 
 mod abort;
@@ -71,11 +72,12 @@ unsafe extern "C" {
 
 #[used(linker)]
 #[unsafe(no_mangle)]
-static HACK__ehdr_start: &ElfHeader = unsafe { &__ehdr_start };
+static HACK__ehdr_start: ImmutableCell<&ElfHeader> = ImmutableCell::new(unsafe { &__ehdr_start });
 
 #[allow(dead_code)]
 fn locate_phdrs() -> &'static [ProgramHeader] {
-    let hdr = HACK__ehdr_start;
+    let hdr = HACK__ehdr_start.get();
+    sel4_panicking_env::debug_println!("XXX: {:x?}", hdr as *const _);
     unsafe {
         if !hdr.is_magic_valid() {
             abort!("ELF header magic mismatch")

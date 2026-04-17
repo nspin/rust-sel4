@@ -240,15 +240,16 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
                 &vec![0; data_size],
             )
         };
+        let mut phdrs_phdr_phdr = phdrs_load_phdr;
+        T::set_p_type(&mut phdrs_phdr_phdr, endian, PT_PHDR);
+        T::take_offset(
+            &mut phdrs_phdr_phdr,
+            endian,
+            <T::Word as NumCast>::from(size_of::<T>()).unwrap(),
+        );
         for phdr in self.phdrs.iter_mut() {
             if phdr.p_type(endian) == PT_PHDR {
-                *phdr = phdrs_load_phdr;
-                T::set_p_type(phdr, endian, PT_PHDR);
-                T::take_offset(
-                    phdr,
-                    endian,
-                    <T::Word as NumCast>::from(size_of::<T>()).unwrap(),
-                );
+                *phdr = phdrs_phdr_phdr;
             }
         }
         {
@@ -261,8 +262,8 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             ehdr_data.copy_from_slice(pod::bytes_of(&new_ehdr));
             phdrs_data.copy_from_slice(pod::bytes_of_slice(&self.phdrs));
         }
-        self.patch_word_with_cast("HACK__ehdr_start", phdrs_load_phdr.p_vaddr(endian));
-        phdrs_load_phdr
+        self.patch_word_with_cast("HACK__ehdr_start", phdrs_phdr_phdr.p_vaddr(endian));
+        phdrs_phdr_phdr
     }
 
     fn add_regions(&mut self) {
