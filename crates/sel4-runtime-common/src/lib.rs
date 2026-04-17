@@ -78,12 +78,10 @@ static HACK__ehdr_start: ImmutableCell<&ElfHeader> = ImmutableCell::new(unsafe {
 fn locate_phdrs() -> &'static [ProgramHeader] {
     let hdr = HACK__ehdr_start.get();
     sel4_panicking_env::debug_println!("XXX: {:x?}", hdr as *const _);
-    unsafe {
-        if !hdr.is_magic_valid() {
-            abort!("ELF header magic mismatch")
-        }
-        hdr.locate_phdrs()
+    if !hdr.is_magic_valid() {
+        abort!("ELF header magic mismatch")
     }
+    hdr.locate_phdrs()
 }
 
 #[cfg(target_arch = "arm")]
