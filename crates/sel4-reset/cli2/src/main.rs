@@ -327,15 +327,9 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
                 }
             }
         }
-        eprint!("ms");
         let regions_meta_data = {
             let mut v = vec![];
             for m in regions.iter() {
-                eprintln!("m");
-                eprintln!("{:x?}", m.dst_vaddr.into());
-                eprintln!("{:x?}", m.dst_size.into());
-                eprintln!("{:x?}", m.src_vaddr.into());
-                eprintln!("{:x?}", m.src_size.into());
                 m.pack(endian, &mut v);
             }
             v
