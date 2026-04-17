@@ -18,7 +18,12 @@ use crate::locate_phdrs;
 pub(crate) unsafe fn with_tls(f: impl FnOnce() -> !) -> ! {
     let phdr = locate_phdrs()
         .iter()
-        .find(|phdr| phdr.p_type == PT_TLS)
+        .find(|phdr| {
+            sel4_panicking_env::debug_println!("XXX: {:x?}", *phdr as *const _);
+            let r = phdr.p_type == PT_TLS;
+            sel4_panicking_env::debug_println!("r: {r:?}");
+            r
+        })
         .unwrap_or_else(|| abort!("no PT_TLS segment"));
     let unchecked = UncheckedTlsImage {
         vaddr: phdr.p_vaddr,

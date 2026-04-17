@@ -162,8 +162,8 @@ in {
 
           origELF = "${orig}/bin/test.elf";
 
-          # patched = prepareResettable origELF;
-          patched = origELF;
+          patched = prepareResettable origELF;
+          # patched = origELF;
 
           sup = runCommandCC "test.sup.elf" {} ''
             $OBJCOPY --only-keep-debug ${origELF} $out
