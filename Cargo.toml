@@ -147,7 +147,6 @@ members = [
     "crates/sel4-platform-info/types",
     "crates/sel4-reset",
     "crates/sel4-reset/cli",
-    "crates/sel4-reset/cli2",
     "crates/sel4-reset/tests",
     "crates/sel4-rodata-static",
     "crates/sel4-root-task",

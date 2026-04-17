@@ -2920,17 +2920,6 @@ dependencies = [
  "anyhow",
  "clap",
  "num",
- "rangemap",
- "sel4-synthetic-elf",
-]
-
-[[package]]
-name = "sel4-reset-cli2"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "num",
  "object",
  "rangemap",
 ]
