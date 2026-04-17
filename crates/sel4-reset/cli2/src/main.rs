@@ -262,7 +262,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
             ehdr_data.copy_from_slice(pod::bytes_of(&new_ehdr));
             phdrs_data.copy_from_slice(pod::bytes_of_slice(&self.phdrs));
         }
-        self.patch_word_with_cast("HACK__ehdr_start", phdrs_phdr_phdr.p_vaddr(endian));
+        self.patch_word_with_cast("HACK__ehdr_start", phdrs_load_phdr.p_vaddr(endian));
         phdrs_phdr_phdr
     }
 
