@@ -15,7 +15,8 @@ use num::{NumCast, ToPrimitive};
 use object::elf::{FileHeader32, FileHeader64, PF_R, PT_PHDR, ProgramHeader32, ProgramHeader64};
 use object::elf::{PF_W, PT_LOAD};
 use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
-use object::{Endian, File, Object, ObjectSegment, ObjectSymbol, U32, U64, pod};
+use object::{Endian, File, Object, ObjectSection, ObjectSegment, ObjectSymbol, U32, U64, pod};
+use rangemap::RangeSet;
 
 // HACK
 const PAGE_SIZE: u64 = 4096;
@@ -265,8 +266,22 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
 
     fn add_regions(&mut self) {
         let endian = self.endian();
+
+        let persistent_ranges = {
+            let mut set = RangeSet::new();
+            for s in self.orig_elf.sections() {
+                if let Ok(name) = s.name()
+                    && (name == ".persistent" || name.starts_with(".persistent."))
+                {
+                    set.insert(s.address()..(s.address() + s.size()));
+                }
+            }
+            set
+        };
+
         let mut regions: Vec<RegionMeta<T>> = vec![];
-        for phdr in self.orig_elf.elf_program_headers() {
+        for seg in self.orig_elf.segments() {
+            let phdr = seg.elf_program_header();
             if phdr.p_type(endian) == PT_LOAD && phdr.p_flags(endian) & PF_W != 0 {
                 let p_align = phdr.p_align(endian).into();
                 let p_filesz = phdr.p_filesz(endian).into();
@@ -280,12 +295,36 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
                     p_memsz: p_filesz,
                     p_align,
                 });
-                regions.push(RegionMeta {
-                    dst_vaddr: phdr.p_vaddr(endian),
-                    dst_size: phdr.p_memsz(endian),
-                    src_vaddr: alt_phdr.p_vaddr(endian),
-                    src_size: phdr.p_filesz(endian),
-                });
+                {
+                    let vaddr = phdr.p_vaddr(endian).into();
+                    let memsz = phdr.p_memsz(endian).into();
+                    let segment_range = vaddr..(vaddr + memsz);
+                    let relevant_persistent_ranges = RangeSet::from_iter(
+                        persistent_ranges
+                            .intersection(&RangeSet::from_iter([segment_range.clone()])),
+                    );
+                    for ephermal in relevant_persistent_ranges.gaps(&segment_range) {
+                        let region_memsz = ephermal.end - ephermal.start;
+                        let region_offset_in_segment = ephermal.start - vaddr;
+                        let (src_vaddr, src_size) = if region_offset_in_segment
+                            < alt_phdr.p_filesz(endian).into()
+                        {
+                            let start = alt_phdr.p_vaddr(endian).into() + region_offset_in_segment;
+                            (
+                                start,
+                                alt_phdr.p_filesz(endian).into().min(ephermal.end - vaddr),
+                            )
+                        } else {
+                            (0, 0)
+                        };
+                        regions.push(RegionMeta {
+                            dst_vaddr: <T::Word as NumCast>::from(ephermal.start).unwrap(),
+                            dst_size: <T::Word as NumCast>::from(region_memsz).unwrap(),
+                            src_vaddr: <T::Word as NumCast>::from(src_vaddr).unwrap(),
+                            src_size: <T::Word as NumCast>::from(src_size).unwrap(),
+                        });
+                    }
+                }
             }
         }
         eprint!("ms");

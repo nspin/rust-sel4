@@ -42,9 +42,11 @@ unsafe fn reset_memory(regions: &'static [RegionMeta]) {
         sel4_panicking_env::debug_println!("{:#x?}", dst.len());
         sel4_panicking_env::debug_println!("{:#x?}", r as usize + dst.len());
         let (dst_data, dst_zero) = dst.split_at_mut(meta.src_size);
-        let src = unsafe { slice::from_raw_parts_mut(meta.src_vaddr as *mut _, meta.src_size) };
-        dst_data.copy_from_slice(src);
-        sel4_panicking_env::debug_println!("done1");
+        if meta.src_vaddr != 0 {
+            let src = unsafe { slice::from_raw_parts_mut(meta.src_vaddr as *mut _, meta.src_size) };
+            dst_data.copy_from_slice(src);
+            sel4_panicking_env::debug_println!("done1");
+        }
         let r = dst_zero.as_ptr();
         sel4_panicking_env::debug_println!("{:#x?}", r);
         sel4_panicking_env::debug_println!("{:#x?}", dst_zero.len());
