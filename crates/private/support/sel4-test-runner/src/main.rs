@@ -5,6 +5,7 @@
 //
 
 use std::os::unix;
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs, iter};
@@ -177,6 +178,12 @@ impl<'a> Runner<'a> {
     }
 
     fn run_not_sel4(&self) -> anyhow::Result<()> {
+        {
+            let mut perms = fs::metadata(self.exe)?.permissions();
+            let mode = perms.mode();
+            perms.set_mode(mode | 0o111); // add execute for user/group/other
+            fs::set_permissions(self.exe, perms)?;
+        }
         ensure!(
             Command::new(self.get_qemu_exe())
                 .args(
