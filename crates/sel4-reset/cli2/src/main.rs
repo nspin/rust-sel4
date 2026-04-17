@@ -181,10 +181,7 @@ impl<'a, T: FileHeader<Word: NumCast + PatchValue> + PatchPhoff> X<'a, T> {
 
     fn patch_word(&mut self, symbol_name: &str, value: T::Word) {
         let value_bytes = value.to_bytes(self.endian());
-        let symbol = self
-            .orig_elf
-            .symbol_by_name(symbol_name)
-            .expect(&format!("{symbol_name}"));
+        let symbol = self.orig_elf.symbol_by_name(symbol_name).unwrap();
         let symbol_vaddr = symbol.address();
         assert_eq!(usize::try_from(symbol.size()).unwrap(), value_bytes.len());
         let offset_in_file = self
