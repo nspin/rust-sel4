@@ -34,11 +34,23 @@ struct RegionMeta {
 
 unsafe fn reset_memory(regions: &'static [RegionMeta]) {
     for meta in regions {
+        sel4_panicking_env::debug_println!("{:#x?}", meta);
         let dst = unsafe { slice::from_raw_parts_mut(meta.dst_vaddr as *mut _, meta.dst_size) };
+        // let r = dst.as_ptr_range();
+        let r = dst.as_ptr();
+        sel4_panicking_env::debug_println!("{:#x?}", r);
+        sel4_panicking_env::debug_println!("{:#x?}", dst.len());
+        sel4_panicking_env::debug_println!("{:#x?}", r as usize + dst.len());
         let (dst_data, dst_zero) = dst.split_at_mut(meta.src_size);
         let src = unsafe { slice::from_raw_parts_mut(meta.src_vaddr as *mut _, meta.src_size) };
         dst_data.copy_from_slice(src);
+        sel4_panicking_env::debug_println!("done1");
+        let r = dst_zero.as_ptr();
+        sel4_panicking_env::debug_println!("{:#x?}", r);
+        sel4_panicking_env::debug_println!("{:#x?}", dst_zero.len());
+        sel4_panicking_env::debug_println!("{:#x?}", r as usize + dst_zero.len());
         dst_zero.fill(0);
+        sel4_panicking_env::debug_println!("done2");
     }
 }
 
