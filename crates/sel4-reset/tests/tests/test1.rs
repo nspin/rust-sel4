@@ -31,7 +31,7 @@ fn main() {
         if RESET_COUNT == 3 {
             assert_eq!(NOT_PERSISTENT, INIT);
             assert_eq!(PERSISTENT, INIT + RESET_COUNT);
-            exit_failure()
+            exit_success()
         }
 
         NOT_PERSISTENT += 1;
