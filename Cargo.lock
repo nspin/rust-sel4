@@ -2910,7 +2910,6 @@ dependencies = [
  "cfg-if",
  "sel4-elf-header",
  "sel4-panicking-env",
- "sel4-rodata-static",
  "sel4-stack",
 ]
 
