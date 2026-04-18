@@ -2930,7 +2930,6 @@ version = "0.1.0"
 dependencies = [
  "sel4-minimal-linux-runtime",
  "sel4-reset",
- "sel4-test-root-task",
 ]
 
 [[package]]

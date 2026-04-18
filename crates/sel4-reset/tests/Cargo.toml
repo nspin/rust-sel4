@@ -26,4 +26,3 @@ name = "test1"
 [dependencies]
 sel4-minimal-linux-runtime = { path = "../../private/support/sel4-minimal-linux-runtime" }
 sel4-reset = { path = ".." }
-sel4-test-root-task = { path = "../../private/support/sel4-test-root-task" }

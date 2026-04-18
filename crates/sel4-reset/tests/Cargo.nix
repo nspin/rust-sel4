@@ -13,7 +13,6 @@ mk {
     inherit (localCrates)
       sel4-minimal-linux-runtime
       sel4-reset
-      sel4-test-root-task
     ;
   };
   test = [
