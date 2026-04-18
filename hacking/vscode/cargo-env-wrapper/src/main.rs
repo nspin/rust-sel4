@@ -34,13 +34,51 @@ struct Cli {
 
 fn main() {
     let cli = Cli::parse();
+
+    let metadata = {
+        let mut cmd = MetadataCommand::new();
+        if let Some(s) = cli.manifest_path.as_ref() {
+            cmd.manifest_path(s);
+        }
+        cmd.other_options(forward_features_args(&cli));
+        cmd.no_deps();
+        cmd.exec().unwrap()
+    };
+
+    let workspace_members = metadata.workspace_packages();
 }
 
-fn forward_args(cli: &Cli, feature_filter: impl Fn(&str) -> bool) -> Vec<String> {
+fn forward_args(cli: &Cli) -> Vec<String> {
     forward_args_with_feature_filter(cli, |_| true)
 }
 
 fn forward_args_with_feature_filter(
+    cli: &Cli,
+    feature_filter: impl Fn(&str) -> bool,
+) -> Vec<String> {
+    let mut args = forward_features_args_with_feature_filter(cli, &feature_filter);
+    if cli.all_features {
+        args.push("--all-features".to_owned());
+    }
+    if cli.no_default_features {
+        args.push("--no-default-features".to_owned());
+    }
+    if let Some(s) = cli.target.as_ref() {
+        args.push("--target".to_owned());
+        args.push(s.to_owned());
+    }
+    for s in cli.config.iter() {
+        args.push("--config".to_owned());
+        args.push(s.to_owned());
+    }
+    args
+}
+
+fn forward_features_args(cli: &Cli) -> Vec<String> {
+    forward_features_args_with_feature_filter(cli, |_| true)
+}
+
+fn forward_features_args_with_feature_filter(
     cli: &Cli,
     feature_filter: impl Fn(&str) -> bool,
 ) -> Vec<String> {
@@ -55,15 +93,7 @@ fn forward_args_with_feature_filter(
         args.push("--all-features".to_owned());
     }
     if cli.no_default_features {
-        args.push("--all-features".to_owned());
-    }
-    if let Some(s) = cli.target.as_ref() {
-        args.push("--target".to_owned());
-        args.push(s.to_owned());
-    }
-    for s in cli.config.iter() {
-        args.push("--config".to_owned());
-        args.push(s.to_owned());
+        args.push("--no-default-features".to_owned());
     }
     args
 }
