@@ -71,7 +71,7 @@ fn forward_args_with_feature_filter(
 fn filter_features_arg(feature_filter: impl Fn(&str) -> bool, arg: &str) -> Option<String> {
     let filtered = arg
         .split(',')
-        .map(|s| assert_eq!(s.chars().filter(|c| *c == '/').count(), 1))
+        .inspect(|s| check_feature_arg_element(s))
         .filter(|s| feature_filter(s))
         .collect::<Vec<_>>()
         .join(",");
@@ -80,4 +80,8 @@ fn filter_features_arg(feature_filter: impl Fn(&str) -> bool, arg: &str) -> Opti
     } else {
         Some(filtered)
     }
+}
+
+fn check_feature_arg_element(s: &str) {
+    assert_eq!(s.chars().filter(|c| *c == '/').count(), 1)
 }
