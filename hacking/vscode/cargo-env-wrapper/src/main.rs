@@ -66,41 +66,79 @@ impl Env {
             cmd.exec().unwrap()
         };
 
-        let mut pkg_names = BTreeMap::new();
-        for pkg in metadata.workspace_packages() {
-            pkg_names.insert(pkg.name.as_ref(), pkg);
-        }
-
-        let exclude = self
-            .cli
-            .exclude
-            .iter()
-            .map(|name| &pkg_names[name.as_str()].name)
-            .collect::<BTreeSet<_>>();
-
-        let mut ok = BTreeSet::new();
-        for pkg in metadata.workspace_packages() {
-            let raw_deps = self.get_deps(&pkg.name);
-            let deps = raw_deps
-                .iter()
-                .map(|name| &pkg_names[name.as_str()].name)
-                .collect::<BTreeSet<_>>();
-            if deps.intersection(&exclude).count() == 0 {
-                ok.insert(&pkg.name);
-            }
-        }
-
         let workspace_pkgs = metadata
             .workspace_packages()
             .iter()
             .map(|pkg| &pkg.name)
             .collect::<BTreeSet<_>>();
 
+        let mut pkg_names = BTreeMap::new();
+        for pkg in workspace_pkgs.iter() {
+            pkg_names.insert(pkg.as_ref(), pkg);
+        }
+
+        let exclude = self
+            .cli
+            .exclude
+            .iter()
+            .map(|name| pkg_names[name.as_str()])
+            .collect::<BTreeSet<_>>();
+
+        let fast_ok = self
+            .get_fast_ok()
+            .iter()
+            .map(|name| pkg_names[name.as_str()])
+            .collect::<BTreeSet<_>>();
+
+        let mut ok = BTreeSet::new();
+        for pkg in workspace_pkgs.iter() {
+            let is_ok = if fast_ok.contains(pkg) {
+                true
+            } else {
+                let raw_deps = self.get_deps(pkg);
+                let deps = raw_deps
+                    .iter()
+                    .map(|name| pkg_names[name.as_str()])
+                    .collect::<BTreeSet<_>>();
+                deps.intersection(&exclude).count() == 0
+            };
+            if is_ok {
+                ok.insert(pkg);
+            }
+        }
+
         for pkg in workspace_pkgs.iter() {
             if !ok.contains(pkg) {
                 println!("{pkg}");
             }
         }
+    }
+
+    fn get_fast_ok(&self) -> Vec<String> {
+        let mut cmd = Command::new("cargo");
+        cmd.arg("tree");
+        if let Some(s) = self.cli.manifest_path.as_ref() {
+            cmd.arg("--manifest-path").arg(s);
+        }
+        cmd.arg("--workspace");
+        cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
+        cmd.arg("--color").arg("never");
+        for pkg in self.cli.exclude.iter() {
+            cmd.arg("--invert").arg(pkg);
+        }
+        let output = cmd.output().unwrap();
+        assert!(output.status.success());
+        str::from_utf8(&output.stdout)
+            .unwrap()
+            .lines()
+            .filter_map(|s| {
+                if s.contains(" (/") {
+                    Some(s.split_whitespace().next().unwrap().to_owned())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
     }
 
     fn get_deps(&self, pkg: &PackageName) -> Vec<String> {
