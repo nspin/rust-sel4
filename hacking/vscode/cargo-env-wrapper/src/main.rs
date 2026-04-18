@@ -17,6 +17,11 @@ fn main() {
 
 #[derive(Debug, Parser)]
 struct Cli {
+    wrapped: String,
+
+    #[arg(last = true)]
+    wrapped_args: Option<String>,
+
     #[arg(long)]
     manifest_path: Option<PathBuf>,
 
