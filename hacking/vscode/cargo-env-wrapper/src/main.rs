@@ -77,7 +77,6 @@ impl Env {
                 }
             }
         }
-
     }
 
     fn invoke_cargo_tree<T: AsRef<str>>(&self, pkg: &PackageName, exclude_features: &[T]) -> CargoTreeOutput {
