@@ -90,6 +90,7 @@ impl Env {
         cmd.args(self.forward_args_with_feature_filter(|s| {
             !exclude_features.iter().any(|s_| s_.as_ref() == s)
         }));
+        cmd.arg("--color").arg("never");
         let output = cmd.output().unwrap();
         if output.status.success() {
             CargoTreeOutput::Packages(
@@ -100,7 +101,23 @@ impl Env {
                     .collect::<Vec<_>>(),
             )
         } else {
-            todo!()
+            let stderr_first_line = str::from_utf8(&output.stderr)
+                .unwrap()
+                .lines()
+                .next()
+                .unwrap();
+            let feats = if let Some(feat) = stderr_first_line
+                .strip_prefix("error: the package '{pkg}' does not contain this feature: ")
+            {
+                vec![feat.to_owned()]
+            } else if let Some(feats) = stderr_first_line
+                .strip_prefix("error: the package '{pkg}' does not contain these features: ")
+            {
+                feats.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>()
+            } else {
+                panic!()
+            };
+            CargoTreeOutput::InvalidFeatures(feats)
         }
     }
 
