@@ -9,7 +9,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use cargo_metadata::{MetadataCommand, Package};
+use cargo_metadata::{MetadataCommand, Package, PackageName};
 use clap::Parser;
 
 fn main() {
@@ -67,16 +67,26 @@ impl Env {
         for pkg in metadata.workspace_packages() {}
     }
 
-    fn get_deps(&self, pkg: &Package) -> Vec<String> {
-        todo!()
+    fn get_deps(&self, pkg: &PackageName) -> Vec<String> {
+        match self.invoke_cargo_tree::<&str>(pkg, &[]) {
+            CargoTreeOutput::Packages(pkgs) => pkgs,
+            CargoTreeOutput::InvalidFeatures(feats) => {
+                match self.invoke_cargo_tree(pkg, &feats) {
+                    CargoTreeOutput::Packages(pkgs) => pkgs,
+                    _ => panic!(),
+                }
+            }
+        }
+
     }
 
-    fn invoke_cargo_tree(&self, exclude_features: &[impl AsRef<str>]) -> CargoTreeOutput {
+    fn invoke_cargo_tree<T: AsRef<str>>(&self, pkg: &PackageName, exclude_features: &[T]) -> CargoTreeOutput {
         let mut cmd = Command::new("cargo");
         cmd.arg("tree");
         if let Some(s) = self.cli.manifest_path.as_ref() {
             cmd.arg("--manifest-path").arg(s);
         }
+        cmd.arg("--package").arg(pkg.as_ref());
         cmd.args(self.forward_args_with_feature_filter(|s| {
             !exclude_features.iter().any(|s_| s_.as_ref() == s)
         }));
