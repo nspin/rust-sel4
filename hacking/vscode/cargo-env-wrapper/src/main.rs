@@ -12,6 +12,10 @@ use std::process::Command;
 use cargo_metadata::{MetadataCommand, Package};
 use clap::Parser;
 
+fn main() {
+    Env::get().run()
+}
+
 #[derive(Debug, Parser)]
 struct Cli {
     #[arg(long)]
@@ -33,8 +37,9 @@ struct Cli {
     config: Vec<String>,
 }
 
-struct Env<'a> {
-    cli: &'a Cli,
+
+struct Env {
+    cli: Cli,
 }
 
 enum CargoTreeOutput {
@@ -42,7 +47,12 @@ enum CargoTreeOutput {
     InvalidFeatures(Vec<String>),
 }
 
-impl<'a> Env<'a> {
+impl Env {
+    fn get() -> Self {
+        let cli = Cli::parse();
+        Self { cli }
+    }
+
     fn run(&self) {
         let metadata = {
             let mut cmd = MetadataCommand::new();
@@ -145,9 +155,4 @@ fn filter_features_arg(feature_filter: impl Fn(&str) -> bool, arg: &str) -> Opti
 
 fn check_feature_arg_element(s: &str) {
     assert_eq!(s.chars().filter(|c| *c == '/').count(), 1)
-}
-
-fn main() {
-    let cli = Cli::parse();
-    Env { cli: &cli }.run()
 }
