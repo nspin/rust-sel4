@@ -36,11 +36,20 @@ fn main() {
     let cli = Cli::parse();
 }
 
-fn forward_args(cli: &Cli) -> Vec<String> {
+fn forward_args(cli: &Cli, feature_filter: impl Fn(&str) -> bool) -> Vec<String> {
+    forward_args_with_feature_filter(cli, |_| true)
+}
+
+fn forward_args_with_feature_filter(
+    cli: &Cli,
+    feature_filter: impl Fn(&str) -> bool,
+) -> Vec<String> {
     let mut args = vec![];
     for s in cli.features.iter() {
-        args.push("--features".to_owned());
-        args.push(s.to_owned());
+        if let Some(filtered) = filter_features_arg(&feature_filter, s) {
+            args.push("--features".to_owned());
+            args.push(filtered.to_owned());
+        }
     }
     if cli.all_features {
         args.push("--all-features".to_owned());
@@ -57,4 +66,18 @@ fn forward_args(cli: &Cli) -> Vec<String> {
         args.push(s.to_owned());
     }
     args
+}
+
+fn filter_features_arg(feature_filter: impl Fn(&str) -> bool, arg: &str) -> Option<String> {
+    let filtered = arg
+        .split(',')
+        .map(|s| assert_eq!(s.chars().filter(|c| *c == '/').count(), 1))
+        .filter(|s| feature_filter(s))
+        .collect::<Vec<_>>()
+        .join(",");
+    if filtered.is_empty() {
+        None
+    } else {
+        Some(filtered)
+    }
 }
