@@ -90,8 +90,12 @@ impl Env {
             }
         }
 
-        for pkg in ok.iter() {
-            println!("{pkg}");
+        let workspace_pkgs = metadata.workspace_packages().iter().map(|pkg| &pkg.name).collect::<BTreeSet<_>>();
+
+        for pkg in workspace_pkgs.iter() {
+            if !ok.contains(pkg) {
+                println!("{pkg}");
+            }
         }
     }
 
