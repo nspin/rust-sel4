@@ -124,12 +124,13 @@ impl Env {
         let output = cmd.output().unwrap();
         if output.status.success() {
             // TODO use regex
+            // eprintln!("{}", str::from_utf8(&output.stdout).unwrap());
             CargoTreeOutput::Packages(
                 str::from_utf8(&output.stdout)
                     .unwrap()
                     .lines()
                     .filter_map(|s| {
-                        if s.contains('/') {
+                        if s.contains(" (/") {
                             Some(
                                 s.strip_prefix("'")
                                     .unwrap()
