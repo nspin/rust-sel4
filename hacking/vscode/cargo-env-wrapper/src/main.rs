@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
@@ -35,6 +35,9 @@ struct Cli {
 
     #[arg(long)]
     config: Vec<String>,
+
+    #[arg(long, short = 'e')]
+    exclude: Vec<String>,
 }
 
 struct Env {
@@ -63,7 +66,25 @@ impl Env {
             cmd.exec().unwrap()
         };
 
-        for pkg in metadata.workspace_packages() {}
+        let mut pkg_names = BTreeMap::new();
+        for pkg in metadata.workspace_packages() {
+            pkg_names.insert(pkg.name.as_ref(), pkg);
+        }
+
+        let exclude = self.cli.exclude.iter().map(|name| &pkg_names[name.as_str()].name).collect::<BTreeSet<_>>();
+
+        let mut ok = BTreeSet::new();
+        for pkg in metadata.workspace_packages() {
+            let raw_deps = self.get_deps(&pkg.name);
+            let deps = raw_deps.iter().map(|name| &pkg_names[name.as_str()].name).collect::<BTreeSet<_>>();
+            if deps.intersection(&exclude).count() == 0 {
+                ok.insert(&pkg.name);
+            }
+        }
+
+        for pkg in ok.iter() {
+            println!("{pkg}");
+        }
     }
 
     fn get_deps(&self, pkg: &PackageName) -> Vec<String> {
