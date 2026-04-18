@@ -90,7 +90,11 @@ impl Env {
             }
         }
 
-        let workspace_pkgs = metadata.workspace_packages().iter().map(|pkg| &pkg.name).collect::<BTreeSet<_>>();
+        let workspace_pkgs = metadata
+            .workspace_packages()
+            .iter()
+            .map(|pkg| &pkg.name)
+            .collect::<BTreeSet<_>>();
 
         for pkg in workspace_pkgs.iter() {
             if !ok.contains(pkg) {
@@ -123,7 +127,7 @@ impl Env {
         cmd.args(self.forward_args_with_feature_filter(|s| {
             !exclude_features.iter().any(|s_| s_.as_ref() == s)
         }));
-        cmd.arg("--prefix").arg("none").arg("--format").arg("'{p}'");
+        cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
         cmd.arg("--color").arg("never");
         let output = cmd.output().unwrap();
         if output.status.success() {
@@ -135,14 +139,7 @@ impl Env {
                     .lines()
                     .filter_map(|s| {
                         if s.contains(" (/") {
-                            Some(
-                                s.strip_prefix("'")
-                                    .unwrap()
-                                    .split_whitespace()
-                                    .next()
-                                    .unwrap()
-                                    .to_owned(),
-                            )
+                            Some(s.split_whitespace().next().unwrap().to_owned())
                         } else {
                             None
                         }
