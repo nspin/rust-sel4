@@ -91,7 +91,9 @@ impl Env {
         }));
         let output = cmd.output().unwrap();
         if output.status.success() {
-            todo!()
+            CargoTreeOutput::Packages(
+                str::from_utf8(&output.stdout).unwrap().lines().map(|s| s.split_whitespace().next().unwrap().to_owned()).collect::<Vec<_>>()
+            )
         } else {
             todo!()
         }
