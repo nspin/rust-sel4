@@ -37,7 +37,6 @@ struct Cli {
     config: Vec<String>,
 }
 
-
 struct Env {
     cli: Cli,
 }
@@ -70,16 +69,18 @@ impl Env {
     fn get_deps(&self, pkg: &PackageName) -> Vec<String> {
         match self.invoke_cargo_tree::<&str>(pkg, &[]) {
             CargoTreeOutput::Packages(pkgs) => pkgs,
-            CargoTreeOutput::InvalidFeatures(feats) => {
-                match self.invoke_cargo_tree(pkg, &feats) {
-                    CargoTreeOutput::Packages(pkgs) => pkgs,
-                    _ => panic!(),
-                }
-            }
+            CargoTreeOutput::InvalidFeatures(feats) => match self.invoke_cargo_tree(pkg, &feats) {
+                CargoTreeOutput::Packages(pkgs) => pkgs,
+                _ => panic!(),
+            },
         }
     }
 
-    fn invoke_cargo_tree<T: AsRef<str>>(&self, pkg: &PackageName, exclude_features: &[T]) -> CargoTreeOutput {
+    fn invoke_cargo_tree<T: AsRef<str>>(
+        &self,
+        pkg: &PackageName,
+        exclude_features: &[T],
+    ) -> CargoTreeOutput {
         let mut cmd = Command::new("cargo");
         cmd.arg("tree");
         if let Some(s) = self.cli.manifest_path.as_ref() {
@@ -92,7 +93,11 @@ impl Env {
         let output = cmd.output().unwrap();
         if output.status.success() {
             CargoTreeOutput::Packages(
-                str::from_utf8(&output.stdout).unwrap().lines().map(|s| s.split_whitespace().next().unwrap().to_owned()).collect::<Vec<_>>()
+                str::from_utf8(&output.stdout)
+                    .unwrap()
+                    .lines()
+                    .map(|s| s.split_whitespace().next().unwrap().to_owned())
+                    .collect::<Vec<_>>(),
             )
         } else {
             todo!()
