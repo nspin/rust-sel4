@@ -5,11 +5,10 @@
 //
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use cargo_metadata::{MetadataCommand, Package, PackageName};
+use cargo_metadata::{MetadataCommand, PackageName};
 use clap::Parser;
 
 fn main() {
