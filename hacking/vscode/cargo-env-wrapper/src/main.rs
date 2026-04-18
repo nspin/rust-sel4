@@ -68,7 +68,7 @@ impl<'a> Env<'a> {
             cmd.arg("--manifest-path").arg(s);
         }
         cmd.args(self.forward_args_with_feature_filter(|s| {
-            !exclude_features.iter().any(|s_| s_.as_ref() == s.as_ref())
+            !exclude_features.iter().any(|s_| s_.as_ref() == s)
         }));
         let output = cmd.output().unwrap();
         if output.status.success() {
@@ -149,6 +149,5 @@ fn check_feature_arg_element(s: &str) {
 
 fn main() {
     let cli = Cli::parse();
-
-    Env { cli }.run()
+    Env { cli: &cli }.run()
 }
