@@ -31,6 +31,7 @@ sel4-microkit-simple-ipc
 sel4-minimal-linux-runtime
 sel4-newlib
 sel4-platform-info
+sel4-reset-tests
 sel4-root-task
 sel4-root-task-default-test-harness
 sel4-root-task-with-std
