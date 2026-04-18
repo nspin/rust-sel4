@@ -71,12 +71,20 @@ impl Env {
             pkg_names.insert(pkg.name.as_ref(), pkg);
         }
 
-        let exclude = self.cli.exclude.iter().map(|name| &pkg_names[name.as_str()].name).collect::<BTreeSet<_>>();
+        let exclude = self
+            .cli
+            .exclude
+            .iter()
+            .map(|name| &pkg_names[name.as_str()].name)
+            .collect::<BTreeSet<_>>();
 
         let mut ok = BTreeSet::new();
         for pkg in metadata.workspace_packages() {
             let raw_deps = self.get_deps(&pkg.name);
-            let deps = raw_deps.iter().map(|name| &pkg_names[name.as_str()].name).collect::<BTreeSet<_>>();
+            let deps = raw_deps
+                .iter()
+                .map(|name| &pkg_names[name.as_str()].name)
+                .collect::<BTreeSet<_>>();
             if deps.intersection(&exclude).count() == 0 {
                 ok.insert(&pkg.name);
             }
@@ -111,14 +119,29 @@ impl Env {
         cmd.args(self.forward_args_with_feature_filter(|s| {
             !exclude_features.iter().any(|s_| s_.as_ref() == s)
         }));
+        cmd.arg("--prefix").arg("none").arg("--format").arg("'{p}'");
         cmd.arg("--color").arg("never");
         let output = cmd.output().unwrap();
         if output.status.success() {
+            // TODO use regex
             CargoTreeOutput::Packages(
                 str::from_utf8(&output.stdout)
                     .unwrap()
                     .lines()
-                    .map(|s| s.split_whitespace().next().unwrap().to_owned())
+                    .filter_map(|s| {
+                        if s.contains('/') {
+                            Some(
+                                s.strip_prefix("'")
+                                    .unwrap()
+                                    .split_whitespace()
+                                    .next()
+                                    .unwrap()
+                                    .to_owned(),
+                            )
+                        } else {
+                            None
+                        }
+                    })
                     .collect::<Vec<_>>(),
             )
         } else {
