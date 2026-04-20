@@ -79,7 +79,17 @@ impl Env {
                 println!("{pkg}");
             }
         } else {
-            
+            let mut cmd = Command::new("hacking/vscode/cargo-env-defaults-wrapper");
+            // let mut cmd = Command::new(&self.cli.wrapped);
+            cmd.arg(&self.cli.wrapped);
+            cmd.args(&self.cli.wrapped_args);
+            cmd.env("__RUST_ANALYZER_WRAPPER__ARGS", self.forward_config_args().join(" "));
+            let mut ws_args = self.forward_features_args();
+            for pkg in excludes.iter() {
+                ws_args.push("--exclude".to_owned());
+                ws_args.push(pkg.to_string());
+            }
+            cmd.env("__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS", ws_args.join(","));
         }
     }
 
