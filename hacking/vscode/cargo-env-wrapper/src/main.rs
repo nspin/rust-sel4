@@ -40,6 +40,9 @@ struct Cli {
     #[arg(long)]
     config: Vec<String>,
 
+    #[arg(long, short = 'i')]
+    include: Vec<String>,
+
     #[arg(long, short = 'e')]
     exclude: Vec<String>,
 }
@@ -49,7 +52,7 @@ struct Env {
 }
 
 enum CargoTreeOutput {
-    Packages(Vec<String>),
+    Packages(BTreeSet<String>),
     InvalidFeatures(Vec<String>),
 }
 
@@ -60,12 +63,91 @@ impl Env {
     }
 
     fn run(&self) {
-        for pkg in self.excludes().iter() {
+        assert!(self.cli.exclude.is_empty() || self.cli.include.is_empty());
+        let excludes = if !self.cli.exclude.is_empty() {
+            self.via_excludes()
+        } else if !self.cli.include.is_empty() {
+            self.via_includes()
+        } else {
+            BTreeSet::new()
+        };
+        for pkg in excludes.iter() {
             println!("{pkg}");
         }
     }
 
-    fn excludes(&self) -> BTreeSet<PackageName> {
+    fn via_includes(&self) -> BTreeSet<PackageName> {
+        let metadata = {
+            let mut cmd = MetadataCommand::new();
+            if let Some(s) = self.cli.manifest_path.as_ref() {
+                cmd.manifest_path(s);
+            }
+            cmd.other_options(self.forward_features_args());
+            cmd.no_deps();
+            cmd.exec().unwrap()
+        };
+
+        let workspace_pkgs = metadata
+            .workspace_packages()
+            .iter()
+            .map(|pkg| &pkg.name)
+            .collect::<BTreeSet<_>>();
+
+        let mut pkg_names = BTreeMap::new();
+        for pkg in workspace_pkgs.iter() {
+            pkg_names.insert(pkg.as_ref(), pkg);
+        }
+
+        let include_roots = self
+            .cli
+            .include
+            .iter()
+            .map(|name| pkg_names[name.as_str()])
+            .collect::<BTreeSet<_>>();
+
+        let all_pre = {
+            let mut cmd = Command::new("cargo");
+            cmd.arg("tree");
+            if let Some(s) = self.cli.manifest_path.as_ref() {
+                cmd.arg("--manifest-path").arg(s);
+            }
+            cmd.arg("--workspace");
+            cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
+            cmd.arg("--color").arg("never");
+            for pkg in self.cli.include.iter() {
+                cmd.arg("--package").arg(pkg);
+            }
+            let output = cmd.output().unwrap();
+            assert!(output.status.success());
+            str::from_utf8(&output.stdout)
+                .unwrap()
+                .lines()
+                .filter_map(|s| {
+                    if s.contains(" (/") {
+                        Some(s.split_whitespace().next().unwrap().to_owned())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<BTreeSet<_>>()
+        };
+    
+        let all = all_pre
+            .iter()
+            .map(|name| pkg_names[name.as_str()])
+            .collect::<BTreeSet<_>>();
+
+        let mut exclude = BTreeSet::new();
+        for pkg in workspace_pkgs.iter() {
+            let excluded = !all.contains(pkg);
+            if excluded {
+                exclude.insert((*pkg).clone());
+            }
+        }
+        exclude
+    }
+
+    fn via_excludes(&self) -> BTreeSet<PackageName> {
         let metadata = {
             let mut cmd = MetadataCommand::new();
             if let Some(s) = self.cli.manifest_path.as_ref() {
@@ -119,7 +201,7 @@ impl Env {
         exclude
     }
 
-    fn get_fast_exclude_candidates(&self) -> Vec<String> {
+    fn get_fast_exclude_candidates(&self) -> BTreeSet<String> {
         let mut cmd = Command::new("cargo");
         cmd.arg("tree");
         if let Some(s) = self.cli.manifest_path.as_ref() {
@@ -143,10 +225,10 @@ impl Env {
                     None
                 }
             })
-            .collect::<Vec<_>>()
+            .collect::<BTreeSet<_>>()
     }
 
-    fn get_deps(&self, pkg: &PackageName) -> Vec<String> {
+    fn get_deps(&self, pkg: &PackageName) -> BTreeSet<String> {
         match self.invoke_cargo_tree::<&str>(pkg, &[]) {
             CargoTreeOutput::Packages(pkgs) => pkgs,
             CargoTreeOutput::InvalidFeatures(feats) => match self.invoke_cargo_tree(pkg, &feats) {
@@ -187,7 +269,7 @@ impl Env {
                             None
                         }
                     })
-                    .collect::<Vec<_>>(),
+                    .collect::<BTreeSet<_>>(),
             )
         } else {
             let stderr_first_line = str::from_utf8(&output.stderr)
