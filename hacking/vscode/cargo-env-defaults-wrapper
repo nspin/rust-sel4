@@ -17,7 +17,7 @@ if [ -z "${__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS+x}" ]; then
     readarray -t excludes < "$here_abs/default-excludes.txt"
     declare -a args
     for exclude in "${excludes[@]}"; do
-        args+=("--exclude", "$exclude")
+        args+=("--exclude" "$exclude")
     done
     export __RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS="${args[*]}"
 fi
