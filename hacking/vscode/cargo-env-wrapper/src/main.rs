@@ -87,40 +87,39 @@ impl Env {
             pkg_names.insert(pkg.as_ref(), pkg);
         }
 
-        let exclude = self
+        let exclude_roots = self
             .cli
             .exclude
             .iter()
             .map(|name| pkg_names[name.as_str()])
             .collect::<BTreeSet<_>>();
 
-        let fast_ok = self
-            .get_fast_ok()
+        let fast_exclude_candidates = self
+            .get_fast_exclude_candidates()
             .iter()
             .map(|name| pkg_names[name.as_str()])
             .collect::<BTreeSet<_>>();
 
-        let mut ok = BTreeSet::new();
+        let mut exclude = BTreeSet::new();
         for pkg in workspace_pkgs.iter() {
-            let is_ok = if fast_ok.contains(pkg) {
-                true
+            let excluded = if !fast_exclude_candidates.contains(pkg) {
+                false
             } else {
                 let raw_deps = self.get_deps(pkg);
                 let deps = raw_deps
                     .iter()
                     .map(|name| pkg_names[name.as_str()])
                     .collect::<BTreeSet<_>>();
-                deps.intersection(&exclude).count() == 0
+                deps.intersection(&exclude_roots).count() > 0
             };
-            if is_ok {
-                ok.insert(*pkg);
+            if excluded {
+                exclude.insert((*pkg).clone());
             }
         }
-
-        BTreeSet::from_iter(workspace_pkgs.difference(&ok).map(|pkg| (*pkg).clone()))
+        exclude
     }
 
-    fn get_fast_ok(&self) -> Vec<String> {
+    fn get_fast_exclude_candidates(&self) -> Vec<String> {
         let mut cmd = Command::new("cargo");
         cmd.arg("tree");
         if let Some(s) = self.cli.manifest_path.as_ref() {
