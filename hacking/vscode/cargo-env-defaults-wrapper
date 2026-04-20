@@ -10,7 +10,7 @@ if [ -z "${__RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED+x}" ]; then
 fi
 
 if [ -z "${__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS+x}" ]; then
-    readarray -t excludes < "$here_abs/excludes.txt"
+    readarray -t excludes < "$here_abs/default-excludes.txt"
     declare -a args
     for exclude in "${excludes[@]}"; do
         args+=("--exclude", "$exclude")
