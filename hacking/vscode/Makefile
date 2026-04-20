@@ -11,4 +11,4 @@ none:
 
 .PHONY: test
 test:
-	cargo run -p cargo-env-wrapper -- --manifest-path=../../Cargo.toml
+	cargo run -p cargo-env-wrapper -- --manifest-path=../../Cargo.toml foo
