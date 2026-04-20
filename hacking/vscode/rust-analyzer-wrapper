@@ -23,7 +23,6 @@ if [ -z "${__RUST_ANALYZER_WRAPPER__LOG+x}" ]; then
     rm -f "$log"
     export __RUST_ANALYZER_WRAPPER__LOG="$log"
 fi
-# export __RUST_ANALYZER_WRAPPER__LOG="$here_abs/log.txt"
 
 export PATH="$here_abs/cargo-wrapper:$PATH"
 
