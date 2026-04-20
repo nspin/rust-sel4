@@ -60,6 +60,12 @@ impl Env {
     }
 
     fn run(&self) {
+        for pkg in self.excludes().iter() {
+            println!("{pkg}");
+        }
+    }
+
+    fn excludes(&self) -> BTreeSet<PackageName> {
         let metadata = {
             let mut cmd = MetadataCommand::new();
             if let Some(s) = self.cli.manifest_path.as_ref() {
@@ -107,15 +113,11 @@ impl Env {
                 deps.intersection(&exclude).count() == 0
             };
             if is_ok {
-                ok.insert(pkg);
+                ok.insert(*pkg);
             }
         }
 
-        for pkg in workspace_pkgs.iter() {
-            if !ok.contains(pkg) {
-                println!("{pkg}");
-            }
-        }
+        BTreeSet::from_iter(workspace_pkgs.difference(&ok).map(|pkg| (*pkg).clone()))
     }
 
     fn get_fast_ok(&self) -> Vec<String> {
