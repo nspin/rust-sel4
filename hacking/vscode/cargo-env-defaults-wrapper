@@ -22,11 +22,11 @@ if [ -z "${__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS+x}" ]; then
     export __RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS="${args[*]}"
 fi
 
-# if [ -z "${__RUST_ANALYZER_WRAPPER__LOG+x}" ]; then
-#     log="$here_abs/log.txt"
-#     rm -f "$log"
-#     export __RUST_ANALYZER_WRAPPER__LOG="$log"
-# fi
+if [ -z "${__RUST_ANALYZER_WRAPPER__LOG+x}" ]; then
+    log="$here_abs/log.txt"
+    rm -f "$log"
+    export __RUST_ANALYZER_WRAPPER__LOG="$log"
+fi
 
 export PATH="$here_abs/cargo-wrapper:$PATH"
 
