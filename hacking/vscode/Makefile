@@ -9,8 +9,8 @@ default_excludes := default-excludes.txt
 .PHONY: none
 none:
 
-.PHONY: test1
-test1:
+.PHONY: t1
+t1:
 	cargo run -p cargo-env-wrapper -- \
 		--manifest-path=../../Cargo.toml \
 		foo \
@@ -22,10 +22,22 @@ test1:
 		-e sel4-newlib \
 	> $(default_excludes)
 
-.PHONY: test2
-test2:
+.PHONY: t2
+t2:
 	cargo run -p cargo-env-wrapper -- \
 		--manifest-path=../../Cargo.toml \
 		foo \
 		-i microkit-http-server-example-server \
+	> $(default_excludes)
+
+get := $(abspath ../../.cargo/gen)
+
+.PHONY: t3
+t3:
+	cargo run -p cargo-env-wrapper -- \
+		--manifest-path=../../Cargo.toml \
+		bash \
+		-i microkit-http-server-example-server \
+		--config $(gen)/target/aarch64-sel4-microkit.toml \
+		--config $(gen)/world/aarch64.microkitDefault.toml \
 	> $(default_excludes)
