@@ -2,12 +2,9 @@
 
 set -eu -o pipefail
 
-declare -a args
 declare -i seen_check_command=0
 
-# args+=("--config" "/home/x/i/rust-sel4/.cargo/config.toml")
-# args+=("--config" "/home/x/i/rust-sel4/.cargo/gen/target/aarch64-sel4-microkit.toml")
-# args+=("--config" "/home/x/i/rust-sel4/.cargo/gen/world/aarch64.microkitDefault.toml")
+read -r -a args <<< "$__RUST_ANALYZER_WRAPPER__ARGS"
 
 for arg in "$@"; do
     args+=("$arg")
@@ -17,16 +14,17 @@ for arg in "$@"; do
             ;;
         --workspace)
             if [[ $seen_check_command -eq 1 ]]; then
-                readarray -t excludes < $__RUST_ANALYZER_WRAPPER__EXCLUDES
-                for exclude in "${excludes[@]}"; do
-                    args+=("--exclude" "$exclude")
-                done
+                read -r -a workspace_args <<< "$__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS"
+                args+=( "${workspace_args[@]}" )
             fi
             ;;
     esac
 done
 
-# echo "cargo $*" >> "$__RUST_ANALYZER_WRAPPER__LOG"
-# echo "cargo ${args[*]}" >> "$__RUST_ANALYZER_WRAPPER__LOG"
+if [ -z "$__RUST_ANALYZER_WRAPPER__LOG" ]; then
+    log="$__RUST_ANALYZER_WRAPPER__LOG"
+    echo "[WRAPPED]   cargo $*" >> "$log"
+    echo "[UNWRAPPED] cargo ${args[*]}" >> "$log"
+fi
 
 exec "$__RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED" "${args[@]}"
