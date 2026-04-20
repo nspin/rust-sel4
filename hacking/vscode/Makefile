@@ -9,6 +9,8 @@ default_excludes := default-excludes.txt
 .PHONY: none
 none:
 
-.PHONY: $(default_excludes)
+.PHONY: test
+test: $(default_excludes)
+
 $(default_excludes):
-	cargo run -p cargo-env-wrapper
+	cargo run -p cargo-env-wrapper -- --manifest-path=../../Cargo.toml
