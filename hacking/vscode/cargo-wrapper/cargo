@@ -21,7 +21,7 @@ for arg in "$@"; do
     esac
 done
 
-if [ -z "$__RUST_ANALYZER_WRAPPER__LOG" ]; then
+if [ -n "${__RUST_ANALYZER_WRAPPER__LOG-}" ]; then
     log="$__RUST_ANALYZER_WRAPPER__LOG"
     echo "[WRAPPED]   cargo $*" >> "$log"
     echo "[UNWRAPPED] cargo ${args[*]}" >> "$log"
