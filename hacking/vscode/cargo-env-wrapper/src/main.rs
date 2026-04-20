@@ -309,7 +309,7 @@ impl Env {
         }
         if let Some(s) = self.cli.target.as_ref() {
             args.push("--config".to_owned());
-            args.push(format!("build.target={s}"));
+            args.push(format!("build.target=\"{s}\""));
         }
         for s in self.cli.config.iter() {
             args.push("--config".to_owned());
