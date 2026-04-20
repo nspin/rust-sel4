@@ -31,7 +31,7 @@ t2:
 		-i microkit-http-server-example-server \
 	> $(default_excludes)
 
-get := $(abspath ../../.cargo/gen)
+gen := $(abspath ../../.cargo/gen)
 
 .PHONY: t3
 t3:
