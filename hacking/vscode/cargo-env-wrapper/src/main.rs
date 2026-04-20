@@ -45,6 +45,9 @@ struct Cli {
 
     #[arg(long, short = 'e')]
     exclude: Vec<String>,
+
+    #[arg(long, short = 'd')]
+    just_dump_excludes: bool,
 }
 
 struct Env {
@@ -71,8 +74,12 @@ impl Env {
         } else {
             BTreeSet::new()
         };
-        for pkg in excludes.iter() {
-            println!("{pkg}");
+        if self.cli.just_dump_excludes {
+            for pkg in excludes.iter() {
+                println!("{pkg}");
+            }
+        } else {
+            
         }
     }
 
