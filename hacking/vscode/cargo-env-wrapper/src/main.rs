@@ -113,6 +113,7 @@ impl Env {
             }
             cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
             cmd.arg("--color").arg("never");
+            cmd.arg("--edges=no-build");
             for pkg in self.cli.include.iter() {
                 cmd.arg("--package").arg(pkg);
             }
