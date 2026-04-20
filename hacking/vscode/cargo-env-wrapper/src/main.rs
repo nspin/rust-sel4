@@ -292,29 +292,12 @@ impl Env {
         }
     }
 
-    fn forward_args(&self) -> Vec<String> {
-        self.forward_args_with_feature_filter(|_| true)
-    }
-
     fn forward_args_with_feature_filter(
         &self,
         feature_filter: impl Fn(&str) -> bool,
     ) -> Vec<String> {
         let mut args = self.forward_features_args_with_feature_filter(&feature_filter);
-        if self.cli.all_features {
-            args.push("--all-features".to_owned());
-        }
-        if self.cli.no_default_features {
-            args.push("--no-default-features".to_owned());
-        }
-        if let Some(s) = self.cli.target.as_ref() {
-            args.push("--config".to_owned());
-            args.push(format!("build.target=\"{s}\""));
-        }
-        for s in self.cli.config.iter() {
-            args.push("--config".to_owned());
-            args.push(s.to_owned());
-        }
+        args.extend(self.forward_config_args());
         args
     }
 
@@ -338,6 +321,21 @@ impl Env {
         }
         if self.cli.no_default_features {
             args.push("--no-default-features".to_owned());
+        }
+        args
+    }
+
+    fn forward_config_args(
+        &self,
+    ) -> Vec<String> {
+        let mut args = vec![];
+        if let Some(s) = self.cli.target.as_ref() {
+            args.push("--config".to_owned());
+            args.push(format!("build.target=\"{s}\""));
+        }
+        for s in self.cli.config.iter() {
+            args.push("--config".to_owned());
+            args.push(s.to_owned());
         }
         args
     }
