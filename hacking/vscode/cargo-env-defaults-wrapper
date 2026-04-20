@@ -26,4 +26,4 @@ fi
 
 export PATH="$here_abs/cargo-wrapper:$PATH"
 
-exec rust-analyzer "$@"
+exec "$@"
