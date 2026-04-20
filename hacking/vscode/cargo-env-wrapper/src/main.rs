@@ -308,8 +308,8 @@ impl Env {
             args.push("--no-default-features".to_owned());
         }
         if let Some(s) = self.cli.target.as_ref() {
-            args.push("--target".to_owned());
-            args.push(s.to_owned());
+            args.push("--config".to_owned());
+            args.push(format!("build.target={s}"));
         }
         for s in self.cli.config.iter() {
             args.push("--config".to_owned());
