@@ -90,6 +90,7 @@ impl Env {
                 ws_args.push(pkg.to_string());
             }
             cmd.env("__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS", ws_args.join(","));
+            assert!(cmd.spawn().unwrap().wait().unwrap().success());
         }
     }
 

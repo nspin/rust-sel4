@@ -20,6 +20,7 @@ t1:
 		-e lionsos-sys \
 		-e sddf-sys \
 		-e sel4-newlib \
+		-d \
 	> $(default_excludes)
 
 .PHONY: t2
@@ -39,5 +40,4 @@ t3:
 		bash \
 		-i microkit-http-server-example-server \
 		--config $(gen)/target/aarch64-sel4-microkit.toml \
-		--config $(gen)/world/aarch64.microkitDefault.toml \
-	> $(default_excludes)
+		--config $(gen)/world/aarch64.microkitDefault.toml
