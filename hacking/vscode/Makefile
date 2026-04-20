@@ -9,8 +9,8 @@ default_excludes := default-excludes.txt
 .PHONY: none
 none:
 
-.PHONY: test
-test:
+.PHONY: test1
+test1:
 	cargo run -p cargo-env-wrapper -- \
 		--manifest-path=../../Cargo.toml \
 		foo \
@@ -20,4 +20,12 @@ test:
 		-e lionsos-sys \
 		-e sddf-sys \
 		-e sel4-newlib \
+	> $(default_excludes)
+
+.PHONY: test2
+test2:
+	cargo run -p cargo-env-wrapper -- \
+		--manifest-path=../../Cargo.toml \
+		foo \
+		-i microkit-http-server-example-server \
 	> $(default_excludes)

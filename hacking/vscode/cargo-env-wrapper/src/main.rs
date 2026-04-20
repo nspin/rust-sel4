@@ -111,7 +111,6 @@ impl Env {
             if let Some(s) = self.cli.manifest_path.as_ref() {
                 cmd.arg("--manifest-path").arg(s);
             }
-            cmd.arg("--workspace");
             cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
             cmd.arg("--color").arg("never");
             for pkg in self.cli.include.iter() {
