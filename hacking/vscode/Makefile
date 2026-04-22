@@ -20,6 +20,7 @@ t1:
 		-e lionsos-sys \
 		-e sddf-sys \
 		-e sel4-newlib \
+		-e sel4-backtrace \
 		-d \
 	> $(default_excludes)
 
