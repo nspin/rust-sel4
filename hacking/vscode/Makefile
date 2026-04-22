@@ -32,6 +32,7 @@ t2:
 	> $(default_excludes)
 
 gen := $(abspath ../../.cargo/gen)
+cargo_config := $(abspath ../../.cargo)
 
 .PHONY: t3
 t3:
@@ -39,5 +40,16 @@ t3:
 		--manifest-path=../../Cargo.toml \
 		bash \
 		-i microkit-http-server-example-server \
+		--config $(gen)/target/aarch64-sel4-microkit.toml \
+		--config $(gen)/world/aarch64.microkitDefault.toml
+
+.PHONY: t4
+t4:
+	cargo build -p cargo-env-wrapper && \
+	../target/debug/cargo-env-wrapper \
+		--manifest-path=../../Cargo.toml \
+		bash \
+		-i microkit-http-server-example-server \
+		--config $(cargo_config)/config.toml \
 		--config $(gen)/target/aarch64-sel4-microkit.toml \
 		--config $(gen)/world/aarch64.microkitDefault.toml

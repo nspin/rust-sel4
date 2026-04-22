@@ -4,7 +4,6 @@ set -eu -o pipefail
 
 here="$(dirname $0)"
 here_abs="$(cd "$here" && echo $PWD)"
-echo foo >> $here_abs/abc.txt
 
 declare -i seen_check_command=0
 
@@ -25,11 +24,10 @@ for arg in "$@"; do
     esac
 done
 
-# if [ -n "${__RUST_ANALYZER_WRAPPER__LOG-}" ]; then
-    # log="$__RUST_ANALYZER_WRAPPER__LOG"
-    log=$here_abs/lg.txt
+if [ -n "${__RUST_ANALYZER_WRAPPER__LOG-}" ]; then
+    log="$__RUST_ANALYZER_WRAPPER__LOG"
     echo "[WRAPPED]   cargo $*" >> "$log"
     echo "[UNWRAPPED] cargo ${args[*]}" >> "$log"
-# fi
+fi
 
 exec "$__RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED" "${args[@]}"

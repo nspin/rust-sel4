@@ -30,9 +30,4 @@ fi
 
 export PATH="$here_abs/cargo-wrapper:$PATH"
 
-xxx="$here_abs/xxx.txt"
-
-echo FOO >> $xxx
-echo $(which cargo) >> $xxx
-
 exec "$@"
