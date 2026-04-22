@@ -5,6 +5,7 @@
 //
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::os::unix::process::CommandExt as _;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -79,18 +80,20 @@ impl Env {
                 println!("{pkg}");
             }
         } else {
-            let mut cmd = Command::new("/home/x/i/rust-sel4/hacking/vscode/cargo-env-defaults-wrapper");
-            // let mut cmd = Command::new(&self.cli.wrapped);
-            cmd.arg(&self.cli.wrapped);
+            // let mut cmd = Command::new("/home/x/i/rust-sel4/hacking/vscode/cargo-env-defaults-wrapper");
+            let mut cmd = Command::new(&self.cli.wrapped);
+            // cmd.arg(&self.cli.wrapped);
             cmd.args(&self.cli.wrapped_args);
-            cmd.env("__RUST_ANALYZER_WRAPPER__ARGS", self.forward_config_args().join(" "));
+            // cmd.env("__RUST_ANALYZER_WRAPPER__ARGS", self.forward_config_args().join(" "));
             let mut ws_args = self.forward_features_args();
             for pkg in excludes.iter() {
                 ws_args.push("--exclude".to_owned());
                 ws_args.push(pkg.to_string());
             }
-            cmd.env("__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS", ws_args.join(" "));
-            assert!(cmd.spawn().unwrap().wait().unwrap().success());
+            // cmd.env("__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS", ws_args.join(" "));
+            // assert!(cmd.spawn().unwrap().wait().unwrap().success());
+            println!("{:?}", cmd);
+            panic!("{:?}", cmd.exec());
         }
     }
 

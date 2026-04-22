@@ -5,4 +5,6 @@ set -eu -o pipefail
 here="$(dirname $0)"
 here_abs="$(cd "$here" && echo $PWD)"
 
+echo RUNNING >> $here_abs/radw.txt
+
 exec "$here_abs/cargo-env-defaults-wrapper" rust-analyzer "$@"
