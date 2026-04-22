@@ -1,0 +1,11 @@
+FOO
+FOO
+FOO
+FOO
+FOO
+FOO
+FOO
+FOO
+/home/x/i/rust-sel4/hacking/vscode/cargo-wrapper/cargo
+FOO
+/home/x/i/rust-sel4/hacking/vscode/cargo-wrapper/cargo
