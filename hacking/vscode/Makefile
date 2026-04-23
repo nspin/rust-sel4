@@ -53,3 +53,14 @@ t4:
 		--config $(cargo_config)/config.toml \
 		--config $(gen)/target/aarch64-sel4-microkit.toml \
 		--config $(gen)/world/aarch64.microkitDefault.toml
+
+.PHONY: t5
+t5:
+	cargo build -p cargo-env-wrapper && \
+	../target/debug/cargo-env-wrapper \
+		--manifest-path=../../Cargo.toml \
+		bash \
+		-i microkit-http-server-example-server \
+		--config $(cargo_config)/config.toml \
+		--config $(gen)/target/aarch64-sel4-microkit.toml \
+		--config $(gen)/world/aarch64.microkitDefault.toml
