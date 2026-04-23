@@ -125,6 +125,7 @@ dependencies = [
  "anyhow",
  "cargo_metadata 0.23.1",
  "clap",
+ "serde_json",
 ]
 
 [[package]]
