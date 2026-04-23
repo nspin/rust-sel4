@@ -40,7 +40,8 @@ t3:
 		--manifest-path=../../Cargo.toml \
 		-i microkit-http-server-example-server \
 		--config $(gen)/target/aarch64-sel4-microkit.toml \
-		--config $(gen)/world/aarch64.microkitDefault.toml
+		--config $(gen)/world/aarch64.microkitDefault.toml \
+		> ws/foo.code-workspace
 
 .PHONY: t4
 t4:

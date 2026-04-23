@@ -132,8 +132,12 @@ impl Env {
                 Value::Bool(true),
             );
         }
-
-        ws
+        json!({
+            "folders": [
+                { "path": "/home/x/i/rust-sel4" }
+            ],
+            "settings": ws,
+        })
     }
 
     fn via_includes(&self) -> BTreeSet<PackageName> {
