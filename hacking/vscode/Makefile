@@ -38,7 +38,6 @@ cargo_config := $(abspath ../../.cargo)
 t3:
 	cargo run -p cargo-env-wrapper -- \
 		--manifest-path=../../Cargo.toml \
-		bash \
 		-i microkit-http-server-example-server \
 		--config $(gen)/target/aarch64-sel4-microkit.toml \
 		--config $(gen)/world/aarch64.microkitDefault.toml
@@ -48,7 +47,6 @@ t4:
 	cargo build -p cargo-env-wrapper && \
 	../target/debug/cargo-env-wrapper \
 		--manifest-path=../../Cargo.toml \
-		bash \
 		-i microkit-http-server-example-server \
 		--config $(cargo_config)/config.toml \
 		--config $(gen)/target/aarch64-sel4-microkit.toml \
@@ -59,7 +57,6 @@ t5:
 	cargo build -p cargo-env-wrapper && \
 	../target/debug/cargo-env-wrapper \
 		--manifest-path=../../Cargo.toml \
-		bash \
 		-i microkit-http-server-example-server \
 		--config $(cargo_config)/config.toml \
 		--config $(gen)/target/aarch64-sel4-microkit.toml \

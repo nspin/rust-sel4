@@ -19,11 +19,6 @@ fn main() {
 
 #[derive(Debug, Parser)]
 struct Cli {
-    wrapped: String,
-
-    #[arg(last = true)]
-    wrapped_args: Option<String>,
-
     #[arg(long)]
     manifest_path: Option<PathBuf>,
 
@@ -94,25 +89,18 @@ impl Env {
                 println!("{pkg}");
             }
         } else {
-            let mut cmd =
-                Command::new("/home/x/i/rust-sel4/hacking/vscode/cargo-env-defaults-wrapper");
-            // let mut cmd = Command::new(&self.cli.wrapped);
-            cmd.arg(&self.cli.wrapped);
-            cmd.args(&self.cli.wrapped_args);
-            cmd.env(
-                "__RUST_ANALYZER_WRAPPER__ARGS",
-                self.forward_config_args().join(" "),
-            );
-            cmd.env("__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS", ws_args.join(" "));
-            // assert!(cmd.spawn().unwrap().wait().unwrap().success());
-            println!("{:?}", cmd);
-            panic!("{:?}", cmd.exec());
+            let ws = self.ws(excludes);
+            println!("{ws:#}");
         }
     }
 
     fn ws(&self, excludes: BTreeSet<PackageName>) -> Value {
         let mut ws = json!({
-            "rust-analyzer.cargo.extraArgs": excludes.iter().map(|x| x.to_string()).collect::<Vec<_>>(),
+            "rust-analyzer.cargo.extraArgs": self.forward_config_args(),
+            "rust-analyzer.cargo.extraEnv": {
+                "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS":
+                    excludes.iter().map(|x| format!("--exclude {x}")).collect::<Vec<_>>().join(" "),
+            },
         });
         let mut features: Option<Vec<&str>> = None;
         for s in self.cli.features.iter() {
