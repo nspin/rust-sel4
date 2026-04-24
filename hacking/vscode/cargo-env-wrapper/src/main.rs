@@ -248,31 +248,25 @@ impl Env {
             .collect::<BTreeSet<_>>();
 
         let all_pre = {
-            let mut cmd = Command::new("cargo");
-            cmd.arg("tree");
-            if let Some(s) = self.cli.manifest_path.as_ref() {
-                cmd.arg("--manifest-path").arg(s);
+            let output = {
+                let mut cmd = Command::new("cargo");
+                cmd.arg("tree");
+                if let Some(s) = self.cli.manifest_path.as_ref() {
+                    cmd.arg("--manifest-path").arg(s);
+                }
+                cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
+                cmd.arg("--color").arg("never");
+                cmd.arg("--edges=no-build");
+                cmd.arg("--edges=no-proc-macro");
+                for pkg in self.cli.include.iter() {
+                    cmd.arg("--package").arg(pkg);
+                }
+                cmd
             }
-            cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
-            cmd.arg("--color").arg("never");
-            cmd.arg("--edges=no-build");
-            cmd.arg("--edges=no-proc-macro");
-            for pkg in self.cli.include.iter() {
-                cmd.arg("--package").arg(pkg);
-            }
-            let output = cmd.output().unwrap();
+            .output()
+            .unwrap();
             assert!(output.status.success());
-            str::from_utf8(&output.stdout)
-                .unwrap()
-                .lines()
-                .filter_map(|s| {
-                    if s.contains(" (/") {
-                        Some(s.split_whitespace().next().unwrap().to_owned())
-                    } else {
-                        None
-                    }
-                })
-                .collect::<BTreeSet<_>>()
+            CargoTreeOutput::parse_success(&output.stdout)
         };
 
         let all = all_pre
