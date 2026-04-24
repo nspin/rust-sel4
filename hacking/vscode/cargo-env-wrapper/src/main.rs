@@ -169,20 +169,6 @@ impl Env {
         }
     }
 
-    fn include_roots<'a>(
-        &self,
-        workspace_packages: &'a WorkspacePackages,
-    ) -> BTreeSet<&'a PackageName> {
-        workspace_packages.by_names(self.cli.include.iter())
-    }
-
-    fn exclude_roots<'a>(
-        &self,
-        workspace_packages: &'a WorkspacePackages,
-    ) -> BTreeSet<&'a PackageName> {
-        workspace_packages.by_names(self.cli.exclude.iter())
-    }
-
     fn get_orig_settings(&self) -> Value {
         let bs = fs::read("/home/x/i/rust-sel4/.vscode/settings.json").unwrap();
         let s = str::from_utf8(&bs).unwrap();
@@ -240,6 +226,33 @@ impl Env {
             ],
             "settings": settings,
         })
+    }
+
+    fn workspace_packages(&self) -> WorkspacePackages {
+        let metadata = {
+            let mut cmd = MetadataCommand::new();
+            if let Some(s) = self.cli.manifest_path.as_ref() {
+                cmd.manifest_path(s);
+            }
+            cmd.other_options(self.forward_features_args());
+            cmd.no_deps();
+            cmd.exec().unwrap()
+        };
+        WorkspacePackages::from_metadata(&metadata)
+    }
+
+    fn include_roots<'a>(
+        &self,
+        workspace_packages: &'a WorkspacePackages,
+    ) -> BTreeSet<&'a PackageName> {
+        workspace_packages.by_names(self.cli.include.iter())
+    }
+
+    fn exclude_roots<'a>(
+        &self,
+        workspace_packages: &'a WorkspacePackages,
+    ) -> BTreeSet<&'a PackageName> {
+        workspace_packages.by_names(self.cli.exclude.iter())
     }
 
     fn via_includes<'a>(
@@ -342,19 +355,6 @@ impl Env {
             cmd.arg("--manifest-path").arg(s);
         }
         cmd
-    }
-
-    fn workspace_packages(&self) -> WorkspacePackages {
-        let metadata = {
-            let mut cmd = MetadataCommand::new();
-            if let Some(s) = self.cli.manifest_path.as_ref() {
-                cmd.manifest_path(s);
-            }
-            cmd.other_options(self.forward_features_args());
-            cmd.no_deps();
-            cmd.exec().unwrap()
-        };
-        WorkspacePackages::from_metadata(&metadata)
     }
 
     fn forward_args_with_feature_filter(
