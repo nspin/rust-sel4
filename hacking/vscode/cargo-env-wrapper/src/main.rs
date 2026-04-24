@@ -129,6 +129,16 @@ impl WorkspacePackages {
     fn by_name(&self, name: impl AsRef<str>) -> &PackageName {
         &self.pkgs_by_name[name.as_ref()]
     }
+
+    fn by_names(&self, names: impl Iterator<Item = impl AsRef<str>>) -> BTreeSet<&PackageName> {
+        names
+            .map(|name| self.by_name(name))
+            .collect::<BTreeSet<_>>()
+    }
+
+    fn set_by_name(&self, names: &BTreeSet<String>) -> BTreeSet<&PackageName> {
+        self.by_names(names.iter())
+    }
 }
 
 impl Env {
@@ -157,6 +167,20 @@ impl Env {
             let vs_ws = self.vscode_workspace(excludes);
             println!("{vs_ws:#}");
         }
+    }
+
+    fn include_roots<'a>(
+        &self,
+        workspace_packages: &'a WorkspacePackages,
+    ) -> BTreeSet<&'a PackageName> {
+        workspace_packages.by_names(self.cli.include.iter())
+    }
+
+    fn exclude_roots<'a>(
+        &self,
+        workspace_packages: &'a WorkspacePackages,
+    ) -> BTreeSet<&'a PackageName> {
+        workspace_packages.by_names(self.cli.exclude.iter())
     }
 
     fn get_orig_settings(&self) -> Value {
@@ -222,24 +246,23 @@ impl Env {
         &self,
         workspace_packages: &'a WorkspacePackages,
     ) -> BTreeSet<&'a PackageName> {
-        let transitive_includes = {
-            let output = {
-                let mut cmd = self.cargo_tree_base_cmd();
-                cmd.arg("--edges=no-build");
-                cmd.arg("--edges=no-proc-macro");
-                for pkg in self.cli.include.iter() {
-                    cmd.arg("--package")
-                        .arg(workspace_packages.by_name(pkg).as_str());
+        let transitive_includes = workspace_packages.by_names(
+            {
+                let output = {
+                    let mut cmd = self.cargo_tree_base_cmd();
+                    cmd.arg("--edges=no-build");
+                    cmd.arg("--edges=no-proc-macro");
+                    for pkg in self.include_roots(workspace_packages) {
+                        cmd.arg("--package").arg(pkg.as_str());
+                    }
+                    cmd
                 }
-                cmd
+                .output()
+                .unwrap();
+                CargoTreeOutput::assume_success(&output)
             }
-            .output()
-            .unwrap();
-            CargoTreeOutput::assume_success(&output)
-        }
-        .iter()
-        .map(|name| workspace_packages.by_name(name))
-        .collect::<BTreeSet<_>>();
+            .iter(),
+        );
 
         workspace_packages
             .iter()
@@ -251,27 +274,18 @@ impl Env {
         &self,
         workspace_packages: &'a WorkspacePackages,
     ) -> BTreeSet<&'a PackageName> {
-        let exclude_roots = self
-            .cli
-            .exclude
-            .iter()
-            .map(|name| workspace_packages.by_name(name))
-            .collect::<BTreeSet<_>>();
+        let exclude_roots = self.exclude_roots(workspace_packages);
 
-        let fast_exclude_candidates = self
-            .get_fast_exclude_candidates()
-            .iter()
-            .map(|name| workspace_packages.by_name(name))
-            .collect::<BTreeSet<_>>();
+        let fast_exclude_candidates =
+            workspace_packages.set_by_name(&self.get_fast_exclude_candidates());
 
         workspace_packages
             .iter()
             .filter(|pkg| {
                 fast_exclude_candidates.contains(pkg)
-                    && self
-                        .get_deps(pkg)
+                    && workspace_packages
+                        .by_names(self.get_deps(pkg).iter())
                         .iter()
-                        .map(|name| workspace_packages.by_name(name))
                         .any(|pkg| exclude_roots.contains(pkg))
             })
             .collect::<BTreeSet<_>>()
