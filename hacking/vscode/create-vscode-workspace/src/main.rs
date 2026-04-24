@@ -48,6 +48,9 @@ struct Cli {
     #[arg(long, short = 'i')]
     include: Vec<String>,
 
+    #[arg(long)]
+    include_dependents: Vec<String>,
+
     #[arg(long, short = 'e')]
     exclude: Vec<String>,
 
