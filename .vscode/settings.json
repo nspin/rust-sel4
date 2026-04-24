@@ -7,21 +7,14 @@
 {
     "rust-analyzer.statusBar.showStatusBar": "always",
     "rust-analyzer.statusBar.clickAction": "stopServer",
-    "rust-analyzer.server.path": "/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper",
+    "rust-analyzer.server.path": "hacking/vscode/rust-analyzer-defaults-wrapper",
     "rust-analyzer.linkedProjects": [
-        "/home/x/i/rust-sel4/Cargo.toml",
-        // "/home/x/i/rust-sel4/hacking/Cargo.toml",
+        "Cargo.toml",
+        "hacking/Cargo.toml",
     ],
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.check.workspace": true,
-    // "rust-analyzer.cargo.targetDir": true, // use subdir
-    "rust-analyzer.cargo.allTargets": false, // use subdir
-    // "rust-analyzer.cargo.extraArgs": ["--verbose"], // use subdir
-    // "rust-analyzer.cargo.extraArgs": [
-    //     "--config", "/home/x/i/rust-sel4/.cargo/config.toml",
-	// 	"--config", "/home/x/i/rust-sel4/.cargo/gen/target/aarch64-sel4-microkit.toml",
-	// 	"--config", "/home/x/i/rust-sel4/.cargo/gen/world/aarch64.microkitDefault.toml",
-    // ],
+    "rust-analyzer.cargo.targetDir": true, // use subdir
     "rust-analyzer.procMacro.enable": false,
     "rust-analyzer.procMacro.attributes.enable": false,
     // TODO

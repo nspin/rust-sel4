@@ -103,6 +103,8 @@ impl Env {
 
     fn ws(&self, excludes: BTreeSet<PackageName>) -> Value {
         let mut ws = self.get_orig_config();
+        ws.as_object_mut().unwrap().insert("rust-analyzer.server.path".to_owned(), json!("/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper"));
+        ws.as_object_mut().unwrap().insert("rust-analyzer.linkedProjects".to_owned(), json!(["/home/x/i/rust-sel4/Cargo.toml"]));
         ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.extraArgs".to_owned(), json!(self.forward_config_args()));
         ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.metadataExtraArgs".to_owned(), json!(self.forward_config_args()));
         ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.extraEnv".to_owned(), json!({
