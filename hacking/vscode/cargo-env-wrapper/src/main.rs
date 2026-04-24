@@ -169,7 +169,9 @@ impl Env {
         let mut new_settings = json!({
             "rust-analyzer.cargo.allTargets": false,
             "rust-analyzer.server.path": "/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper",
-            "rust-analyzer.linkedProjects": ["/home/x/i/rust-sel4/Cargo.toml"],
+            "rust-analyzer.linkedProjects": [
+                "/home/x/i/rust-sel4/Cargo.toml",
+            ],
             "rust-analyzer.cargo.extraArgs": self.forward_config_args(),
             "rust-analyzer.cargo.metadataExtraArgs": self.forward_config_args(),
             "rust-analyzer.cargo.extraEnv": {
