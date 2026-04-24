@@ -178,7 +178,7 @@ impl Env {
         jsonc_parser::parse_to_serde_value(s, &Default::default()).unwrap()
     }
 
-    fn ws(&self, excludes: BTreeSet<PackageName>) -> Value {
+    fn ws(&self, excludes: BTreeSet<&PackageName>) -> Value {
         let mut ws = self.get_orig_config();
         ws.as_object_mut()
             .unwrap()
@@ -273,7 +273,10 @@ impl Env {
             .collect::<BTreeSet<_>>()
     }
 
-    fn via_excludes<'a>(&self, workspace_packages: &'a WorkspacePackages) -> BTreeSet<&'a PackageName> {
+    fn via_excludes<'a>(
+        &self,
+        workspace_packages: &'a WorkspacePackages,
+    ) -> BTreeSet<&'a PackageName> {
         let exclude_roots = self
             .cli
             .exclude
