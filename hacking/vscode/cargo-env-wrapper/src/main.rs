@@ -189,7 +189,6 @@ impl Env {
             ],
             "rust-analyzer.cargo.allTargets": false,
             "rust-analyzer.cargo.extraArgs": self.forward_config_args(),
-            "rust-analyzer.cargo.metadataExtraArgs": self.forward_config_args(),
             "rust-analyzer.cargo.extraEnv": {
                 "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS": exclude_args,
             },
