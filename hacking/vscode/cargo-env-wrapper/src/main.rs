@@ -6,6 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
+use std::env;
 use std::path::PathBuf;
 use std::process::{Command, Output};
 use std::str::FromStr;
@@ -16,7 +17,7 @@ use serde_json::{Value, json};
 
 // HACK
 fn project_root() -> PathBuf {
-    let mut d = PathBuf::from_str(file!()).unwrap().parent().unwrap().to_owned();
+    let mut d = env::current_dir().unwrap();
     while !d.join("rust-toolchain.toml").exists() {
         d = d.parent().unwrap().to_owned();
     }
