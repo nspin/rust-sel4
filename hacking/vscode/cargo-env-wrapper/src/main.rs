@@ -341,8 +341,8 @@ impl Env {
         let output = {
             let mut cmd = self.cargo_tree_base_cmd();
             cmd.arg("--package").arg(pkg.as_ref());
-            cmd.args(self.forward_args_with_feature_filter(|s| {
-                !exclude_features.iter().any(|s_| s_.as_ref() == s)
+            cmd.args(self.forward_args_with_feature_filter(|feat| {
+                !exclude_features.iter().any(|excluded_feat| feat == excluded_feat.as_ref())
             }));
             cmd
         }
