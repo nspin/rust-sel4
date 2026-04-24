@@ -5,8 +5,8 @@
 //
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
@@ -52,6 +52,9 @@ struct Cli {
 
     #[arg(long, short = 'd')]
     just_dump_excludes: bool,
+
+    #[arg(short = 'o')]
+    out_path: PathBuf,
 }
 
 struct Env {
@@ -229,10 +232,19 @@ impl Env {
 
         json!({
             "folders": [
-                { "path": project_root() }
+                { "path": pathdiff::diff_paths(project_root(), self.abs_out_path()) }
             ],
             "settings": settings,
         })
+    }
+
+    fn abs_out_path(&self) -> PathBuf {
+        let p = &self.cli.out_path;
+        if p.is_absolute() {
+            p.clone()
+        } else {
+            env::current_dir().unwrap().join(p)
+        }
     }
 
     fn workspace_packages(&self) -> WorkspacePackages {
