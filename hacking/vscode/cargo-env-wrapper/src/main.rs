@@ -399,24 +399,23 @@ impl Env {
         pkg: &PackageName,
         exclude_features: &[T],
     ) -> CargoTreeOutput {
-        CargoTreeOutput::parse(
-            &{
-                let mut cmd = Command::new("cargo");
-                cmd.arg("tree");
-                if let Some(s) = self.cli.manifest_path.as_ref() {
-                    cmd.arg("--manifest-path").arg(s);
-                }
-                cmd.arg("--package").arg(pkg.as_ref());
-                cmd.args(self.forward_args_with_feature_filter(|s| {
-                    !exclude_features.iter().any(|s_| s_.as_ref() == s)
-                }));
-                cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
-                cmd.arg("--color").arg("never");
-                cmd
+        let output = {
+            let mut cmd = Command::new("cargo");
+            cmd.arg("tree");
+            if let Some(s) = self.cli.manifest_path.as_ref() {
+                cmd.arg("--manifest-path").arg(s);
             }
-            .output()
-            .unwrap(),
-        )
+            cmd.arg("--package").arg(pkg.as_ref());
+            cmd.args(self.forward_args_with_feature_filter(|s| {
+                !exclude_features.iter().any(|s_| s_.as_ref() == s)
+            }));
+            cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
+            cmd.arg("--color").arg("never");
+            cmd
+        }
+        .output()
+        .unwrap();
+        CargoTreeOutput::parse(&output)
     }
 
     fn workspace_packages(&self) -> WorkspacePackages {
