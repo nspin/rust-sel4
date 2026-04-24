@@ -135,11 +135,12 @@ impl Env {
     }
 
     fn run(&self) {
+        let workspace_packages = self.workspace_packages();
         assert!(self.cli.exclude.is_empty() || self.cli.include.is_empty());
         let excludes = if !self.cli.exclude.is_empty() {
-            self.via_excludes()
+            self.via_excludes(&workspace_packages)
         } else if !self.cli.include.is_empty() {
-            self.via_includes()
+            self.via_includes(&workspace_packages)
         } else {
             BTreeSet::new()
         };
@@ -238,33 +239,12 @@ impl Env {
         })
     }
 
-    fn via_includes(&self) -> BTreeSet<PackageName> {
-        let metadata = {
-            let mut cmd = MetadataCommand::new();
-            if let Some(s) = self.cli.manifest_path.as_ref() {
-                cmd.manifest_path(s);
-            }
-            cmd.other_options(self.forward_features_args());
-            cmd.no_deps();
-            cmd.exec().unwrap()
-        };
-
-        let workspace_pkgs = metadata
-            .workspace_packages()
-            .iter()
-            .map(|pkg| &pkg.name)
-            .collect::<BTreeSet<_>>();
-
-        let mut pkg_names = BTreeMap::new();
-        for pkg in workspace_pkgs.iter() {
-            pkg_names.insert(pkg.as_ref(), pkg);
-        }
-
+    fn via_includes(&self, workspace_packages: &WorkspacePackages) -> BTreeSet<PackageName> {
         let include_roots = self
             .cli
             .include
             .iter()
-            .map(|name| pkg_names[name.as_str()])
+            .map(|name| workspace_packages.by_name(name))
             .collect::<BTreeSet<_>>();
 
         let all_pre = {
@@ -297,11 +277,11 @@ impl Env {
 
         let all = all_pre
             .iter()
-            .map(|name| pkg_names[name.as_str()])
+            .map(|name| workspace_packages.by_name(name))
             .collect::<BTreeSet<_>>();
 
         let mut exclude = BTreeSet::new();
-        for pkg in workspace_pkgs.iter() {
+        for pkg in workspace_packages.iter() {
             let excluded = !all.contains(pkg);
             if excluded {
                 exclude.insert((*pkg).clone());
@@ -310,50 +290,29 @@ impl Env {
         exclude
     }
 
-    fn via_excludes(&self) -> BTreeSet<PackageName> {
-        let metadata = {
-            let mut cmd = MetadataCommand::new();
-            if let Some(s) = self.cli.manifest_path.as_ref() {
-                cmd.manifest_path(s);
-            }
-            cmd.other_options(self.forward_features_args());
-            cmd.no_deps();
-            cmd.exec().unwrap()
-        };
-
-        let workspace_pkgs = metadata
-            .workspace_packages()
-            .iter()
-            .map(|pkg| &pkg.name)
-            .collect::<BTreeSet<_>>();
-
-        let mut pkg_names = BTreeMap::new();
-        for pkg in workspace_pkgs.iter() {
-            pkg_names.insert(pkg.as_ref(), pkg);
-        }
-
+    fn via_excludes(&self, workspace_packages: &WorkspacePackages) -> BTreeSet<PackageName> {
         let exclude_roots = self
             .cli
             .exclude
             .iter()
-            .map(|name| pkg_names[name.as_str()])
+            .map(|name| workspace_packages.by_name(name))
             .collect::<BTreeSet<_>>();
 
         let fast_exclude_candidates = self
             .get_fast_exclude_candidates()
             .iter()
-            .map(|name| pkg_names[name.as_str()])
+            .map(|name| workspace_packages.by_name(name))
             .collect::<BTreeSet<_>>();
 
         let mut exclude = BTreeSet::new();
-        for pkg in workspace_pkgs.iter() {
+        for pkg in workspace_packages.iter() {
             let excluded = if !fast_exclude_candidates.contains(pkg) {
                 false
             } else {
                 let raw_deps = self.get_deps(pkg);
                 let deps = raw_deps
                     .iter()
-                    .map(|name| pkg_names[name.as_str()])
+                    .map(|name| workspace_packages.by_name(name))
                     .collect::<BTreeSet<_>>();
                 deps.intersection(&exclude_roots).count() > 0
             };
