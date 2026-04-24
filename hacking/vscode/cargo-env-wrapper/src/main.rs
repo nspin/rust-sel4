@@ -154,8 +154,8 @@ impl Env {
                 println!("{pkg}");
             }
         } else {
-            let ws = self.ws(excludes);
-            println!("{ws:#}");
+            let vs_ws = self.vscode_workspace(excludes);
+            println!("{vs_ws:#}");
         }
     }
 
@@ -165,7 +165,7 @@ impl Env {
         jsonc_parser::parse_to_serde_value(s, &Default::default()).unwrap()
     }
 
-    fn ws(&self, excludes: BTreeSet<&PackageName>) -> Value {
+    fn vscode_workspace(&self, excludes: BTreeSet<&PackageName>) -> Value {
         let exclude_args = excludes
             .iter()
             .map(|x| format!("--exclude={x}"))
