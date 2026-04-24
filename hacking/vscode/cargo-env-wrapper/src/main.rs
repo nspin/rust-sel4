@@ -242,11 +242,7 @@ impl Env {
     fn via_includes(&self, workspace_packages: &WorkspacePackages) -> BTreeSet<PackageName> {
         let all_pre = {
             let output = {
-                let mut cmd = Command::new("cargo");
-                cmd.args(["tree", "--prefix=none", "--format={p}", "--color=never"]);
-                if let Some(s) = self.cli.manifest_path.as_ref() {
-                    cmd.arg("--manifest-path").arg(s);
-                }
+                let mut cmd = self.cargo_tree_base_cmd();
                 cmd.arg("--edges=no-build");
                 cmd.arg("--edges=no-proc-macro");
                 for pkg in self.cli.include.iter() {
@@ -311,11 +307,7 @@ impl Env {
 
     fn get_fast_exclude_candidates(&self) -> BTreeSet<String> {
         let output = {
-            let mut cmd = Command::new("cargo");
-            cmd.args(["tree", "--prefix=none", "--format={p}", "--color=never"]);
-            if let Some(s) = self.cli.manifest_path.as_ref() {
-                cmd.arg("--manifest-path").arg(s);
-            }
+            let mut cmd = self.cargo_tree_base_cmd();
             cmd.arg("--workspace");
             for pkg in self.cli.exclude.iter() {
                 cmd.arg("--invert").arg(pkg);
@@ -344,22 +336,25 @@ impl Env {
         exclude_features: &[T],
     ) -> CargoTreeOutput {
         let output = {
-            let mut cmd = Command::new("cargo");
-            cmd.arg("tree");
-            if let Some(s) = self.cli.manifest_path.as_ref() {
-                cmd.arg("--manifest-path").arg(s);
-            }
+            let mut cmd = self.cargo_tree_base_cmd();
             cmd.arg("--package").arg(pkg.as_ref());
             cmd.args(self.forward_args_with_feature_filter(|s| {
                 !exclude_features.iter().any(|s_| s_.as_ref() == s)
             }));
-            cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
-            cmd.arg("--color").arg("never");
             cmd
         }
         .output()
         .unwrap();
         CargoTreeOutput::parse(&output)
+    }
+
+    fn cargo_tree_base_cmd(&self) -> Command {
+        let mut cmd = Command::new("cargo");
+        cmd.args(["tree", "--prefix=none", "--format={p}", "--color=never"]);
+        if let Some(s) = self.cli.manifest_path.as_ref() {
+            cmd.arg("--manifest-path").arg(s);
+        }
+        cmd
     }
 
     fn workspace_packages(&self) -> WorkspacePackages {
