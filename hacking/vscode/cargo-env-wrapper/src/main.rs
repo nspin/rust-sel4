@@ -244,8 +244,11 @@ impl Env {
         })
     }
 
-    fn via_includes(&self, workspace_packages: &WorkspacePackages) -> BTreeSet<PackageName> {
-        let all_pre = {
+    fn via_includes<'a>(
+        &self,
+        workspace_packages: &'a WorkspacePackages,
+    ) -> BTreeSet<&'a PackageName> {
+        let transitive_includes = {
             let output = {
                 let mut cmd = self.cargo_tree_base_cmd();
                 cmd.arg("--edges=no-build");
@@ -259,21 +262,15 @@ impl Env {
             .output()
             .unwrap();
             CargoTreeOutput::assume_success(&output)
-        };
-
-        let all = all_pre
-            .iter()
-            .map(|name| workspace_packages.by_name(name))
-            .collect::<BTreeSet<_>>();
-
-        let mut exclude = BTreeSet::new();
-        for pkg in workspace_packages.iter() {
-            let excluded = !all.contains(pkg);
-            if excluded {
-                exclude.insert((*pkg).clone());
-            }
         }
-        exclude
+        .iter()
+        .map(|name| workspace_packages.by_name(name))
+        .collect::<BTreeSet<_>>();
+
+        workspace_packages
+            .iter()
+            .filter(|pkg| !transitive_includes.contains(pkg))
+            .collect::<BTreeSet<_>>()
     }
 
     fn via_excludes(&self, workspace_packages: &WorkspacePackages) -> BTreeSet<PackageName> {
