@@ -207,10 +207,8 @@ impl Env {
                 "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS": exclude_args,
             },
             "terminal.integrated.env.linux": {
-                "cargo_config_args": self.forward_config_args()
-            .join(" "),
-                "cargo_feature_args": self.forward_feature_args()
-            .join(" "),
+                "cargo_config_args": self.forward_config_args().join(" "),
+                "cargo_feature_args": self.forward_feature_args().join(" "),
                 "cargo_exclude_args": exclude_args,
             },
         });
