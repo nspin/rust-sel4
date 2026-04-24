@@ -180,22 +180,13 @@ impl Env {
 
         let new_obj = new.as_object_mut().unwrap();
 
-        let mut features: Option<Vec<&str>> = None;
-        for s in self.cli.features.iter() {
-            features.get_or_insert_default().push(s);
-        }
         let features_val = if self.cli.all_features {
-            if features.is_some() {
+            if !self.cli.features.is_empty() {
                 panic!()
             }
-            Some(Value::String("all".to_owned()))
-        } else if let Some(features) = features {
-            Some(Value::Array(
-                features
-                    .into_iter()
-                    .map(|s| Value::String(s.to_owned()))
-                    .collect::<Vec<_>>(),
-            ))
+            Some(json!("all"))
+        } else if !self.cli.features.is_empty() {
+            Some(json!(self.cli.features))
         } else {
             None
         };
