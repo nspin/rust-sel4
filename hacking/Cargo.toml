@@ -11,7 +11,6 @@ members = [
     "cargo-manifest-management/tool/crates/toml-normalize",
     "cargo-manifest-management/tool/crates/manage-cargo-manifests",
     "cargo-manifest-management/tool/crates/manage-direct-dependency-allow-list",
-    "vscode/hacking/manage-vscode-exclude-list",
     "vscode/cargo-env-wrapper",
     "unstable-feature-monitoring/wishlist",
 ]
