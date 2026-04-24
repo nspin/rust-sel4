@@ -40,7 +40,7 @@ t3:
 		-i microkit-http-server-example-server \
 		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
 		--config .cargo/gen/world/aarch64.microkitDefault.toml \
-		> ws/foo.code-workspace
+		-o ws/foo.code-workspace
 
 .PHONY: t4
 t4:

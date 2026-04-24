@@ -6,9 +6,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
-use std::fs;
+use std::fs::{self, OpenOptions};
 use std::path::PathBuf;
 use std::process::{Command, Output};
+use std::io::Write;
 
 use cargo_metadata::{Metadata, MetadataCommand, PackageName};
 use clap::Parser;
@@ -170,12 +171,14 @@ impl Env {
         };
 
         if self.cli.just_dump_excludes {
+            let mut f = OpenOptions::new().write(true).open(&self.cli.out_path).unwrap();
             for pkg in excludes.iter() {
-                println!("{pkg}");
+                writeln!(f, "{pkg}").unwrap();
             }
         } else {
             let vs_ws = self.vscode_workspace(excludes);
-            println!("{vs_ws:#}");
+            let mut f = OpenOptions::new().write(true).open(&self.cli.out_path).unwrap();
+            writeln!(f, "{vs_ws}").unwrap();
         }
     }
 
