@@ -27,13 +27,32 @@ default-excludes:
 		--just-dump-excludes \
 		-o $(default_excludes)
 
-.PHONY: priv
-priv:
+.PHONY: priv1
+priv1:
 	cargo run -p create-vscode-workspace -- \
-		-i microkit-http-server-example-server \
 		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
 		--config .cargo/gen/world/aarch64.microkitDefault.toml \
+		-i microkit-http-server-example-server \
 		-o $(private_workspaces_dir)/ukit$(ws)
+
+.PHONY: priv2
+priv2:
+	cargo run -p create-vscode-workspace -- \
+		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
+		--config .cargo/gen/world/aarch64.microkitDefault.toml \
+		--include-dependents sel4 \
+		-e tests-root-task-dafny-core \
+		-e sel4-test-harness \
+		-e lionsos-sys \
+		-e sddf-sys \
+		-e spawn-thread \
+		-e spawn-task \
+		-e sel4-root-task-with-std \
+		-e sel4-simple-task-runtime \
+		--features banscii-serial-driver/board-qemu_virt_aarch64 \
+		-o $(private_workspaces_dir)/all-sel4$(ws)
+
+# cargo check --workspace $cargo_config_args $cargo_exclude_args
 
 .PHONY: t
 t:

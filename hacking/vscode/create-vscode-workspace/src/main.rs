@@ -72,11 +72,11 @@ enum CargoTreeOutput {
 }
 
 impl CargoTreeOutput {
-    fn parse(output: &Output) -> Self {
+    fn parse(output: &Output, pkg: &PackageName) -> Self {
         if output.status.success() {
             CargoTreeOutput::Packages(Self::parse_success(&output.stdout))
         } else {
-            CargoTreeOutput::InvalidFeatures(Self::parse_failure(&output.stderr))
+            CargoTreeOutput::InvalidFeatures(Self::parse_failure(&output.stderr, pkg))
         }
     }
 
@@ -100,18 +100,18 @@ impl CargoTreeOutput {
             .collect::<BTreeSet<_>>()
     }
 
-    fn parse_failure(stderr: &[u8]) -> Vec<String> {
+    fn parse_failure(stderr: &[u8], pkg: &PackageName) -> Vec<String> {
         let stderr_first_line = str::from_utf8(stderr).unwrap().lines().next().unwrap();
-        if let Some(s) = stderr_first_line
-            .strip_prefix("error: the package '{pkg}' does not contain this feature: ")
-        {
+        if let Some(s) = stderr_first_line.strip_prefix(&format!(
+            "error: the package '{pkg}' does not contain this feature: "
+        )) {
             vec![s.to_owned()]
-        } else if let Some(s) = stderr_first_line
-            .strip_prefix("error: the package '{pkg}' does not contain these features: ")
-        {
+        } else if let Some(s) = stderr_first_line.strip_prefix(&format!(
+            "error: the package '{pkg}' does not contain these features: "
+        )) {
             s.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>()
         } else {
-            panic!()
+            panic!("xxx {stderr_first_line:?}")
         }
     }
 }
@@ -307,9 +307,9 @@ impl Env {
             self.get_included_dependents(workspace_packages)
         };
 
-        for x in included_dependents.iter() {
-            // eprintln!("{x}");
-        }
+        // for x in included_dependents.iter() {
+        //     eprintln!("{x}");
+        // }
 
         let transitive_includes = workspace_packages.by_names(
             {
@@ -333,9 +333,9 @@ impl Env {
             .iter(),
         );
 
-        for x in transitive_includes.iter() {
-            // eprintln!("{x}");
-        }
+        // for x in transitive_includes.iter() {
+        //     eprintln!("{x}");
+        // }
 
         workspace_packages
             .iter()
@@ -385,12 +385,12 @@ impl Env {
         let fast_exclude_candidates =
             workspace_packages.set_by_name(&self.get_fast_exclude_candidates());
 
-        eprintln!("{exclude_roots:?}");
-        eprintln!("{fast_exclude_candidates:?}");
+        // eprintln!("{exclude_roots:?}");
+        // eprintln!("{fast_exclude_candidates:?}");
 
-        for x in pkgs.iter() {
-            eprintln!("{x}");
-        }
+        // for x in pkgs.iter() {
+        //     eprintln!("{x}");
+        // }
 
         workspace_packages
             .iter()
@@ -450,7 +450,7 @@ impl Env {
         }
         .output()
         .unwrap();
-        CargoTreeOutput::parse(&output)
+        CargoTreeOutput::parse(&output, pkg)
     }
 
     fn cargo_tree_base_cmd(&self) -> Command {
