@@ -312,12 +312,11 @@ impl Env {
     fn get_fast_exclude_candidates(&self) -> BTreeSet<String> {
         let mut cmd = Command::new("cargo");
         cmd.arg("tree");
+        cmd.args(["--prefix=none", "--format={p}", "--color=never"]);
         if let Some(s) = self.cli.manifest_path.as_ref() {
             cmd.arg("--manifest-path").arg(s);
         }
         cmd.arg("--workspace");
-        cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
-        cmd.arg("--color").arg("never");
         for pkg in self.cli.exclude.iter() {
             cmd.arg("--invert").arg(pkg);
         }
