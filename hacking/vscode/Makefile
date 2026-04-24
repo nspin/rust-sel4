@@ -10,7 +10,7 @@ workspaces_dir := workspaces
 
 private_workspaces_dir := $(workspaces_dir)/private
 
-ws := .code_workspace
+ws := .code-workspace
 
 .PHONY: none
 none:
