@@ -39,7 +39,6 @@ t3:
 	cargo run -p cargo-env-wrapper -- \
 		--manifest-path=../../Cargo.toml \
 		-i microkit-http-server-example-server \
-		--config $(cargo_config)/config.toml \
 		--config $(gen)/target/aarch64-sel4-microkit.toml \
 		--config $(gen)/world/aarch64.microkitDefault.toml \
 		> ws/foo.code-workspace

@@ -8,10 +8,16 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
+use std::str::FromStr;
 
 use cargo_metadata::{Metadata, MetadataCommand, PackageName};
 use clap::Parser;
 use serde_json::{Value, json};
+
+// HACK
+fn project_root() -> PathBuf {
+    PathBuf::from_str("/home/x/i/rust-sel4").unwrap()
+}
 
 fn main() {
     Env::get().run()
@@ -19,9 +25,6 @@ fn main() {
 
 #[derive(Debug, Parser)]
 struct Cli {
-    #[arg(long)]
-    manifest_path: Option<PathBuf>,
-
     #[arg(long, short = 'F')]
     features: Vec<String>,
 
@@ -170,7 +173,7 @@ impl Env {
     }
 
     fn get_orig_settings(&self) -> Value {
-        let bs = fs::read("/home/x/i/rust-sel4/.vscode/settings.json").unwrap();
+        let bs = fs::read(project_root().join(".vscode/settings.json")).unwrap();
         let s = str::from_utf8(&bs).unwrap();
         jsonc_parser::parse_to_serde_value(s, &Default::default()).unwrap()
     }
@@ -183,9 +186,9 @@ impl Env {
             .join(" ");
 
         let mut new_settings = json!({
-            "rust-analyzer.server.path": "/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper",
+            "rust-analyzer.server.path": "hacking/vscode/rust-analyzer-defaults-wrapper",
             "rust-analyzer.linkedProjects": [
-                "/home/x/i/rust-sel4/Cargo.toml",
+                "Cargo.toml",
             ],
             "rust-analyzer.cargo.allTargets": false,
             "rust-analyzer.cargo.extraArgs": self.forward_config_args(),
@@ -222,7 +225,7 @@ impl Env {
 
         json!({
             "folders": [
-                { "path": "/home/x/i/rust-sel4" }
+                { "path": project_root() }
             ],
             "settings": settings,
         })
@@ -231,10 +234,8 @@ impl Env {
     fn workspace_packages(&self) -> WorkspacePackages {
         let metadata = {
             let mut cmd = MetadataCommand::new();
-            if let Some(s) = self.cli.manifest_path.as_ref() {
-                cmd.manifest_path(s);
-            }
-            cmd.other_options(self.forward_features_args());
+            cmd.current_dir(project_root());
+            cmd.other_options(self.forward_args());
             cmd.no_deps();
             cmd.exec().unwrap()
         };
@@ -350,11 +351,13 @@ impl Env {
 
     fn cargo_tree_base_cmd(&self) -> Command {
         let mut cmd = Command::new("cargo");
+        cmd.current_dir(project_root());
         cmd.args(["tree", "--prefix=none", "--format={p}", "--color=never"]);
-        if let Some(s) = self.cli.manifest_path.as_ref() {
-            cmd.arg("--manifest-path").arg(s);
-        }
         cmd
+    }
+
+    fn forward_args(&self) -> Vec<String> {
+        self.forward_args_with_feature_filter(|_| true)
     }
 
     fn forward_args_with_feature_filter(
@@ -364,10 +367,6 @@ impl Env {
         let mut args = self.forward_features_args_with_feature_filter(&feature_filter);
         args.extend(self.forward_config_args());
         args
-    }
-
-    fn forward_features_args(&self) -> Vec<String> {
-        self.forward_features_args_with_feature_filter(|_| true)
     }
 
     fn forward_features_args_with_feature_filter(
