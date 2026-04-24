@@ -176,7 +176,7 @@ impl Env {
             "rust-analyzer.cargo.metadataExtraArgs": self.forward_config_args(),
             "rust-analyzer.cargo.extraEnv": {
                 "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS":
-                    excludes.iter().map(|x| format!("--exclude={x}")).collect::<Vec<_>>().join(" "),
+                    excludes.iter().map(|x| format!(" --exclude={x}")).collect::<String>(),
             },
         });
 
