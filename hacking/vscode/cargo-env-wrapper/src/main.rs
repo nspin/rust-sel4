@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::os::unix::process::CommandExt as _;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Output};
 
 use cargo_metadata::{MetadataCommand, Package, PackageName};
 use clap::Parser;
@@ -59,7 +59,16 @@ enum CargoTreeOutput {
 }
 
 impl CargoTreeOutput {
+    fn parse(output: &Output) -> Self {
+        if output.status.success() {
+            CargoTreeOutput::Packages(Self::parse_success(&output.stdout))
+        } else {
+            CargoTreeOutput::InvalidFeatures(Self::parse_failure(&output.stderr))
+        }
+    }
+
     fn parse_success(stdout: &[u8]) -> BTreeSet<String> {
+        // TODO use regex
         str::from_utf8(stdout)
             .unwrap()
             .lines()
@@ -74,12 +83,8 @@ impl CargoTreeOutput {
     }
 
     fn parse_failure(stderr: &[u8]) -> Vec<String> {
-        let stderr_first_line = str::from_utf8(stderr)
-            .unwrap()
-            .lines()
-            .next()
-            .unwrap();
-        let features = if let Some(s) = stderr_first_line
+        let stderr_first_line = str::from_utf8(stderr).unwrap().lines().next().unwrap();
+        if let Some(s) = stderr_first_line
             .strip_prefix("error: the package '{pkg}' does not contain this feature: ")
         {
             vec![s.to_owned()]
@@ -89,8 +94,7 @@ impl CargoTreeOutput {
             s.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>()
         } else {
             panic!()
-        };
-        unwrap
+        }
     }
 }
 
@@ -358,7 +362,9 @@ impl Env {
                 cmd.arg("--invert").arg(pkg);
             }
             cmd
-        }.output().unwrap();
+        }
+        .output()
+        .unwrap();
         assert!(output.status.success());
         str::from_utf8(&output.stdout)
             .unwrap()
