@@ -10,12 +10,7 @@ mk {
   package.name = "sel4-backtrace";
   dependencies = {
     inherit (versions) cfg-if;
-    unwinding = {
-      version = versions.unwinding;
-      default-features = false;
-      optional = true;
-      # features = [ "unwinder" "hide-trace" ];
-    };
+    unwinding = unwindingWith [] // { optional = true; };
     postcard = postcardWith [] // { optional = true; };
     serde = serdeWith [] // { optional = true; };
     inherit (localCrates)
