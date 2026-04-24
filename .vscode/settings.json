@@ -13,7 +13,7 @@
         "./hacking/Cargo.toml",
     ],
     "rust-analyzer.check.command": "clippy",
-    "rust-analyzer.cargo.targetDir": true, // use subdir
+    "rust-analyzer.cargo.targetDir": true,
     "rust-analyzer.procMacro.enable": false,
     "rust-analyzer.procMacro.attributes.enable": false,
     // TODO
