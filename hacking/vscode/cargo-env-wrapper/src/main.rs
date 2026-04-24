@@ -370,7 +370,6 @@ impl Env {
             cmd.no_deps();
             cmd.exec().unwrap()
         };
-
         WorkspacePackages::from_metadata(&metadata)
     }
 
