@@ -301,12 +301,11 @@ impl Env {
         &self,
         workspace_packages: &'a WorkspacePackages,
     ) -> BTreeSet<&'a PackageName> {
-        let included_dependents =
-            if self.cli.include_dependents.is_empty() {
-                BTreeSet::new()
-            } else {
-                self.get_included_dependents(workspace_packages)
-            };
+        let included_dependents = if self.cli.include_dependents.is_empty() {
+            BTreeSet::new()
+        } else {
+            self.get_included_dependents(workspace_packages)
+        };
 
         for x in included_dependents.iter() {
             // eprintln!("{x}");
@@ -318,7 +317,11 @@ impl Env {
                     let mut cmd = self.cargo_tree_base_cmd();
                     cmd.arg("--edges=no-build");
                     cmd.arg("--edges=no-proc-macro");
-                    for pkg in self.include_roots(workspace_packages).iter().chain(included_dependents.iter()) {
+                    for pkg in self
+                        .include_roots(workspace_packages)
+                        .iter()
+                        .chain(included_dependents.iter())
+                    {
                         cmd.arg("--package").arg(pkg.as_str());
                     }
                     cmd
@@ -336,11 +339,14 @@ impl Env {
 
         workspace_packages
             .iter()
-            .filter(|pkg| !transitive_includes.contains(pkg))
+            .filter(|pkg| transitive_includes.contains(pkg))
             .collect::<BTreeSet<_>>()
     }
 
-    fn get_included_dependents<'a>(&self, workspace_packages: &'a WorkspacePackages) -> BTreeSet<&'a PackageName> {
+    fn get_included_dependents<'a>(
+        &self,
+        workspace_packages: &'a WorkspacePackages,
+    ) -> BTreeSet<&'a PackageName> {
         let output = {
             let mut cmd = self.cargo_tree_base_cmd();
             cmd.arg("--workspace");
@@ -354,15 +360,19 @@ impl Env {
         .output()
         .unwrap();
         let candidates = workspace_packages.set_by_name(&CargoTreeOutput::assume_success(&output));
-        candidates.iter().filter(|candidate| {
-            let deps = self.get_deps(candidate);
-            for pkg in self.cli.include_dependents.iter() {
-                if deps.contains(pkg) {
-                    return true;
+        candidates
+            .iter()
+            .filter(|candidate| {
+                let deps = self.get_deps(candidate);
+                for pkg in self.cli.include_dependents.iter() {
+                    if deps.contains(pkg) {
+                        return true;
+                    }
                 }
-            }            
-            false
-        }).copied().collect::<BTreeSet<_>>()
+                false
+            })
+            .copied()
+            .collect::<BTreeSet<_>>()
     }
 
     fn via_excludes<'a>(
@@ -375,14 +385,22 @@ impl Env {
         let fast_exclude_candidates =
             workspace_packages.set_by_name(&self.get_fast_exclude_candidates());
 
-        workspace_packages.iter()
+        eprintln!("{exclude_roots:?}");
+        eprintln!("{fast_exclude_candidates:?}");
+
+        for x in pkgs.iter() {
+            eprintln!("{x}");
+        }
+
+        workspace_packages
+            .iter()
             .filter(|pkg| {
-                fast_exclude_candidates.contains(*pkg)
-                    && !pkgs.contains(*pkg)
-                    && workspace_packages
-                        .set_by_name(&self.get_deps(pkg))
-                        .iter()
-                        .any(|pkg| exclude_roots.contains(pkg))
+                !pkgs.contains(*pkg)
+                    || (fast_exclude_candidates.contains(*pkg)
+                        && workspace_packages
+                            .set_by_name(&self.get_deps(pkg))
+                            .iter()
+                            .any(|pkg| exclude_roots.contains(pkg)))
             })
             .collect::<BTreeSet<_>>()
     }
