@@ -240,26 +240,18 @@ impl Env {
     }
 
     fn via_includes(&self, workspace_packages: &WorkspacePackages) -> BTreeSet<PackageName> {
-        let include_roots = self
-            .cli
-            .include
-            .iter()
-            .map(|name| workspace_packages.by_name(name))
-            .collect::<BTreeSet<_>>();
-
         let all_pre = {
             let output = {
                 let mut cmd = Command::new("cargo");
-                cmd.arg("tree");
+                cmd.args(["tree", "--prefix=none", "--format={p}", "--color=never"]);
                 if let Some(s) = self.cli.manifest_path.as_ref() {
                     cmd.arg("--manifest-path").arg(s);
                 }
-                cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
-                cmd.arg("--color").arg("never");
                 cmd.arg("--edges=no-build");
                 cmd.arg("--edges=no-proc-macro");
                 for pkg in self.cli.include.iter() {
-                    cmd.arg("--package").arg(pkg);
+                    cmd.arg("--package")
+                        .arg(workspace_packages.by_name(pkg).as_str());
                 }
                 cmd
             }
@@ -320,8 +312,7 @@ impl Env {
     fn get_fast_exclude_candidates(&self) -> BTreeSet<String> {
         let output = {
             let mut cmd = Command::new("cargo");
-            cmd.arg("tree");
-            cmd.args(["--prefix=none", "--format={p}", "--color=never"]);
+            cmd.args(["tree", "--prefix=none", "--format={p}", "--color=never"]);
             if let Some(s) = self.cli.manifest_path.as_ref() {
                 cmd.arg("--manifest-path").arg(s);
             }
