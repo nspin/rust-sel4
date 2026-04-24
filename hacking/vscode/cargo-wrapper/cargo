@@ -3,11 +3,10 @@
 set -eu -o pipefail
 
 declare -i seen_check_command=0
-
-read -r -a args <<< "$__RUST_ANALYZER_WRAPPER__ARGS"
+declare -a args
 
 for arg in "$@"; do
-    args+=("$arg")
+    args+=( "$arg" )
     case "$arg" in
         check|clippy|build)
             (( seen_check_command+= 1 ))
