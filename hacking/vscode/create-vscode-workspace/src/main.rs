@@ -206,6 +206,13 @@ impl Env {
             "rust-analyzer.cargo.extraEnv": {
                 "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS": exclude_args,
             },
+            "terminal.integrated.env.linux": {
+                "cargo_config_args": self.forward_config_args()
+            .join(" "),
+                "cargo_feature_args": self.forward_feature_args()
+            .join(" "),
+                "cargo_exclude_args": exclude_args,
+            },
         });
 
         let new_settings_obj = new_settings.as_object_mut().unwrap();
@@ -389,12 +396,16 @@ impl Env {
         &self,
         feature_filter: impl Fn(&str) -> bool,
     ) -> Vec<String> {
-        let mut args = self.forward_features_args_with_feature_filter(&feature_filter);
+        let mut args = self.forward_feature_args_with_feature_filter(&feature_filter);
         args.extend(self.forward_config_args());
         args
     }
 
-    fn forward_features_args_with_feature_filter(
+    fn forward_feature_args(&self) -> Vec<String> {
+        self.forward_feature_args_with_feature_filter(|_| true)
+    }
+
+    fn forward_feature_args_with_feature_filter(
         &self,
         feature_filter: impl Fn(&str) -> bool,
     ) -> Vec<String> {
