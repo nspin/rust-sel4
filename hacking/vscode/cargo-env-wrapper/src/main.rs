@@ -10,8 +10,9 @@ use std::os::unix::process::CommandExt as _;
 use std::path::PathBuf;
 use std::process::Command;
 
-use cargo_metadata::{MetadataCommand, PackageName};
+use cargo_metadata::{MetadataCommand, Package, PackageName};
 use clap::Parser;
+use clap::builder::Str;
 use serde_json::{Value, json};
 
 fn main() {
@@ -55,6 +56,21 @@ struct Env {
 enum CargoTreeOutput {
     Packages(BTreeSet<String>),
     InvalidFeatures(Vec<String>),
+}
+
+struct WorkspacePackages {
+    pkgs: BTreeSet<PackageName>,
+    pkgs_by_name: BTreeMap<String, PackageName>,
+}
+
+impl WorkspacePackages {
+    fn iter(&self) -> impl Iterator<Item = &PackageName> {
+        self.pkgs.iter()
+    }
+
+    fn by_name(&self, name: impl AsRef<str>) -> &PackageName {
+        &self.pkgs_by_name[name.as_ref()]
+    }
 }
 
 impl Env {
@@ -382,6 +398,31 @@ impl Env {
             };
             CargoTreeOutput::InvalidFeatures(feats)
         }
+    }
+
+    fn workspace_packages(&self) -> WorkspacePackages {
+        let metadata = {
+            let mut cmd = MetadataCommand::new();
+            if let Some(s) = self.cli.manifest_path.as_ref() {
+                cmd.manifest_path(s);
+            }
+            cmd.other_options(self.forward_features_args());
+            cmd.no_deps();
+            cmd.exec().unwrap()
+        };
+
+        let pkgs = metadata
+            .workspace_packages()
+            .iter()
+            .map(|pkg| pkg.name.clone())
+            .collect::<BTreeSet<_>>();
+
+        let mut pkgs_by_name = BTreeMap::new();
+        for pkg in pkgs.iter() {
+            pkgs_by_name.insert(pkg.to_string(), pkg.clone());
+        }
+
+        WorkspacePackages { pkgs, pkgs_by_name }
     }
 
     fn forward_args_with_feature_filter(
