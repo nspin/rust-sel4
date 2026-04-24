@@ -321,6 +321,7 @@ impl Env {
             for pkg in self.cli.exclude.iter() {
                 cmd.arg("--invert").arg(pkg);
             }
+            cmd
         }.output().unwrap();
         assert!(output.status.success());
         str::from_utf8(&output.stdout)
