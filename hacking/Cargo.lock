@@ -668,16 +668,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "manage-vscode-exclude-list"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cargo_metadata 0.18.1",
- "clap",
- "similar",
-]
-
-[[package]]
 name = "memchr"
 version = "2.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
