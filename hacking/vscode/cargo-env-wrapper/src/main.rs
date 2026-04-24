@@ -284,7 +284,7 @@ impl Env {
             .filter(|pkg| {
                 fast_exclude_candidates.contains(pkg)
                     && workspace_packages
-                        .by_names(self.get_deps(pkg).iter())
+                        .set_by_name(&self.get_deps(pkg))
                         .iter()
                         .any(|pkg| exclude_roots.contains(pkg))
             })
