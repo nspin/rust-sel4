@@ -273,7 +273,7 @@ impl Env {
             .collect::<BTreeSet<_>>()
     }
 
-    fn via_excludes(&self, workspace_packages: &WorkspacePackages) -> BTreeSet<PackageName> {
+    fn via_excludes<'a>(&self, workspace_packages: &'a WorkspacePackages) -> BTreeSet<&'a PackageName> {
         let exclude_roots = self
             .cli
             .exclude
@@ -300,7 +300,7 @@ impl Env {
                 deps.intersection(&exclude_roots).count() > 0
             };
             if excluded {
-                exclude.insert((*pkg).clone());
+                exclude.insert(pkg);
             }
         }
         exclude
