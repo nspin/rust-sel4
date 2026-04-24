@@ -10,7 +10,7 @@ use std::os::unix::process::CommandExt as _;
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
-use cargo_metadata::{MetadataCommand, Package, PackageName};
+use cargo_metadata::{Metadata, MetadataCommand, Package, PackageName};
 use clap::Parser;
 use clap::builder::Str;
 use serde_json::{Value, json};
@@ -104,6 +104,21 @@ struct WorkspacePackages {
 }
 
 impl WorkspacePackages {
+    fn from_metadata(metadata: &Metadata) -> Self {
+        let pkgs = metadata
+            .workspace_packages()
+            .iter()
+            .map(|pkg| pkg.name.clone())
+            .collect::<BTreeSet<_>>();
+
+        let mut pkgs_by_name = BTreeMap::new();
+        for pkg in pkgs.iter() {
+            pkgs_by_name.insert(pkg.to_string(), pkg.clone());
+        }
+
+        WorkspacePackages { pkgs, pkgs_by_name }
+    }
+
     fn iter(&self) -> impl Iterator<Item = &PackageName> {
         self.pkgs.iter()
     }
@@ -366,17 +381,7 @@ impl Env {
         .output()
         .unwrap();
         assert!(output.status.success());
-        str::from_utf8(&output.stdout)
-            .unwrap()
-            .lines()
-            .filter_map(|s| {
-                if s.contains(" (/") {
-                    Some(s.split_whitespace().next().unwrap().to_owned())
-                } else {
-                    None
-                }
-            })
-            .collect::<BTreeSet<_>>()
+        CargoTreeOutput::parse_success(&output.stdout)
     }
 
     fn get_deps(&self, pkg: &PackageName) -> BTreeSet<String> {
@@ -405,42 +410,7 @@ impl Env {
         }));
         cmd.arg("--prefix").arg("none").arg("--format").arg("{p}");
         cmd.arg("--color").arg("never");
-        let output = cmd.output().unwrap();
-        if output.status.success() {
-            // TODO use regex
-            // eprintln!("{}", str::from_utf8(&output.stdout).unwrap());
-            CargoTreeOutput::Packages(
-                str::from_utf8(&output.stdout)
-                    .unwrap()
-                    .lines()
-                    .filter_map(|s| {
-                        if s.contains(" (/") {
-                            Some(s.split_whitespace().next().unwrap().to_owned())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<BTreeSet<_>>(),
-            )
-        } else {
-            let stderr_first_line = str::from_utf8(&output.stderr)
-                .unwrap()
-                .lines()
-                .next()
-                .unwrap();
-            let feats = if let Some(feat) = stderr_first_line
-                .strip_prefix("error: the package '{pkg}' does not contain this feature: ")
-            {
-                vec![feat.to_owned()]
-            } else if let Some(feats) = stderr_first_line
-                .strip_prefix("error: the package '{pkg}' does not contain these features: ")
-            {
-                feats.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>()
-            } else {
-                panic!()
-            };
-            CargoTreeOutput::InvalidFeatures(feats)
-        }
+        CargoTreeOutput::parse(&cmd.output().unwrap())
     }
 
     fn workspace_packages(&self) -> WorkspacePackages {
@@ -454,18 +424,7 @@ impl Env {
             cmd.exec().unwrap()
         };
 
-        let pkgs = metadata
-            .workspace_packages()
-            .iter()
-            .map(|pkg| pkg.name.clone())
-            .collect::<BTreeSet<_>>();
-
-        let mut pkgs_by_name = BTreeMap::new();
-        for pkg in pkgs.iter() {
-            pkgs_by_name.insert(pkg.to_string(), pkg.clone());
-        }
-
-        WorkspacePackages { pkgs, pkgs_by_name }
+        WorkspacePackages::from_metadata(&metadata)
     }
 
     fn forward_args_with_feature_filter(
