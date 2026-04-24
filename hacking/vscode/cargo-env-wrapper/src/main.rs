@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
-use std::fs::{self, OpenOptions};
+use std::fs::{self, File};
 use std::path::PathBuf;
 use std::process::{Command, Output};
 use std::io::Write;
@@ -171,14 +171,14 @@ impl Env {
         };
 
         if self.cli.just_dump_excludes {
-            let mut f = OpenOptions::new().write(true).open(&self.cli.out_path).unwrap();
+            let mut f = File::create(&self.cli.out_path).unwrap();
             for pkg in excludes.iter() {
                 writeln!(f, "{pkg}").unwrap();
             }
         } else {
             let vs_ws = self.vscode_workspace(excludes);
-            let mut f = OpenOptions::new().write(true).open(&self.cli.out_path).unwrap();
-            writeln!(f, "{vs_ws}").unwrap();
+            let mut f = File::create(&self.cli.out_path).unwrap();
+            writeln!(f, "{vs_ws:#}").unwrap();
         }
     }
 
