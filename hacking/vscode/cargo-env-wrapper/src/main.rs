@@ -159,14 +159,14 @@ impl Env {
         }
     }
 
-    fn get_orig_config(&self) -> Value {
+    fn get_orig_settings(&self) -> Value {
         let bs = fs::read("/home/x/i/rust-sel4/.vscode/settings.json").unwrap();
         let s = str::from_utf8(&bs).unwrap();
         jsonc_parser::parse_to_serde_value(s, &Default::default()).unwrap()
     }
 
     fn ws(&self, excludes: BTreeSet<&PackageName>) -> Value {
-        let mut new = json!({
+        let mut new_settings = json!({
             "rust-analyzer.cargo.allTargets": false,
             "rust-analyzer.server.path": "/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper",
             "rust-analyzer.linkedProjects": ["/home/x/i/rust-sel4/Cargo.toml"],
@@ -178,7 +178,7 @@ impl Env {
             },
         });
 
-        let new_obj = new.as_object_mut().unwrap();
+        let new_settings_obj = new_settings.as_object_mut().unwrap();
 
         let features_val = if self.cli.all_features {
             if !self.cli.features.is_empty() {
@@ -191,23 +191,23 @@ impl Env {
             None
         };
         if let Some(features_val) = features_val {
-            new_obj.insert("rust-analyzer.cargo.features".to_owned(), features_val);
+            new_settings_obj.insert("rust-analyzer.cargo.features".to_owned(), features_val);
         }
         if self.cli.no_default_features {
-            new_obj.insert(
+            new_settings_obj.insert(
                 "rust-analyzer.cargo.noDefaultFeatures".to_owned(),
                 json!(true),
             );
         }
 
-        let mut ws = self.get_orig_config();
-        ws.as_object_mut().unwrap().append(new_obj);
+        let mut settings = self.get_orig_settings();
+        settings.as_object_mut().unwrap().append(new_settings_obj);
 
         json!({
             "folders": [
                 { "path": "/home/x/i/rust-sel4" }
             ],
-            "settings": ws,
+            "settings": settings,
         })
     }
 
