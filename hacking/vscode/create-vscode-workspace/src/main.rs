@@ -171,15 +171,21 @@ impl Env {
         };
 
         if self.cli.just_dump_excludes {
-            let mut f = File::create(&self.cli.out_path).unwrap();
+            let mut f = self.create_out_file();
             for pkg in excludes.iter() {
                 writeln!(f, "{pkg}").unwrap();
             }
         } else {
             let vs_ws = self.vscode_workspace(excludes);
-            let mut f = File::create(&self.cli.out_path).unwrap();
+            let mut f = self.create_out_file();
             writeln!(f, "{vs_ws:#}").unwrap();
         }
+    }
+
+    fn create_out_file(&self) -> File {
+        let p = self.abs_out_path();
+        fs::create_dir_all(p.parent().unwrap()).unwrap();
+        File::create(&self.cli.out_path).unwrap()
     }
 
     fn get_orig_settings(&self) -> Value {
