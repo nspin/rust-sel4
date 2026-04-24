@@ -34,3 +34,11 @@ priv:
 		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
 		--config .cargo/gen/world/aarch64.microkitDefault.toml \
 		-o $(private_workspaces_dir)/ukit$(ws)
+
+.PHONY: t
+t:
+	cargo run -p create-vscode-workspace -- \
+		--include-dependents sel4 \
+		-e tests-root-task-dafny-core \
+		--just-dump-excludes \
+		-o $(private_workspaces_dir)/foo.txt
