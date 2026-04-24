@@ -264,23 +264,17 @@ impl Env {
             .map(|name| workspace_packages.by_name(name))
             .collect::<BTreeSet<_>>();
 
-        let mut exclude = BTreeSet::new();
-        for pkg in workspace_packages.iter() {
-            let excluded = if !fast_exclude_candidates.contains(pkg) {
-                false
-            } else {
-                let raw_deps = self.get_deps(pkg);
-                let deps = raw_deps
-                    .iter()
-                    .map(|name| workspace_packages.by_name(name))
-                    .collect::<BTreeSet<_>>();
-                deps.intersection(&exclude_roots).count() > 0
-            };
-            if excluded {
-                exclude.insert(pkg);
-            }
-        }
-        exclude
+        workspace_packages
+            .iter()
+            .filter(|pkg| {
+                fast_exclude_candidates.contains(pkg)
+                    && self
+                        .get_deps(pkg)
+                        .iter()
+                        .map(|name| workspace_packages.by_name(name))
+                        .any(|pkg| exclude_roots.contains(pkg))
+            })
+            .collect::<BTreeSet<_>>()
     }
 
     fn get_fast_exclude_candidates(&self) -> BTreeSet<String> {
