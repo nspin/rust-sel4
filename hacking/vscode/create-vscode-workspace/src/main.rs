@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+use std::borrow::{Borrow, Cow};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs::{self, File};
@@ -164,13 +165,15 @@ impl Env {
     fn run(&self) {
         let workspace_packages = self.workspace_packages();
 
-        assert!(self.cli.exclude.is_empty() || self.cli.include.is_empty());
-        let excludes = if !self.cli.exclude.is_empty() {
-            self.via_excludes(&workspace_packages)
-        } else if !self.cli.include.is_empty() {
-            self.via_includes(&workspace_packages)
+        let included = if self.cli.include.is_empty() {
+            Cow::Borrowed(&workspace_packages.pkgs.iter().collect::<BTreeSet<_>>())
         } else {
-            BTreeSet::new()
+            Cow::Owned(self.via_includes(&workspace_packages))
+        };
+        let excludes = if !self.cli.exclude.is_empty() {
+            self.via_excludes(&workspace_packages, included.borrow())
+        } else {
+            included
         };
 
         if self.cli.just_dump_excludes {
@@ -322,21 +325,22 @@ impl Env {
     fn via_excludes<'a>(
         &self,
         workspace_packages: &'a WorkspacePackages,
+        pkgs: &'a BTreeSet<&PackageName>,
     ) -> BTreeSet<&'a PackageName> {
         let exclude_roots = self.exclude_roots(workspace_packages);
 
         let fast_exclude_candidates =
             workspace_packages.set_by_name(&self.get_fast_exclude_candidates());
 
-        workspace_packages
+        pkgs
             .iter()
             .filter(|pkg| {
-                fast_exclude_candidates.contains(pkg)
+                fast_exclude_candidates.contains(*pkg)
                     && workspace_packages
                         .set_by_name(&self.get_deps(pkg))
                         .iter()
                         .any(|pkg| exclude_roots.contains(pkg))
-            })
+            }).copied()
             .collect::<BTreeSet<_>>()
     }
 
