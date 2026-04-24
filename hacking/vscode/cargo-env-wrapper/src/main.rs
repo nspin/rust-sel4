@@ -67,6 +67,11 @@ impl CargoTreeOutput {
         }
     }
 
+    fn assume_success(output: &Output) -> BTreeSet<String> {
+        assert!(output.status.success());
+        Self::parse_success(&output.stdout)
+    }
+
     fn parse_success(stdout: &[u8]) -> BTreeSet<String> {
         // TODO use regex
         str::from_utf8(stdout)
@@ -253,8 +258,7 @@ impl Env {
             }
             .output()
             .unwrap();
-            assert!(output.status.success());
-            CargoTreeOutput::parse_success(&output.stdout)
+            CargoTreeOutput::assume_success(&output)
         };
 
         let all = all_pre
@@ -316,8 +320,7 @@ impl Env {
         }
         .output()
         .unwrap();
-        assert!(output.status.success());
-        CargoTreeOutput::parse_success(&output.stdout)
+        CargoTreeOutput::assume_success(&output)
     }
 
     fn get_deps(&self, pkg: &PackageName) -> BTreeSet<String> {
