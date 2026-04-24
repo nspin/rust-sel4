@@ -141,6 +141,7 @@ impl Env {
 
     fn run(&self) {
         let workspace_packages = self.workspace_packages();
+
         assert!(self.cli.exclude.is_empty() || self.cli.include.is_empty());
         let excludes = if !self.cli.exclude.is_empty() {
             self.via_excludes(&workspace_packages)
@@ -149,19 +150,14 @@ impl Env {
         } else {
             BTreeSet::new()
         };
+
         let mut ws_args = self.forward_features_args();
+
         for pkg in excludes.iter() {
             ws_args.push("--exclude".to_owned());
             ws_args.push(pkg.to_string());
         }
-        //     let ws = json!({
-        // // "rust-analyzer.cargo.extraArgs": [
-        // //     "--config", "/home/x/i/rust-sel4/.cargo/config.toml",
-        // // 	"--config", "/home/x/i/rust-sel4/.cargo/gen/target/aarch64-sel4-microkit.toml",
-        // // 	"--config", "/home/x/i/rust-sel4/.cargo/gen/world/aarch64.microkitDefault.toml",
-        // // ],
 
-        //     });
         if self.cli.just_dump_excludes {
             for pkg in excludes.iter() {
                 println!("{pkg}");
