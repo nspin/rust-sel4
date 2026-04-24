@@ -17,7 +17,7 @@ none:
 
 .PHONY: default-excludes
 default-excludes:
-	cargo run -p cargo-env-wrapper -- \
+	cargo run -p create-vscode-workspace -- \
 		-e sel4-config-data \
 		-e sel4-test-harness \
 		-e tests-root-task-dafny-core \
@@ -29,7 +29,7 @@ default-excludes:
 
 .PHONY: priv
 priv:
-	cargo run -p cargo-env-wrapper -- \
+	cargo run -p create-vscode-workspace -- \
 		-i microkit-http-server-example-server \
 		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
 		--config .cargo/gen/world/aarch64.microkitDefault.toml \
