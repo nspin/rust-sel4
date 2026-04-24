@@ -9,8 +9,8 @@
     "rust-analyzer.statusBar.clickAction": "stopServer",
     "rust-analyzer.server.path": "./hacking/vscode/rust-analyzer-defaults-wrapper",
     "rust-analyzer.linkedProjects": [
-        "./Cargo.toml",
-        "./hacking/Cargo.toml",
+        "Cargo.toml",
+        "hacking/Cargo.toml",
     ],
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.cargo.targetDir": true,
