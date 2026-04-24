@@ -151,12 +151,6 @@ impl Env {
             BTreeSet::new()
         };
 
-        let mut ws_args = self.forward_features_args();
-        for pkg in excludes.iter() {
-            ws_args.push("--exclude".to_owned());
-            ws_args.push(pkg.to_string());
-        }
-
         if self.cli.just_dump_excludes {
             for pkg in excludes.iter() {
                 println!("{pkg}");
@@ -198,7 +192,7 @@ impl Env {
             "rust-analyzer.cargo.extraEnv".to_owned(),
             json!({
                 "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS":
-                    excludes.iter().map(|x| format!("--exclude {x}")).collect::<Vec<_>>().join(" "),
+                    excludes.iter().map(|x| format!("--exclude={x}")).collect::<Vec<_>>().join(" "),
             }),
         );
         let mut features: Option<Vec<&str>> = None;
