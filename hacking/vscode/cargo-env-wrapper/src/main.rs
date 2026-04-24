@@ -9,7 +9,6 @@ use std::fs;
 use std::env;
 use std::path::PathBuf;
 use std::process::{Command, Output};
-use std::str::FromStr;
 
 use cargo_metadata::{Metadata, MetadataCommand, PackageName};
 use clap::Parser;
