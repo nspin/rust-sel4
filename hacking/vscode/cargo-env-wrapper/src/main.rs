@@ -16,7 +16,11 @@ use serde_json::{Value, json};
 
 // HACK
 fn project_root() -> PathBuf {
-    PathBuf::from_str("/home/x/i/rust-sel4").unwrap()
+    let mut d = PathBuf::from_str(file!()).unwrap().parent().unwrap().to_owned();
+    while !d.join("rust-toolchain.toml").exists() {
+        d = d.parent().unwrap().to_owned();
+    }
+    d
 }
 
 fn main() {
