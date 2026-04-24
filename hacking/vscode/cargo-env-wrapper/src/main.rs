@@ -103,15 +103,32 @@ impl Env {
 
     fn ws(&self, excludes: BTreeSet<PackageName>) -> Value {
         let mut ws = self.get_orig_config();
-        ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.allTargets".to_owned(), json!(false));
-        ws.as_object_mut().unwrap().insert("rust-analyzer.server.path".to_owned(), json!("/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper"));
-        ws.as_object_mut().unwrap().insert("rust-analyzer.linkedProjects".to_owned(), json!(["/home/x/i/rust-sel4/Cargo.toml"]));
-        ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.extraArgs".to_owned(), json!(self.forward_config_args()));
-        ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.metadataExtraArgs".to_owned(), json!(self.forward_config_args()));
-        ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.extraEnv".to_owned(), json!({
-            "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS":
-                excludes.iter().map(|x| format!("--exclude {x}")).collect::<Vec<_>>().join(" "),
-        }));
+        ws.as_object_mut()
+            .unwrap()
+            .insert("rust-analyzer.cargo.allTargets".to_owned(), json!(false));
+        ws.as_object_mut().unwrap().insert(
+            "rust-analyzer.server.path".to_owned(),
+            json!("/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper"),
+        );
+        ws.as_object_mut().unwrap().insert(
+            "rust-analyzer.linkedProjects".to_owned(),
+            json!(["/home/x/i/rust-sel4/Cargo.toml"]),
+        );
+        ws.as_object_mut().unwrap().insert(
+            "rust-analyzer.cargo.extraArgs".to_owned(),
+            json!(self.forward_config_args()),
+        );
+        ws.as_object_mut().unwrap().insert(
+            "rust-analyzer.cargo.metadataExtraArgs".to_owned(),
+            json!(self.forward_config_args()),
+        );
+        ws.as_object_mut().unwrap().insert(
+            "rust-analyzer.cargo.extraEnv".to_owned(),
+            json!({
+                "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS":
+                    excludes.iter().map(|x| format!("--exclude {x}")).collect::<Vec<_>>().join(" "),
+            }),
+        );
         let mut features: Option<Vec<&str>> = None;
         for s in self.cli.features.iter() {
             features.get_or_insert_default().push(s);
