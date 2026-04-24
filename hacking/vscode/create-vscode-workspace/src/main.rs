@@ -173,7 +173,7 @@ impl Env {
         let excludes = if !self.cli.exclude.is_empty() {
             self.via_excludes(&workspace_packages, included.borrow())
         } else {
-            included
+            workspace_packages.iter().filter(|pkg| !included.contains(pkg)).collect::<BTreeSet<_>>()
         };
 
         if self.cli.just_dump_excludes {
