@@ -38,8 +38,8 @@ cargo_config := $(abspath ../../.cargo)
 t3:
 	cargo run -p cargo-env-wrapper -- \
 		-i microkit-http-server-example-server \
-		--config $(gen)/target/aarch64-sel4-microkit.toml \
-		--config $(gen)/world/aarch64.microkitDefault.toml \
+		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
+		--config .cargo/gen/world/aarch64.microkitDefault.toml \
 		> ws/foo.code-workspace
 
 .PHONY: t4
