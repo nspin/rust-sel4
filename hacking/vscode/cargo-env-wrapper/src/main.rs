@@ -6,13 +6,11 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::os::unix::process::CommandExt as _;
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
-use cargo_metadata::{Metadata, MetadataCommand, Package, PackageName};
+use cargo_metadata::{Metadata, MetadataCommand, PackageName};
 use clap::Parser;
-use clap::builder::Str;
 use serde_json::{Value, json};
 
 fn main() {
