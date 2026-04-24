@@ -182,12 +182,6 @@ impl Env {
         }
     }
 
-    fn create_out_file(&self) -> File {
-        let p = self.abs_out_path();
-        fs::create_dir_all(p.parent().unwrap()).unwrap();
-        File::create(&self.cli.out_path).unwrap()
-    }
-
     fn get_orig_settings(&self) -> Value {
         let bs = fs::read(project_root().join(".vscode/settings.json")).unwrap();
         let s = str::from_utf8(&bs).unwrap();
@@ -245,6 +239,12 @@ impl Env {
             ],
             "settings": settings,
         })
+    }
+
+    fn create_out_file(&self) -> File {
+        let p = self.abs_out_path();
+        fs::create_dir_all(p.parent().unwrap()).unwrap();
+        File::create(&self.cli.out_path).unwrap()
     }
 
     fn abs_out_path(&self) -> PathBuf {
