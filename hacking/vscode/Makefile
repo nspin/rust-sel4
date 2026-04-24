@@ -49,6 +49,7 @@ priv2:
 		-e spawn-task \
 		-e sel4-root-task-with-std \
 		-e sel4-simple-task-runtime \
+		-e sel4-simple-task-rpc \
 		--features banscii-serial-driver/board-qemu_virt_aarch64 \
 		-o $(private_workspaces_dir)/all-sel4$(ws)
 
