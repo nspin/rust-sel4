@@ -168,33 +168,20 @@ impl Env {
     }
 
     fn ws(&self, excludes: BTreeSet<&PackageName>) -> Value {
-        let mut ws = self.get_orig_config();
-        ws.as_object_mut()
-            .unwrap()
-            .insert("rust-analyzer.cargo.allTargets".to_owned(), json!(false));
-        ws.as_object_mut().unwrap().insert(
-            "rust-analyzer.server.path".to_owned(),
-            json!("/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper"),
-        );
-        ws.as_object_mut().unwrap().insert(
-            "rust-analyzer.linkedProjects".to_owned(),
-            json!(["/home/x/i/rust-sel4/Cargo.toml"]),
-        );
-        ws.as_object_mut().unwrap().insert(
-            "rust-analyzer.cargo.extraArgs".to_owned(),
-            json!(self.forward_config_args()),
-        );
-        ws.as_object_mut().unwrap().insert(
-            "rust-analyzer.cargo.metadataExtraArgs".to_owned(),
-            json!(self.forward_config_args()),
-        );
-        ws.as_object_mut().unwrap().insert(
-            "rust-analyzer.cargo.extraEnv".to_owned(),
-            json!({
+        let mut new = json!({
+            "rust-analyzer.cargo.allTargets": false,
+            "rust-analyzer.server.path": "/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper",
+            "rust-analyzer.linkedProjects": ["/home/x/i/rust-sel4/Cargo.toml"],
+            "rust-analyzer.cargo.extraArgs": self.forward_config_args(),
+            "rust-analyzer.cargo.metadataExtraArgs": self.forward_config_args(),
+            "rust-analyzer.cargo.extraEnv": {
                 "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS":
                     excludes.iter().map(|x| format!("--exclude={x}")).collect::<Vec<_>>().join(" "),
-            }),
-        );
+            },
+        });
+
+        let new_obj = new.as_object_mut().unwrap();
+
         let mut features: Option<Vec<&str>> = None;
         for s in self.cli.features.iter() {
             features.get_or_insert_default().push(s);
@@ -215,16 +202,18 @@ impl Env {
             None
         };
         if let Some(features_val) = features_val {
-            ws.as_object_mut()
-                .unwrap()
-                .insert("rust-analyzer.cargo.features".to_owned(), features_val);
+            new_obj.insert("rust-analyzer.cargo.features".to_owned(), features_val);
         }
         if self.cli.no_default_features {
-            ws.as_object_mut().unwrap().insert(
+            new_obj.insert(
                 "rust-analyzer.cargo.noDefaultFeatures".to_owned(),
-                Value::Bool(true),
+                json!(true),
             );
         }
+
+        let mut ws = self.get_orig_config();
+        ws.as_object_mut().unwrap().append(new_obj);
+
         json!({
             "folders": [
                 { "path": "/home/x/i/rust-sel4" }
@@ -331,7 +320,9 @@ impl Env {
             let mut cmd = self.cargo_tree_base_cmd();
             cmd.arg("--package").arg(pkg.as_ref());
             cmd.args(self.forward_args_with_feature_filter(|feat| {
-                !exclude_features.iter().any(|excluded_feat| feat == excluded_feat.as_ref())
+                !exclude_features
+                    .iter()
+                    .any(|excluded_feat| feat == excluded_feat.as_ref())
             }));
             cmd
         }
