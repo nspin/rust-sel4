@@ -125,6 +125,7 @@ dependencies = [
  "anyhow",
  "cargo_metadata 0.23.1",
  "clap",
+ "jsonc-parser",
  "serde_json",
 ]
 
@@ -612,6 +613,15 @@ checksum = "b011eec8cc36da2aab2d5cff675ec18454fad408585853910a202391cf9f8e65"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "jsonc-parser"
+version = "0.32.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c2e5dea04f54739ca5694ee06e4448ffda065a55b3427d2b131bd5ea697ea2c"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

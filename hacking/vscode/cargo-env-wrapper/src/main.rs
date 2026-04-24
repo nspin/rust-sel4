@@ -5,6 +5,7 @@
 //
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
 use std::os::unix::process::CommandExt as _;
 use std::path::PathBuf;
 use std::process::Command;
@@ -94,14 +95,20 @@ impl Env {
         }
     }
 
+    fn get_orig_config(&self) -> Value {
+        let bs = fs::read("/home/x/i/rust-sel4/.vscode/settings.json").unwrap();
+        let s = str::from_utf8(&bs).unwrap();
+        jsonc_parser::parse_to_serde_value(s, &Default::default()).unwrap()
+    }
+
     fn ws(&self, excludes: BTreeSet<PackageName>) -> Value {
-        let mut ws = json!({
-            "rust-analyzer.cargo.extraArgs": self.forward_config_args(),
-            "rust-analyzer.cargo.extraEnv": {
-                "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS":
-                    excludes.iter().map(|x| format!("--exclude {x}")).collect::<Vec<_>>().join(" "),
-            },
-        });
+        let mut ws = self.get_orig_config();
+        ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.extraArgs".to_owned(), json!(self.forward_config_args()));
+        ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.metadataExtraArgs".to_owned(), json!(self.forward_config_args()));
+        ws.as_object_mut().unwrap().insert("rust-analyzer.cargo.extraEnv".to_owned(), json!({
+            "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS":
+                excludes.iter().map(|x| format!("--exclude {x}")).collect::<Vec<_>>().join(" "),
+        }));
         let mut features: Option<Vec<&str>> = None;
         for s in self.cli.features.iter() {
             features.get_or_insert_default().push(s);

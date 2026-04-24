@@ -7,10 +7,10 @@
 {
     "rust-analyzer.statusBar.showStatusBar": "always",
     "rust-analyzer.statusBar.clickAction": "stopServer",
-    "rust-analyzer.server.path": "./hacking/vscode/rust-analyzer-defaults-wrapper",
+    "rust-analyzer.server.path": "/home/x/i/rust-sel4/hacking/vscode/rust-analyzer-defaults-wrapper",
     "rust-analyzer.linkedProjects": [
-        "Cargo.toml",
-        "hacking/Cargo.toml",
+        "/home/x/i/rust-sel4/Cargo.toml",
+        // "/home/x/i/rust-sel4/hacking/Cargo.toml",
     ],
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.check.workspace": true,
