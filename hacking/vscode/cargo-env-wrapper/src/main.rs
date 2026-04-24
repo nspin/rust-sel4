@@ -58,6 +58,42 @@ enum CargoTreeOutput {
     InvalidFeatures(Vec<String>),
 }
 
+impl CargoTreeOutput {
+    fn parse_success(stdout: &[u8]) -> BTreeSet<String> {
+        str::from_utf8(stdout)
+            .unwrap()
+            .lines()
+            .filter_map(|s| {
+                if s.contains(" (/") {
+                    Some(s.split_whitespace().next().unwrap().to_owned())
+                } else {
+                    None
+                }
+            })
+            .collect::<BTreeSet<_>>()
+    }
+
+    fn parse_failure(stderr: &[u8]) -> Vec<String> {
+        let stderr_first_line = str::from_utf8(stderr)
+            .unwrap()
+            .lines()
+            .next()
+            .unwrap();
+        let features = if let Some(s) = stderr_first_line
+            .strip_prefix("error: the package '{pkg}' does not contain this feature: ")
+        {
+            vec![s.to_owned()]
+        } else if let Some(s) = stderr_first_line
+            .strip_prefix("error: the package '{pkg}' does not contain these features: ")
+        {
+            s.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>()
+        } else {
+            panic!()
+        };
+        unwrap
+    }
+}
+
 struct WorkspacePackages {
     pkgs: BTreeSet<PackageName>,
     pkgs_by_name: BTreeMap<String, PackageName>,
