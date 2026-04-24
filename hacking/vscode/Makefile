@@ -24,7 +24,7 @@ default-excludes:
 		-e lionsos-sys \
 		-e sddf-sys \
 		-e sel4-newlib \
-		-o default_excludes
+		-o $(default_excludes)
 
 .PHONY: priv
 priv:
