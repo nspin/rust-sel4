@@ -7,9 +7,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs::{self, File};
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Output};
-use std::io::Write;
 
 use cargo_metadata::{Metadata, MetadataCommand, PackageName};
 use clap::Parser;
@@ -235,7 +235,7 @@ impl Env {
 
         json!({
             "folders": [
-                { "path": pathdiff::diff_paths(project_root(), self.abs_out_path()) }
+                { "path": pathdiff::diff_paths(project_root(), self.abs_out_path().parent().unwrap()) }
             ],
             "settings": settings,
         })
