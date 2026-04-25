@@ -14,10 +14,6 @@ for exclude in "${excludes[@]}"; do
 done
 export __RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS="${args[*]}"
 
-# log="$here_abs/log.txt"
-# rm -f "$log"
-# export __RUST_ANALYZER_WRAPPER__LOG="$log"
-
 export PATH="$here_abs/cargo-wrapper:$PATH"
 
 exec rust-analyzer "$@"

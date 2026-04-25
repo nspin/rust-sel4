@@ -20,10 +20,8 @@ for arg in "$@"; do
     esac
 done
 
-if [ -n "${__RUST_ANALYZER_WRAPPER__LOG-}" ]; then
-    log="$__RUST_ANALYZER_WRAPPER__LOG"
-    echo "[WRAPPED]   cargo $*" >> "$log"
-    echo "[UNWRAPPED] cargo ${args[*]}" >> "$log"
-fi
+log="$(cd "$(dirname $0)" && echo $PWD)/../log.txt"
+echo "@ cargo $*" >> "$log"
+echo "  cargo ${args[*]}" >> "$log"
 
 exec "$__RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED" "${args[@]}"
