@@ -199,6 +199,7 @@ impl<'a> CargoTreeOutput<'a> {
 struct WorkspacePackages {
     pkgs: BTreeSet<PackageName>,
     pkgs_by_name: BTreeMap<String, PackageName>,
+    root: PathBuf,
 }
 
 impl WorkspacePackages {
@@ -214,7 +215,9 @@ impl WorkspacePackages {
             pkgs_by_name.insert(pkg.to_string(), pkg.clone());
         }
 
-        WorkspacePackages { pkgs, pkgs_by_name }
+        let root = metadata.workspace_root.clone().into();
+
+        WorkspacePackages { pkgs, pkgs_by_name, root }
     }
 
     fn iter(&self) -> impl Iterator<Item = &PackageName> {
@@ -500,7 +503,7 @@ impl Env {
         &self,
         pkg: &PackageName,
         exclude_features: &[T],
-    ) -> CargoTreeOutput {
+    ) -> CargoTreeOutput<'_> {
         let output = {
             let mut cmd = self.cargo_tree_base_cmd();
             cmd.arg("--package").arg(pkg.as_ref());
@@ -518,7 +521,7 @@ impl Env {
 
     fn cargo_tree_base_cmd(&self) -> Command {
         let mut cmd = Command::new("cargo");
-        cmd.current_dir(project_root());
+        cmd.current_dir(&self.ws.root);
         cmd.args(["tree", "--prefix=none", "--format={p}", "--color=never"]);
         cmd
     }
