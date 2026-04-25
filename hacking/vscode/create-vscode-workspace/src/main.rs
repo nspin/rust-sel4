@@ -7,7 +7,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs::{self, File};
-use std::io::Write;
+use std::io::{Write, stdout};
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
@@ -59,7 +59,7 @@ struct Cli {
     just_dump_excludes: bool,
 
     #[arg(short = 'o')]
-    out_path: PathBuf,
+    out_path: Option<PathBuf>,
 }
 
 impl Cli {
@@ -326,19 +326,23 @@ impl Env {
         })
     }
 
-    fn create_out_file(&self) -> File {
-        let p = self.abs_out_path();
-        fs::create_dir_all(p.parent().unwrap()).unwrap();
-        File::create(&self.cli.out_path).unwrap()
+    fn create_out_file(&self) -> Box<dyn Write> {
+        if let Some(p) = self.abs_out_path() {
+            fs::create_dir_all(p.parent().unwrap()).unwrap();
+            Box::new(File::create(p).unwrap())
+        } else {
+            Box::new(stdout())
+        }
     }
 
-    fn abs_out_path(&self) -> PathBuf {
-        let p = &self.cli.out_path;
-        if p.is_absolute() {
-            p.clone()
-        } else {
-            env::current_dir().unwrap().join(p)
-        }
+    fn abs_out_path(&self) -> Option<PathBuf> {
+        self.cli.out_path.as_ref().map(|p| {
+            if p.is_absolute() {
+                p.clone()
+            } else {
+                env::current_dir().unwrap().join(p)
+            }
+        })
     }
 
     fn include_dependents(&self) -> BTreeSet<&PackageName> {
