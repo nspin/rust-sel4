@@ -173,11 +173,11 @@ impl<'a> CargoTreeOutput<'a> {
             .unwrap()
             .lines()
             .filter_map(|s| {
-                let r = r#"^[a-zA-Z][a-zA-Z0-9_-]* v[0-9.]+ \((?<path>[^)]+)\)$"#;
+                let r = r#"^(?<name>[a-zA-Z][a-zA-Z0-9_-]*) v[0-9.]+ \(/[^)]+\)$"#;
                 Regex::new(r)
                     .unwrap()
                     .captures(s)
-                    .map(|captures| ws.by_name(captures.name("path").unwrap().as_str()))
+                    .map(|captures| ws.by_name(captures.name("name").unwrap().as_str()))
             })
             .collect::<BTreeSet<_>>()
     }
