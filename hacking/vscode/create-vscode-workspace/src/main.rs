@@ -14,6 +14,7 @@ use std::process::{Command, Output};
 
 use cargo_metadata::{Metadata, MetadataCommand, PackageName};
 use clap::Parser;
+use regex::Regex;
 use serde_json::{Value, json};
 
 // HACK
@@ -66,53 +67,42 @@ struct Env {
     cli: Cli,
 }
 
-enum CargoTreeOutput {
-    Packages(BTreeSet<String>),
+enum CargoTreeOutput<'a> {
+    Packages(BTreeSet<&'a PackageName>),
     InvalidFeatures(Vec<String>),
 }
 
-impl CargoTreeOutput {
-    fn parse(output: &Output, pkg: &PackageName) -> Self {
+impl<'a> CargoTreeOutput<'a> {
+    fn parse(output: &Output, ws: &'a WorkspacePackages) -> Self {
         if output.status.success() {
-            CargoTreeOutput::Packages(Self::parse_success(&output.stdout))
+            CargoTreeOutput::Packages(Self::parse_success(&output.stdout, ws))
         } else {
-            CargoTreeOutput::InvalidFeatures(Self::parse_failure(&output.stderr, pkg))
+            CargoTreeOutput::InvalidFeatures(Self::parse_failure(&output.stderr))
         }
     }
 
-    fn assume_success(output: &Output) -> BTreeSet<String> {
+    fn assume_success(output: &Output, ws: &'a WorkspacePackages) -> BTreeSet<&'a PackageName> {
         assert!(output.status.success());
-        Self::parse_success(&output.stdout)
+        Self::parse_success(&output.stdout, ws)
     }
 
-    fn parse_success(stdout: &[u8]) -> BTreeSet<String> {
-        // TODO use regex
+    fn parse_success(stdout: &[u8], ws: &'a WorkspacePackages) -> BTreeSet<&'a PackageName> {
         str::from_utf8(stdout)
             .unwrap()
             .lines()
             .filter_map(|s| {
-                if s.contains(" (/") {
-                    Some(s.split_whitespace().next().unwrap().to_owned())
-                } else {
-                    None
-                }
+                Regex::new(r#"^[a-zA-Z][a-zA-Z0-9_-]* v[0-9.]+ \((?<path>[^)]+)\)$"#)
+                    .unwrap()
+                    .captures(s)
+                    .map(|captures| ws.by_name(captures.name("path").unwrap().as_str()))
             })
             .collect::<BTreeSet<_>>()
     }
 
-    fn parse_failure(stderr: &[u8], pkg: &PackageName) -> Vec<String> {
-        let stderr_first_line = str::from_utf8(stderr).unwrap().lines().next().unwrap();
-        if let Some(s) = stderr_first_line.strip_prefix(&format!(
-            "error: the package '{pkg}' does not contain this feature: "
-        )) {
-            vec![s.to_owned()]
-        } else if let Some(s) = stderr_first_line.strip_prefix(&format!(
-            "error: the package '{pkg}' does not contain these features: "
-        )) {
-            s.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>()
-        } else {
-            panic!("xxx {stderr_first_line:?}")
-        }
+    fn parse_failure(stderr: &[u8]) -> Vec<String> {
+        let s = str::from_utf8(stderr).unwrap();
+        let feats = Regex::new(r#"error: the package '[a-zA-Z][a-zA-Z0-9_-]*' does not contain (this feature|these features): (?<feats>.+)"#).unwrap().captures(s).unwrap().name("feats").unwrap().as_str();
+        feats.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>()
     }
 }
 
