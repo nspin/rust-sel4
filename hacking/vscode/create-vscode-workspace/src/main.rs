@@ -406,9 +406,7 @@ impl Env {
             .unwrap();
             let mut pkgs = CargoTreeOutput::assume_success(&output, &self.ws);
             pkgs.retain(|possible_dependent| {
-                self.get_deps(possible_dependent)
-                    .iter()
-                    .any(|dep| include_dependents.contains(dep))
+                self.has_dep_in(possible_dependent, &include_dependents)
             });
             pkgs
         }
@@ -431,10 +429,7 @@ impl Env {
             .filter(|pkg| {
                 !pkgs.contains(*pkg)
                     || (fast_exclude_candidates.contains(*pkg)
-                        && self
-                            .get_deps(pkg)
-                            .iter()
-                            .any(|pkg| exclude_roots.contains(pkg)))
+                        && self.has_dep_in(pkg, &exclude_roots))
             })
             .collect::<BTreeSet<_>>()
     }
@@ -456,6 +451,12 @@ impl Env {
             .unwrap();
             CargoTreeOutput::assume_success(&output, &self.ws)
         }
+    }
+
+    fn has_dep_in(&self, pkg: &PackageName, deps_of_interest: &BTreeSet<&PackageName>) -> bool {
+        self.get_deps(pkg)
+            .iter()
+            .any(|dep| deps_of_interest.contains(dep))
     }
 
     fn get_deps(&self, pkg: &PackageName) -> BTreeSet<&PackageName> {
