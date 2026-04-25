@@ -55,7 +55,10 @@ struct Cli {
     #[arg(long, short = 'e')]
     exclude: Vec<String>,
 
-    #[arg(long, short = 'd')]
+    #[arg(long)]
+    just_dump_includes: bool,
+
+    #[arg(long)]
     just_dump_excludes: bool,
 
     #[arg(short = 'o')]
@@ -277,8 +280,15 @@ impl Env {
     }
 
     fn run(&self) {
-        let excludes = self.get_excluded();
-        if self.cli.just_dump_excludes {
+        let includes = self.get_included();
+        let excludes = self.get_excluded(&includes);
+        assert!(!(self.cli.just_dump_includes && self.cli.just_dump_excludes));
+        if self.cli.just_dump_includes {
+            let mut f = self.create_out_file();
+            for pkg in includes.iter() {
+                writeln!(f, "{pkg}").unwrap();
+            }
+        } else if self.cli.just_dump_excludes {
             let mut f = self.create_out_file();
             for pkg in excludes.iter() {
                 writeln!(f, "{pkg}").unwrap();
@@ -409,8 +419,7 @@ impl Env {
         }
     }
 
-    fn get_excluded(&self) -> BTreeSet<&PackageName> {
-        let included = self.get_included();
+    fn get_excluded(&self, included: &BTreeSet<&PackageName>) -> BTreeSet<&PackageName> {
         let exclude_roots = self.exclude_roots();
         let fast_exclude_candidates = self.get_fast_exclude_candidates();
         self.ws
