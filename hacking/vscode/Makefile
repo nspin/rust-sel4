@@ -41,8 +41,7 @@ p:
 		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
 		--config .cargo/gen/world/aarch64.microkitDefault.toml \
 		-i microkit-http-server-example-server \
-		--just-dump-excludes \
-# 		-o $(private_workspaces_dir)/ukit.txt
+		--just-dump-excludes
 
 .PHONY: priv2
 priv2:
