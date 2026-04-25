@@ -5,24 +5,18 @@ set -eu -o pipefail
 here="$(dirname $0)"
 here_abs="$(cd "$here" && echo $PWD)"
 
-if [ -z "${__RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED+x}" ]; then
-    export __RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED="$(command -v cargo)"
-fi
+export __RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED="$(command -v cargo)"
 
-if [ -z "${__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS+x}" ]; then
-    readarray -t excludes < "$here_abs/default-excludes.txt"
-    declare -a args
-    for exclude in "${excludes[@]}"; do
-        args+=("--exclude" "$exclude")
-    done
-    export __RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS="${args[*]}"
-fi
+declare -a args
+readarray -t excludes < "$here_abs/default-excludes.txt"
+for exclude in "${excludes[@]}"; do
+    args+=("--exclude" "$exclude")
+done
+export __RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS="${args[*]}"
 
-# if [ -z "${__RUST_ANALYZER_WRAPPER__LOG+x}" ]; then
-#     log="$here_abs/log.txt"
-#     rm -f "$log"
-#     export __RUST_ANALYZER_WRAPPER__LOG="$log"
-# fi
+# log="$here_abs/log.txt"
+# rm -f "$log"
+# export __RUST_ANALYZER_WRAPPER__LOG="$log"
 
 export PATH="$here_abs/cargo-wrapper:$PATH"
 
