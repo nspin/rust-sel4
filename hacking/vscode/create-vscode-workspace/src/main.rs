@@ -63,8 +63,90 @@ struct Cli {
     out_path: PathBuf,
 }
 
+impl Cli {
+    fn workspace_packages(&self) -> WorkspacePackages {
+        let metadata = {
+            let mut cmd = MetadataCommand::new();
+            cmd.current_dir(project_root());
+            cmd.other_options(self.forward_args());
+            cmd.no_deps();
+            cmd.exec().unwrap()
+        };
+        WorkspacePackages::from_metadata(&metadata)
+    }
+
+    fn forward_args(&self) -> Vec<String> {
+        self.forward_args_with_feature_filter(|_| true)
+    }
+
+    fn forward_args_with_feature_filter(
+        &self,
+        feature_filter: impl Fn(&str) -> bool,
+    ) -> Vec<String> {
+        let mut args = self.forward_feature_args_with_feature_filter(&feature_filter);
+        args.extend(self.forward_config_args());
+        args
+    }
+
+    fn forward_feature_args(&self) -> Vec<String> {
+        self.forward_feature_args_with_feature_filter(|_| true)
+    }
+
+    fn forward_feature_args_with_feature_filter(
+        &self,
+        feature_filter: impl Fn(&str) -> bool,
+    ) -> Vec<String> {
+        let mut args = vec![];
+        for s in self.features.iter() {
+            if let Some(filtered) = filter_features_arg(&feature_filter, s) {
+                args.push("--features".to_owned());
+                args.push(filtered.to_owned());
+            }
+        }
+        if self.all_features {
+            args.push("--all-features".to_owned());
+        }
+        if self.no_default_features {
+            args.push("--no-default-features".to_owned());
+        }
+        args
+    }
+
+    fn forward_config_args(&self) -> Vec<String> {
+        let mut args = vec![];
+        if let Some(s) = self.target.as_ref() {
+            args.push("--config".to_owned());
+            args.push(format!("build.target=\"{s}\""));
+        }
+        for s in self.config.iter() {
+            args.push("--config".to_owned());
+            args.push(s.to_owned());
+        }
+        args
+    }
+}
+
+fn filter_features_arg(feature_filter: impl Fn(&str) -> bool, arg: &str) -> Option<String> {
+    let filtered = arg
+        .split(',')
+        .inspect(|s| check_feature_arg_element(s))
+        .filter(|s| feature_filter(s))
+        .collect::<Vec<_>>()
+        .join(",");
+    if filtered.is_empty() {
+        None
+    } else {
+        Some(filtered)
+    }
+}
+
+fn check_feature_arg_element(s: &str) {
+    assert_eq!(s.chars().filter(|c| *c == '/').count(), 1)
+}
+
 struct Env {
     cli: Cli,
+    ws: WorkspacePackages,
 }
 
 enum CargoTreeOutput<'a> {
@@ -91,7 +173,8 @@ impl<'a> CargoTreeOutput<'a> {
             .unwrap()
             .lines()
             .filter_map(|s| {
-                Regex::new(r#"^[a-zA-Z][a-zA-Z0-9_-]* v[0-9.]+ \((?<path>[^)]+)\)$"#)
+                let r = r#"^[a-zA-Z][a-zA-Z0-9_-]* v[0-9.]+ \((?<path>[^)]+)\)$"#;
+                Regex::new(r)
                     .unwrap()
                     .captures(s)
                     .map(|captures| ws.by_name(captures.name("path").unwrap().as_str()))
@@ -101,7 +184,14 @@ impl<'a> CargoTreeOutput<'a> {
 
     fn parse_failure(stderr: &[u8]) -> Vec<String> {
         let s = str::from_utf8(stderr).unwrap();
-        let feats = Regex::new(r#"error: the package '[a-zA-Z][a-zA-Z0-9_-]*' does not contain (this feature|these features): (?<feats>.+)"#).unwrap().captures(s).unwrap().name("feats").unwrap().as_str();
+        let r = r#"error: the package '[a-zA-Z][a-zA-Z0-9_-]*' does not contain (this feature|these features): (?<feats>.+)"#;
+        let feats = Regex::new(r)
+            .unwrap()
+            .captures(s)
+            .unwrap()
+            .name("feats")
+            .unwrap()
+            .as_str();
         feats.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>()
     }
 }
@@ -149,11 +239,12 @@ impl WorkspacePackages {
 impl Env {
     fn get() -> Self {
         let cli = Cli::parse();
-        Self { cli }
+        let ws = cli.workspace_packages();
+        Self { cli, ws }
     }
 
     fn run(&self) {
-        let workspace_packages = self.workspace_packages();
+        let workspace_packages = self.cli.workspace_packages();
 
         let included = if self.cli.include.is_empty() && self.cli.include_dependents.is_empty() {
             Cow::Borrowed(&workspace_packages.pkgs.iter().collect::<BTreeSet<_>>())
@@ -200,14 +291,14 @@ impl Env {
                 "Cargo.toml",
             ],
             "rust-analyzer.cargo.allTargets": false,
-            "rust-analyzer.cargo.extraArgs": self.forward_config_args(),
-            "rust-analyzer.cargo.metadataExtraArgs": self.forward_config_args(),
+            "rust-analyzer.cargo.extraArgs": self.cli.forward_config_args(),
+            "rust-analyzer.cargo.metadataExtraArgs": self.cli.forward_config_args(),
             "rust-analyzer.cargo.extraEnv": {
                 "__RUST_ANALYZER_WRAPPER__WORKSPACE_ARGS": exclude_args,
             },
             "terminal.integrated.env.linux": {
-                "cargo_config_args": self.forward_config_args().join(" "),
-                "cargo_feature_args": self.forward_feature_args().join(" "),
+                "cargo_config_args": self.cli.forward_config_args().join(" "),
+                "cargo_feature_args": self.cli.forward_feature_args().join(" "),
                 "cargo_exclude_args": exclude_args,
             },
         });
@@ -262,29 +353,12 @@ impl Env {
         }
     }
 
-    fn workspace_packages(&self) -> WorkspacePackages {
-        let metadata = {
-            let mut cmd = MetadataCommand::new();
-            cmd.current_dir(project_root());
-            cmd.other_options(self.forward_args());
-            cmd.no_deps();
-            cmd.exec().unwrap()
-        };
-        WorkspacePackages::from_metadata(&metadata)
+    fn include_roots(&self) -> BTreeSet<&PackageName> {
+        self.ws.by_names(self.cli.include.iter())
     }
 
-    fn include_roots<'a>(
-        &self,
-        workspace_packages: &'a WorkspacePackages,
-    ) -> BTreeSet<&'a PackageName> {
-        workspace_packages.by_names(self.cli.include.iter())
-    }
-
-    fn exclude_roots<'a>(
-        &self,
-        workspace_packages: &'a WorkspacePackages,
-    ) -> BTreeSet<&'a PackageName> {
-        workspace_packages.by_names(self.cli.exclude.iter())
+    fn exclude_roots(&self) -> BTreeSet<&PackageName> {
+        self.ws.by_names(self.cli.exclude.iter())
     }
 
     fn via_includes<'a>(
@@ -318,7 +392,7 @@ impl Env {
                 }
                 .output()
                 .unwrap();
-                CargoTreeOutput::assume_success(&output)
+                CargoTreeOutput::assume_success(&output, workspace_packages)
             }
             .iter(),
         );
@@ -349,7 +423,7 @@ impl Env {
         }
         .output()
         .unwrap();
-        let candidates = workspace_packages.set_by_name(&CargoTreeOutput::assume_success(&output));
+        let candidates = CargoTreeOutput::assume_success(&output, workspace_packages);
         candidates
             .iter()
             .filter(|candidate| {
@@ -387,15 +461,18 @@ impl Env {
             .filter(|pkg| {
                 !pkgs.contains(*pkg)
                     || (fast_exclude_candidates.contains(*pkg)
-                        && workspace_packages
-                            .set_by_name(&self.get_deps(pkg))
+                        && self
+                            .get_deps(pkg)
                             .iter()
                             .any(|pkg| exclude_roots.contains(pkg)))
             })
             .collect::<BTreeSet<_>>()
     }
 
-    fn get_fast_exclude_candidates(&self) -> BTreeSet<String> {
+    fn get_fast_exclude_candidates<'a>(
+        &self,
+        workspace_packages: &'a WorkspacePackages,
+    ) -> BTreeSet<&'a PackageName> {
         if self.cli.exclude.is_empty() {
             BTreeSet::new()
         } else {
@@ -409,11 +486,11 @@ impl Env {
             }
             .output()
             .unwrap();
-            CargoTreeOutput::assume_success(&output)
+            CargoTreeOutput::assume_success(&output, workspace_packages)
         }
     }
 
-    fn get_deps(&self, pkg: &PackageName) -> BTreeSet<String> {
+    fn get_deps(&self, pkg: &PackageName) -> BTreeSet<&PackageName> {
         match self.invoke_cargo_tree::<&str>(pkg, &[]) {
             CargoTreeOutput::Packages(pkgs) => pkgs,
             CargoTreeOutput::InvalidFeatures(feats) => match self.invoke_cargo_tree(pkg, &feats) {
@@ -431,7 +508,7 @@ impl Env {
         let output = {
             let mut cmd = self.cargo_tree_base_cmd();
             cmd.arg("--package").arg(pkg.as_ref());
-            cmd.args(self.forward_args_with_feature_filter(|feat| {
+            cmd.args(self.cli.forward_args_with_feature_filter(|feat| {
                 !exclude_features
                     .iter()
                     .any(|excluded_feat| feat == excluded_feat.as_ref())
@@ -440,7 +517,7 @@ impl Env {
         }
         .output()
         .unwrap();
-        CargoTreeOutput::parse(&output, pkg)
+        CargoTreeOutput::parse(&output, &self.ws)
     }
 
     fn cargo_tree_base_cmd(&self) -> Command {
@@ -449,72 +526,4 @@ impl Env {
         cmd.args(["tree", "--prefix=none", "--format={p}", "--color=never"]);
         cmd
     }
-
-    fn forward_args(&self) -> Vec<String> {
-        self.forward_args_with_feature_filter(|_| true)
-    }
-
-    fn forward_args_with_feature_filter(
-        &self,
-        feature_filter: impl Fn(&str) -> bool,
-    ) -> Vec<String> {
-        let mut args = self.forward_feature_args_with_feature_filter(&feature_filter);
-        args.extend(self.forward_config_args());
-        args
-    }
-
-    fn forward_feature_args(&self) -> Vec<String> {
-        self.forward_feature_args_with_feature_filter(|_| true)
-    }
-
-    fn forward_feature_args_with_feature_filter(
-        &self,
-        feature_filter: impl Fn(&str) -> bool,
-    ) -> Vec<String> {
-        let mut args = vec![];
-        for s in self.cli.features.iter() {
-            if let Some(filtered) = filter_features_arg(&feature_filter, s) {
-                args.push("--features".to_owned());
-                args.push(filtered.to_owned());
-            }
-        }
-        if self.cli.all_features {
-            args.push("--all-features".to_owned());
-        }
-        if self.cli.no_default_features {
-            args.push("--no-default-features".to_owned());
-        }
-        args
-    }
-
-    fn forward_config_args(&self) -> Vec<String> {
-        let mut args = vec![];
-        if let Some(s) = self.cli.target.as_ref() {
-            args.push("--config".to_owned());
-            args.push(format!("build.target=\"{s}\""));
-        }
-        for s in self.cli.config.iter() {
-            args.push("--config".to_owned());
-            args.push(s.to_owned());
-        }
-        args
-    }
-}
-
-fn filter_features_arg(feature_filter: impl Fn(&str) -> bool, arg: &str) -> Option<String> {
-    let filtered = arg
-        .split(',')
-        .inspect(|s| check_feature_arg_element(s))
-        .filter(|s| feature_filter(s))
-        .collect::<Vec<_>>()
-        .join(",");
-    if filtered.is_empty() {
-        None
-    } else {
-        Some(filtered)
-    }
-}
-
-fn check_feature_arg_element(s: &str) {
-    assert_eq!(s.chars().filter(|c| *c == '/').count(), 1)
 }
