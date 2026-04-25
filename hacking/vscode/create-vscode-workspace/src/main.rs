@@ -233,10 +233,6 @@ impl WorkspacePackages {
             .map(|name| self.by_name(name))
             .collect::<BTreeSet<_>>()
     }
-
-    fn set_by_name(&self, names: &BTreeSet<String>) -> BTreeSet<&PackageName> {
-        self.by_names(names.iter())
-    }
 }
 
 impl Env {
