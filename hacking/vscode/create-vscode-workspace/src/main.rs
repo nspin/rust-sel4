@@ -468,14 +468,15 @@ impl Env {
     }
 
     fn get_fast_exclude_candidates(&self) -> BTreeSet<&PackageName> {
-        if self.cli.exclude.is_empty() {
+        let exclude_roots = self.exclude_roots();
+        if exclude_roots.is_empty() {
             BTreeSet::new()
         } else {
             let output = {
                 let mut cmd = self.cargo_tree_base_cmd();
                 cmd.arg("--workspace");
-                for pkg in self.cli.exclude.iter() {
-                    cmd.arg("--invert").arg(pkg);
+                for pkg in exclude_roots.iter() {
+                    cmd.arg("--invert").arg(pkg.as_str());
                 }
                 cmd
             }
@@ -486,19 +487,19 @@ impl Env {
     }
 
     fn get_deps(&self, pkg: &PackageName) -> BTreeSet<&PackageName> {
-        match self.invoke_cargo_tree::<&str>(pkg, &[]) {
+        match self.get_deps_inner(pkg, &[]) {
             CargoTreeOutput::Packages(pkgs) => pkgs,
-            CargoTreeOutput::InvalidFeatures(feats) => match self.invoke_cargo_tree(pkg, &feats) {
+            CargoTreeOutput::InvalidFeatures(feats) => match self.get_deps_inner(pkg, &feats) {
                 CargoTreeOutput::Packages(pkgs) => pkgs,
                 _ => panic!(),
             },
         }
     }
 
-    fn invoke_cargo_tree<T: AsRef<str>>(
+    fn get_deps_inner(
         &self,
         pkg: &PackageName,
-        exclude_features: &[T],
+        exclude_features: &[String],
     ) -> CargoTreeOutput<'_> {
         let output = {
             let mut cmd = self.cargo_tree_base_cmd();
@@ -506,7 +507,7 @@ impl Env {
             cmd.args(self.cli.forward_args_with_feature_filter(|feat| {
                 !exclude_features
                     .iter()
-                    .any(|excluded_feat| feat == excluded_feat.as_ref())
+                    .any(|excluded_feat| feat == excluded_feat)
             }));
             cmd
         }
