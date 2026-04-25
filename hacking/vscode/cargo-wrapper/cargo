@@ -9,7 +9,7 @@ for arg in "$@"; do
     args+=( "$arg" )
     case "$arg" in
         check|clippy|build)
-            (( seen_check_command+= 1 ))
+            (( seen_check_command+=1 ))
             ;;
         --workspace)
             if [[ $seen_check_command -eq 1 ]]; then
