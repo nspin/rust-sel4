@@ -367,46 +367,22 @@ impl Env {
     }
 
     fn via_includes(&self) -> BTreeSet<&PackageName> {
-        let included_dependents = if self.cli.include_dependents.is_empty() {
-            BTreeSet::new()
-        } else {
-            self.get_included_dependents()
-        };
-
-        // for x in included_dependents.iter() {
-        //     eprintln!("{x}");
-        // }
-
-        let transitive_includes = self.ws.by_names(
+        let output = {
+            let mut cmd = self.cargo_tree_base_cmd();
+            cmd.arg("--edges=no-build");
+            cmd.arg("--edges=no-proc-macro");
+            for pkg in self
+                .include_roots()
+                .iter()
+                .chain(self.get_included_dependents().iter())
             {
-                let output = {
-                    let mut cmd = self.cargo_tree_base_cmd();
-                    cmd.arg("--edges=no-build");
-                    cmd.arg("--edges=no-proc-macro");
-                    for pkg in self
-                        .include_roots()
-                        .iter()
-                        .chain(included_dependents.iter())
-                    {
-                        cmd.arg("--package").arg(pkg.as_str());
-                    }
-                    cmd
-                }
-                .output()
-                .unwrap();
-                CargoTreeOutput::assume_success(&output, &self.ws)
+                cmd.arg("--package").arg(pkg.as_str());
             }
-            .iter(),
-        );
-
-        // for x in transitive_includes.iter() {
-        //     eprintln!("{x}");
-        // }
-
-        self.ws
-            .iter()
-            .filter(|pkg| transitive_includes.contains(pkg))
-            .collect::<BTreeSet<_>>()
+            cmd
+        }
+        .output()
+        .unwrap();
+        CargoTreeOutput::assume_success(&output, &self.ws)
     }
 
     fn get_included_dependents(&self) -> BTreeSet<&PackageName> {
@@ -426,14 +402,13 @@ impl Env {
             }
             .output()
             .unwrap();
-            CargoTreeOutput::assume_success(&output, &self.ws)
-                .into_iter()
-                .filter(|possible_dependent| {
-                    self.get_deps(possible_dependent)
-                        .iter()
-                        .any(|dep| include_dependents.contains(dep))
-                })
-                .collect::<BTreeSet<_>>()
+            let mut pkgs = CargoTreeOutput::assume_success(&output, &self.ws);
+            pkgs.retain(|possible_dependent| {
+                self.get_deps(possible_dependent)
+                    .iter()
+                    .any(|dep| include_dependents.contains(dep))
+            });
+            pkgs
         }
     }
 
