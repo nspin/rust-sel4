@@ -217,7 +217,11 @@ impl WorkspacePackages {
 
         let root = metadata.workspace_root.clone().into();
 
-        WorkspacePackages { pkgs, pkgs_by_name, root }
+        WorkspacePackages {
+            pkgs,
+            pkgs_by_name,
+            root,
+        }
     }
 
     fn iter(&self) -> impl Iterator<Item = &PackageName> {
@@ -362,9 +366,7 @@ impl Env {
         self.ws.by_names(self.cli.exclude.iter())
     }
 
-    fn via_includes(
-        &self,
-    ) -> BTreeSet<&PackageName> {
+    fn via_includes(&self) -> BTreeSet<&PackageName> {
         let included_dependents = if self.cli.include_dependents.is_empty() {
             BTreeSet::new()
         } else {
@@ -407,35 +409,32 @@ impl Env {
             .collect::<BTreeSet<_>>()
     }
 
-    fn get_included_dependents(
-        &self,
-    ) -> BTreeSet<&PackageName> {
-        let output = {
-            let mut cmd = self.cargo_tree_base_cmd();
-            cmd.arg("--workspace");
-            cmd.arg("--edges=no-build");
-            cmd.arg("--edges=no-proc-macro");
-            for pkg in self.cli.include_dependents.iter() {
-                cmd.arg("--invert").arg(pkg);
-            }
-            cmd
-        }
-        .output()
-        .unwrap();
-        let candidates = CargoTreeOutput::assume_success(&output, &self.ws);
-        candidates
-            .iter()
-            .filter(|candidate| {
-                let deps = self.get_deps(candidate);
-                for pkg in self.include_dependents() {
-                    if deps.contains(pkg) {
-                        return true;
-                    }
+    fn get_included_dependents(&self) -> BTreeSet<&PackageName> {
+        let include_dependents = self.include_dependents();
+        if include_dependents.is_empty() {
+            BTreeSet::new()
+        } else {
+            let output = {
+                let mut cmd = self.cargo_tree_base_cmd();
+                cmd.arg("--workspace");
+                cmd.arg("--edges=no-build");
+                cmd.arg("--edges=no-proc-macro");
+                for pkg in include_dependents.iter() {
+                    cmd.arg("--invert").arg(pkg.as_str());
                 }
-                false
-            })
-            .copied()
-            .collect::<BTreeSet<_>>()
+                cmd
+            }
+            .output()
+            .unwrap();
+            CargoTreeOutput::assume_success(&output, &self.ws)
+                .into_iter()
+                .filter(|possible_dependent| {
+                    self.get_deps(possible_dependent)
+                        .iter()
+                        .any(|dep| include_dependents.contains(dep))
+                })
+                .collect::<BTreeSet<_>>()
+        }
     }
 
     fn via_excludes(&self, pkgs: &BTreeSet<&PackageName>) -> BTreeSet<&PackageName> {
