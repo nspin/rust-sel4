@@ -247,11 +247,7 @@ impl Env {
     }
 
     fn run(&self) {
-        let included = if self.cli.include.is_empty() && self.cli.include_dependents.is_empty() {
-            Cow::Borrowed(&self.ws.pkgs.iter().collect::<BTreeSet<_>>())
-        } else {
-            Cow::Owned(self.via_includes())
-        };
+        let included = self.via_includes();
         let excludes = if !self.cli.exclude.is_empty() {
             self.via_excludes(included.borrow())
         } else {
