@@ -363,22 +363,28 @@ impl Env {
     }
 
     fn via_includes(&self) -> BTreeSet<&PackageName> {
-        let output = {
-            let mut cmd = self.cargo_tree_base_cmd();
-            cmd.arg("--edges=no-build");
-            cmd.arg("--edges=no-proc-macro");
-            for pkg in self
-                .include_roots()
-                .iter()
-                .chain(self.get_included_dependents().iter())
-            {
-                cmd.arg("--package").arg(pkg.as_str());
+        let include_roots = self.include_roots();
+        let included_dependends = self.get_included_dependents();
+        if include_roots.is_empty() && included_dependends.is_empty() {
+            self.ws.iter().collect::<BTreeSet<_>>()
+        } else {
+            let output = {
+                let mut cmd = self.cargo_tree_base_cmd();
+                cmd.arg("--edges=no-build");
+                cmd.arg("--edges=no-proc-macro");
+                for pkg in self
+                    .include_roots()
+                    .iter()
+                    .chain(self.get_included_dependents().iter())
+                {
+                    cmd.arg("--package").arg(pkg.as_str());
+                }
+                cmd
             }
-            cmd
+            .output()
+            .unwrap();
+            CargoTreeOutput::assume_success(&output, &self.ws)
         }
-        .output()
-        .unwrap();
-        CargoTreeOutput::assume_success(&output, &self.ws)
     }
 
     fn get_included_dependents(&self) -> BTreeSet<&PackageName> {
