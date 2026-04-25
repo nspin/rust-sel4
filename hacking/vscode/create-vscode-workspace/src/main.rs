@@ -277,8 +277,7 @@ impl Env {
     }
 
     fn run(&self) {
-        let included = self.get_included();
-        let excludes = self.get_excluded(&included);
+        let excludes = self.get_excluded();
         if self.cli.just_dump_excludes {
             let mut f = self.create_out_file();
             for pkg in excludes.iter() {
@@ -410,7 +409,8 @@ impl Env {
         }
     }
 
-    fn get_excluded(&self, included: &BTreeSet<&PackageName>) -> BTreeSet<&PackageName> {
+    fn get_excluded(&self) -> BTreeSet<&PackageName> {
+        let included = self.get_included();
         let exclude_roots = self.exclude_roots();
         let fast_exclude_candidates = self.get_fast_exclude_candidates();
         self.ws
