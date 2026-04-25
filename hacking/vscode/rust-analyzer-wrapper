@@ -7,8 +7,8 @@ here_abs="$(cd "$here" && echo $PWD)"
 
 export __RUST_ANALYZER_WRAPPER__CARGO_UWRAPPED="$(command -v cargo)"
 
-declare -a args
 readarray -t excludes < "$here_abs/default-excludes.txt"
+declare -a args
 for exclude in "${excludes[@]}"; do
     args+=("--exclude" "$exclude")
 done
