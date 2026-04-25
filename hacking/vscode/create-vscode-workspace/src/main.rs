@@ -243,17 +243,15 @@ impl Env {
     }
 
     fn run(&self) {
-        let workspace_packages = self.cli.workspace_packages();
-
         let included = if self.cli.include.is_empty() && self.cli.include_dependents.is_empty() {
-            Cow::Borrowed(&workspace_packages.pkgs.iter().collect::<BTreeSet<_>>())
+            Cow::Borrowed(&self.ws.pkgs.iter().collect::<BTreeSet<_>>())
         } else {
-            Cow::Owned(self.via_includes(&workspace_packages))
+            Cow::Owned(self.via_includes())
         };
         let excludes = if !self.cli.exclude.is_empty() {
             self.via_excludes(included.borrow())
         } else {
-            workspace_packages
+            self.ws
                 .iter()
                 .filter(|pkg| !included.contains(pkg))
                 .collect::<BTreeSet<_>>()
@@ -364,21 +362,20 @@ impl Env {
         self.ws.by_names(self.cli.exclude.iter())
     }
 
-    fn via_includes<'a>(
+    fn via_includes(
         &self,
-        workspace_packages: &'a WorkspacePackages,
-    ) -> BTreeSet<&'a PackageName> {
+    ) -> BTreeSet<&PackageName> {
         let included_dependents = if self.cli.include_dependents.is_empty() {
             BTreeSet::new()
         } else {
-            self.get_included_dependents(workspace_packages)
+            self.get_included_dependents()
         };
 
         // for x in included_dependents.iter() {
         //     eprintln!("{x}");
         // }
 
-        let transitive_includes = workspace_packages.by_names(
+        let transitive_includes = self.ws.by_names(
             {
                 let output = {
                     let mut cmd = self.cargo_tree_base_cmd();
@@ -395,7 +392,7 @@ impl Env {
                 }
                 .output()
                 .unwrap();
-                CargoTreeOutput::assume_success(&output, workspace_packages)
+                CargoTreeOutput::assume_success(&output, &self.ws)
             }
             .iter(),
         );
@@ -404,16 +401,15 @@ impl Env {
         //     eprintln!("{x}");
         // }
 
-        workspace_packages
+        self.ws
             .iter()
             .filter(|pkg| transitive_includes.contains(pkg))
             .collect::<BTreeSet<_>>()
     }
 
-    fn get_included_dependents<'a>(
+    fn get_included_dependents(
         &self,
-        workspace_packages: &'a WorkspacePackages,
-    ) -> BTreeSet<&'a PackageName> {
+    ) -> BTreeSet<&PackageName> {
         let output = {
             let mut cmd = self.cargo_tree_base_cmd();
             cmd.arg("--workspace");
@@ -426,7 +422,7 @@ impl Env {
         }
         .output()
         .unwrap();
-        let candidates = CargoTreeOutput::assume_success(&output, workspace_packages);
+        let candidates = CargoTreeOutput::assume_success(&output, &self.ws);
         candidates
             .iter()
             .filter(|candidate| {
