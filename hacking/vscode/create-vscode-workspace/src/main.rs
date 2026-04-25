@@ -245,6 +245,37 @@ impl Env {
         Self { cli, ws }
     }
 
+    fn include_dependents(&self) -> BTreeSet<&PackageName> {
+        self.ws.by_names(self.cli.include_dependents.iter())
+    }
+
+    fn include_roots(&self) -> BTreeSet<&PackageName> {
+        self.ws.by_names(self.cli.include.iter())
+    }
+
+    fn exclude_roots(&self) -> BTreeSet<&PackageName> {
+        self.ws.by_names(self.cli.exclude.iter())
+    }
+
+    fn abs_out_path(&self) -> Option<PathBuf> {
+        self.cli.out_path.as_ref().map(|p| {
+            if p.is_absolute() {
+                p.clone()
+            } else {
+                env::current_dir().unwrap().join(p)
+            }
+        })
+    }
+
+    fn create_out_file(&self) -> Box<dyn Write> {
+        if let Some(p) = self.abs_out_path() {
+            fs::create_dir_all(p.parent().unwrap()).unwrap();
+            Box::new(File::create(p).unwrap())
+        } else {
+            Box::new(stdout())
+        }
+    }
+
     fn run(&self) {
         let included = self.get_included();
         let excludes = self.get_excluded(&included);
@@ -258,12 +289,6 @@ impl Env {
             let mut f = self.create_out_file();
             writeln!(f, "{vs_ws:#}").unwrap();
         }
-    }
-
-    fn get_orig_settings(&self) -> Value {
-        let bs = fs::read(project_root().join(".vscode/settings.json")).unwrap();
-        let s = str::from_utf8(&bs).unwrap();
-        jsonc_parser::parse_to_serde_value(s, &Default::default()).unwrap()
     }
 
     fn vscode_workspace(&self, excludes: BTreeSet<&PackageName>) -> Value {
@@ -316,7 +341,7 @@ impl Env {
         let mut settings = self.get_orig_settings();
         settings.as_object_mut().unwrap().append(new_settings_obj);
 
-        let path = pathdiff::diff_paths(project_root(), self.abs_out_path().parent().unwrap());
+        let path = pathdiff::diff_paths(&self.ws.root, self.abs_out_path().unwrap().parent().unwrap());
 
         json!({
             "folders": [
@@ -326,35 +351,10 @@ impl Env {
         })
     }
 
-    fn create_out_file(&self) -> Box<dyn Write> {
-        if let Some(p) = self.abs_out_path() {
-            fs::create_dir_all(p.parent().unwrap()).unwrap();
-            Box::new(File::create(p).unwrap())
-        } else {
-            Box::new(stdout())
-        }
-    }
-
-    fn abs_out_path(&self) -> Option<PathBuf> {
-        self.cli.out_path.as_ref().map(|p| {
-            if p.is_absolute() {
-                p.clone()
-            } else {
-                env::current_dir().unwrap().join(p)
-            }
-        })
-    }
-
-    fn include_dependents(&self) -> BTreeSet<&PackageName> {
-        self.ws.by_names(self.cli.include_dependents.iter())
-    }
-
-    fn include_roots(&self) -> BTreeSet<&PackageName> {
-        self.ws.by_names(self.cli.include.iter())
-    }
-
-    fn exclude_roots(&self) -> BTreeSet<&PackageName> {
-        self.ws.by_names(self.cli.exclude.iter())
+    fn get_orig_settings(&self) -> Value {
+        let bs = fs::read(self.ws.root.join(".vscode/settings.json")).unwrap();
+        let s = str::from_utf8(&bs).unwrap();
+        jsonc_parser::parse_to_serde_value(s, &Default::default()).unwrap()
     }
 
     fn get_included(&self) -> BTreeSet<&PackageName> {
