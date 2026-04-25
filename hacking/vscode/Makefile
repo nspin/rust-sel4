@@ -53,4 +53,4 @@ priv2:
 		--features banscii-serial-driver/board-qemu_virt_aarch64 \
 		-o $(private_workspaces_dir)/all-sel4$(ws)
 
-# cargo check --workspace $cargo_config_args $cargo_exclude_args $cargo_feature_args
+# cargo check --workspace $cargo_config_args $cargo_feature_args $cargo_exclude_args
