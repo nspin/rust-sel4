@@ -247,16 +247,8 @@ impl Env {
     }
 
     fn run(&self) {
-        let included = self.via_includes();
-        let excludes = if !self.cli.exclude.is_empty() {
-            self.via_excludes(included.borrow())
-        } else {
-            self.ws
-                .iter()
-                .filter(|pkg| !included.contains(pkg))
-                .collect::<BTreeSet<_>>()
-        };
-
+        let included = self.get_included();
+        let excludes = self.get_excluded(&included);
         if self.cli.just_dump_excludes {
             let mut f = self.create_out_file();
             for pkg in excludes.iter() {
@@ -362,7 +354,7 @@ impl Env {
         self.ws.by_names(self.cli.exclude.iter())
     }
 
-    fn via_includes(&self) -> BTreeSet<&PackageName> {
+    fn get_included(&self) -> BTreeSet<&PackageName> {
         let include_roots = self.include_roots();
         let included_dependends = self.get_included_dependents();
         if include_roots.is_empty() && included_dependends.is_empty() {
@@ -412,22 +404,13 @@ impl Env {
         }
     }
 
-    fn via_excludes(&self, pkgs: &BTreeSet<&PackageName>) -> BTreeSet<&PackageName> {
+    fn get_excluded(&self, included: &BTreeSet<&PackageName>) -> BTreeSet<&PackageName> {
         let exclude_roots = self.exclude_roots();
-
         let fast_exclude_candidates = self.get_fast_exclude_candidates();
-
-        // eprintln!("{exclude_roots:?}");
-        // eprintln!("{fast_exclude_candidates:?}");
-
-        // for x in pkgs.iter() {
-        //     eprintln!("{x}");
-        // }
-
         self.ws
             .iter()
             .filter(|pkg| {
-                !pkgs.contains(*pkg)
+                !included.contains(*pkg)
                     || (fast_exclude_candidates.contains(*pkg)
                         && self.has_dep_in(pkg, &exclude_roots))
             })
@@ -454,9 +437,11 @@ impl Env {
     }
 
     fn has_dep_in(&self, pkg: &PackageName, deps_of_interest: &BTreeSet<&PackageName>) -> bool {
-        self.get_deps(pkg)
-            .iter()
-            .any(|dep| deps_of_interest.contains(dep))
+        !deps_of_interest.is_empty()
+            && self
+                .get_deps(pkg)
+                .iter()
+                .any(|dep| deps_of_interest.contains(dep))
     }
 
     fn get_deps(&self, pkg: &PackageName) -> BTreeSet<&PackageName> {
