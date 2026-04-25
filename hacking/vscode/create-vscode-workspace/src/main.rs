@@ -341,7 +341,10 @@ impl Env {
         let mut settings = self.get_orig_settings();
         settings.as_object_mut().unwrap().append(new_settings_obj);
 
-        let path = pathdiff::diff_paths(&self.ws.root, self.abs_out_path().unwrap().parent().unwrap());
+        let path = pathdiff::diff_paths(
+            &self.ws.root,
+            self.abs_out_path().unwrap().parent().unwrap(),
+        );
 
         json!({
             "folders": [
