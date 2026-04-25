@@ -272,6 +272,7 @@ dependencies = [
  "clap",
  "jsonc-parser",
  "pathdiff",
+ "regex",
  "serde_json",
 ]
 
