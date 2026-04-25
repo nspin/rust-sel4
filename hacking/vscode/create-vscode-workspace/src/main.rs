@@ -252,7 +252,7 @@ impl Env {
             Cow::Owned(self.via_includes(&workspace_packages))
         };
         let excludes = if !self.cli.exclude.is_empty() {
-            self.via_excludes(&workspace_packages, included.borrow())
+            self.via_excludes(included.borrow())
         } else {
             workspace_packages
                 .iter()
@@ -353,6 +353,10 @@ impl Env {
         }
     }
 
+    fn include_dependents(&self) -> BTreeSet<&PackageName> {
+        self.ws.by_names(self.cli.include_dependents.iter())
+    }
+
     fn include_roots(&self) -> BTreeSet<&PackageName> {
         self.ws.by_names(self.cli.include.iter())
     }
@@ -382,7 +386,7 @@ impl Env {
                     cmd.arg("--edges=no-build");
                     cmd.arg("--edges=no-proc-macro");
                     for pkg in self
-                        .include_roots(workspace_packages)
+                        .include_roots()
                         .iter()
                         .chain(included_dependents.iter())
                     {
@@ -428,7 +432,7 @@ impl Env {
             .iter()
             .filter(|candidate| {
                 let deps = self.get_deps(candidate);
-                for pkg in self.cli.include_dependents.iter() {
+                for pkg in self.include_dependents() {
                     if deps.contains(pkg) {
                         return true;
                     }
@@ -439,15 +443,10 @@ impl Env {
             .collect::<BTreeSet<_>>()
     }
 
-    fn via_excludes<'a>(
-        &self,
-        workspace_packages: &'a WorkspacePackages,
-        pkgs: &'a BTreeSet<&PackageName>,
-    ) -> BTreeSet<&'a PackageName> {
-        let exclude_roots = self.exclude_roots(workspace_packages);
+    fn via_excludes(&self, pkgs: &BTreeSet<&PackageName>) -> BTreeSet<&PackageName> {
+        let exclude_roots = self.exclude_roots();
 
-        let fast_exclude_candidates =
-            workspace_packages.set_by_name(&self.get_fast_exclude_candidates());
+        let fast_exclude_candidates = self.get_fast_exclude_candidates();
 
         // eprintln!("{exclude_roots:?}");
         // eprintln!("{fast_exclude_candidates:?}");
@@ -456,7 +455,7 @@ impl Env {
         //     eprintln!("{x}");
         // }
 
-        workspace_packages
+        self.ws
             .iter()
             .filter(|pkg| {
                 !pkgs.contains(*pkg)
@@ -469,10 +468,7 @@ impl Env {
             .collect::<BTreeSet<_>>()
     }
 
-    fn get_fast_exclude_candidates<'a>(
-        &self,
-        workspace_packages: &'a WorkspacePackages,
-    ) -> BTreeSet<&'a PackageName> {
+    fn get_fast_exclude_candidates(&self) -> BTreeSet<&PackageName> {
         if self.cli.exclude.is_empty() {
             BTreeSet::new()
         } else {
@@ -486,7 +482,7 @@ impl Env {
             }
             .output()
             .unwrap();
-            CargoTreeOutput::assume_success(&output, workspace_packages)
+            CargoTreeOutput::assume_success(&output, &self.ws)
         }
     }
 
