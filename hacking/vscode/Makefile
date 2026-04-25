@@ -35,6 +35,16 @@ priv1:
 		-i microkit-http-server-example-server \
 		-o $(private_workspaces_dir)/ukit$(ws)
 
+.PHONY: p
+p:
+	cargo run -p create-vscode-workspace -- \
+		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
+		--config .cargo/gen/world/aarch64.microkitDefault.toml \
+		-i microkit-http-server-example-server \
+		--just-dump-includes
+
+# 		--just-dump-excludes
+
 .PHONY: priv2
 priv2:
 	cargo run -p create-vscode-workspace -- \
