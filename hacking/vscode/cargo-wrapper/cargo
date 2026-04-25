@@ -2,8 +2,8 @@
 
 set -eu -o pipefail
 
-declare -i seen_check_command=0
 declare -a args
+declare -i seen_check_command=0
 
 for arg in "$@"; do
     args+=( "$arg" )
