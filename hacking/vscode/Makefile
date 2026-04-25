@@ -35,16 +35,6 @@ priv1:
 		-i microkit-http-server-example-server \
 		-o $(private_workspaces_dir)/ukit$(ws)
 
-.PHONY: p
-p:
-	cargo run -p create-vscode-workspace -- \
-		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
-		--config .cargo/gen/world/aarch64.microkitDefault.toml \
-		-i microkit-http-server-example-server \
-		--just-dump-includes
-
-# 		--just-dump-excludes
-
 .PHONY: priv2
 priv2:
 	cargo run -p create-vscode-workspace -- \
@@ -64,11 +54,3 @@ priv2:
 		-o $(private_workspaces_dir)/all-sel4$(ws)
 
 # cargo check --workspace $cargo_config_args $cargo_exclude_args
-
-.PHONY: t
-t:
-	cargo run -p create-vscode-workspace -- \
-		--include-dependents sel4 \
-		-e tests-root-task-dafny-core \
-		--just-dump-excludes \
-		-o $(private_workspaces_dir)/foo.txt
