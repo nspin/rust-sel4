@@ -9,7 +9,7 @@ use core::mem;
 
 use aarch64_cpu::registers::{CurrentEL, Readable};
 
-use sel4_kernel_loader_payload_types::{ArchivedPayloadInfo, ArchivedWord};
+use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 
 use crate::{arch::Arch, main, secondary_main};
 
@@ -52,11 +52,8 @@ impl Arch for ArchImpl {
             mem::transmute::<usize, KernelEntry>(payload_info.kernel_image.virt_entry.to_usize())
         };
 
-        let (dtb_addr_p, dtb_size) = match payload_info.fdt_phys_addr_range.as_ref() {
-            Some(region) => {
-                let region = ArchivedWord::to_usize_range(region);
-                (region.start, region.len())
-            }
+        let (dtb_addr_p, dtb_size) = match payload_info.fdt.as_ref() {
+            Some(fdt) => (fdt.addr.to_usize(), fdt.size.to_usize()),
             None => (0, 0),
         };
 

@@ -65,13 +65,16 @@ pub fn serialize_payload<T: FileHeader<Word: PrimInt + WrappingSub + Integer + S
         - u64::try_from(fdt_content.len())
             .unwrap()
             .next_multiple_of(1 << PAGE_SIZE_BITS);
-    let fdt_phys_addr_range = builder.add_region(fdt_paddr, fdt_content);
+    builder.add_region(fdt_paddr, fdt_content.clone());
 
     Payload {
         info: PayloadInfo {
             kernel_image,
             user_image,
-            fdt_phys_addr_range: Some(Word::from_u64_range(&fdt_phys_addr_range)),
+            fdt: Some(FdtInfo {
+                addr: fdt_paddr.into(),
+                size: Word::from_u64(u64::try_from(fdt_content.len()).unwrap()),
+            }),
         },
         data: builder.regions,
     }
@@ -105,23 +108,22 @@ impl Builder {
                 self.add_region(paddr.into(), data.to_vec());
                 if memsz > filesz {
                     self.regions.push(Region {
-                        phys_addr_range: Word::from_u64_range(
-                            &(paddr.checked_add(&filesz).unwrap()
-                                ..paddr.checked_add(&memsz).unwrap()),
-                        ),
-                        content: vec![],
+                        addr: Word::from_u64(paddr.checked_add(&filesz).unwrap()),
+                        size: Word::from_u64(memsz.checked_sub(&filesz).unwrap()),
+                        data: vec![],
                     });
                 }
             }
         }
     }
 
-    fn add_region(&mut self, phys_addr_start: u64, content: Vec<u8>) -> Range<u64> {
+    fn add_region(&mut self, phys_addr_start: u64, data: Vec<u8>) -> Range<u64> {
         let phys_addr_range =
-            phys_addr_start..(phys_addr_start + u64::try_from(content.len()).unwrap());
+            phys_addr_start..(phys_addr_start + u64::try_from(data.len()).unwrap());
         self.regions.push(Region {
-            phys_addr_range: Word::from_u64_range(&phys_addr_range),
-            content,
+            addr: Word::from_u64(phys_addr_start),
+            size: Word::from_u64(u64::try_from(data.len()).unwrap()),
+            data,
         });
         phys_addr_range
     }

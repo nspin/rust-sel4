@@ -16,7 +16,6 @@ use core::ptr;
 use core::slice;
 
 use rkyv::Archive;
-use rkyv::ops::ArchivedRange;
 use rkyv::rancor;
 use rkyv::util::AlignedVec;
 
@@ -52,10 +51,6 @@ impl ArchivedWord {
     pub fn to_usize(&self) -> usize {
         self.0.try_into().unwrap()
     }
-
-    pub fn to_usize_range(range: &ArchivedRange<Self>) -> Range<usize> {
-        range.start.to_usize()..range.end.to_usize()
-    }
 }
 
 #[derive(rkyv::Archive, rkyv::Serialize)]
@@ -69,7 +64,7 @@ pub struct Payload {
 pub struct PayloadInfo {
     pub kernel_image: ImageInfo,
     pub user_image: ImageInfo,
-    pub fdt_phys_addr_range: Option<Range<Word>>,
+    pub fdt: Option<FdtInfo>,
 }
 
 #[derive(Debug, Clone, rkyv::Archive, rkyv::Serialize)]
@@ -79,6 +74,13 @@ pub struct ImageInfo {
     // TODO invert and i64
     pub phys_to_virt_offset: Word,
     pub virt_entry: Word,
+}
+
+#[derive(Debug, Clone, rkyv::Archive, rkyv::Serialize)]
+#[rkyv(derive(Debug, Clone))]
+pub struct FdtInfo {
+    pub addr: Word,
+    pub size: Word,
 }
 
 // impl ImageInfo {
@@ -94,8 +96,15 @@ pub struct ImageInfo {
 
 #[derive(Debug, rkyv::Archive, rkyv::Serialize)]
 pub struct Region {
-    pub phys_addr_range: Range<Word>,
-    pub content: Vec<u8>,
+    pub addr: Word,
+    pub size: Word,
+    pub data: Vec<u8>,
+}
+
+impl ArchivedRegion {
+    fn addr_range(&self) -> Range<usize> {
+        self.addr.to_usize()..self.addr.to_usize().strict_add(self.size.to_usize())
+    }
 }
 
 impl Payload {
@@ -113,12 +122,9 @@ impl ArchivedPayload {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn copy_data_out(&self) {
         for region in self.data.iter() {
-            let src = &region.content;
+            let src = &region.data;
             let dst = unsafe {
-                slice::from_raw_parts_mut(
-                    region.phys_addr_range.start.to_usize() as *mut _,
-                    region.phys_addr_range.end.to_usize() - region.phys_addr_range.start.to_usize(),
-                )
+                slice::from_raw_parts_mut(region.addr.to_usize() as *mut _, region.size.to_usize())
             };
             let (dst_data, dst_zero) = dst.split_at_mut(src.len());
             dst_data.copy_from_slice(src);
@@ -143,11 +149,11 @@ impl ArchivedPayload {
         for region in self.data.iter() {
             assert!(any_range_contains(
                 memory.iter(),
-                &range_try_into(&ArchivedWord::to_usize_range(&region.phys_addr_range)).unwrap()
+                &range_try_into(&region.addr_range()).unwrap()
             ));
             assert!(ranges_are_disjoint(
                 &own_footprint,
-                &ArchivedWord::to_usize_range(&region.phys_addr_range)
+                &range_try_into(&region.addr_range()).unwrap()
             ));
         }
     }

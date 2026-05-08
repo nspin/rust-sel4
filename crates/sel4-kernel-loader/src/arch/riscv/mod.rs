@@ -10,7 +10,7 @@ use core::mem;
 use riscv::register::satp;
 
 use sel4_config::sel4_cfg_if;
-use sel4_kernel_loader_payload_types::{ArchivedPayloadInfo, ArchivedWord};
+use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 
 use crate::{
     arch::Arch,
@@ -69,11 +69,8 @@ impl Arch for ArchImpl {
             0_usize.wrapping_sub(payload_info.user_image.phys_to_virt_offset.to_usize()) as isize;
         let v_entry = payload_info.user_image.virt_entry.to_usize();
 
-        let (dtb_addr_p, dtb_size) = match payload_info.fdt_phys_addr_range.as_ref() {
-            Some(region) => {
-                let region = ArchivedWord::to_usize_range(region);
-                (region.start, region.len())
-            }
+        let (dtb_addr_p, dtb_size) = match payload_info.fdt.as_ref() {
+            Some(fdt) => (fdt.addr.to_usize(), fdt.size.to_usize()),
             None => (0, 0),
         };
 
