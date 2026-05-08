@@ -9,7 +9,7 @@
 mk {
   package.name = "sel4-kernel-loader-payload-types";
   dependencies = {
-    rkyv = { version = versions.rkyv; default-features = false; features = [ "alloc" "bytecheck" "pointer_width_32" ]; };
+    rkyv = { version = versions.rkyv; default-features = false; features = [ "alloc" "pointer_width_32" ]; };
     inherit (localCrates) sel4-platform-info-types;
   };
 }

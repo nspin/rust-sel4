@@ -59,9 +59,9 @@ fn main(per_core: <ArchImpl as Arch>::PerCore) -> ! {
     log::debug!("Payload regions:");
     for region in payload.data.iter() {
         log::debug!(
-            "    0x{:x?} (filesz = 0x{:x?}, memsz = 0x{:x?})",
-            region.addr,
-            region.size,
+            "    {:#x?} (filesz = {:#x?}, memsz = {:#x?})",
+            region.addr.0,
+            region.size.0,
             region.data.len()
         );
     }

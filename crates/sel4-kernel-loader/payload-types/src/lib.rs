@@ -22,34 +22,18 @@ use rkyv::util::AlignedVec;
 use sel4_platform_info_types::PlatformInfo;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-#[rkyv(derive(Debug, Copy, Clone, Eq, PartialEq))]
+#[rkyv(derive(Copy, Clone, Eq, PartialEq))]
 pub struct Word(pub u64);
-
-impl From<u64> for Word {
-    fn from(x: u64) -> Word {
-        Word(x)
-    }
-}
-
-impl From<Word> for u64 {
-    fn from(x: Word) -> u64 {
-        x.0
-    }
-}
-
-impl Word {
-    pub fn from_u64(x: impl Into<u64>) -> Self {
-        x.into().into()
-    }
-
-    pub fn from_u64_range(range: &Range<impl Into<u64> + Copy>) -> Range<Self> {
-        Self::from_u64(range.start)..Self::from_u64(range.end)
-    }
-}
 
 impl ArchivedWord {
     pub fn to_usize(&self) -> usize {
         self.0.try_into().unwrap()
+    }
+}
+
+impl fmt::Debug for ArchivedWord {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
     }
 }
 
@@ -62,37 +46,26 @@ pub struct Payload {
 #[derive(Debug, Clone, rkyv::Archive, rkyv::Serialize)]
 #[rkyv(derive(Debug, Clone))]
 pub struct PayloadInfo {
-    pub kernel_image: ImageInfo,
-    pub user_image: ImageInfo,
-    pub fdt: Option<FdtInfo>,
+    pub kernel_entry: Word,
+    pub user_image: UserImageInfo,
+    pub dtb: Option<DtbInfo>,
 }
 
 #[derive(Debug, Clone, rkyv::Archive, rkyv::Serialize)]
 #[rkyv(derive(Debug, Clone))]
-pub struct ImageInfo {
-    pub phys_addr_range: Range<Word>,
-    // TODO invert and i64
-    pub phys_to_virt_offset: Word,
-    pub virt_entry: Word,
+pub struct UserImageInfo {
+    pub ui_p_reg_start: Word,
+    pub ui_p_reg_end: Word,
+    pub pv_offset: Word,
+    pub v_entry: Word,
 }
 
 #[derive(Debug, Clone, rkyv::Archive, rkyv::Serialize)]
 #[rkyv(derive(Debug, Clone))]
-pub struct FdtInfo {
-    pub addr: Word,
+pub struct DtbInfo {
+    pub addr_p: Word,
     pub size: Word,
 }
-
-// impl ImageInfo {
-//     pub fn virt_addr_range(&self) -> Range<Word> {
-//         self.phys_to_virt(self.phys_addr_range.start)..self.phys_to_virt(self.phys_addr_range.end)
-//     }
-
-//     pub fn phys_to_virt(&self, paddr: Word) -> Word {
-//         // TODO must parameterize over word size for wrapping
-//         Word(paddr.0.wrapping_add(self.phys_to_virt_offset.0))
-//     }
-// }
 
 #[derive(Debug, rkyv::Archive, rkyv::Serialize)]
 pub struct Region {
