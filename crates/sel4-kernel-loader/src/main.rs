@@ -59,9 +59,9 @@ fn main(per_core: <ArchImpl as Arch>::PerCore) -> ! {
     log::debug!("Payload regions:");
     for region in payload.data.iter() {
         log::debug!(
-            "    0x{:x?} {:?}",
+            "    0x{:x?}[{:?}]",
             region.phys_addr_range,
-            region.content.is_some()
+            region.content.len()
         );
     }
 

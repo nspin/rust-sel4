@@ -109,7 +109,7 @@ impl Builder {
                             &(paddr.checked_add(&filesz).unwrap()
                                 ..paddr.checked_add(&memsz).unwrap()),
                         ),
-                        content: None,
+                        content: vec![],
                     });
                 }
             }
@@ -121,7 +121,7 @@ impl Builder {
             phys_addr_start..(phys_addr_start + u64::try_from(content.len()).unwrap());
         self.regions.push(Region {
             phys_addr_range: Word::from_u64_range(&phys_addr_range),
-            content: Some(content),
+            content,
         });
         phys_addr_range
     }

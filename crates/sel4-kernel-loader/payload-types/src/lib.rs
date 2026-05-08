@@ -95,8 +95,7 @@ pub struct ImageInfo {
 #[derive(Debug, rkyv::Archive, rkyv::Serialize)]
 pub struct Region {
     pub phys_addr_range: Range<Word>,
-    // TODO no Option
-    pub content: Option<Vec<u8>>,
+    pub content: Vec<u8>,
 }
 
 impl Payload {
@@ -114,23 +113,19 @@ impl ArchivedPayload {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn copy_data_out(&self) {
         for region in self.data.iter() {
+            let src = &region.content;
             let dst = unsafe {
                 slice::from_raw_parts_mut(
                     region.phys_addr_range.start.to_usize() as *mut _,
                     region.phys_addr_range.end.to_usize() - region.phys_addr_range.start.to_usize(),
                 )
             };
-            match region.content.as_ref() {
-                Some(src) => {
-                    dst.copy_from_slice(src);
-                }
-                None => {
-                    // NOTE slice::fill is too slow
-                    // TODO(nspin) is that still true?
-                    unsafe {
-                        ptr::write_bytes(dst.as_mut_ptr(), 0, dst.len());
-                    }
-                }
+            let (dst_data, dst_zero) = dst.split_at_mut(src.len());
+            dst_data.copy_from_slice(src);
+            // NOTE slice::fill is too slow
+            // TODO(nspin) is that still true?
+            unsafe {
+                ptr::write_bytes(dst_zero.as_mut_ptr(), 0, dst_zero.len());
             }
         }
     }
