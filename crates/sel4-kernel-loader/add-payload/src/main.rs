@@ -29,6 +29,8 @@ mod serialize_payload;
 use args::Args;
 use platform_info::PlatformInfoForBuildSystem;
 
+use crate::page_tables::mk_loader_map;
+
 type ArchiveAlignedVec = AlignedVec;
 
 fn main() -> Result<()> {
@@ -77,9 +79,13 @@ where
 
     let payload_data: ArchiveAlignedVec = payload.to_bytes().unwrap();
 
-    let loader_with_payload_bytes = {
+    // let loader_map = mk_loader_map(vaddr, platform_info)
+
+    let final_loader = {
         let orig_elf = ElfFile::<T>::parse(&loader_bytes).unwrap();
         let mut patching = Patching::new(&orig_elf);
+        patching.add_data_segment(page_tables::ALIGN, |vaddr| page_tables::mk_loader_map(vaddr, &platform_info));
+        // patching.add_data_segment(page_tables::ALIGN, |vaddr| page_tables::mk_kernel_map(vaddr, &platform_info));
         patching.add_data_segment_with_meta_phdr(
             PT_SEL4_KERNEL_LOADER_PAYLOAD,
             ArchiveAlignedVec::ALIGNMENT.try_into().unwrap(),
@@ -90,6 +96,6 @@ where
 
     let out_file_path = &args.out_file_path;
 
-    fs::write(out_file_path, loader_with_payload_bytes)?;
+    fs::write(out_file_path, final_loader)?;
     Ok(())
 }

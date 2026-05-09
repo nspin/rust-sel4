@@ -11,6 +11,8 @@ use std::ops::Range;
 
 use crate::platform_info::PlatformInfoForBuildSystem;
 
+pub const ALIGN: u64 = 4096;
+
 pub fn mk_loader_map(vaddr: u64, platform_info: &PlatformInfoForBuildSystem) -> Vec<u8> {
     todo!()
 }
