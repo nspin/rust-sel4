@@ -80,7 +80,7 @@ where
     let loader_with_payload_bytes = {
         let orig_elf = ElfFile::<T>::parse(&loader_bytes).unwrap();
         let mut patching = Patching::new(&orig_elf);
-        patching.add_data_segment(
+        patching.add_data_segment_with_meta_phdr(
             PT_SEL4_KERNEL_LOADER_PAYLOAD,
             ArchiveAlignedVec::ALIGNMENT.try_into().unwrap(),
             &payload_data,

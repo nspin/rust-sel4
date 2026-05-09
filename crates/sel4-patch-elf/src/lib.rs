@@ -121,7 +121,7 @@ impl<'a, T: FileHeaderExt> Patching<'a, T> {
         }
     }
 
-    pub fn add_data_segment(&mut self, p_type: u32, data_align: u64, data: &[u8]) {
+    pub fn add_data_segment_with_meta_phdr(&mut self, p_type: u32, data_align: u64, data: &[u8]) {
         let endian = self.endian();
         let phdr = self.prepare_load_phdr(data_align, data.len());
         self.data.extend_from_slice(data);
