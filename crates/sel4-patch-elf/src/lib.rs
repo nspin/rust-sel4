@@ -102,14 +102,18 @@ impl<'a, T: FileHeaderExt> Patching<'a, T> {
         self.data[usize::try_from(offset_in_file).unwrap()..][..value.len()].copy_from_slice(value);
     }
 
-    fn prepare_load_phdr(&mut self, data_align: u64, data_size: usize) -> GenericProgramHeader {
+    fn prepare_load_phdr<U>(
+        &mut self,
+        data_align: u64,
+        f: impl FnOnce(u64) -> (u64, U),
+    ) -> (GenericProgramHeader, U) {
         let p_align = self.infer_page_size().unwrap();
         assert!(data_align <= p_align);
         self.align_data_cursor(data_align);
         let p_offset = self.data.len().try_into().unwrap();
-        let p_filesz = data_size.try_into().unwrap();
         let p_vaddr = self.next_aligned_vaddr(p_align, p_offset);
-        GenericProgramHeader {
+        let (p_filesz, ret) = f(p_vaddr);
+        let phdr = GenericProgramHeader {
             p_type: PT_LOAD,
             p_flags: PF_R,
             p_offset,
@@ -118,19 +122,27 @@ impl<'a, T: FileHeaderExt> Patching<'a, T> {
             p_filesz,
             p_memsz: p_filesz,
             p_align,
-        }
+        };
+        (phdr, ret)
     }
 
-    pub fn add_data_segment(&mut self, data_align: u64, data: &[u8]) -> &T::ProgramHeader {
+    pub fn add_data_segment(
+        &mut self,
+        data_align: u64,
+        f: impl FnOnce(u64) -> &[u8],
+    ) -> &T::ProgramHeader {
         let endian = self.endian();
-        let phdr = self.prepare_load_phdr(data_align, data.len());
+        let (phdr, data) = self.prepare_load_phdr(data_align, |vaddr| {
+            let data = f(vaddr);
+            (data.len().try_into().unwrap(), data)
+        });
         self.data.extend_from_slice(data);
         self.add_phdr(phdr.to_concrete(endian))
     }
 
     pub fn add_data_segment_with_meta_phdr(&mut self, p_type: u32, data_align: u64, data: &[u8]) {
         let endian = self.endian();
-        let mut phdr = *self.add_data_segment(data_align, data);
+        let mut phdr = *self.add_data_segment(data_align, |_| data);
         phdr.set_p_type(endian, p_type);
         self.add_phdr(phdr);
     }
@@ -142,8 +154,9 @@ impl<'a, T: FileHeaderExt> Patching<'a, T> {
             let data_align = align_of::<T::Word>().try_into().unwrap();
             let eventual_n = self.phdrs.len() + 1;
             let data_size = eventual_n * size_of::<T::ProgramHeader>();
-            self.prepare_load_phdr(data_align, data_size)
-                .to_concrete::<T::ProgramHeader>(endian)
+            let (phdr, ()) =
+                self.prepare_load_phdr(data_align, |_| (data_size.try_into().unwrap(), ()));
+            phdr.to_concrete::<T::ProgramHeader>(endian)
         };
         {
             let mut phdrs_phdr_phdr = phdrs_load_phdr;
