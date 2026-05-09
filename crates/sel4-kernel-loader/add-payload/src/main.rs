@@ -25,11 +25,12 @@ mod args;
 mod page_tables;
 mod platform_info;
 mod serialize_payload;
+mod utils;
 
 use args::Args;
 use platform_info::PlatformInfoForBuildSystem;
 
-use crate::page_tables::mk_loader_map;
+use crate::utils::{virt_footprint, with_elf};
 
 type ArchiveAlignedVec = AlignedVec;
 
@@ -84,8 +85,27 @@ where
     let final_loader = {
         let orig_elf = ElfFile::<T>::parse(&loader_bytes).unwrap();
         let mut patching = Patching::new(&orig_elf);
-        patching.add_data_segment(page_tables::ALIGN, |vaddr| page_tables::mk_loader_map(vaddr, &platform_info));
-        // patching.add_data_segment(page_tables::ALIGN, |vaddr| page_tables::mk_kernel_map(vaddr, &platform_info));
+        {
+            let mut addr = None;
+            patching.add_data_segment(page_tables::ALIGN, |vaddr| {
+                addr = Some(vaddr);
+                page_tables::mk_loader_map(vaddr, &platform_info)
+            });
+            patching.patch_word("loader_level_0_table", todo!()); // addr.unwrap()
+        }
+        {
+            let mut addr = None;
+            patching.add_data_segment(page_tables::ALIGN, |vaddr| {
+                addr = Some(vaddr);
+                with_elf::<T, _, _>(&args.kernel_path, |elf| {
+                    let virt_range = virt_footprint(elf);
+                    let phys_range = todo!();
+                    let phys_to_virt_offset = todo!();
+                    page_tables::mk_kernel_map(vaddr, phys_range, phys_to_virt_offset)
+                })
+            });
+            patching.patch_word("kernel_boot_level_0_table", todo!()); // addr.unwrap()
+        }
         patching.add_data_segment_with_meta_phdr(
             PT_SEL4_KERNEL_LOADER_PAYLOAD,
             ArchiveAlignedVec::ALIGNMENT.try_into().unwrap(),

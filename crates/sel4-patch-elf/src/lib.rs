@@ -130,6 +130,7 @@ impl<'a, T: FileHeaderExt> Patching<'a, T> {
         (phdr, ret)
     }
 
+    // TODO return () in public fn
     pub fn add_data_segment<D: AsRef<[u8]>>(
         &mut self,
         data_align: u64,
