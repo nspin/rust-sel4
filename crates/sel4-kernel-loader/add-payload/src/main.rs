@@ -80,8 +80,6 @@ where
 
     let payload_data: ArchiveAlignedVec = payload.to_bytes().unwrap();
 
-    // let loader_map = mk_loader_map(vaddr, platform_info)
-
     let final_loader = {
         let orig_elf = ElfFile::<T>::parse(&loader_bytes).unwrap();
         let mut patching = Patching::new(&orig_elf);
