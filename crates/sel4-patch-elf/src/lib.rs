@@ -102,6 +102,10 @@ impl<'a, T: FileHeaderExt> Patching<'a, T> {
         self.data[usize::try_from(offset_in_file).unwrap()..][..value.len()].copy_from_slice(value);
     }
 
+    pub fn patch_word(&mut self, symbol_name: &str, word: T::Word) {
+        self.patch_symbol(symbol_name, &word.write_bytes(self.endian()));
+    }
+
     fn prepare_load_phdr<U>(
         &mut self,
         data_align: u64,
