@@ -4,6 +4,9 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+#![allow(unused_variables)]
+#![allow(dead_code)]
+
 use std::ops::Range;
 
 use crate::platform_info::PlatformInfoForBuildSystem;
