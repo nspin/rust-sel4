@@ -121,12 +121,18 @@ impl<'a, T: FileHeaderExt> Patching<'a, T> {
         }
     }
 
-    pub fn add_data_segment_with_meta_phdr(&mut self, p_type: u32, data_align: u64, data: &[u8]) {
+    pub fn add_data_segment(&mut self, data_align: u64, data: &[u8]) -> &T::ProgramHeader {
         let endian = self.endian();
         let phdr = self.prepare_load_phdr(data_align, data.len());
         self.data.extend_from_slice(data);
-        self.add_phdr(phdr.to_concrete(endian));
-        self.add_phdr(GenericProgramHeader { p_type, ..phdr }.to_concrete(endian));
+        self.add_phdr(phdr.to_concrete(endian))
+    }
+
+    pub fn add_data_segment_with_meta_phdr(&mut self, p_type: u32, data_align: u64, data: &[u8]) {
+        let endian = self.endian();
+        let mut phdr = *self.add_data_segment(data_align, data);
+        phdr.set_p_type(endian, p_type);
+        self.add_phdr(phdr);
     }
 
     pub fn finalize(mut self) -> Vec<u8> {
