@@ -22,6 +22,7 @@ use sel4_patch_elf::{FileHeaderExt, Patching};
 use sel4_phdrs_constants::PT_SEL4_KERNEL_LOADER_PAYLOAD;
 
 mod args;
+mod page_tables;
 mod platform_info;
 mod serialize_payload;
 
