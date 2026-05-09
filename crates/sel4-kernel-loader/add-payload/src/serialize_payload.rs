@@ -12,32 +12,21 @@ use num::Integer;
 use object::elf::PT_LOAD;
 use object::read::elf::{ElfFile, ElfSegment, FileHeader, ProgramHeader};
 use object::{Object, ObjectSegment, ReadCache, ReadRef};
-use serde::Deserialize;
 
 use sel4_kernel_loader_payload_types::{
     DtbInfo, Payload, PayloadInfo, Region, UserImageInfo, Word,
 };
 
+use crate::platform_info::PlatformInfoForBuildSystem;
+
 const PAGE_SIZE: u64 = 4096;
-
-type Ranges = Vec<Range<u64>>;
-
-#[derive(Debug, Clone, Deserialize)]
-struct PlatformInfoForBuildSystem {
-    memory: Ranges,
-    #[allow(dead_code)]
-    devices: Ranges,
-}
 
 pub fn serialize_payload<T: FileHeader>(
     kernel_path: impl AsRef<Path>,
     app_path: impl AsRef<Path>,
     dtb_path: impl AsRef<Path>,
-    platform_info_path: impl AsRef<Path>,
+    platform_info: &PlatformInfoForBuildSystem,
 ) -> Payload {
-    let platform_info: PlatformInfoForBuildSystem =
-        serde_yaml::from_reader(fs::File::open(&platform_info_path).unwrap()).unwrap();
-
     let mut builder = Builder::new();
 
     let kernel_entry = with_elf::<T, _, _>(&kernel_path, |elf| {

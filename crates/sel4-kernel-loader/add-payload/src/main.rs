@@ -22,9 +22,11 @@ use sel4_patch_elf::{FileHeaderExt, Patching};
 use sel4_phdrs_constants::PT_SEL4_KERNEL_LOADER_PAYLOAD;
 
 mod args;
+mod platform_info;
 mod serialize_payload;
 
 use args::Args;
+use platform_info::PlatformInfoForBuildSystem;
 
 type ArchiveAlignedVec = AlignedVec;
 
@@ -60,13 +62,16 @@ where
     T: FileHeader<Word: PrimInt + WrappingSub + Integer + Serialize, Endian = Endianness>
         + FileHeaderExt,
 {
+    let platform_info: PlatformInfoForBuildSystem =
+        serde_yaml::from_reader(fs::File::open(&args.platform_info_path).unwrap()).unwrap();
+
     let loader_bytes = fs::read(&args.loader_path)?;
 
     let payload = serialize_payload::serialize_payload::<T>(
         &args.kernel_path,
         &args.app_path,
         &args.dtb_path,
-        &args.platform_info_path,
+        &platform_info,
     );
 
     let payload_data: ArchiveAlignedVec = payload.to_bytes().unwrap();
