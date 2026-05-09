@@ -126,17 +126,17 @@ impl<'a, T: FileHeaderExt> Patching<'a, T> {
         (phdr, ret)
     }
 
-    pub fn add_data_segment<'b>(
+    pub fn add_data_segment<D: AsRef<[u8]>>(
         &mut self,
         data_align: u64,
-        f: impl FnOnce(u64) -> &'b [u8],
+        f: impl FnOnce(u64) -> D,
     ) -> &T::ProgramHeader {
         let endian = self.endian();
         let (phdr, data) = self.prepare_load_phdr(data_align, |vaddr| {
             let data = f(vaddr);
-            (data.len().try_into().unwrap(), data)
+            (data.as_ref().len().try_into().unwrap(), data)
         });
-        self.data.extend_from_slice(data);
+        self.data.extend_from_slice(data.as_ref());
         self.add_phdr(phdr.to_concrete(endian))
     }
 
