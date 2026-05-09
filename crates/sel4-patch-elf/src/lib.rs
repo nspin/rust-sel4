@@ -80,7 +80,7 @@ impl<'a, T: FileHeaderExt> Patching<'a, T> {
             .min()
     }
 
-    fn patch_symbol(&mut self, symbol_name: &str, value: &[u8]) {
+    pub fn patch_symbol(&mut self, symbol_name: &str, value: &[u8]) {
         let val_len = u64::try_from(value.len()).unwrap();
         let symbol = self.orig_elf.symbol_by_name(symbol_name).unwrap();
         assert_eq!(symbol.size(), val_len);
