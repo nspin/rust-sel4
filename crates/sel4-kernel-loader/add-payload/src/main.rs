@@ -7,8 +7,10 @@
 use std::fs::{self, File};
 
 use anyhow::Result;
+use num::NumCast;
 use num::{Integer, PrimInt, traits::WrappingSub};
-use object::read::elf::ElfFile;
+use object::ReadRef;
+use object::read::elf::{ElfFile, ProgramHeader};
 use object::{
     Endianness,
     elf::{FileHeader32, FileHeader64},
@@ -92,17 +94,19 @@ where
             patching.patch_word("loader_level_0_table", todo!()); // addr.unwrap()
         }
         {
-            let mut addr = None;
+            let mut addr_slot = None;
             patching.add_data_segment(page_tables::ALIGN, |vaddr| {
-                addr = Some(vaddr);
+                addr_slot = Some(vaddr);
                 with_elf::<T, _, _>(&args.kernel_path, |elf| {
+                    let phys_to_virt_offset = kernel_phys_to_virt_offset(elf);
                     let virt_range = virt_footprint(elf);
-                    let phys_range = todo!();
-                    let phys_to_virt_offset = todo!();
+                    let phys_range = virt_range.start.wrapping_add(virt_range.start)
+                        ..virt_range.end.wrapping_add(virt_range.end);
                     page_tables::mk_kernel_map(vaddr, phys_range, phys_to_virt_offset)
                 })
             });
-            patching.patch_word("kernel_boot_level_0_table", todo!()); // addr.unwrap()
+            let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
+            patching.patch_word("kernel_boot_level_0_table", addr); // addr.unwrap()
         }
         patching.add_data_segment_with_meta_phdr(
             PT_SEL4_KERNEL_LOADER_PAYLOAD,
@@ -116,4 +120,15 @@ where
 
     fs::write(out_file_path, final_loader)?;
     Ok(())
+}
+
+fn kernel_phys_to_virt_offset<'a, T: FileHeader, R: ReadRef<'a>>(elf: &ElfFile<'a, T, R>) -> u64 {
+    let endian = elf.endian();
+    let phdr = utils::loadable_segments(elf)
+        .next()
+        .unwrap()
+        .elf_program_header();
+    let vaddr = phdr.p_vaddr(endian).into();
+    let paddr = phdr.p_paddr(endian).into();
+    vaddr.wrapping_sub(paddr)
 }
