@@ -24,7 +24,7 @@ use sel4_patch_elf::{FileHeaderExt, Patching};
 use sel4_phdrs_constants::PT_SEL4_KERNEL_LOADER_PAYLOAD;
 
 mod args;
-mod page_tables;
+mod maps;
 mod platform_info;
 mod serialize_payload;
 mod utils;
@@ -87,23 +87,23 @@ where
         let mut patching = Patching::new(&orig_elf);
         {
             let mut addr_slot = None;
-            patching.add_data_segment(page_tables::ALIGN, |vaddr| {
+            patching.add_data_segment(maps::ALIGN, |vaddr| {
                 addr_slot = Some(vaddr);
-                page_tables::mk_loader_map(vaddr, &platform_info)
+                maps::mk_loader_map(vaddr, &platform_info)
             });
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
             patching.patch_word("loader_level_0_table", addr);
         }
         {
             let mut addr_slot = None;
-            patching.add_data_segment(page_tables::ALIGN, |vaddr| {
+            patching.add_data_segment(maps::ALIGN, |vaddr| {
                 addr_slot = Some(vaddr);
                 with_elf::<T, _, _>(&args.kernel_path, |elf| {
                     let phys_to_virt_offset = kernel_phys_to_virt_offset(elf);
                     let virt_range = virt_footprint(elf);
                     let phys_range = virt_range.start.wrapping_add(virt_range.start)
                         ..virt_range.end.wrapping_add(virt_range.end);
-                    page_tables::mk_kernel_map(vaddr, phys_range, phys_to_virt_offset)
+                    maps::mk_kernel_map(vaddr, phys_range, phys_to_virt_offset)
                 })
             });
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
