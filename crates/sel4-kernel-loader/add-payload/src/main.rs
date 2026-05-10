@@ -46,17 +46,27 @@ fn main() -> Result<()> {
     let word_size = sel4_config.get("SEL4_ARCH").unwrap().as_str().unwrap();
 
     match word_size {
-        "aarch32" => continue_with_config::<FileHeader32<Endianness>, schemes::AArch32>(&args),
-        "aarch64" => continue_with_config::<FileHeader64<Endianness>, schemes::AArch64>(&args),
-        "riscv32" => continue_with_config::<FileHeader32<Endianness>, schemes::RiscV32Sv32>(&args),
-        "riscv64" => continue_with_config::<FileHeader64<Endianness>, schemes::RiscV64Sv39>(&args),
+        "aarch32" => {
+            continue_with_config::<FileHeader32<Endianness>, schemes::AArch32>(&args, &sel4_config)
+        }
+        "aarch64" => {
+            continue_with_config::<FileHeader64<Endianness>, schemes::AArch64>(&args, &sel4_config)
+        }
+        "riscv32" => continue_with_config::<FileHeader32<Endianness>, schemes::RiscV32Sv32>(
+            &args,
+            &sel4_config,
+        ),
+        "riscv64" => continue_with_config::<FileHeader64<Endianness>, schemes::RiscV64Sv39>(
+            &args,
+            &sel4_config,
+        ),
         _ => {
             panic!()
         }
     }
 }
 
-fn continue_with_config<T, S>(args: &Args) -> Result<()>
+fn continue_with_config<T, S>(args: &Args, sel4_config: &Configuration) -> Result<()>
 where
     T: FileHeaderExt<Word: NumCast>,
     S: SchemeExt + 'static,
@@ -78,7 +88,7 @@ where
     let final_loader = {
         let orig_elf = ElfFile::<T>::parse(&loader_bytes).unwrap();
         let mut patching = Patching::new(&orig_elf);
-        {
+        if sel4_config.get("ARCH_ARM").unwrap().as_bool().unwrap() {
             let mut addr_slot = None;
             patching.add_data_segment(maps::ALIGN, |vaddr| {
                 let (bytes, root_vaddr) = maps::mk_loader_map::<S>(vaddr, &platform_info);
