@@ -14,7 +14,7 @@ use quote::format_ident;
 use crate::page_tables::{LeafLocation, Region, RegionsBuilder, Scheme, SchemeHelpers, schemes};
 use crate::platform_info::PlatformInfoForBuildSystem;
 
-// TODO
+// TODO must be T::align_of_level(0)
 pub const ALIGN: u64 = 4096;
 
 pub fn mk_loader_map(vaddr: u64, platform_info: &PlatformInfoForBuildSystem) -> Vec<u8> {
