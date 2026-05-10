@@ -98,13 +98,14 @@ where
         {
             let mut addr_slot = None;
             patching.add_data_segment(maps::ALIGN, |vaddr| {
-                addr_slot = Some(vaddr);
                 with_elf::<T, _, _>(&args.kernel_path, |elf| {
                     let phys_to_virt_offset = kernel_phys_to_virt_offset(elf);
                     let virt_range = virt_footprint(elf);
                     let phys_range = virt_range.start.wrapping_add(virt_range.start)
                         ..virt_range.end.wrapping_add(virt_range.end);
-                    maps::mk_kernel_map(vaddr, phys_range, phys_to_virt_offset)
+                    let (bytes, root_vaddr) = maps::mk_kernel_map(vaddr, phys_range, phys_to_virt_offset)
+                    addr_slot = Some(root_vaddr);
+                    bytes
                 })
             });
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();

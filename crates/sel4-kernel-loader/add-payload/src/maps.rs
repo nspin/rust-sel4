@@ -14,6 +14,7 @@ use quote::format_ident;
 use crate::page_tables::{LeafLocation, Region, RegionsBuilder, Scheme, SchemeHelpers, schemes};
 use crate::platform_info::PlatformInfoForBuildSystem;
 
+// TODO
 pub const ALIGN: u64 = 4096;
 
 pub fn mk_loader_map(vaddr: u64, platform_info: &PlatformInfoForBuildSystem) -> Vec<u8> {
@@ -24,7 +25,7 @@ pub fn mk_kernel_map(
     vaddr: u64,
     kernel_phys_addr_range: Range<u64>,
     kernel_phys_to_virt_offset: u64,
-) -> Vec<u8> {
+) -> (Vec<u8>, u64) {
     let virt_start = kernel_phys_addr_range
         .start
         .wrapping_add(kernel_phys_to_virt_offset);
@@ -43,11 +44,9 @@ pub fn mk_kernel_map(
             SchemeImpl::mk_kernel_leaf_for_kernel_map(kernel_phys_to_virt_offset, loc)
         }));
 
-    regions.build().construct_table().embed(
-        format_ident!("kernel_boot_level_0_table"),
-        format_ident!("sel4_kernel_loader_embed_page_tables_runtime"),
-    );
-    vec![]
+    let (entries, root_vaddr) = regions.build().construct_table().embed(vaddr);
+    let bytes = todo!();
+    (bytes, root_vaddr)
 }
 
 type SchemeImpl = schemes::RiscV32Sv32;
