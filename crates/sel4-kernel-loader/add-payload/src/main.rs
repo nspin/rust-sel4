@@ -43,11 +43,7 @@ fn main() -> Result<()> {
     let sel4_config: Configuration =
         serde_json::from_reader(File::open(&args.sel4_config_path).unwrap()).unwrap();
 
-    let word_size = sel4_config
-        .get("SEL4_ARCH")
-        .unwrap()
-        .as_str()
-        .unwrap();
+    let word_size = sel4_config.get("SEL4_ARCH").unwrap().as_str().unwrap();
 
     match word_size {
         "aarch32" => continue_with_config::<FileHeader32<Endianness>, schemes::AArch32>(&args),
@@ -85,8 +81,9 @@ where
         {
             let mut addr_slot = None;
             patching.add_data_segment(maps::ALIGN, |vaddr| {
-                addr_slot = Some(vaddr);
-                maps::mk_loader_map::<S>(vaddr, &platform_info)
+                let (bytes, root_vaddr) = maps::mk_loader_map::<S>(vaddr, &platform_info);
+                addr_slot = Some(root_vaddr);
+                bytes
             });
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
             patching.patch_word("x_loader_level_0_table", addr);

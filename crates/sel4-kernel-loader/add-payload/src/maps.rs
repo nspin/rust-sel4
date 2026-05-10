@@ -15,8 +15,33 @@ use crate::platform_info::PlatformInfoForBuildSystem;
 // TODO must be T::align_of_level(0)
 pub const ALIGN: u64 = 4096;
 
-pub fn mk_loader_map<S: Scheme>(vaddr: u64, platform_info: &PlatformInfoForBuildSystem) -> Vec<u8> {
-    vec![]
+pub fn mk_loader_map<S: SchemeExt + 'static>(
+    vaddr: u64,
+    platform_info: &PlatformInfoForBuildSystem,
+) -> (Vec<u8>, u64) {
+    let device_range_end = S::device_range_end();
+
+    let mut regions = RegionsBuilder::<S>::new();
+    regions = regions.insert(Region::valid(
+        0..device_range_end,
+        S::mk_device_leaf_for_loader_map,
+    ));
+    for range in platform_info.memory.iter() {
+        regions = regions.insert(Region::valid(
+            range.clone(),
+            S::mk_normal_leaf_for_loader_map,
+        ));
+    }
+
+    let (entries, root_vaddr) = regions.build().construct_table().embed(vaddr);
+    let bytes = {
+        let mut v = vec![];
+        for entry in entries.iter() {
+            v.extend(S::entry_to_bytes(entry));
+        }
+        v
+    };
+    (bytes, root_vaddr)
 }
 
 pub fn mk_kernel_map<S: SchemeExt + 'static>(
@@ -63,6 +88,10 @@ pub trait SchemeExt: Scheme {
         phys_to_virt_offset: u64,
         loc: LeafLocation,
     ) -> Self::LeafDescriptor;
+
+    fn device_range_end() -> u64 {
+        unimplemented!()
+    }
 }
 
 impl SchemeExt for schemes::AArch64 {
@@ -93,6 +122,10 @@ impl SchemeExt for schemes::AArch64 {
             .set_access_flag(true)
             .set_attribute_index(4) // select MT_NORMAL
             .set_shareability(AARCH64_NORMAL_SHAREABILITY)
+    }
+
+    fn device_range_end() -> u64 {
+        1 << 39
     }
 }
 
@@ -127,6 +160,10 @@ impl SchemeExt for schemes::AArch32 {
         loc.map::<schemes::AArch32>(|vaddr| virt_to_phys(vaddr, phys_to_virt_offset))
             .set_access_flag(true)
             .set_shareability(true)
+    }
+
+    fn device_range_end() -> u64 {
+        SchemeHelpers::<Self>::virt_bounds().end
     }
 }
 
