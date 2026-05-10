@@ -42,20 +42,12 @@ pub trait SchemeLeafDescriptor<WordPrimitive> {
 pub struct SchemeHelpers<T: ?Sized>(PhantomData<T>);
 
 impl<T: Scheme> SchemeHelpers<T> {
-    pub fn word_bits() -> usize {
-        mem::size_of::<T::WordPrimitive>() * 8
-    }
-
     pub fn num_entries_in_table(level: usize) -> usize {
         1 << T::level_bits(level)
     }
 
     pub fn vaddr_bits() -> usize {
         (0..T::NUM_LEVELS).map(T::level_bits).sum::<usize>() + T::PAGE_BITS
-    }
-
-    pub fn vaddr_mask() -> u64 {
-        (1 << Self::vaddr_bits()) - 1
     }
 
     pub fn virt_bounds() -> Range<u64> {
