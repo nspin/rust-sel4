@@ -31,8 +31,6 @@ pub trait Scheme {
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive;
     const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive;
-
-    const RUNTIME_SCHEME_IDENT: &'static str;
 }
 
 pub trait SchemeLeafDescriptor<WordPrimitive> {
@@ -104,8 +102,6 @@ impl Scheme for AArch64 {
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive = 0b0;
     const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = 0b11;
-
-    const RUNTIME_SCHEME_IDENT: &'static str = "AArch64";
 }
 
 #[derive(Debug)]
@@ -165,8 +161,6 @@ impl Scheme for AArch32 {
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive = 0b00;
     const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = 0b01;
-
-    const RUNTIME_SCHEME_IDENT: &'static str = "AArch32";
 }
 
 #[derive(Debug)]
@@ -251,8 +245,6 @@ impl Scheme for RiscV64Sv39 {
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive = riscv64_encode_for_linking(0b0);
     const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = riscv64_encode_for_linking(0b1);
-
-    const RUNTIME_SCHEME_IDENT: &'static str = "RiscV64";
 }
 
 #[derive(Debug)]
@@ -315,8 +307,6 @@ impl Scheme for RiscV32Sv32 {
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive = riscv32_encode_for_linking(0b0);
     const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = riscv32_encode_for_linking(0b1);
-
-    const RUNTIME_SCHEME_IDENT: &'static str = "RiscV32";
 }
 
 #[derive(Debug)]
