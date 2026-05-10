@@ -2696,8 +2696,6 @@ dependencies = [
  "clap",
  "num",
  "object",
- "proc-macro2",
- "quote",
  "rkyv",
  "sel4-config-types",
  "sel4-kernel-loader-payload-types",

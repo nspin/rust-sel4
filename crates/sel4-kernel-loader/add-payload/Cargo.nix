@@ -17,7 +17,7 @@ mk {
       clap
       object
       rkyv
-      proc-macro2 quote bitfield
+      bitfield
     ;
     serde = serdeWith [ "alloc" "derive" ];
     inherit (localCrates)

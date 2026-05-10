@@ -10,10 +10,9 @@ use std::mem;
 use std::ops::Range;
 
 use bitfield::{BitMut, BitRange, BitRangeMut};
-use quote::ToTokens;
 
 pub trait Scheme {
-    type WordPrimitive: ToTokens + fmt::Debug;
+    type WordPrimitive: fmt::Debug;
 
     const PAGE_BITS: usize;
     const NUM_LEVELS: usize;
