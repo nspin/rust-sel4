@@ -103,7 +103,8 @@ where
                     let virt_range = virt_footprint(elf);
                     let phys_range = virt_range.start.wrapping_add(virt_range.start)
                         ..virt_range.end.wrapping_add(virt_range.end);
-                    let (bytes, root_vaddr) = maps::mk_kernel_map(vaddr, phys_range, phys_to_virt_offset)
+                    let (bytes, root_vaddr) =
+                        maps::mk_kernel_map(vaddr, phys_range, phys_to_virt_offset);
                     addr_slot = Some(root_vaddr);
                     bytes
                 })
