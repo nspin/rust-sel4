@@ -216,16 +216,6 @@ impl AArch32LeafDescriptor {
     }
 }
 
-const RISCV_ENCODE_FOR_LINKING_LEFT_ROTATION: u32 = 2;
-
-const fn riscv32_encode_for_linking(word: u32) -> u32 {
-    word.rotate_left(RISCV_ENCODE_FOR_LINKING_LEFT_ROTATION)
-}
-
-const fn riscv64_encode_for_linking(word: u64) -> u64 {
-    word.rotate_left(RISCV_ENCODE_FOR_LINKING_LEFT_ROTATION)
-}
-
 #[derive(Debug)]
 pub enum RiscV64Sv39 {}
 
@@ -243,8 +233,8 @@ impl Scheme for RiscV64Sv39 {
 
     type LeafDescriptor = RiscV64Sv39LeafDescriptor;
 
-    const EMPTY_DESCRIPTOR: Self::WordPrimitive = riscv64_encode_for_linking(0b0);
-    const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = riscv64_encode_for_linking(0b1);
+    const EMPTY_DESCRIPTOR: Self::WordPrimitive = 0b0;
+    const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = 0b1;
 }
 
 #[derive(Debug)]
@@ -262,7 +252,7 @@ impl SchemeLeafDescriptor<u64> for RiscV64Sv39LeafDescriptor {
     }
 
     fn to_raw(&self) -> u64 {
-        riscv64_encode_for_linking(self.0)
+        self.0
     }
 }
 
@@ -305,8 +295,8 @@ impl Scheme for RiscV32Sv32 {
 
     type LeafDescriptor = RiscV32Sv32LeafDescriptor;
 
-    const EMPTY_DESCRIPTOR: Self::WordPrimitive = riscv32_encode_for_linking(0b0);
-    const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = riscv32_encode_for_linking(0b1);
+    const EMPTY_DESCRIPTOR: Self::WordPrimitive = 0b0;
+    const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = 0b1;
 }
 
 #[derive(Debug)]
@@ -324,7 +314,7 @@ impl SchemeLeafDescriptor<u32> for RiscV32Sv32LeafDescriptor {
     }
 
     fn to_raw(&self) -> u32 {
-        riscv32_encode_for_linking(self.0)
+        self.0
     }
 }
 
