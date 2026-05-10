@@ -2692,9 +2692,12 @@ name = "sel4-kernel-loader-add-payload"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bitfield",
  "clap",
  "num",
  "object",
+ "proc-macro2",
+ "quote",
  "rkyv",
  "sel4-config-types",
  "sel4-kernel-loader-payload-types",
