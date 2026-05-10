@@ -21,15 +21,11 @@ pub fn mk_loader_map(vaddr: u64, platform_info: &PlatformInfoForBuildSystem) -> 
 
 pub fn mk_kernel_map(
     vaddr: u64,
-    kernel_phys_addr_range: Range<u64>,
+    kernel_virt_addr_range: Range<u64>,
     kernel_phys_to_virt_offset: u64,
 ) -> (Vec<u8>, u64) {
-    let virt_start = kernel_phys_addr_range
-        .start
-        .wrapping_add(kernel_phys_to_virt_offset);
-    let virt_end = kernel_phys_addr_range
-        .end
-        .wrapping_add(kernel_phys_to_virt_offset);
+    let virt_start = kernel_virt_addr_range.start;
+    let virt_end = kernel_virt_addr_range.end;
     let virt_map_end =
         virt_end.next_multiple_of(1 << SchemeHelpers::<SchemeImpl>::largest_leaf_size_bits());
 
@@ -43,7 +39,13 @@ pub fn mk_kernel_map(
         }));
 
     let (entries, root_vaddr) = regions.build().construct_table().embed(vaddr);
-    let bytes = todo!();
+    let bytes = {
+        let mut v = vec![];
+        for entry in entries.iter() {
+            v.extend(entry.to_le_bytes());
+        }
+        v
+    };
     (bytes, root_vaddr)
 }
 
