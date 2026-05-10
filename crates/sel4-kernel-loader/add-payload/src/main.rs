@@ -66,8 +66,7 @@ fn main() -> Result<()> {
 
 fn continue_with_word_size<T>(args: &Args) -> Result<()>
 where
-    T: FileHeader<Word: PrimInt + WrappingSub + Integer + Serialize, Endian = Endianness>
-        + FileHeaderExt,
+    T: FileHeaderExt<Word: NumCast>,
 {
     let platform_info: PlatformInfoForBuildSystem =
         serde_yaml::from_reader(fs::File::open(&args.platform_info_path).unwrap()).unwrap();
