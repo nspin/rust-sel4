@@ -16,8 +16,9 @@ use crate::{
     arch::Arch,
     main, secondary_main,
     this_image::page_tables::kernel::{
-        kernel_boot_level_0_table, kernel_boot_level_0_table_access,
+        old_kernel_boot_level_0_table, old_kernel_boot_level_0_table_access,
     },
+    this_image::kernel_boot_level_0_table,
 };
 
 pub(crate) struct PerCoreImpl {
@@ -41,7 +42,7 @@ impl Arch for ArchImpl {
 
     fn init() {
         unsafe {
-            kernel_boot_level_0_table_access.finish_for_riscv();
+            old_kernel_boot_level_0_table_access.finish_for_riscv();
         }
     }
 
@@ -134,7 +135,7 @@ fn switch_page_tables() {
     const MODE: satp::Mode = satp::Mode::Sv39;
 
     unsafe {
-        let ppn = kernel_boot_level_0_table.value() as usize >> 12;
+        let ppn = kernel_boot_level_0_table.get() >> 12;
         asm!("sfence.vma", options(nostack));
         satp::set(MODE, 0, ppn);
         asm!("fence.i", options(nostack));

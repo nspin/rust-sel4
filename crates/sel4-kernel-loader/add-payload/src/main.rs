@@ -108,7 +108,7 @@ where
                 })
             });
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
-            patching.patch_word("x_kernel_boot_level_0_table", addr);
+            patching.patch_word("kernel_boot_level_0_table", addr);
         }
         patching.add_data_segment_with_meta_phdr(
             PT_SEL4_KERNEL_LOADER_PAYLOAD,

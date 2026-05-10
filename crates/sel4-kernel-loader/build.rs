@@ -167,7 +167,7 @@ fn mk_kernel_map(
         }));
 
     regions.build().construct_table().embed(
-        format_ident!("kernel_boot_level_0_table"),
+        format_ident!("old_kernel_boot_level_0_table"),
         format_ident!("sel4_kernel_loader_embed_page_tables_runtime"),
     )
 }

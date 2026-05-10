@@ -46,7 +46,7 @@ static x_loader_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 #[used(linker)]
-static x_kernel_boot_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
+pub static kernel_boot_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
 
 pub(crate) mod stacks {
     use sel4_config::sel4_cfg_usize;
