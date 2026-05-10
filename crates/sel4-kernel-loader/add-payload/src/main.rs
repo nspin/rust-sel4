@@ -86,12 +86,13 @@ where
         let orig_elf = ElfFile::<T>::parse(&loader_bytes).unwrap();
         let mut patching = Patching::new(&orig_elf);
         {
-            let mut addr = None;
+            let mut addr_slot = None;
             patching.add_data_segment(page_tables::ALIGN, |vaddr| {
-                addr = Some(vaddr);
+                addr_slot = Some(vaddr);
                 page_tables::mk_loader_map(vaddr, &platform_info)
             });
-            patching.patch_word("loader_level_0_table", todo!()); // addr.unwrap()
+            let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
+            patching.patch_word("loader_level_0_table", addr); // addr.unwrap()
         }
         {
             let mut addr_slot = None;
