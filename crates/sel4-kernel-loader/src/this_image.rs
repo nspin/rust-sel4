@@ -8,6 +8,7 @@ use core::ops::Range;
 
 use sel4_kernel_loader_payload_types::*;
 use sel4_phdrs::{PT_SEL4_KERNEL_LOADER_PAYLOAD, locate_phdrs};
+use sel4_immutable_cell::ImmutableCell;
 
 use sel4_phdrs_patched as _;
 
@@ -36,6 +37,16 @@ pub(crate) mod page_tables {
         include!(concat!(env!("OUT_DIR"), "/kernel_page_tables.rs"));
     }
 }
+
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".data")]
+#[used(linker)]
+static x_loader_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
+
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".data")]
+#[used(linker)]
+static x_kernel_boot_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
 
 pub(crate) mod stacks {
     use sel4_config::sel4_cfg_usize;

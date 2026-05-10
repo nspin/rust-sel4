@@ -14,7 +14,7 @@ use crate::platform_info::PlatformInfoForBuildSystem;
 pub const ALIGN: u64 = 4096;
 
 pub fn mk_loader_map(vaddr: u64, platform_info: &PlatformInfoForBuildSystem) -> Vec<u8> {
-    todo!()
+    vec![]
 }
 
 pub fn mk_kernel_map(
@@ -22,5 +22,5 @@ pub fn mk_kernel_map(
     kernel_phys_addr_range: Range<u64>,
     kernel_phys_to_virt_offset: u64,
 ) -> Vec<u8> {
-    todo!()
+    vec![]
 }
