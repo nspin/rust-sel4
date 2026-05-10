@@ -9,8 +9,6 @@
 
 use std::ops::Range;
 
-use quote::format_ident;
-
 use crate::page_tables::{LeafLocation, Region, RegionsBuilder, Scheme, SchemeHelpers, schemes};
 use crate::platform_info::PlatformInfoForBuildSystem;
 
