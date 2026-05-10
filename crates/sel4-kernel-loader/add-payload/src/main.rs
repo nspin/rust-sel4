@@ -7,17 +7,11 @@
 use std::fs::{self, File};
 
 use anyhow::Result;
-use num::NumCast;
-use num::{Integer, PrimInt, traits::WrappingSub};
-use object::ReadRef;
-use object::read::elf::{ElfFile, ProgramHeader};
-use object::{
-    Endianness,
-    elf::{FileHeader32, FileHeader64},
-    read::elf::FileHeader,
-};
+use num::traits::NumCast;
+use object::elf::{FileHeader32, FileHeader64};
+use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
+use object::{Endianness, ReadRef};
 use rkyv::util::AlignedVec;
-use serde::Serialize;
 
 use sel4_config_types::Configuration;
 use sel4_patch_elf::{FileHeaderExt, Patching};
@@ -33,6 +27,8 @@ mod utils;
 use args::Args;
 use platform_info::PlatformInfoForBuildSystem;
 
+use crate::maps::SchemeExt;
+use crate::page_tables::schemes;
 use crate::utils::{virt_footprint, with_elf};
 
 type ArchiveAlignedVec = AlignedVec;
@@ -48,25 +44,26 @@ fn main() -> Result<()> {
         serde_json::from_reader(File::open(&args.sel4_config_path).unwrap()).unwrap();
 
     let word_size = sel4_config
-        .get("WORD_SIZE")
+        .get("SEL4_ARCH")
         .unwrap()
         .as_str()
-        .unwrap()
-        .parse::<usize>()
         .unwrap();
 
     match word_size {
-        32 => continue_with_word_size::<FileHeader32<Endianness>>(&args),
-        64 => continue_with_word_size::<FileHeader64<Endianness>>(&args),
+        "aarch32" => continue_with_config::<FileHeader32<Endianness>, schemes::AArch32>(&args),
+        "aarch64" => continue_with_config::<FileHeader64<Endianness>, schemes::AArch64>(&args),
+        "riscv32" => continue_with_config::<FileHeader32<Endianness>, schemes::RiscV32Sv32>(&args),
+        "riscv64" => continue_with_config::<FileHeader64<Endianness>, schemes::RiscV64Sv39>(&args),
         _ => {
             panic!()
         }
     }
 }
 
-fn continue_with_word_size<T>(args: &Args) -> Result<()>
+fn continue_with_config<T, S>(args: &Args) -> Result<()>
 where
     T: FileHeaderExt<Word: NumCast>,
+    S: SchemeExt + 'static,
 {
     let platform_info: PlatformInfoForBuildSystem =
         serde_yaml::from_reader(fs::File::open(&args.platform_info_path).unwrap()).unwrap();
@@ -89,7 +86,7 @@ where
             let mut addr_slot = None;
             patching.add_data_segment(maps::ALIGN, |vaddr| {
                 addr_slot = Some(vaddr);
-                maps::mk_loader_map(vaddr, &platform_info)
+                maps::mk_loader_map::<S>(vaddr, &platform_info)
             });
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
             patching.patch_word("x_loader_level_0_table", addr);
@@ -101,7 +98,7 @@ where
                     let phys_to_virt_offset = kernel_phys_to_virt_offset(elf);
                     let virt_range = virt_footprint(elf);
                     let (bytes, root_vaddr) =
-                        maps::mk_kernel_map(vaddr, virt_range, phys_to_virt_offset);
+                        maps::mk_kernel_map::<S>(vaddr, virt_range, phys_to_virt_offset);
                     addr_slot = Some(root_vaddr);
                     bytes
                 })

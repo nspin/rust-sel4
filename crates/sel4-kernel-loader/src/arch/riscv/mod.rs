@@ -15,10 +15,10 @@ use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 use crate::{
     arch::Arch,
     main, secondary_main,
+    this_image::kernel_boot_level_0_table,
     this_image::page_tables::kernel::{
         old_kernel_boot_level_0_table, old_kernel_boot_level_0_table_access,
     },
-    this_image::kernel_boot_level_0_table,
 };
 
 pub(crate) struct PerCoreImpl {

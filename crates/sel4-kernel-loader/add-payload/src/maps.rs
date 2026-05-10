@@ -15,43 +15,40 @@ use crate::platform_info::PlatformInfoForBuildSystem;
 // TODO must be T::align_of_level(0)
 pub const ALIGN: u64 = 4096;
 
-pub fn mk_loader_map(vaddr: u64, platform_info: &PlatformInfoForBuildSystem) -> Vec<u8> {
+pub fn mk_loader_map<S: Scheme>(vaddr: u64, platform_info: &PlatformInfoForBuildSystem) -> Vec<u8> {
     vec![]
 }
 
-pub fn mk_kernel_map(
+pub fn mk_kernel_map<S: SchemeExt + 'static>(
     vaddr: u64,
     kernel_virt_addr_range: Range<u64>,
     kernel_phys_to_virt_offset: u64,
 ) -> (Vec<u8>, u64) {
     let virt_start = kernel_virt_addr_range.start;
     let virt_end = kernel_virt_addr_range.end;
-    let virt_map_end =
-        virt_end.next_multiple_of(1 << SchemeHelpers::<SchemeImpl>::largest_leaf_size_bits());
+    let virt_map_end = virt_end.next_multiple_of(1 << SchemeHelpers::<S>::largest_leaf_size_bits());
 
-    let regions = RegionsBuilder::<SchemeImpl>::new()
+    let regions = RegionsBuilder::<S>::new()
         .insert(Region::valid(
             0..virt_start,
-            SchemeImpl::mk_identity_leaf_for_kernel_map,
+            S::mk_identity_leaf_for_kernel_map,
         ))
         .insert(Region::valid(virt_start..virt_map_end, move |loc| {
-            SchemeImpl::mk_kernel_leaf_for_kernel_map(kernel_phys_to_virt_offset, loc)
+            S::mk_kernel_leaf_for_kernel_map(kernel_phys_to_virt_offset, loc)
         }));
 
     let (entries, root_vaddr) = regions.build().construct_table().embed(vaddr);
     let bytes = {
         let mut v = vec![];
         for entry in entries.iter() {
-            v.extend(entry.to_le_bytes());
+            v.extend(S::entry_to_bytes(entry));
         }
         v
     };
     (bytes, root_vaddr)
 }
 
-type SchemeImpl = schemes::RiscV32Sv32;
-
-trait SchemeExt: Scheme {
+pub trait SchemeExt: Scheme {
     fn mk_normal_leaf_for_loader_map(_loc: LeafLocation) -> Self::LeafDescriptor {
         unimplemented!()
     }

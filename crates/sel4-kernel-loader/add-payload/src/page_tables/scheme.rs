@@ -31,6 +31,8 @@ pub trait Scheme {
     const EMPTY_DESCRIPTOR: Self::WordPrimitive;
 
     fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive;
+
+    fn entry_to_bytes(entry: &Self::WordPrimitive) -> Vec<u8>;
 }
 
 pub trait SchemeLeafDescriptor<WordPrimitive> {
@@ -97,6 +99,10 @@ impl Scheme for AArch64 {
     fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive {
         child_vaddr | 0b11
     }
+
+    fn entry_to_bytes(entry: &Self::WordPrimitive) -> Vec<u8> {
+        entry.to_le_bytes().to_vec()
+    }
 }
 
 #[derive(Debug)]
@@ -158,6 +164,10 @@ impl Scheme for AArch32 {
 
     fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive {
         child_vaddr as u32 | 0b01
+    }
+
+    fn entry_to_bytes(entry: &Self::WordPrimitive) -> Vec<u8> {
+        entry.to_le_bytes().to_vec()
     }
 }
 
@@ -236,6 +246,10 @@ impl Scheme for RiscV64Sv39 {
     fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive {
         (child_vaddr >> 2) | 0b1
     }
+
+    fn entry_to_bytes(entry: &Self::WordPrimitive) -> Vec<u8> {
+        entry.to_le_bytes().to_vec()
+    }
 }
 
 #[derive(Debug)]
@@ -300,6 +314,10 @@ impl Scheme for RiscV32Sv32 {
 
     fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive {
         ((child_vaddr as u32) >> 2) | 0b1
+    }
+
+    fn entry_to_bytes(entry: &Self::WordPrimitive) -> Vec<u8> {
+        entry.to_le_bytes().to_vec()
     }
 }
 
