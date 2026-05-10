@@ -299,7 +299,7 @@ impl Scheme for RiscV32Sv32 {
     const EMPTY_DESCRIPTOR: Self::WordPrimitive = 0b0;
 
     fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive {
-        (child_vaddr as u32 >> 2) | 0b1
+        ((child_vaddr as u32) >> 2) | 0b1
     }
 }
 
