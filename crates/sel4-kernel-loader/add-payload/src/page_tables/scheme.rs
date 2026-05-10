@@ -30,7 +30,8 @@ pub trait Scheme {
     type LeafDescriptor: SchemeLeafDescriptor<Self::WordPrimitive> + fmt::Debug;
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive;
-    const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive;
+
+    fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive;
 }
 
 pub trait SchemeLeafDescriptor<WordPrimitive> {
@@ -93,7 +94,10 @@ impl Scheme for AArch64 {
     type LeafDescriptor = AArch64LeafDescriptor;
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive = 0b0;
-    const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = 0b11;
+
+    fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive {
+        child_vaddr | 0b11
+    }
 }
 
 #[derive(Debug)]
@@ -152,7 +156,10 @@ impl Scheme for AArch32 {
     type LeafDescriptor = AArch32LeafDescriptor;
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive = 0b00;
-    const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = 0b01;
+
+    fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive {
+        child_vaddr as u32 | 0b01
+    }
 }
 
 #[derive(Debug)]
@@ -226,7 +233,10 @@ impl Scheme for RiscV64Sv39 {
     type LeafDescriptor = RiscV64Sv39LeafDescriptor;
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive = 0b0;
-    const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = 0b1;
+
+    fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive {
+        (child_vaddr >> 2) | 0b1
+    }
 }
 
 #[derive(Debug)]
@@ -288,7 +298,10 @@ impl Scheme for RiscV32Sv32 {
     type LeafDescriptor = RiscV32Sv32LeafDescriptor;
 
     const EMPTY_DESCRIPTOR: Self::WordPrimitive = 0b0;
-    const SYMBOLIC_BRANCH_DESCRIPTOR_OFFSET: Self::WordPrimitive = 0b1;
+
+    fn mk_branch_descriptor(child_vaddr: u64) -> Self::WordPrimitive {
+        (child_vaddr as u32 >> 2) | 0b1
+    }
 }
 
 #[derive(Debug)]
