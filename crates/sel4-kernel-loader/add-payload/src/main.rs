@@ -92,7 +92,7 @@ where
                 page_tables::mk_loader_map(vaddr, &platform_info)
             });
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
-            patching.patch_word("loader_level_0_table", addr); // addr.unwrap()
+            patching.patch_word("loader_level_0_table", addr);
         }
         {
             let mut addr_slot = None;
@@ -107,7 +107,7 @@ where
                 })
             });
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
-            patching.patch_word("kernel_boot_level_0_table", addr); // addr.unwrap()
+            patching.patch_word("kernel_boot_level_0_table", addr);
         }
         patching.add_data_segment_with_meta_phdr(
             PT_SEL4_KERNEL_LOADER_PAYLOAD,
