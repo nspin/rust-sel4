@@ -123,6 +123,5 @@ fn coarsen_footprint(footprint: &Range<u64>, granularity: u64) -> Range<u64> {
 }
 
 fn truncate_word<T: FileHeader>(word: u64) -> u64 {
-    let bits = if T::is_type_64_sized() { 64 } else { 32 };
-    word & (!0 >> bits)
+    if T::is_type_64_sized() { word } else { word & 0xffff_ffff }
 }
