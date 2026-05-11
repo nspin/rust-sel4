@@ -102,11 +102,16 @@ where
             let mut addr_slot = None;
             patching.add_data_segment(maps::ALIGN, |vaddr| {
                 with_elf::<T, _, _>(&args.kernel_path, |elf| {
-                    let phys_to_virt_offset = kernel_phys_to_virt_offset(elf, SchemeHelpers::<S>::vaddr_mask());
+                    let phys_to_virt_offset =
+                        kernel_phys_to_virt_offset(elf, SchemeHelpers::<S>::vaddr_mask());
                     let virt_range = virt_footprint(elf);
-                    let masked_virt_addr_range = virt_range.start & SchemeHelpers::<S>::vaddr_mask()..virt_range.end & SchemeHelpers::<S>::vaddr_mask();
-                    let (bytes, root_vaddr) =
-                        maps::mk_kernel_map::<S>(vaddr, masked_virt_addr_range, phys_to_virt_offset);
+                    let masked_virt_addr_range = virt_range.start & SchemeHelpers::<S>::vaddr_mask()
+                        ..virt_range.end & SchemeHelpers::<S>::vaddr_mask();
+                    let (bytes, root_vaddr) = maps::mk_kernel_map::<S>(
+                        vaddr,
+                        masked_virt_addr_range,
+                        phys_to_virt_offset,
+                    );
                     addr_slot = Some(root_vaddr);
                     bytes
                 })
@@ -128,7 +133,10 @@ where
     Ok(())
 }
 
-fn kernel_phys_to_virt_offset<'a, T: FileHeader, R: ReadRef<'a>>(elf: &ElfFile<'a, T, R>, vaddr_mask: u64) -> u64 {
+fn kernel_phys_to_virt_offset<'a, T: FileHeader, R: ReadRef<'a>>(
+    elf: &ElfFile<'a, T, R>,
+    vaddr_mask: u64,
+) -> u64 {
     let endian = elf.endian();
     let phdr = utils::loadable_segments(elf)
         .next()
