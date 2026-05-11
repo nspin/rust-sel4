@@ -49,9 +49,12 @@ pub fn mk_kernel_map<S: SchemeExt + 'static>(
     kernel_virt_addr_range: Range<u64>,
     kernel_phys_to_virt_offset: u64,
 ) -> (Vec<u8>, u64) {
-    let virt_start = kernel_virt_addr_range.start & SchemeHelpers::<S>::vaddr_mask();
-    let virt_end = kernel_virt_addr_range.end & SchemeHelpers::<S>::vaddr_mask();
+    let virt_start = kernel_virt_addr_range.start;
+    let virt_end = kernel_virt_addr_range.end;
     let virt_map_end = virt_end.next_multiple_of(1 << SchemeHelpers::<S>::largest_leaf_size_bits());
+
+    eprintln!("XXX {:#x?}", virt_start);
+    eprintln!("XXX {:#x?}", virt_map_end);
 
     let regions = RegionsBuilder::<S>::new()
         .insert(Region::valid(
