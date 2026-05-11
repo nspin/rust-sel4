@@ -35,7 +35,6 @@ pub fn mk_loader_map<S: SchemeExt + 'static>(
         ));
     }
 
-
     let (entries, root_vaddr) = regions.build().construct_table().embed(vaddr);
     let bytes = {
         let mut v = vec![];
