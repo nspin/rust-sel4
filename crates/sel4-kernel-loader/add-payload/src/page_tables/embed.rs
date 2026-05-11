@@ -44,8 +44,10 @@ impl<T: Scheme> Embedding<T> {
                 }
             })
             .collect::<Vec<_>>();
-        self.align(1 << T::level_align_bits(level));
+        let align = 1 << T::level_align_bits(level);
+        self.align(align);
         let vaddr = self.cur_vaddr();
+        eprintln!("AAA level {level}, align {align:#x?}, vaddr {vaddr:#x?}");
         self.buf.extend(entries);
         vaddr
     }
@@ -58,7 +60,7 @@ impl<T: Scheme> Embedding<T> {
         let cur_vaddr = self.cur_vaddr();
         let aligned_vaddr = cur_vaddr.next_multiple_of(align);
         self.buf.resize_with(
-            (aligned_vaddr - self.start_vaddr).try_into().unwrap(),
+            u64::try_from(aligned_vaddr - self.start_vaddr).unwrap().strict_div(Self::word_bytes()).try_into().unwrap(),
             || T::EMPTY_DESCRIPTOR,
         );
     }

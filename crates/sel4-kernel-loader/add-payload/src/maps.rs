@@ -43,6 +43,12 @@ pub fn mk_loader_map<S: SchemeExt + 'static>(
         }
         v
     };
+
+    let t = "/home/x/i/rust-sel4/tmp/x.bin";
+    std::fs::write(t, &bytes).unwrap();
+    eprintln!("BASE: {:#x}", root_vaddr);
+    eprintln!("ROOT: {:#x}", vaddr);
+
     (bytes, root_vaddr)
 }
 
