@@ -41,7 +41,7 @@ pub(crate) mod page_tables {
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 #[used(linker)]
-static x_loader_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
+static loader_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
 
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]

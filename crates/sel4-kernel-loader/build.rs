@@ -139,7 +139,7 @@ fn mk_loader_map() -> TokenStream {
     }
 
     regions.build().construct_table().embed(
-        format_ident!("loader_level_0_table"),
+        format_ident!("old_loader_level_0_table"),
         format_ident!("sel4_kernel_loader_embed_page_tables_runtime"),
     )
 }

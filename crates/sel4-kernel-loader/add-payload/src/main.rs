@@ -96,7 +96,7 @@ where
                 bytes
             });
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
-            patching.patch_word("x_loader_level_0_table", addr);
+            patching.patch_word("loader_level_0_table", addr);
         }
         {
             let mut addr_slot = None;
