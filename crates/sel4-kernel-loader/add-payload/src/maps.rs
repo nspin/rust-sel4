@@ -26,12 +26,15 @@ pub fn mk_loader_map<S: SchemeExt + 'static>(
         0..device_range_end,
         S::mk_device_leaf_for_loader_map,
     ));
+    eprintln!("QQA {:#x?}", device_range_end);
     for range in platform_info.memory.iter() {
+        eprintln!("QQR {:#x?}", range);
         regions = regions.insert(Region::valid(
             range.clone(),
             S::mk_normal_leaf_for_loader_map,
         ));
     }
+
 
     let (entries, root_vaddr) = regions.build().construct_table().embed(vaddr);
     let bytes = {
