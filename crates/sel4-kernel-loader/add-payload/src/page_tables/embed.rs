@@ -57,10 +57,10 @@ impl<T: Scheme> Embedding<T> {
     fn align(&mut self, align: u64) {
         let cur_vaddr = self.cur_vaddr();
         let aligned_vaddr = cur_vaddr.next_multiple_of(align);
-        self.buf
-            .resize_with((aligned_vaddr - cur_vaddr).try_into().unwrap(), || {
-                T::EMPTY_DESCRIPTOR
-            });
+        self.buf.resize_with(
+            (aligned_vaddr - self.start_vaddr).try_into().unwrap(),
+            || T::EMPTY_DESCRIPTOR,
+        );
     }
 
     fn word_bytes() -> u64 {
