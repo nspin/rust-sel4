@@ -16,9 +16,6 @@ use crate::{
     arch::Arch,
     main, secondary_main,
     this_image::kernel_boot_level_0_table,
-    this_image::page_tables::kernel::{
-        old_kernel_boot_level_0_table, old_kernel_boot_level_0_table_access,
-    },
 };
 
 pub(crate) struct PerCoreImpl {
@@ -42,7 +39,6 @@ impl Arch for ArchImpl {
 
     fn init() {
         unsafe {
-            old_kernel_boot_level_0_table_access.finish_for_riscv();
         }
     }
 

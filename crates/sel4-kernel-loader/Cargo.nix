@@ -18,7 +18,6 @@ mk {
       sel4-logging
       sel4-config
       sel4-kernel-loader-payload-types
-      sel4-kernel-loader-embed-page-tables-runtime
       sel4-stack
       sel4-phdrs
       sel4-phdrs-patched
@@ -52,7 +51,6 @@ mk {
       sel4-config
       sel4-build-env
       sel4-kernel-loader-payload-types
-      sel4-kernel-loader-embed-page-tables
     ;
   };
 }
