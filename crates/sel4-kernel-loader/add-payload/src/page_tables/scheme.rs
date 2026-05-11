@@ -52,6 +52,10 @@ impl<T: Scheme> SchemeHelpers<T> {
         (0..T::NUM_LEVELS).map(T::level_bits).sum::<usize>() + T::PAGE_BITS
     }
 
+    pub fn vaddr_mask() -> u64 {
+        (1 << Self::vaddr_bits()) - 1
+    }
+
     pub fn virt_bounds() -> Range<u64> {
         0..(1 << Self::vaddr_bits())
     }

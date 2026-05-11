@@ -137,3 +137,54 @@ fn kernel_phys_to_virt_offset<'a, T: FileHeader, R: ReadRef<'a>>(elf: &ElfFile<'
     let paddr = phdr.p_paddr(endian).into();
     vaddr.wrapping_sub(paddr)
 }
+
+// fn elf_phys_addr_range<'a, T: FileHeader<Word: Ord + num::CheckedAdd>, R: ReadRef<'a>>(elf: &ElfFile<'a, T, R>) -> std::ops::Range<u64> {
+//     let endian = elf.endian();
+//     let virt_min = elf
+//         .elf_program_headers()
+//         .iter()
+//         .filter(|phdr| phdr.p_type(endian) == object::elf::PT_LOAD)
+//         .map(|phdr| phdr.p_paddr(endian))
+//         .min()
+//         .unwrap();
+//     let virt_max = elf
+//         .elf_program_headers()
+//         .iter()
+//         .filter(|phdr| phdr.p_type(endian) == object::elf::PT_LOAD)
+//         .map(|phdr| {
+//             num::CheckedAdd::checked_add(&phdr.p_paddr(endian), &phdr.p_memsz(endian))
+//                 .unwrap()
+//         })
+//         .max()
+//         .unwrap();
+//     virt_min.into()..virt_max.into()
+// }
+
+// fn elf_phys_to_vaddr_offset<'a, T: FileHeader, R: ReadRef<'a>>(elf: &ElfFile<'a, FileHeaTder, R>) -> u64 {
+//     let endian = elf.endian();
+//     unified(
+//         elf.elf_program_headers()
+//             .iter()
+//             .filter(|phdr| phdr.p_type(endian) == object::elf::PT_LOAD)
+//             .map(|phdr| {
+//                 let paddr = phdr.p_paddr(endian).into();
+//                 let vaddr_with_extension: u64 = phdr.p_vaddr(endian).into();
+//                 let vaddr = vaddr_with_extension & SchemeHelpers::<S>::vaddr_mask();
+//                 phys_to_virt_offset_for(paddr, vaddr)
+//             }),
+//     )
+// }
+
+// fn unified<T: Eq>(mut it: impl Iterator<Item = T>) -> T {
+//     let first = it.next().unwrap();
+//     assert!(it.all(|subsequent| subsequent == first));
+//     first
+// }
+
+// fn phys_to_virt_offset_for(paddr: u64, vaddr: u64) -> u64 {
+//     vaddr.wrapping_sub(paddr)
+// }
+
+// fn virt_to_phys(vaddr: u64, phys_to_virt_offset: u64) -> u64 {
+//     vaddr.wrapping_sub(phys_to_virt_offset)
+// }
