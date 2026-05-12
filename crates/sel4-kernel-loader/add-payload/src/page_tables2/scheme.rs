@@ -6,10 +6,96 @@
 
 use bitfield::{BitMut, BitRangeMut};
 
+use sel4_config_types::Configuration;
+
 pub type RawDescriptor = u64;
 
+pub type Level = u8;
+
+pub enum Scheme {
+    AArch64,
+    AArch32,
+    RiscVSv39,
+    RiscVSv32,
+}
+
+impl Scheme {
+    fn from_config(kernel_config: &Configuration) -> Self {
+        let sel4_arch = kernel_config.get("SEL4_ARCH").unwrap().as_str().unwrap();
+        let pt_levels = || {
+            kernel_config
+                .get("PT_LEVELS")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .parse::<u8>()
+                .unwrap()
+        };
+        match sel4_arch {
+            "aarch64" => Self::AArch64,
+            "aarch32" => Self::AArch32,
+            "riscv64" if pt_levels() == 3 => Self::RiscVSv39,
+            "riscv32" if pt_levels() == 2 => Self::RiscVSv32,
+            _ => panic!("unsupported configuration"),
+        }
+    }
+
+    fn word_bytes(&self) -> usize {
+        match self {
+            Self::AArch64 | Self::RiscVSv39 => 64,
+            Self::AArch32 | Self::RiscVSv32 => 32,
+        }
+    }
+
+    fn page_bits(&self) -> u64 {
+        4096
+    }
+
+    fn num_levels(&self) -> u64 {
+        match self {
+            Self::AArch64 => 4,
+            Self::AArch32 => 2,
+            Self::RiscVSv39 => 3,
+            Self::RiscVSv32 => 2,
+        }
+    }
+
+    fn level_bits(&self, level: Level) -> u64 {
+        match self {
+            Self::AArch64 => 9,
+            Self::AArch32 => match level {
+                0 => 12,
+                1 => 8,
+                _ => unreachable!(),
+            },
+            Self::RiscVSv39 => 9,
+            Self::RiscVSv32 => 10,
+        }
+    }
+
+    fn min_level_for_leaf(&self) -> Level {
+        match self {
+            Self::AArch64 => 1,
+            Self::AArch32 => 0,
+            Self::RiscVSv39 | Self::RiscVSv32 => 0,
+        }
+    }
+
+    fn empty_descriptor(&self) -> RawDescriptor {
+        0
+    }
+
+    fn branch_descriptor(&self, child_vaddr: u64) -> RawDescriptor {
+        match self {
+            Self::AArch64 => child_vaddr | 0b11,
+            Self::AArch32 => child_vaddr | 0b01,
+            Self::RiscVSv39 | Self::RiscVSv32 => (child_vaddr >> 2) | 0b1,
+        }
+    }
+}
+
 pub trait LeafDescriptor {
-    fn from_level_paddr(level: u8, paddr: u64) -> Self;
+    fn from_level_paddr(level: Level, paddr: u64) -> Self;
     fn to_raw(self) -> RawDescriptor;
 }
 
@@ -19,7 +105,7 @@ pub struct AArch64LeafDescriptor {
 }
 
 impl LeafDescriptor for AArch64LeafDescriptor {
-    fn from_level_paddr(level: u8, paddr: u64) -> Self {
+    fn from_level_paddr(level: Level, paddr: u64) -> Self {
         let mut raw = paddr;
         raw.set_bit_range(1, 0, if level == 3 { 0b11 } else { 0b01 });
         Self { raw }
@@ -51,12 +137,12 @@ impl AArch64LeafDescriptor {
 
 #[derive(Debug)]
 pub struct AArch32LeafDescriptor {
-    level: u8,
+    level: Level,
     raw: RawDescriptor,
 }
 
 impl LeafDescriptor for AArch32LeafDescriptor {
-    fn from_level_paddr(level: u8, paddr: u64) -> Self {
+    fn from_level_paddr(level: Level, paddr: u64) -> Self {
         let mut raw = paddr;
         raw.set_bit_range(1, 0, if level == 3 { 0b11 } else { 0b01 });
         Self { level, raw }
@@ -108,7 +194,7 @@ pub struct RiscVLeafDescriptor {
 }
 
 impl LeafDescriptor for RiscVLeafDescriptor {
-    fn from_level_paddr(_level: u8, paddr: u64) -> Self {
+    fn from_level_paddr(_level: Level, paddr: u64) -> Self {
         let raw = paddr >> 2;
         Self { raw }
             .set_valid(true)
