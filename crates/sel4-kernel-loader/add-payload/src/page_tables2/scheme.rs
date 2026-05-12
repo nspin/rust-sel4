@@ -92,6 +92,10 @@ impl Scheme {
             Self::RiscVSv39 | Self::RiscVSv32 => (child_vaddr >> 2) | 0b1,
         }
     }
+
+    fn descriptor_to_bytes(&self, desc: RawDescriptor) -> Vec<u8> {
+        desc.to_le_bytes()[..self.word_bytes()].to_vec()
+    }
 }
 
 pub trait LeafDescriptor {
