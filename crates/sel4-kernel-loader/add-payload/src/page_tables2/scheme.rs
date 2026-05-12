@@ -108,14 +108,13 @@ impl AArch32LeafDescriptor {
 }
 
 #[derive(Debug)]
-pub struct RiscV64Sv39LeafDescriptor {
+pub struct RiscV {
     raw: RawDescriptor,
 }
 
-impl LeafDescriptor for RiscV64Sv39LeafDescriptor {
+impl LeafDescriptor for RiscV {
     fn from_level_paddr(_level: u8, paddr: u64) -> Self {
-        let mut raw = 0;
-        raw.set_bit_range(53, 10, BitRange::<u64>::bit_range(&paddr, 55, 12));
+        let raw = paddr >> 2;
         Self { raw }
             .set_valid(true)
             .set_read(true)
@@ -128,50 +127,7 @@ impl LeafDescriptor for RiscV64Sv39LeafDescriptor {
     }
 }
 
-impl RiscV64Sv39LeafDescriptor {
-    pub fn set_valid(mut self, value: bool) -> Self {
-        self.raw.set_bit(0, value);
-        self
-    }
-
-    pub fn set_read(mut self, value: bool) -> Self {
-        self.raw.set_bit(1, value);
-        self
-    }
-
-    pub fn set_write(mut self, value: bool) -> Self {
-        self.raw.set_bit(2, value);
-        self
-    }
-
-    pub fn set_execute(mut self, value: bool) -> Self {
-        self.raw.set_bit(3, value);
-        self
-    }
-}
-
-#[derive(Debug)]
-pub struct RiscV32Sv32LeafDescriptor {
-    raw: RawDescriptor,
-}
-
-impl LeafDescriptor for RiscV32Sv32LeafDescriptor {
-    fn from_level_paddr(_level: u8, paddr: u64) -> Self {
-        let mut raw = 0;
-        raw.set_bit_range(29, 10, BitRange::<u32>::bit_range(&paddr, 31, 12));
-        Self { raw }
-            .set_valid(true)
-            .set_read(true)
-            .set_write(true)
-            .set_execute(true)
-    }
-
-    fn to_raw(self) -> RawDescriptor {
-        self.raw
-    }
-}
-
-impl RiscV32Sv32LeafDescriptor {
+impl RiscV {
     pub fn set_valid(mut self, value: bool) -> Self {
         self.raw.set_bit(0, value);
         self
