@@ -12,7 +12,7 @@ mod scheme;
 
 // pub use glue::{Region, Regions, RegionsBuilder};
 pub use regions::{AbstractRegion, AbstractRegions, AbstractRegionsBuilder};
-pub use scheme::LeafDescriptor;
+pub use scheme::{LeafDescriptor, Level, RawDescriptor, Scheme};
 // pub use table::{LeafLocation, MkLeafFn, RegionContent, Table};
 
 pub mod schemes {
