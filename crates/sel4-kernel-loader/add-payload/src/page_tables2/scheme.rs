@@ -22,7 +22,7 @@ pub enum Scheme {
 }
 
 impl Scheme {
-    fn from_config(kernel_config: &Configuration) -> Self {
+    pub fn from_config(kernel_config: &Configuration) -> Self {
         let sel4_arch = kernel_config.get("SEL4_ARCH").unwrap().as_str().unwrap();
         let pt_levels = || {
             kernel_config
@@ -49,11 +49,11 @@ impl Scheme {
         }
     }
 
-    fn page_bits(&self) -> u64 {
+    pub fn page_bits(&self) -> u64 {
         4096
     }
 
-    fn num_levels(&self) -> u8 {
+    pub fn num_levels(&self) -> u8 {
         match self {
             Self::AArch64 => 4,
             Self::AArch32 => 2,
@@ -62,7 +62,7 @@ impl Scheme {
         }
     }
 
-    fn level_bits(&self, level: Level) -> u64 {
+    pub fn level_bits(&self, level: Level) -> u64 {
         match self {
             Self::AArch64 => 9,
             Self::AArch32 => match level {
@@ -75,7 +75,7 @@ impl Scheme {
         }
     }
 
-    fn min_level_for_leaf(&self) -> Level {
+    pub fn min_level_for_leaf(&self) -> Level {
         match self {
             Self::AArch64 => 1,
             Self::AArch32 => 0,
@@ -83,11 +83,11 @@ impl Scheme {
         }
     }
 
-    fn empty_descriptor(&self) -> RawDescriptor {
+    pub fn empty_descriptor(&self) -> RawDescriptor {
         0
     }
 
-    fn branch_descriptor(&self, child_vaddr: u64) -> RawDescriptor {
+    pub fn branch_descriptor(&self, child_vaddr: u64) -> RawDescriptor {
         match self {
             Self::AArch64 => child_vaddr | 0b11,
             Self::AArch32 => child_vaddr | 0b01,
@@ -95,7 +95,7 @@ impl Scheme {
         }
     }
 
-    fn descriptor_to_bytes(&self, desc: RawDescriptor) -> Vec<u8> {
+    pub fn descriptor_to_bytes(&self, desc: RawDescriptor) -> Vec<u8> {
         desc.to_le_bytes()[..self.word_bytes()].to_vec()
     }
 

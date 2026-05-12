@@ -8,31 +8,31 @@ use std::borrow::Borrow;
 use std::sync::Arc;
 
 use super::regions::{AbstractRegion, AbstractRegions};
-use super::scheme::{Scheme, SchemeHelpers};
+use super::scheme::{Level, RawDescriptor, Scheme};
 
 #[derive(Debug)]
-pub struct Table<T: Scheme> {
-    pub(crate) entries: Vec<AbstractEntry<T>>,
+pub struct Table {
+    pub(crate) entries: Vec<AbstractEntry>,
 }
 
 #[derive(Debug)]
-pub(crate) enum AbstractEntry<T: Scheme> {
+pub(crate) enum AbstractEntry {
     Empty,
-    Leaf(T::LeafDescriptor),
-    Branch(Box<Table<T>>),
+    Leaf(RawDescriptor),
+    Branch(Box<Table>),
 }
 
-pub trait MkLeafFn<T: Scheme>: Fn(LeafLocation) -> T::LeafDescriptor {}
+pub trait MkLeafFn: Fn(LeafLocation) -> RawDescriptor {}
 
-impl<T: Scheme, F: Fn(LeafLocation) -> T::LeafDescriptor> MkLeafFn<T> for F {}
+impl<F: Fn(LeafLocation) -> RawDescriptor> MkLeafFn for F {}
 
 pub struct LeafLocation {
-    level: usize,
+    level: Level,
     vaddr: u64,
 }
 
 impl LeafLocation {
-    pub fn level(&self) -> usize {
+    pub fn level(&self) -> Level {
         self.level
     }
 
@@ -41,62 +41,62 @@ impl LeafLocation {
     }
 }
 
-pub struct RegionContent<T: Scheme> {
-    mk_leaf: Box<dyn MkLeafFn<T>>,
+pub struct RegionContent {
+    mk_leaf: Box<dyn MkLeafFn>,
 }
 
-impl<T: Scheme> RegionContent<T> {
-    pub(crate) fn new(mk_leaf: impl MkLeafFn<T> + 'static) -> Self {
+impl RegionContent {
+    pub(crate) fn new(mk_leaf: impl MkLeafFn + 'static) -> Self {
         Self {
             mk_leaf: Box::new(mk_leaf),
         }
     }
 
-    fn mk_leaf(&self, level: usize, vaddr: u64) -> T::LeafDescriptor {
+    fn mk_leaf(&self, level: Level, vaddr: u64) -> RawDescriptor {
         (self.mk_leaf)(LeafLocation { level, vaddr })
     }
 }
 
-impl<T: Scheme> Table<T> {
-    pub fn construct(regions: &AbstractRegions<Option<RegionContent<T>>>) -> Self {
-        assert_eq!(regions.bounds(), SchemeHelpers::<T>::virt_bounds());
-        Construction::new(regions.as_slice().iter()).construct()
+impl Table {
+    pub fn construct(scheme: &Scheme, regions: &AbstractRegions<Option<RegionContent>>) -> Self {
+        assert_eq!(regions.bounds(), scheme.virt_bounds());
+        Construction::new(scheme, regions.as_slice().iter()).construct()
     }
 }
 
-struct Construction<T, U, V> {
-    marker: std::marker::PhantomData<T>,
+struct Construction<'a, U, V> {
+    scheme: &'a Scheme,
     current: U,
     rest: V,
 }
 
-impl<T: Scheme, U, V> Construction<T, U, V>
+impl<'a, U, V> Construction<'a, U, V>
 where
-    U: Borrow<AbstractRegion<Arc<Option<RegionContent<T>>>>>,
+    U: Borrow<AbstractRegion<Arc<Option<RegionContent>>>>,
     V: Iterator<Item = U>,
 {
-    fn new(mut regions: V) -> Self {
+    fn new(scheme: &'a Scheme, mut regions: V) -> Self {
         let region = regions.next().unwrap();
         Self {
-            marker: std::marker::PhantomData,
+            scheme,
             current: region,
             rest: regions,
         }
     }
 
-    fn construct(mut self) -> Table<T> {
+    fn construct(mut self) -> Table {
         let table = self.construct_inner(0, 0);
         assert!(!self.advance());
         table
     }
 
-    fn construct_inner(&mut self, level: usize, table_vaddr: u64) -> Table<T> {
-        assert!(level < T::NUM_LEVELS);
-        let num_entries = SchemeHelpers::<T>::num_entries_in_table(level);
-        let step_bits = ((level + 1)..T::NUM_LEVELS)
-            .map(T::level_bits)
-            .sum::<usize>()
-            + T::PAGE_BITS;
+    fn construct_inner(&mut self, level: Level, table_vaddr: u64) -> Table {
+        assert!(level < self.scheme.num_levels());
+        let num_entries = self.scheme.num_entries_in_table(level);
+        let step_bits = ((level + 1)..self.scheme.num_levels())
+            .map(|level| self.scheme.level_bits(level))
+            .sum::<u64>()
+            + self.scheme.page_bits();
         let step = 1 << step_bits;
         Table {
             entries: (0..num_entries)
@@ -107,7 +107,8 @@ where
                     }
                     assert!(self.current_end() > entry_vaddr);
                     if self.current_end() < entry_vaddr + step
-                        || (self.current_content().is_some() && level < T::MIN_LEVEL_FOR_LEAF)
+                        || (self.current_content().is_some()
+                            && level < self.scheme.min_level_for_leaf())
                     {
                         AbstractEntry::Branch(Box::new(
                             self.construct_inner(level + 1, entry_vaddr),
@@ -125,7 +126,7 @@ where
         }
     }
 
-    fn current(&self) -> &AbstractRegion<Arc<Option<RegionContent<T>>>> {
+    fn current(&self) -> &AbstractRegion<Arc<Option<RegionContent>>> {
         self.current.borrow()
     }
 
@@ -133,7 +134,7 @@ where
         self.current().range.end
     }
 
-    fn current_content(&self) -> Option<&RegionContent<T>> {
+    fn current_content(&self) -> Option<&RegionContent> {
         (*self.current().content).as_ref()
     }
 
