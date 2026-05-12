@@ -103,11 +103,11 @@ impl AArch32LeafDescriptor {
 }
 
 #[derive(Debug)]
-pub struct RiscV {
+pub struct RiscVLeafDescriptor {
     raw: RawDescriptor,
 }
 
-impl LeafDescriptor for RiscV {
+impl LeafDescriptor for RiscVLeafDescriptor {
     fn from_level_paddr(_level: u8, paddr: u64) -> Self {
         let raw = paddr >> 2;
         Self { raw }
@@ -122,7 +122,7 @@ impl LeafDescriptor for RiscV {
     }
 }
 
-impl RiscV {
+impl RiscVLeafDescriptor {
     pub fn set_valid(mut self, value: bool) -> Self {
         self.raw.set_bit(0, value);
         self
