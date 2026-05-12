@@ -4,12 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fmt;
-use std::marker::PhantomData;
-use std::mem;
-use std::ops::Range;
-
-use bitfield::{BitMut, BitRange, BitRangeMut};
+use bitfield::{BitMut, BitRangeMut};
 
 pub type RawDescriptor = u64;
 
