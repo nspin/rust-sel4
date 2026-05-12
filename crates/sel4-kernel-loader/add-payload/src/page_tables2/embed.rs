@@ -4,47 +4,49 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use super::scheme::{Scheme, SchemeLeafDescriptor};
+use super::scheme::{Level, RawDescriptor, Scheme};
 use super::table::{AbstractEntry, Table};
 
-impl<T: Scheme> Table<T> {
-    pub fn embed(&self, vaddr: u64) -> (Vec<T::WordPrimitive>, u64) {
-        Embedding::new(vaddr).embed(self)
+impl Table {
+    pub fn embed(&self, scheme: &Scheme, vaddr: u64) -> (Vec<RawDescriptor>, u64) {
+        Embedding::new(scheme, vaddr).embed(self)
     }
 }
 
-struct Embedding<T: Scheme> {
+struct Embedding<'a> {
+    scheme: &'a Scheme,
     start_vaddr: u64,
-    buf: Vec<T::WordPrimitive>,
+    buf: Vec<RawDescriptor>,
 }
 
-impl<T: Scheme> Embedding<T> {
-    fn new(start_vaddr: u64) -> Self {
+impl<'a> Embedding<'a> {
+    fn new(scheme: &'a Scheme, start_vaddr: u64) -> Self {
         Self {
+            scheme,
             start_vaddr,
             buf: vec![],
         }
     }
 
-    fn embed(mut self, table: &Table<T>) -> (Vec<T::WordPrimitive>, u64) {
+    fn embed(mut self, table: &Table) -> (Vec<RawDescriptor>, u64) {
         let root_vaddr = self.embed_inner(table, 0);
         (self.buf, root_vaddr)
     }
 
-    fn embed_inner(&mut self, table: &Table<T>, level: usize) -> u64 {
+    fn embed_inner(&mut self, table: &Table, level: Level) -> u64 {
         let entries = table
             .entries
             .iter()
             .map(|entry| match entry {
-                AbstractEntry::Empty => T::EMPTY_DESCRIPTOR,
-                AbstractEntry::Leaf(descriptor) => descriptor.to_raw(),
+                AbstractEntry::Empty => self.scheme.empty_descriptor(),
+                AbstractEntry::Leaf(descriptor) => *descriptor,
                 AbstractEntry::Branch(branch) => {
                     let child_vaddr = self.embed_inner(branch, level + 1);
-                    T::mk_branch_descriptor(child_vaddr)
+                    self.scheme.branch_descriptor(child_vaddr)
                 }
             })
             .collect::<Vec<_>>();
-        let align = 1 << T::level_align_bits(level);
+        let align = 1 << self.scheme.level_align_bits(level);
         self.align(align);
         let vaddr = self.cur_vaddr();
         eprintln!("AAA level {level}, align {align:#x?}, vaddr {vaddr:#x?}");
@@ -53,7 +55,7 @@ impl<T: Scheme> Embedding<T> {
     }
 
     fn cur_vaddr(&self) -> u64 {
-        self.start_vaddr + Self::word_bytes() * u64::try_from(self.buf.len()).unwrap()
+        self.start_vaddr + self.word_bytes() * u64::try_from(self.buf.len()).unwrap()
     }
 
     fn align(&mut self, align: u64) {
@@ -62,14 +64,14 @@ impl<T: Scheme> Embedding<T> {
         self.buf.resize_with(
             u64::try_from(aligned_vaddr - self.start_vaddr)
                 .unwrap()
-                .strict_div(Self::word_bytes())
+                .strict_div(self.word_bytes())
                 .try_into()
                 .unwrap(),
-            || T::EMPTY_DESCRIPTOR,
+            || self.scheme.empty_descriptor(),
         );
     }
 
-    fn word_bytes() -> u64 {
-        size_of::<T::WordPrimitive>().try_into().unwrap()
+    fn word_bytes(&self) -> u64 {
+        self.scheme.word_bytes().try_into().unwrap()
     }
 }

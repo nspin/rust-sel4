@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-// mod embed;
+mod embed;
 // mod glue;
 mod regions;
 mod scheme;

@@ -42,7 +42,7 @@ impl Scheme {
         }
     }
 
-    fn word_bytes(&self) -> usize {
+    pub fn word_bytes(&self) -> usize {
         match self {
             Self::AArch64 | Self::RiscVSv39 => 64,
             Self::AArch32 | Self::RiscVSv32 => 32,
@@ -73,6 +73,10 @@ impl Scheme {
             Self::RiscVSv39 => 9,
             Self::RiscVSv32 => 10,
         }
+    }
+
+    pub fn level_align_bits(&self, level: Level) -> u64 {
+        self.level_bits(level) + u64::from(self.word_bytes().trailing_zeros())
     }
 
     pub fn min_level_for_leaf(&self) -> Level {
