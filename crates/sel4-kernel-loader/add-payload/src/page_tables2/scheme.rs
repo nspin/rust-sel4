@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+use core::ops::Range;
+
 use bitfield::{BitMut, BitRangeMut};
 
 use sel4_config_types::Configuration;
@@ -51,7 +53,7 @@ impl Scheme {
         4096
     }
 
-    fn num_levels(&self) -> u64 {
+    fn num_levels(&self) -> u8 {
         match self {
             Self::AArch64 => 4,
             Self::AArch32 => 2,
@@ -95,6 +97,41 @@ impl Scheme {
 
     fn descriptor_to_bytes(&self, desc: RawDescriptor) -> Vec<u8> {
         desc.to_le_bytes()[..self.word_bytes()].to_vec()
+    }
+
+    pub fn num_entries_in_table(&self, level: Level) -> u64 {
+        1 << self.level_bits(level)
+    }
+
+    pub fn vaddr_bits(&self) -> u64 {
+        (0..self.num_levels())
+            .map(|level| self.level_bits(level))
+            .sum::<u64>()
+            + self.page_bits()
+    }
+
+    pub fn vaddr_mask(&self) -> u64 {
+        (1 << self.vaddr_bits()) - 1
+    }
+
+    pub fn virt_bounds(&self) -> Range<u64> {
+        0..(1 << self.vaddr_bits())
+    }
+
+    pub fn largest_leaf_size_bits(&self) -> u64 {
+        ((self.min_level_for_leaf() + 1)..self.num_levels())
+            .map(|level| self.level_bits(level))
+            .sum::<u64>()
+            + self.page_bits()
+    }
+
+    pub fn check_paddr_for_level(&self, level: Level, paddr: u64) {
+        let num_zero_bits = ((level + 1)..self.num_levels())
+            .map(|level| self.level_bits(level))
+            .sum::<u64>()
+            + self.page_bits();
+        let mask = (1 << num_zero_bits) - 1;
+        assert_eq!(paddr & mask, 0);
     }
 }
 
