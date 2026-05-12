@@ -7,28 +7,28 @@
 use std::ops::Range;
 
 use super::regions::{AbstractRegion, AbstractRegions, AbstractRegionsBuilder};
-use super::scheme::{Scheme, SchemeHelpers};
+use super::scheme::{RawDescriptor, Scheme};
 use super::table::{LeafLocation, MkLeafFn, RegionContent, Table};
 
-pub type Region<T> = AbstractRegion<Option<RegionContent<T>>>;
-pub type Regions<T> = AbstractRegions<Option<RegionContent<T>>>;
-pub type RegionsBuilder<T> = AbstractRegionsBuilder<Option<RegionContent<T>>>;
+pub type Region = AbstractRegion<Option<RegionContent>>;
+pub type Regions = AbstractRegions<Option<RegionContent>>;
+pub type RegionsBuilder = AbstractRegionsBuilder<Option<RegionContent>>;
 
-impl<T: Scheme> RegionsBuilder<T> {
+impl RegionsBuilder {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self::new_with_background(Region::invalid(SchemeHelpers::<T>::virt_bounds()))
     }
 }
 
-impl<T: Scheme> Regions<T> {
-    pub fn construct_table(&self) -> Table<T> {
+impl Regions {
+    pub fn construct_table(&self) -> Table {
         Table::construct(self)
     }
 }
 
-impl<T: Scheme> Region<T> {
-    pub fn valid(range: Range<u64>, mk_leaf: impl MkLeafFn<T> + 'static) -> Self {
+impl Region {
+    pub fn valid(range: Range<u64>, mk_leaf: impl MkLeafFn + 'static) -> Self {
         Self {
             range,
             content: Some(RegionContent::new(mk_leaf)),
@@ -44,14 +44,14 @@ impl<T: Scheme> Region<T> {
 }
 
 impl LeafLocation {
-    pub fn map<T: Scheme>(&self, vaddr_to_paddr: impl FnOnce(u64) -> u64) -> T::LeafDescriptor {
+    pub fn map(&self, vaddr_to_paddr: impl FnOnce(u64) -> u64) -> RawDescriptor {
         SchemeHelpers::<T>::leaf_descriptor_from_paddr_with_check(
             (vaddr_to_paddr)(self.vaddr()),
             self.level(),
         )
     }
 
-    pub fn map_identity<T: Scheme>(&self) -> T::LeafDescriptor {
-        self.map::<T>(|vaddr| vaddr)
+    pub fn map_identity(&self) -> RawDescriptor {
+        self.map(|vaddr| vaddr)
     }
 }
