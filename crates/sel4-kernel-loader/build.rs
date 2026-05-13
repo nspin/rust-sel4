@@ -80,11 +80,7 @@ fn phys_addr_range<'a, R: ReadRef<'a>>(elf: &ElfFile<'a, FileHeaderImpl, R>) -> 
         .min()
         .unwrap();
     let virt_max = loadable_segments(elf)
-        .map(|phdr| {
-            phdr.p_paddr(endian)
-                .checked_add(phdr.p_memsz(endian))
-                .unwrap()
-        })
+        .map(|phdr| phdr.p_paddr(endian).strict_add(phdr.p_memsz(endian)))
         .max()
         .unwrap();
     virt_min.into()..virt_max.into()
