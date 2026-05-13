@@ -9,7 +9,8 @@
 
 use std::ops::Range;
 
-use crate::page_tables2::{MkLeafArgs, Region, RegionsBuilder, Scheme, schemes};
+use crate::page_tables2::{LeafDescriptor, schemes::*};
+use crate::page_tables2::{MkLeafArgs, RawDescriptor, Region, RegionsBuilder, Scheme, schemes};
 use crate::platform_info::PlatformInfoForBuildSystem;
 
 // TODO must be T::align_of_level(0)
@@ -89,18 +90,30 @@ pub fn mk_kernel_map(
     (bytes, root_vaddr)
 }
 
-//     fn mk_normal_leaf_for_loader_map(loc: MkLeafArgs) -> Self::LeafDescriptor {
-//         loc.map_identity::<schemes::AArch64>()
-//             .set_access_flag(true)
-//             .set_attribute_index(4) // select MT_NORMAL
-//             .set_shareability(AARCH64_NORMAL_SHAREABILITY)
-//     }
+fn mk_normal_leaf_for_loader_map(smp: bool, loc: MkLeafArgs) -> RawDescriptor {
+    match loc.scheme() {
+        Scheme::AArch64 => {
+            loc.identity_descriptor::<AArch64LeafDescriptor>()
+                .set_access_flag(true)
+                .set_attribute_index(4) // select MT_NORMAL
+                .set_shareability(aarch64_normal_shareability(smp))
+                .to_raw()
+        }
+        Scheme::AArch32 => loc
+            .identity_descriptor::<AArch32LeafDescriptor>()
+            .set_access_flag(true)
+            .set_attributes(0b101, false, true)
+            .set_shareability(true)
+            .to_raw(),
+        _ => panic!(),
+    }
+}
 
-//     fn mk_device_leaf_for_loader_map(loc: LeafLocation) -> Self::LeafDescriptor {
-//         loc.map_identity::<schemes::AArch64>()
-//             .set_access_flag(true)
-//             .set_attribute_index(0) // select MT_DEVICE_nGnRnE
-//     }
+fn mk_device_leaf_for_loader_map(loc: LeafLocation) -> RawDescriptor {
+    loc.map_identity::<schemes::AArch64>()
+        .set_access_flag(true)
+        .set_attribute_index(0) // select MT_DEVICE_nGnRnE
+}
 
 //     fn mk_identity_leaf_for_kernel_map(loc: LeafLocation) -> Self::LeafDescriptor {
 //         loc.map_identity::<schemes::AArch64>()
@@ -122,20 +135,14 @@ pub fn mk_kernel_map(
 //         1 << 39
 //     }
 
-// // TODO
-// const AARCH64_NORMAL_SHAREABILITY: u64 = 0;
-// // if todo!("MAX_NUM_NODES") {
-// //     0b11
-// // } else {
-// //     0b00
-// // };
+fn aarch64_normal_shareability(smp: bool) -> u64 {
+    if smp { 0b11 } else { 0b00 }
+}
 
 // impl SchemeExt for schemes::AArch32 {
 //     fn mk_normal_leaf_for_loader_map(loc: LeafLocation) -> Self::LeafDescriptor {
 //         loc.map_identity::<schemes::AArch32>()
-//             .set_access_flag(true)
-//             .set_attributes(0b101, false, true)
-//             .set_shareability(true)
+//
 //     }
 
 //     fn mk_device_leaf_for_loader_map(loc: LeafLocation) -> Self::LeafDescriptor {

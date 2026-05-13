@@ -137,6 +137,15 @@ impl Scheme {
         let mask = (1 << num_zero_bits) - 1;
         assert_eq!(paddr & mask, 0);
     }
+
+    pub fn leaf_descriptor_from_level_paddr<T: LeafDescriptor>(
+        &self,
+        level: Level,
+        paddr: u64,
+    ) -> T {
+        self.check_paddr_for_level(level, paddr);
+        T::from_level_paddr(level, paddr)
+    }
 }
 
 pub trait LeafDescriptor {

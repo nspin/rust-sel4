@@ -7,6 +7,8 @@
 use std::borrow::Borrow;
 use std::sync::Arc;
 
+use crate::page_tables2::LeafDescriptor;
+
 use super::regions::{AbstractRegion, AbstractRegions};
 use super::scheme::{Level, RawDescriptor, Scheme};
 
@@ -43,6 +45,15 @@ impl<'a> MkLeafArgs<'a> {
 
     pub fn vaddr(&self) -> u64 {
         self.vaddr
+    }
+
+    pub fn identity_descriptor<T: LeafDescriptor>(&self) -> T {
+        self.descriptor(|vaddr| vaddr)
+    }
+
+    pub fn descriptor<T: LeafDescriptor>(&self, vaddr_to_paddr: impl FnOnce(u64) -> u64) -> T {
+        self.scheme()
+            .leaf_descriptor_from_level_paddr(self.level(), (vaddr_to_paddr)(self.vaddr()))
     }
 }
 
