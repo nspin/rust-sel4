@@ -62,8 +62,6 @@ where
 
     let loader_bytes = fs::read(&args.loader_path)?;
 
-    let scheme = Scheme::from_config(sel4_config);
-
     let payload = serialize_payload::serialize_payload::<T>(
         &args.kernel_path,
         &args.app_path,
@@ -72,6 +70,8 @@ where
     );
 
     let payload_data: ArchiveAlignedVec = payload.to_bytes().unwrap();
+
+    let scheme = Scheme::from_config(sel4_config);
 
     let final_loader = {
         let orig_elf = ElfFile::<T>::parse(&loader_bytes).unwrap();
