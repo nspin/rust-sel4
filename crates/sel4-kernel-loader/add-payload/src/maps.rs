@@ -34,9 +34,7 @@ pub fn mk_loader_map(
         0..device_range_end,
         mk_device_leaf_for_loader_map,
     ));
-    eprintln!("QQA {:#x?}", device_range_end);
     for range in platform_info.memory.iter() {
-        eprintln!("QQR {:#x?}", range);
         regions = regions.insert(Region::valid(range.clone(), move |args| {
             mk_normal_leaf_for_loader_map(smp, args)
         }));
@@ -64,9 +62,6 @@ pub fn mk_kernel_map(
     let virt_start = kernel_virt_addr_range.start;
     let virt_end = kernel_virt_addr_range.end;
     let virt_map_end = virt_end.next_multiple_of(1 << scheme.largest_leaf_size_bits());
-
-    eprintln!("XXX {:#x?}", virt_start);
-    eprintln!("XXX {:#x?}", virt_map_end);
 
     let regions = RegionsBuilder::new(scheme)
         .insert(Region::valid(

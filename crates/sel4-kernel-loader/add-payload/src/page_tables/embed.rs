@@ -49,7 +49,6 @@ impl<'a> Embedding<'a> {
         let align = 1 << self.scheme.level_align_bits(level);
         self.align(align);
         let vaddr = self.cur_vaddr();
-        eprintln!("AAA level {level}, align {align:#x?}, vaddr {vaddr:#x?}");
         self.buf.extend(entries);
         vaddr
     }
