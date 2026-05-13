@@ -62,8 +62,7 @@ impl<'a> Embedding<'a> {
         let cur_vaddr = self.cur_vaddr();
         let aligned_vaddr = cur_vaddr.next_multiple_of(align);
         self.buf.resize_with(
-            u64::try_from(aligned_vaddr - self.start_vaddr)
-                .unwrap()
+            (aligned_vaddr - self.start_vaddr)
                 .strict_div(self.word_bytes())
                 .try_into()
                 .unwrap(),
