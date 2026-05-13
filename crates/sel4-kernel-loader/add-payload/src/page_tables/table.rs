@@ -7,10 +7,8 @@
 use std::borrow::Borrow;
 use std::sync::Arc;
 
-use crate::page_tables2::LeafDescriptor;
-
 use super::regions::{AbstractRegion, AbstractRegions};
-use super::scheme::{Level, RawDescriptor, Scheme};
+use super::scheme::{LeafDescriptor, Level, RawDescriptor, Scheme};
 
 #[derive(Debug)]
 pub struct Table {

@@ -9,8 +9,8 @@
 
 use std::ops::Range;
 
-use crate::page_tables2::{LeafDescriptor, schemes::*};
-use crate::page_tables2::{MkLeafArgs, RawDescriptor, Region, RegionsBuilder, Scheme, schemes};
+use crate::page_tables::{LeafDescriptor, schemes::*};
+use crate::page_tables::{MkLeafArgs, RawDescriptor, Region, RegionsBuilder, Scheme, schemes};
 use crate::platform_info::PlatformInfoForBuildSystem;
 
 // TODO must be T::align_of_level(0)
