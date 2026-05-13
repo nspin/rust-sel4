@@ -15,7 +15,6 @@ pub type Regions = AbstractRegions<Option<RegionContent>>;
 pub type RegionsBuilder = AbstractRegionsBuilder<Option<RegionContent>>;
 
 impl RegionsBuilder {
-    #[allow(clippy::new_without_default)]
     pub fn new(scheme: &Scheme) -> Self {
         Self::new_with_background(Region::invalid(scheme.virt_bounds()))
     }
