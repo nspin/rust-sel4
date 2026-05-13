@@ -198,7 +198,7 @@ pub struct AArch32LeafDescriptor {
 impl LeafDescriptor for AArch32LeafDescriptor {
     fn from_level_paddr(level: Level, paddr: u64) -> Self {
         let mut raw = paddr;
-        raw.set_bit_range(1, 0, if level == 3 { 0b11 } else { 0b01 });
+        raw.set_bit_range(1, 0, 0b10);
         Self { level, raw }
     }
 
