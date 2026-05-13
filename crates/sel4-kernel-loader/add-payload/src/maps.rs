@@ -40,16 +40,7 @@ pub fn mk_loader_map(
         }));
     }
 
-    let (entries, root_vaddr) = regions.build().construct_table(scheme).embed(scheme, vaddr);
-    let bytes = {
-        let mut v = vec![];
-        for entry in entries.iter() {
-            v.extend(scheme.descriptor_to_bytes(*entry));
-        }
-        v
-    };
-
-    (bytes, root_vaddr)
+    regions.build().construct_table(scheme).embed(scheme, vaddr)
 }
 
 pub fn mk_kernel_map(
@@ -72,15 +63,7 @@ pub fn mk_kernel_map(
             mk_kernel_leaf_for_kernel_map(smp, kernel_phys_to_virt_offset, loc)
         }));
 
-    let (entries, root_vaddr) = regions.build().construct_table(scheme).embed(scheme, vaddr);
-    let bytes = {
-        let mut v = vec![];
-        for entry in entries.iter() {
-            v.extend(scheme.descriptor_to_bytes(*entry));
-        }
-        v
-    };
-    (bytes, root_vaddr)
+    regions.build().construct_table(scheme).embed(scheme, vaddr)
 }
 
 fn aarch64_normal_shareability(smp: bool) -> u64 {
