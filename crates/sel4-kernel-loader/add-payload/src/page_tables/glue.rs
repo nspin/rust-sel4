@@ -7,8 +7,8 @@
 use std::ops::Range;
 
 use super::regions::{AbstractRegion, AbstractRegions, AbstractRegionsBuilder};
-use super::scheme::{RawDescriptor, Scheme};
-use super::table::{MkLeafArgs, MkLeafFn, RegionContent, Table};
+use super::scheme::Scheme;
+use super::table::{MkLeafFn, RegionContent, Table};
 
 pub type Region = AbstractRegion<Option<RegionContent>>;
 pub type Regions = AbstractRegions<Option<RegionContent>>;
@@ -42,17 +42,3 @@ impl Region {
         }
     }
 }
-
-// impl<'a> MkLeafArgs<'a> {
-//     pub fn map(&self, vaddr_to_paddr: impl FnOnce(u64) -> u64) -> RawDescriptor {
-//         let paddr = (vaddr_to_paddr)(self.vaddr());
-//         self.scheme().check_paddr_for_level(paddr);
-//         self.
-//             self.level(),
-//         )
-//     }
-
-//     pub fn map_identity(&self) -> RawDescriptor {
-//         self.map(|vaddr| vaddr)
-//     }
-// }
