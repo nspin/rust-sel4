@@ -9,8 +9,9 @@
 
 use std::ops::Range;
 
-use crate::page_tables::{LeafDescriptor, schemes::*};
-use crate::page_tables::{MkLeafArgs, RawDescriptor, Region, RegionsBuilder, Scheme, schemes};
+use crate::page_tables::{
+    LeafDescriptor, MkLeafArgs, RawDescriptor, Region, RegionsBuilder, Scheme, schemes,
+};
 use crate::platform_info::PlatformInfoForBuildSystem;
 
 // TODO must be T::align_of_level(0)
@@ -94,14 +95,14 @@ fn aarch64_normal_shareability(smp: bool) -> u64 {
 fn mk_normal_leaf_for_loader_map(smp: bool, loc: MkLeafArgs) -> RawDescriptor {
     match loc.scheme() {
         Scheme::AArch64 => {
-            loc.identity_descriptor::<AArch64LeafDescriptor>()
+            loc.identity_descriptor::<schemes::AArch64LeafDescriptor>()
                 .set_access_flag(true)
                 .set_attribute_index(4) // select MT_NORMAL
                 .set_shareability(aarch64_normal_shareability(smp))
                 .to_raw()
         }
         Scheme::AArch32 => loc
-            .identity_descriptor::<AArch32LeafDescriptor>()
+            .identity_descriptor::<schemes::AArch32LeafDescriptor>()
             .set_access_flag(true)
             .set_attributes(0b101, false, true)
             .set_shareability(true)
@@ -113,12 +114,12 @@ fn mk_normal_leaf_for_loader_map(smp: bool, loc: MkLeafArgs) -> RawDescriptor {
 fn mk_device_leaf_for_loader_map(loc: MkLeafArgs) -> RawDescriptor {
     match loc.scheme() {
         Scheme::AArch64 => loc
-            .identity_descriptor::<AArch64LeafDescriptor>()
+            .identity_descriptor::<schemes::AArch64LeafDescriptor>()
             .set_access_flag(true)
             .set_attribute_index(0)
             .to_raw(),
         Scheme::AArch32 => loc
-            .identity_descriptor::<AArch32LeafDescriptor>()
+            .identity_descriptor::<schemes::AArch32LeafDescriptor>()
             .set_access_flag(true)
             .to_raw(),
         _ => panic!(),
@@ -128,18 +129,17 @@ fn mk_device_leaf_for_loader_map(loc: MkLeafArgs) -> RawDescriptor {
 fn mk_identity_leaf_for_kernel_map(loc: MkLeafArgs) -> RawDescriptor {
     match loc.scheme() {
         Scheme::AArch64 => loc
-            .identity_descriptor::<AArch64LeafDescriptor>()
+            .identity_descriptor::<schemes::AArch64LeafDescriptor>()
             .set_access_flag(true)
             .set_attribute_index(0) // select MT_DEVICE_nGnRnE
             .to_raw(),
         Scheme::AArch32 => loc
-            .identity_descriptor::<AArch32LeafDescriptor>()
+            .identity_descriptor::<schemes::AArch32LeafDescriptor>()
             .set_access_flag(true)
             .to_raw(),
-        Scheme::RiscVSv39 | Scheme::RiscVSv32 => {
-            loc.identity_descriptor::<RiscVLeafDescriptor>().to_raw()
-        }
-        _ => panic!(),
+        Scheme::RiscVSv39 | Scheme::RiscVSv32 => loc
+            .identity_descriptor::<schemes::RiscVLeafDescriptor>()
+            .to_raw(),
     }
 }
 
@@ -151,18 +151,19 @@ fn mk_kernel_leaf_for_kernel_map(
     let f = |vaddr| virt_to_phys(vaddr, phys_to_virt_offset);
     match loc.scheme() {
         Scheme::AArch64 => loc
-            .descriptor::<AArch64LeafDescriptor>(f)
+            .descriptor::<schemes::AArch64LeafDescriptor>(f)
             .set_access_flag(true)
             .set_attribute_index(4) // select MT_NORMAL
             .set_shareability(aarch64_normal_shareability(smp))
             .to_raw(),
         Scheme::AArch32 => loc
-            .descriptor::<AArch32LeafDescriptor>(f)
+            .descriptor::<schemes::AArch32LeafDescriptor>(f)
             .set_access_flag(true)
             .set_shareability(true)
             .to_raw(),
-        Scheme::RiscVSv39 | Scheme::RiscVSv32 => loc.descriptor::<RiscVLeafDescriptor>(f).to_raw(),
-        _ => panic!(),
+        Scheme::RiscVSv39 | Scheme::RiscVSv32 => {
+            loc.descriptor::<schemes::RiscVLeafDescriptor>(f).to_raw()
+        }
     }
 }
 
