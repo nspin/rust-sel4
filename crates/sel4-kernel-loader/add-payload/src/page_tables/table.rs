@@ -60,18 +60,10 @@ pub struct RegionContent {
 }
 
 impl RegionContent {
-    pub(crate) fn new(mk_leaf: impl MkLeafFn + 'static) -> Self {
+    pub fn new(mk_leaf: impl MkLeafFn + 'static) -> Self {
         Self {
             mk_leaf: Box::new(mk_leaf),
         }
-    }
-
-    fn mk_leaf(&self, scheme: &Scheme, level: Level, vaddr: u64) -> RawDescriptor {
-        (self.mk_leaf)(MkLeafArgs {
-            scheme,
-            level,
-            vaddr,
-        })
     }
 }
 
@@ -134,11 +126,13 @@ where
                     } else {
                         match self.current_content() {
                             None => AbstractEntry::Empty,
-                            Some(region_content) => AbstractEntry::Leaf(region_content.mk_leaf(
-                                self.scheme,
-                                level,
-                                entry_vaddr,
-                            )),
+                            Some(region_content) => {
+                                AbstractEntry::Leaf((region_content.mk_leaf)(MkLeafArgs {
+                                    scheme: self.scheme,
+                                    level,
+                                    vaddr: entry_vaddr,
+                                }))
+                            }
                         }
                     }
                 })
