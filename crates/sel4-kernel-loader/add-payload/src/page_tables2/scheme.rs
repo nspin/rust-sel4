@@ -44,13 +44,13 @@ impl Scheme {
 
     pub fn word_bytes(&self) -> usize {
         match self {
-            Self::AArch64 | Self::RiscVSv39 => 64,
-            Self::AArch32 | Self::RiscVSv32 => 32,
+            Self::AArch64 | Self::RiscVSv39 => 8,
+            Self::AArch32 | Self::RiscVSv32 => 4,
         }
     }
 
     pub fn page_bits(&self) -> u64 {
-        4096
+        12
     }
 
     pub fn num_levels(&self) -> u8 {
