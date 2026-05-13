@@ -53,7 +53,7 @@ fn main() {
     let kernel_path = get_with_sel4_prefix_relative_fallback(SEL4_KERNEL_ENV, "bin/kernel.elf");
     let kernel_bytes = fs::read(kernel_path).unwrap();
     let kernel_elf = ElfFile::<FileHeaderImpl, _>::parse(kernel_bytes.as_slice()).unwrap();
-    let kernel_phys_addr_range = elf_phys_addr_range(&kernel_elf);
+    let kernel_phys_addr_range = phys_addr_range(&kernel_elf);
 
     let loader_phys_start =
         (kernel_phys_addr_range.end + KERNEL_HEADROOM).next_multiple_of(GRANULE_SIZE);
@@ -73,7 +73,7 @@ fn main() {
 
 // // //
 
-fn elf_phys_addr_range<'a, R: ReadRef<'a>>(elf: &ElfFile<'a, FileHeaderImpl, R>) -> Range<u64> {
+fn phys_addr_range<'a, R: ReadRef<'a>>(elf: &ElfFile<'a, FileHeaderImpl, R>) -> Range<u64> {
     let endian = elf.endian();
     let virt_min = loadable_segments(elf)
         .map(|phdr| phdr.p_paddr(endian))
