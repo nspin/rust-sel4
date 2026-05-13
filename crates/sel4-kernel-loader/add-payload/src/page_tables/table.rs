@@ -119,7 +119,7 @@ where
         Table {
             entries: (0..num_entries)
                 .map(|i| {
-                    let entry_vaddr = table_vaddr + u64::try_from(i).unwrap() * step;
+                    let entry_vaddr = table_vaddr + i * step;
                     while self.current_end() == entry_vaddr {
                         assert!(self.advance())
                     }
