@@ -44,8 +44,8 @@ impl Scheme {
 
     pub fn word_bytes(&self) -> usize {
         match self {
-            Self::AArch64 | Self::RiscVSv39 => 8,
-            Self::AArch32 | Self::RiscVSv32 => 4,
+            Self::AArch64 | Self::RiscVSv39 => size_of::<u64>(),
+            Self::AArch32 | Self::RiscVSv32 => size_of::<u32>(),
         }
     }
 
