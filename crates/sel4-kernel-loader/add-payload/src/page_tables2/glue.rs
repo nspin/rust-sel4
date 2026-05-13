@@ -8,7 +8,7 @@ use std::ops::Range;
 
 use super::regions::{AbstractRegion, AbstractRegions, AbstractRegionsBuilder};
 use super::scheme::{RawDescriptor, Scheme};
-use super::table::{LeafLocation, MkLeafFn, RegionContent, Table};
+use super::table::{MkLeafArgs, MkLeafFn, RegionContent, Table};
 
 pub type Region = AbstractRegion<Option<RegionContent>>;
 pub type Regions = AbstractRegions<Option<RegionContent>>;
@@ -16,14 +16,14 @@ pub type RegionsBuilder = AbstractRegionsBuilder<Option<RegionContent>>;
 
 impl RegionsBuilder {
     #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        Self::new_with_background(Region::invalid(SchemeHelpers::<T>::virt_bounds()))
+    pub fn new(scheme: &Scheme) -> Self {
+        Self::new_with_background(Region::invalid(scheme.virt_bounds()))
     }
 }
 
 impl Regions {
-    pub fn construct_table(&self) -> Table {
-        Table::construct(self)
+    pub fn construct_table(&self, scheme: &Scheme) -> Table {
+        Table::construct(scheme, self)
     }
 }
 
@@ -43,15 +43,16 @@ impl Region {
     }
 }
 
-impl LeafLocation {
-    pub fn map(&self, vaddr_to_paddr: impl FnOnce(u64) -> u64) -> RawDescriptor {
-        SchemeHelpers::<T>::leaf_descriptor_from_paddr_with_check(
-            (vaddr_to_paddr)(self.vaddr()),
-            self.level(),
-        )
-    }
+// impl<'a> MkLeafArgs<'a> {
+//     pub fn map(&self, vaddr_to_paddr: impl FnOnce(u64) -> u64) -> RawDescriptor {
+//         let paddr = (vaddr_to_paddr)(self.vaddr());
+//         self.scheme().check_paddr_for_level(paddr);
+//         self.
+//             self.level(),
+//         )
+//     }
 
-    pub fn map_identity(&self) -> RawDescriptor {
-        self.map(|vaddr| vaddr)
-    }
-}
+//     pub fn map_identity(&self) -> RawDescriptor {
+//         self.map(|vaddr| vaddr)
+//     }
+// }

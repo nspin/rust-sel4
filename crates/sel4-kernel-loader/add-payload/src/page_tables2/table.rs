@@ -22,16 +22,21 @@ pub(crate) enum AbstractEntry {
     Branch(Box<Table>),
 }
 
-pub trait MkLeafFn: Fn(LeafLocation) -> RawDescriptor {}
+pub trait MkLeafFn: Fn(MkLeafArgs<'_>) -> RawDescriptor {}
 
-impl<F: Fn(LeafLocation) -> RawDescriptor> MkLeafFn for F {}
+impl<F: Fn(MkLeafArgs) -> RawDescriptor> MkLeafFn for F {}
 
-pub struct LeafLocation {
+pub struct MkLeafArgs<'a> {
+    scheme: &'a Scheme,
     level: Level,
     vaddr: u64,
 }
 
-impl LeafLocation {
+impl<'a> MkLeafArgs<'a>  {
+    pub fn scheme(&self) -> &'a Scheme {
+        self.scheme
+    }
+
     pub fn level(&self) -> Level {
         self.level
     }
@@ -52,8 +57,8 @@ impl RegionContent {
         }
     }
 
-    fn mk_leaf(&self, level: Level, vaddr: u64) -> RawDescriptor {
-        (self.mk_leaf)(LeafLocation { level, vaddr })
+    fn mk_leaf(&self, scheme: &Scheme, level: Level, vaddr: u64) -> RawDescriptor {
+        (self.mk_leaf)(MkLeafArgs { scheme, level, vaddr })
     }
 }
 
@@ -117,7 +122,7 @@ where
                         match self.current_content() {
                             None => AbstractEntry::Empty,
                             Some(region_content) => {
-                                AbstractEntry::Leaf(region_content.mk_leaf(level, entry_vaddr))
+                                AbstractEntry::Leaf(region_content.mk_leaf(self.scheme, level, entry_vaddr))
                             }
                         }
                     }
