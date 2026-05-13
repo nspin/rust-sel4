@@ -77,10 +77,18 @@ where
     let final_loader = {
         let orig_elf = ElfFile::<T>::parse(&loader_bytes).unwrap();
         let mut patching = Patching::new(&orig_elf);
+        let smp = sel4_config
+            .get("MAX_NUM_NODES")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .parse::<u32>()
+            .unwrap()
+            > 1;
         if sel4_config.get("ARCH_ARM").unwrap().as_bool().unwrap() {
             let mut addr_slot = None;
             patching.add_data_segment(maps::ALIGN, |vaddr| {
-                let (bytes, root_vaddr) = maps::mk_loader_map(&scheme, vaddr, &platform_info);
+                let (bytes, root_vaddr) = maps::mk_loader_map(&scheme, smp, vaddr, &platform_info);
                 addr_slot = Some(root_vaddr);
                 bytes
             });
@@ -97,6 +105,7 @@ where
                         ..virt_range.end & scheme.vaddr_mask();
                     let (bytes, root_vaddr) = maps::mk_kernel_map(
                         &scheme,
+                        smp,
                         vaddr,
                         masked_virt_addr_range,
                         phys_to_virt_offset,
