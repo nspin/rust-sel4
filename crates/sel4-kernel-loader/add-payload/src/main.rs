@@ -76,6 +76,7 @@ where
     let final_loader = {
         let orig_elf = ElfFile::<T>::parse(&loader_bytes).unwrap();
         let mut patching = Patching::new(&orig_elf);
+
         let smp = sel4_config
             .get("MAX_NUM_NODES")
             .unwrap()
@@ -84,9 +85,16 @@ where
             .parse::<u32>()
             .unwrap()
             > 1;
+
+        let min_level_align = 1
+            << (0..scheme.num_levels())
+                .map(|level| scheme.level_align_bits(level))
+                .min()
+                .unwrap();
+
         if sel4_config.get("ARCH_ARM").unwrap().as_bool().unwrap() {
             let mut addr_slot = None;
-            patching.add_data_segment(maps::ALIGN, |vaddr| {
+            patching.add_data_segment(min_level_align, |vaddr| {
                 let (bytes, root_vaddr) = maps::mk_loader_map(&scheme, smp, vaddr, &platform_info);
                 addr_slot = Some(root_vaddr);
                 bytes
@@ -94,9 +102,10 @@ where
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
             patching.patch_word("loader_level_0_table", addr);
         }
+
         {
             let mut addr_slot = None;
-            patching.add_data_segment(maps::ALIGN, |vaddr| {
+            patching.add_data_segment(min_level_align, |vaddr| {
                 with_elf::<T, _, _>(&args.kernel_path, |elf| {
                     let phys_to_virt_offset = kernel_phys_to_virt_offset(elf, scheme.vaddr_mask());
                     let virt_range = virt_footprint(elf);
@@ -116,11 +125,13 @@ where
             let addr = <T::Word as NumCast>::from(addr_slot.unwrap()).unwrap();
             patching.patch_word("kernel_boot_level_0_table", addr);
         }
+
         patching.add_data_segment_with_meta_phdr(
             PT_SEL4_KERNEL_LOADER_PAYLOAD,
             ArchiveAlignedVec::ALIGNMENT.try_into().unwrap(),
             &payload_data,
         );
+
         patching.finalize()
     };
 

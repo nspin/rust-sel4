@@ -14,9 +14,6 @@ use crate::page_tables::{
 };
 use crate::platform_info::PlatformInfoForBuildSystem;
 
-// TODO must be T::align_of_level(0)
-pub const ALIGN: u64 = 4096;
-
 pub fn mk_loader_map(
     scheme: &Scheme,
     smp: bool,
