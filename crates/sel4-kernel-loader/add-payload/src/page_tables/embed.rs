@@ -55,9 +55,7 @@ impl<'a> Embedding<'a> {
     }
 
     fn cur_vaddr(&self) -> u64 {
-        self.start_vaddr
-            + u64::try_from(self.scheme.word_bytes()).unwrap()
-                * u64::try_from(self.buf.len()).unwrap()
+        self.start_vaddr + u64::try_from(self.buf.len()).unwrap()
     }
 
     fn align(&mut self, align: u64) {
