@@ -19,7 +19,6 @@ use sel4_phdrs_constants::PT_SEL4_KERNEL_LOADER_PAYLOAD;
 
 mod args;
 mod maps;
-mod page_tables;
 mod page_tables2;
 mod platform_info;
 mod serialize_payload;
