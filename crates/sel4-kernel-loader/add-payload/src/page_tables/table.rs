@@ -45,13 +45,13 @@ impl<'a> MkLeafArgs<'a> {
         self.vaddr
     }
 
-    pub fn identity_descriptor<T: LeafDescriptor>(&self) -> T {
-        self.descriptor(|vaddr| vaddr)
-    }
-
     pub fn descriptor<T: LeafDescriptor>(&self, vaddr_to_paddr: impl FnOnce(u64) -> u64) -> T {
         self.scheme()
             .leaf_descriptor_from_level_paddr(self.level(), (vaddr_to_paddr)(self.vaddr()))
+    }
+
+    pub fn identity_descriptor<T: LeafDescriptor>(&self) -> T {
+        self.descriptor(|vaddr| vaddr)
     }
 }
 
