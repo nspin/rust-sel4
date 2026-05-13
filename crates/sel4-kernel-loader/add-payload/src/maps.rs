@@ -18,6 +18,7 @@ pub const ALIGN: u64 = 4096;
 
 pub fn mk_loader_map(
     scheme: &Scheme,
+    smp: bool,
     vaddr: u64,
     platform_info: &PlatformInfoForBuildSystem,
 ) -> (Vec<u8>, u64) {
@@ -30,17 +31,14 @@ pub fn mk_loader_map(
     let mut regions = RegionsBuilder::new(scheme);
     regions = regions.insert(Region::valid(
         0..device_range_end,
-        // S::mk_device_leaf_for_loader_map,
-        todo!(),
+        mk_device_leaf_for_loader_map,
     ));
     eprintln!("QQA {:#x?}", device_range_end);
     for range in platform_info.memory.iter() {
         eprintln!("QQR {:#x?}", range);
-        regions = regions.insert(Region::valid(
-            range.clone(),
-            // S::mk_normal_leaf_for_loader_map,
-            todo!(),
-        ));
+        regions = regions.insert(Region::valid(range.clone(), move |args| {
+            mk_normal_leaf_for_loader_map(smp, args)
+        }));
     }
 
     let (entries, root_vaddr) = regions.build().construct_table(scheme).embed(scheme, vaddr);
