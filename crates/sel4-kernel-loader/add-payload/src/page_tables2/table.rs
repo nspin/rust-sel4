@@ -32,7 +32,7 @@ pub struct MkLeafArgs<'a> {
     vaddr: u64,
 }
 
-impl<'a> MkLeafArgs<'a>  {
+impl<'a> MkLeafArgs<'a> {
     pub fn scheme(&self) -> &'a Scheme {
         self.scheme
     }
@@ -58,7 +58,11 @@ impl RegionContent {
     }
 
     fn mk_leaf(&self, scheme: &Scheme, level: Level, vaddr: u64) -> RawDescriptor {
-        (self.mk_leaf)(MkLeafArgs { scheme, level, vaddr })
+        (self.mk_leaf)(MkLeafArgs {
+            scheme,
+            level,
+            vaddr,
+        })
     }
 }
 
@@ -121,9 +125,11 @@ where
                     } else {
                         match self.current_content() {
                             None => AbstractEntry::Empty,
-                            Some(region_content) => {
-                                AbstractEntry::Leaf(region_content.mk_leaf(self.scheme, level, entry_vaddr))
-                            }
+                            Some(region_content) => AbstractEntry::Leaf(region_content.mk_leaf(
+                                self.scheme,
+                                level,
+                                entry_vaddr,
+                            )),
                         }
                     }
                 })
