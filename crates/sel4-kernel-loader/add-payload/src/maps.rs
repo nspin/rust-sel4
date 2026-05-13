@@ -109,10 +109,19 @@ fn mk_normal_leaf_for_loader_map(smp: bool, loc: MkLeafArgs) -> RawDescriptor {
     }
 }
 
-fn mk_device_leaf_for_loader_map(loc: LeafLocation) -> RawDescriptor {
-    loc.map_identity::<schemes::AArch64>()
-        .set_access_flag(true)
-        .set_attribute_index(0) // select MT_DEVICE_nGnRnE
+fn mk_device_leaf_for_loader_map(loc: MkLeafArgs) -> RawDescriptor {
+    match loc.scheme() {
+        Scheme::AArch64 => loc
+            .identity_descriptor::<AArch64LeafDescriptor>()
+            .set_access_flag(true)
+            .set_attribute_index(0)
+            .to_raw(),
+        Scheme::AArch32 => loc
+            .identity_descriptor::<AArch32LeafDescriptor>()
+            .set_access_flag(true)
+            .to_raw(),
+        _ => panic!(),
+    }
 }
 
 //     fn mk_identity_leaf_for_kernel_map(loc: LeafLocation) -> Self::LeafDescriptor {
@@ -140,14 +149,6 @@ fn aarch64_normal_shareability(smp: bool) -> u64 {
 }
 
 // impl SchemeExt for schemes::AArch32 {
-//     fn mk_normal_leaf_for_loader_map(loc: LeafLocation) -> Self::LeafDescriptor {
-//         loc.map_identity::<schemes::AArch32>()
-//
-//     }
-
-//     fn mk_device_leaf_for_loader_map(loc: LeafLocation) -> Self::LeafDescriptor {
-//         loc.map_identity::<schemes::AArch32>().set_access_flag(true)
-//     }
 
 //     fn mk_identity_leaf_for_kernel_map(loc: LeafLocation) -> Self::LeafDescriptor {
 //         loc.map_identity::<schemes::AArch32>().set_access_flag(true)
