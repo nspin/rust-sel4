@@ -66,10 +66,6 @@ pub fn mk_kernel_map(
     regions.build().construct_table(scheme).embed(scheme, vaddr)
 }
 
-fn aarch64_normal_shareability(smp: bool) -> u64 {
-    if smp { 0b11 } else { 0b00 }
-}
-
 fn mk_normal_leaf_for_loader_map(smp: bool, loc: MkLeafArgs) -> RawDescriptor {
     match loc.scheme() {
         Scheme::AArch64 => {
@@ -126,7 +122,7 @@ fn mk_kernel_leaf_for_kernel_map(
     phys_to_virt_offset: u64,
     loc: MkLeafArgs,
 ) -> RawDescriptor {
-    let f = |vaddr| virt_to_phys(vaddr, phys_to_virt_offset);
+    let f = |vaddr: u64| vaddr.wrapping_sub(phys_to_virt_offset);
     match loc.scheme() {
         Scheme::AArch64 => loc
             .descriptor::<schemes::AArch64LeafDescriptor>(f)
@@ -145,6 +141,6 @@ fn mk_kernel_leaf_for_kernel_map(
     }
 }
 
-fn virt_to_phys(vaddr: u64, phys_to_virt_offset: u64) -> u64 {
-    vaddr.wrapping_sub(phys_to_virt_offset)
+fn aarch64_normal_shareability(smp: bool) -> u64 {
+    if smp { 0b11 } else { 0b00 }
 }
