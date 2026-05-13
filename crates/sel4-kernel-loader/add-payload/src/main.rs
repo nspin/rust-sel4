@@ -28,8 +28,7 @@ mod utils;
 use args::Args;
 use platform_info::PlatformInfoForBuildSystem;
 
-use crate::maps::SchemeExt;
-use crate::page_tables::{SchemeHelpers, schemes};
+use crate::page_tables2::Scheme;
 use crate::utils::{virt_footprint, with_elf};
 
 type ArchiveAlignedVec = AlignedVec;
@@ -44,38 +43,27 @@ fn main() -> Result<()> {
     let sel4_config: Configuration =
         serde_json::from_reader(File::open(&args.sel4_config_path).unwrap()).unwrap();
 
-    let word_size = sel4_config.get("SEL4_ARCH").unwrap().as_str().unwrap();
+    let word_size = sel4_config.get("WORD_SIZE").unwrap().as_str().unwrap();
 
     match word_size {
-        "aarch32" => {
-            continue_with_config::<FileHeader32<Endianness>, schemes::AArch32>(&args, &sel4_config)
-        }
-        "aarch64" => {
-            continue_with_config::<FileHeader64<Endianness>, schemes::AArch64>(&args, &sel4_config)
-        }
-        "riscv32" => continue_with_config::<FileHeader32<Endianness>, schemes::RiscV32Sv32>(
-            &args,
-            &sel4_config,
-        ),
-        "riscv64" => continue_with_config::<FileHeader64<Endianness>, schemes::RiscV64Sv39>(
-            &args,
-            &sel4_config,
-        ),
+        "32" => continue_with_config::<FileHeader32<Endianness>>(&args, &sel4_config),
+        "64" => continue_with_config::<FileHeader64<Endianness>>(&args, &sel4_config),
         _ => {
             panic!()
         }
     }
 }
 
-fn continue_with_config<T, S>(args: &Args, sel4_config: &Configuration) -> Result<()>
+fn continue_with_config<T>(args: &Args, sel4_config: &Configuration) -> Result<()>
 where
     T: FileHeaderExt<Word: NumCast>,
-    S: SchemeExt + 'static,
 {
     let platform_info: PlatformInfoForBuildSystem =
         serde_yaml::from_reader(fs::File::open(&args.platform_info_path).unwrap()).unwrap();
 
     let loader_bytes = fs::read(&args.loader_path)?;
+
+    let scheme = Scheme::from_config(sel4_config);
 
     let payload = serialize_payload::serialize_payload::<T>(
         &args.kernel_path,
@@ -92,7 +80,7 @@ where
         if sel4_config.get("ARCH_ARM").unwrap().as_bool().unwrap() {
             let mut addr_slot = None;
             patching.add_data_segment(maps::ALIGN, |vaddr| {
-                let (bytes, root_vaddr) = maps::mk_loader_map::<S>(vaddr, &platform_info);
+                let (bytes, root_vaddr) = maps::mk_loader_map(&scheme, vaddr, &platform_info);
                 addr_slot = Some(root_vaddr);
                 bytes
             });
@@ -103,12 +91,12 @@ where
             let mut addr_slot = None;
             patching.add_data_segment(maps::ALIGN, |vaddr| {
                 with_elf::<T, _, _>(&args.kernel_path, |elf| {
-                    let phys_to_virt_offset =
-                        kernel_phys_to_virt_offset(elf, SchemeHelpers::<S>::vaddr_mask());
+                    let phys_to_virt_offset = kernel_phys_to_virt_offset(elf, scheme.vaddr_mask());
                     let virt_range = virt_footprint(elf);
-                    let masked_virt_addr_range = virt_range.start & SchemeHelpers::<S>::vaddr_mask()
-                        ..virt_range.end & SchemeHelpers::<S>::vaddr_mask();
-                    let (bytes, root_vaddr) = maps::mk_kernel_map::<S>(
+                    let masked_virt_addr_range = virt_range.start & scheme.vaddr_mask()
+                        ..virt_range.end & scheme.vaddr_mask();
+                    let (bytes, root_vaddr) = maps::mk_kernel_map(
+                        &scheme,
                         vaddr,
                         masked_virt_addr_range,
                         phys_to_virt_offset,
