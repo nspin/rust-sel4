@@ -9,6 +9,7 @@
 #![allow(dead_code)]
 
 use spin::RwLock;
+use fdt::Fdt;
 
 use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 use sel4_platform_info::PLATFORM_INFO;
@@ -24,9 +25,7 @@ mod rt;
 mod this_image;
 
 use crate::{
-    arch::{Arch, ArchImpl},
-    barrier::Barrier,
-    plat::{Plat, PlatImpl},
+    arch::{Arch, ArchImpl}, barrier::Barrier, fmt::debug_println, plat::{Plat, PlatImpl}
 };
 
 const MAX_NUM_NODES: usize = sel4_config::sel4_cfg_usize!(MAX_NUM_NODES);
@@ -40,7 +39,7 @@ struct SecondaryCoreInitInfo {
 }
 
 #[allow(clippy::reversed_empty_ranges)]
-fn main(per_core: <ArchImpl as Arch>::PerCore) -> ! {
+fn main(per_core: <ArchImpl as Arch>::PerCore, dtb: usize) -> ! {
     ArchImpl::init();
     PlatImpl::init();
 
@@ -66,6 +65,15 @@ fn main(per_core: <ArchImpl as Arch>::PerCore) -> ! {
     }
 
     payload.sanity_check(&PLATFORM_INFO, own_footprint.clone());
+
+    let fdt = unsafe {
+        Fdt::from_ptr(dtb as *const _).unwrap()
+    };
+
+    let chosen = fdt.chosen();
+    for x in chosen.stdout().unwrap().compatible().unwrap().all() {
+        debug_println!("{:?}", x);
+    }
 
     log::debug!("Copying payload data");
     unsafe {
