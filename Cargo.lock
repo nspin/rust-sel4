@@ -1122,6 +1122,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "inventory"
+version = "0.3.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4f0c30c76f2f4ccee3fe55a2435f691ca00c0e4bd87abe4f4a851b1d4dac39b"
+dependencies = [
+ "rustversion",
+]
+
+[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2656,7 +2665,9 @@ dependencies = [
  "cc",
  "cfg-if",
  "embedded-hal-nb",
+ "fdt",
  "glob",
+ "inventory",
  "log",
  "object",
  "postcard",
@@ -2669,10 +2680,12 @@ dependencies = [
  "sel4-bcm2835-aux-uart-driver",
  "sel4-build-env",
  "sel4-config",
+ "sel4-ctors-dtors",
  "sel4-immutable-cell",
  "sel4-kernel-loader-payload-types",
  "sel4-logging",
  "sel4-no-allocator",
+ "sel4-one-ref-cell",
  "sel4-phdrs",
  "sel4-phdrs-patched",
  "sel4-pl011-driver",

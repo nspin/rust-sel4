@@ -19,13 +19,17 @@ license = "BSD-2-Clause AND GPL-2.0-only"
 [dependencies]
 cfg-if = "1.0.4"
 embedded-hal-nb = "1.0"
+fdt = "0.1.5"
+inventory = "0.3.24"
 log = "0.4.28"
 rkyv = { version = "0.8.12", default-features = false }
 sel4-config = { path = "../sel4/config" }
+sel4-ctors-dtors = { path = "../sel4-ctors-dtors" }
 sel4-immutable-cell = { path = "../sel4-immutable-cell" }
 sel4-kernel-loader-payload-types = { path = "payload-types" }
 sel4-logging = { path = "../sel4-logging" }
 sel4-no-allocator = { path = "../sel4-no-allocator" }
+sel4-one-ref-cell = { path = "../sel4-one-ref-cell" }
 sel4-phdrs = { path = "../sel4-phdrs" }
 sel4-phdrs-patched = { path = "../sel4-phdrs/patched" }
 sel4-platform-info = { path = "../sel4-platform-info" }
