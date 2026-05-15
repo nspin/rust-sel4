@@ -19,8 +19,8 @@ pub(crate) struct PerCoreImpl {
 }
 
 #[unsafe(no_mangle)]
-extern "C" fn arch_main(hart_id: usize) -> ! {
-    main(PerCoreImpl { hart_id })
+extern "C" fn arch_main(hart_id: usize, dtb: usize) -> ! {
+    main(PerCoreImpl { hart_id }, dtb)
 }
 
 #[unsafe(no_mangle)]
