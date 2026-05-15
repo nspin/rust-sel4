@@ -57,7 +57,7 @@ kernel-loader:
 		--config .cargo/gen/target/aarch64-unknown-none.toml \
 		--config .cargo/gen/world/aarch64.default.toml \
 		-i sel4-kernel-loader \
-		-o $(private_workspaces_dir)/kernel-loader$(ws)
+		-o $(private_workspaces_dir)/$@$(ws)
 
 .PHONY: kernel-loader-riscv64
 kernel-loader-riscv64:
@@ -65,4 +65,4 @@ kernel-loader-riscv64:
 		--config .cargo/gen/target/riscv64imac-unknown-none-elf.toml \
 		--config .cargo/gen/world/riscv64.default.toml \
 		-i sel4-kernel-loader \
-		-o $(private_workspaces_dir)/kernel-loader$(ws)
+		-o $(private_workspaces_dir)/$@$(ws)
