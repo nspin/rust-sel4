@@ -7,6 +7,8 @@
 use core::ptr;
 use core::sync::atomic::{AtomicI32, AtomicUsize, Ordering};
 
+use sel4_config::sel4_cfg_usize;
+
 use crate::plat::Plat;
 
 #[unsafe(no_mangle)]
@@ -30,6 +32,7 @@ pub(crate) enum PlatImpl {}
 impl Plat for PlatImpl {
     fn init() {
         assert!(get_hsm_exists());
+        start_all_harts();
     }
 
     fn put_char(c: u8) {
@@ -42,11 +45,6 @@ impl Plat for PlatImpl {
 
     fn start_secondary_core(core_id: usize, sp: usize) {
         unsafe {
-            let _ = sbi::hart_state_management::hart_start(
-                core_id,
-                sbi::PhysicalAddress::new(secondary_harts as *const () as usize),
-                core_id,
-            );
             AtomicUsize::from_ptr(ptr::addr_of_mut!(secondary_core_sp)).store(sp, Ordering::SeqCst);
             AtomicI32::from_ptr(ptr::addr_of_mut!(start_core_by_logical_id))
                 .store(core_id.try_into().unwrap(), Ordering::SeqCst);
@@ -56,4 +54,18 @@ impl Plat for PlatImpl {
 
 fn get_hsm_exists() -> bool {
     unsafe { hsm_exists != 0 }
+}
+
+fn start_all_harts() {
+    for i in 0..sel4_cfg_usize!(MAX_NUM_NODES) {
+        if i != sel4_cfg_usize!(FIRST_HART_ID) {
+            let _ = unsafe {
+                sbi::hart_state_management::hart_start(
+                    i,
+                    sbi::PhysicalAddress::new(secondary_harts as *const () as usize),
+                    i,
+                )
+            };
+        }
+    }
 }
