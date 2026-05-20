@@ -38,10 +38,12 @@ mk {
     inherit (localCrates) sel4-pl011-driver sel4-bcm2835-aux-uart-driver;
   };
   target."cfg(target_arch = \"aarch64\")".dependencies = {
-    inherit (versions) smccc aarch64-cpu;
+    inherit (versions) aarch64-cpu;
+    inherit (localCrates) smccc;
   };
   target."cfg(target_arch = \"arm\")".dependencies = {
     inherit (versions) aarch32-cpu;
+    inherit (localCrates) smccc;
   };
   build-dependencies = {
     inherit (versions)

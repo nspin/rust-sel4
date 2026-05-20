@@ -59,7 +59,8 @@ sbi = "0.3.0"
 
 [target."cfg(target_arch = \"aarch64\")".dependencies]
 aarch64-cpu = "11.1.0"
-smccc = "0.2.2"
+smccc = { path = "../../tmp/src/smccc" }
 
 [target."cfg(target_arch = \"arm\")".dependencies]
 aarch32-cpu = "0.3.0"
+smccc = { path = "../../tmp/src/smccc" }

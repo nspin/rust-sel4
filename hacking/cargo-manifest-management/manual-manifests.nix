@@ -19,4 +19,5 @@ in {
   # volatile = relativeToTmpSrc "volatile";
   # dafny_runtime = relativeToTmpSrc "dafny/Source/DafnyRuntime/DafnyRuntimeRust";
   # offset-allocator = relativeToTmpSrc "offset-allocator";
+  smccc = relativeToTmpSrc "smccc";
 }
