@@ -1,0 +1,6 @@
+/.git
+/tmp
+/result
+/result*
+/.cargo/gen
+target
