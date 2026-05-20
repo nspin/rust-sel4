@@ -13,6 +13,7 @@ pub(crate) mod drivers;
 pub(crate) mod exception_handler;
 
 unsafe extern "C" {
+    pub(crate) fn secondary_entry() -> !;
     fn switch_translation_tables_el2();
 }
 
@@ -46,7 +47,7 @@ impl Arch for ArchImpl {
         let current_el = CurrentEL.read_as_enum(CurrentEL::EL);
         assert!(current_el == Some(CurrentEL::EL::Value::EL2));
 
-        TPIDR_EL1.set(tpidr.try_into().unwrap())
+        TPIDR_EL1.set(core_id.try_into().unwrap());
 
         unsafe {
             switch_translation_tables_el2();

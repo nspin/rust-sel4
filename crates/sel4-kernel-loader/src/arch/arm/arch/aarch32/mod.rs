@@ -12,6 +12,7 @@ use crate::{arch::Arch, main, secondary_main};
 pub(crate) mod drivers;
 
 unsafe extern "C" {
+    pub(crate) fn secondary_entry() -> !;
     fn switch_translation_tables();
 }
 
@@ -31,7 +32,6 @@ extern "C" fn arch_secondary_main() -> ! {
 fn get_physical_core_id() -> usize {
     (Mpidr::read().0 & 0xff).try_into().unwrap()
 }
-
 
 pub(crate) enum ArchImpl {}
 
