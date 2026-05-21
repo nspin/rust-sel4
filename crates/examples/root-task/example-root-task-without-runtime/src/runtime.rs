@@ -58,19 +58,16 @@ unsafe extern "C" fn _start() -> ! {
                 1:  b 1b
             "#,
             target_arch = "riscv64" => r#"
-                .extern __global_pointer$
-                .option push
-                .option norelax
-                1:  auipc gp, %pcrel_hi(__global_pointer$)
-                    addi gp, gp, %pcrel_lo(1b)
-                .option pop
-
-                    la sp, {stack_bottom}
-                    ld sp, (sp)
-                    jal {rust_entrypoint}
-                1:  j 1b
+                .macro lx dst, src
+                    ld \dst, \src
+                .endm
             "#,
             target_arch = "riscv32" => r#"
+                .macro lx dst, src
+                    lw \dst, \src
+                .endm
+            "#,
+            any(target_arch = "riscv64", target_arch = "riscv32") => r#"
                 .extern __global_pointer$
                 .option push
                 .option norelax
@@ -79,7 +76,7 @@ unsafe extern "C" fn _start() -> ! {
                 .option pop
 
                     la sp, {stack_bottom}
-                    lw sp, (sp)
+                    lx sp, (sp)
                     jal {rust_entrypoint}
                 1:  j 1b
             "#,
