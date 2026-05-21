@@ -27,7 +27,7 @@ mod stack {
     }
 
     #[repr(transparent)]
-    struct StackBottom(#[allow(dead_code)] *mut u8);
+    pub(super) struct StackBottom(#[allow(dead_code)] *mut u8);
 
     unsafe impl Sync for StackBottom {}
 
