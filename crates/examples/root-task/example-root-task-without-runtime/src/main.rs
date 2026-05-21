@@ -6,10 +6,8 @@
 
 #![no_std]
 #![no_main]
-#![feature(core_intrinsics)]
-#![allow(internal_features)]
 
-use core::arch::global_asm;
+use core::arch::naked_asm;
 
 fn main(bootinfo: &sel4::BootInfoPtr) -> sel4::Result<Never> {
     sel4::debug_println!("Hello, World!");
@@ -109,121 +107,69 @@ mod stack {
 
     static STACK: Stack<STACK_SIZE> = Stack::new();
 
-    #[unsafe(no_mangle)]
-    static __stack_bottom: StackBottom = STACK.bottom();
+    pub(crate) static STACK_BOTTOM: StackBottom = STACK.bottom();
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(target_arch = "aarch64")] {
-        global_asm! {
-            r#"
-                .extern __rust_entry
-                .extern __stack_bottom
-
-                .section .text
-
-                .global _start
-                _start:
-                    ldr x9, =__stack_bottom
+#[unsafe(naked)]
+#[unsafe(no_mangle)]
+unsafe extern "C" fn _start() -> ! {
+    naked_asm! {
+        cfg_select! {
+            target_arch = "aarch64" => r#"
+                    ldr x9, ={stack_bottom}
                     ldr x9, [x9]
                     mov sp, x9
-                    b __rust_entry
-
+                    b {rust_entrypoint}
                 1:  b 1b
-            "#
-        }
-    } else if #[cfg(target_arch = "arm")] {
-            global_asm! {
-                r#"
-                    .extern __rust_entry
-                    .extern __stack_bottom
-
-                    .section .text
-
-                    .global _start
-                    _start:
-                        ldr r12, =__stack_bottom
-                        ldr r12, [r12]
-                        mov sp, r12
-                        b __rust_entry
-
-                    1:  b 1b
-                "#
-            }
-    } else if #[cfg(any(target_arch = "riscv64", target_arch = "riscv32"))] {
-        macro_rules! riscv_common {
-            () => {
-                r#"
-                    .extern __rust_entry
-                    .extern __stack_bottom
-
-                    .section .text
-
-                    .global _start
-                    _start:
-
-                        # See https://www.sifive.com/blog/all-aboard-part-3-linker-relaxation-in-riscv-toolchain
-                    .extern __global_pointer$
-                    .option push
-                    .option norelax
-                    1:  auipc gp, %pcrel_hi(__global_pointer$)
-                        addi gp, gp, %pcrel_lo(1b)
-                    .option pop
-
-                        la sp, __stack_bottom
-                        lx sp, (sp)
-                        jal __rust_entry
-
-                    1:  j 1b
-                "#
-            }
-        }
-
-        #[cfg(target_arch = "riscv64")]
-        global_asm! {
-            r#"
-                .macro lx dst, src
-                    ld \dst, \src
-                .endm
             "#,
-            riscv_common!()
-        }
-
-        #[cfg(target_arch = "riscv32")]
-        global_asm! {
-            r#"
-                .macro lx dst, src
-                    lw \dst, \src
-                .endm
+            target_arch = "arm" => r#"
+                    ldr r12, ={stack_bottom}
+                    ldr r12, [r12]
+                    mov sp, r12
+                    b {rust_entrypoint}
+                1:  b 1b
             "#,
-            riscv_common!()
-        }
-    } else if #[cfg(target_arch = "x86_64")] {
-        global_asm! {
-            r#"
-                .extern __rust_entry
-                .extern __stack_bottom
+            target_arch = "riscv64" => r#"
+                .extern __global_pointer$
+                .option push
+                .option norelax
+                1:  auipc gp, %pcrel_hi(__global_pointer$)
+                    addi gp, gp, %pcrel_lo(1b)
+                .option pop
 
-                .section .text
+                    la sp, {stack_bottom}
+                    ld sp, (sp)
+                    jal {rust_entrypoint}
+                1:  j 1b
+            "#,
+            target_arch = "riscv32" => r#"
+                .extern __global_pointer$
+                .option push
+                .option norelax
+                1:  auipc gp, %pcrel_hi(__global_pointer$)
+                    addi gp, gp, %pcrel_lo(1b)
+                .option pop
 
-                .global _start
-                _start:
-                    mov rsp, __stack_bottom
+                    la sp, {stack_bottom}
+                    lw sp, (sp)
+                    jal {rust_entrypoint}
+                1:  j 1b
+            "#,
+            target_arch = "x86_64" => r#"
+                    mov rsp, {stack_bottom}
                     mov rbp, rsp
                     sub rsp, 0x8 // Stack must be 16-byte aligned before call
                     push rbp
-                    call __rust_entry
-
+                    call {rust_entrypoint}
                 1:  jmp 1b
-            "#
-        }
-    } else {
-        compile_error!("unsupported architecture");
+            "#,
+        },
+        stack_bottom = sym stack::STACK_BOTTOM,
+        rust_entrypoint = sym rust_entrypoint,
     }
 }
 
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __rust_entry(bootinfo: *const sel4::BootInfo) -> ! {
+unsafe extern "C" fn rust_entrypoint(bootinfo: *const sel4::BootInfo) -> ! {
     let bootinfo = unsafe { sel4::BootInfoPtr::new(bootinfo) };
     match main(&bootinfo) {
         #[allow(unreachable_patterns)]
@@ -235,5 +181,5 @@ unsafe extern "C" fn __rust_entry(bootinfo: *const sel4::BootInfo) -> ! {
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
     sel4::debug_println!("{}", info);
-    core::intrinsics::abort()
+    loop {}
 }
