@@ -43,6 +43,19 @@ mod stack {
 unsafe extern "C" fn _start() -> ! {
     naked_asm! {
         cfg_select! {
+            target_arch = "riscv64" => r#"
+                .macro lx dst, src
+                    ld \dst, \src
+                .endm
+            "#,
+            target_arch = "riscv32" => r#"
+                .macro lx dst, src
+                    lw \dst, \src
+                .endm
+            "#,
+            _ => "",
+        },
+        cfg_select! {
             target_arch = "aarch64" => r#"
                     ldr x9, ={stack_bottom}
                     ldr x9, [x9]
@@ -56,16 +69,6 @@ unsafe extern "C" fn _start() -> ! {
                     mov sp, r12
                     b {rust_entrypoint}
                 1:  b 1b
-            "#,
-            target_arch = "riscv64" => r#"
-                .macro lx dst, src
-                    ld \dst, \src
-                .endm
-            "#,
-            target_arch = "riscv32" => r#"
-                .macro lx dst, src
-                    lw \dst, \src
-                .endm
             "#,
             any(target_arch = "riscv64", target_arch = "riscv32") => r#"
                 .extern __global_pointer$
