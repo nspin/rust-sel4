@@ -98,7 +98,7 @@ const STACK_SIZE: usize = 4096;
 #[unsafe(link_section = ".persistent")]
 static STACK: Stack<STACK_SIZE> = Stack::new();
 
-static RESET_STACK_BOTTOM: StackBottom = STACK.bottom();
+static STACK_BOTTOM: StackBottom = STACK.bottom();
 
 #[unsafe(naked)]
 unsafe extern "C" fn _reset(x0: usize, x1: usize, x2: usize, x3: usize) -> ! {
@@ -134,7 +134,7 @@ unsafe extern "C" fn _reset(x0: usize, x1: usize, x2: usize, x3: usize) -> ! {
                 jmp {reset_rust_entrypoint}
             "#,
         },
-        reset_stack_bottom = sym RESET_STACK_BOTTOM,
+        reset_stack_bottom = sym STACK_BOTTOM,
         reset_rust_entrypoint = sym reset_rust_entrypoint,
     }
 }
