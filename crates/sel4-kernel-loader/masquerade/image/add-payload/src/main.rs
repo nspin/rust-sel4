@@ -4,13 +4,13 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fs::{self, File};
+use std::fs;
 
 use anyhow::Result;
 use clap::Parser;
-use object::elf::{FileHeader32, FileHeader64};
-use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
-use object::{Endianness, Object, ObjectSegment, ReadRef};
+use object::elf::FileHeader64;
+use object::read::elf::ElfFile;
+use object::{Endianness, Object, ObjectSegment};
 
 #[derive(Parser, Debug)]
 struct Cli {
