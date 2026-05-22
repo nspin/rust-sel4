@@ -11,9 +11,9 @@ fn cache_line_size() -> usize {
     unsafe {
         asm!("mrs {}, ctr_el0", out(reg) ctr, options(nomem, nostack));
     }
-
-    // DminLine is bits [19:16], log2(words per D-cache line).
-    4 << ((ctr >> 16) & 0xf)
+    let dminline = (ctr >> 16) & 0xf;
+    let words_per_cache_line = 1 << dminline;
+    4 * words_per_cache_line
 }
 
 pub(crate) unsafe fn clean_dcache_range(start: usize, size: usize) {
