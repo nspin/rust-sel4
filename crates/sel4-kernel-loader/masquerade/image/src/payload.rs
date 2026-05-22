@@ -9,22 +9,6 @@ use core::slice;
 
 use crate::caches::{clean_dcache_range, invalidate_icache_all};
 
-#[repr(C)]
-struct BigEndianWord {
-    _align: [usize; 0],
-    bytes: [u8; size_of::<usize>()],
-}
-
-impl BigEndianWord {
-    fn to_usize(&self) -> usize {
-        usize::from_be_bytes(self.bytes)
-    }
-
-    fn to_mut_ptr(&self) -> *mut u8 {
-        self.to_usize() as *mut u8
-    }
-}
-
 pub(crate) struct Payload {
     entry: usize,
     regions: &'static [Region],
@@ -33,16 +17,16 @@ pub(crate) struct Payload {
 
 #[repr(C)]
 struct Region {
-    vaddr: BigEndianWord,
-    offset: BigEndianWord,
-    filesz: BigEndianWord,
-    memsz: BigEndianWord,
+    vaddr: usize,
+    offset: usize,
+    filesz: usize,
+    memsz: usize,
 }
 
 impl Payload {
     pub(crate) unsafe fn deserialize(start: *const u8) -> Self {
         unsafe {
-            let mut cursor = start.cast::<BigEndianWord>();
+            let mut cursor = start.cast::<usize>();
             let entry = deserialize_word(&mut cursor);
             let num_regions = deserialize_word(&mut cursor);
             let cursor = cursor.cast::<Region>();
@@ -59,11 +43,11 @@ impl Payload {
 
     pub(crate) unsafe fn deploy(self) -> usize {
         for region in self.regions {
-            let vaddr = region.vaddr.to_mut_ptr();
-            let filesz = region.filesz.to_usize();
-            let memsz = region.memsz.to_usize();
+            let vaddr = region.vaddr as *mut u8;
+            let filesz = region.filesz;
+            let memsz = region.memsz;
             unsafe {
-                let src = self.data.add(region.offset.to_usize());
+                let src = self.data.add(region.offset);
                 ptr::copy(src, vaddr, filesz);
                 ptr::write_bytes(vaddr.add(filesz), 0, memsz - filesz);
                 clean_dcache_range(vaddr.addr(), memsz);
@@ -76,10 +60,10 @@ impl Payload {
     }
 }
 
-unsafe fn deserialize_word(cursor: &mut *const BigEndianWord) -> usize {
+unsafe fn deserialize_word(cursor: &mut *const usize) -> usize {
     unsafe {
         let word = cursor.read();
         *cursor = cursor.add(1);
-        word.to_usize()
+        word
     }
 }
