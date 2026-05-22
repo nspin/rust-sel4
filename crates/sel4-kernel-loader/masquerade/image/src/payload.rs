@@ -7,6 +7,8 @@
 use core::ptr;
 use core::slice;
 
+use crate::io::*;
+
 #[repr(C)]
 struct BigEndianWord {
     _align: [usize; 0],
@@ -40,8 +42,11 @@ struct Region {
 impl Payload {
     pub(crate) unsafe fn deserialize(start: *const u8) -> Self {
         let mut de = Deserializer::new(start.cast::<BigEndianWord>());
+        puts("a\n");
         let entry = unsafe { de.next() }.to_usize();
+        puts("b\n");
         let num_regions = unsafe { de.next() }.to_usize();
+        puts("c\n");
         let (regions, data) = unsafe { de.rest(num_regions) };
         Self {
             entry,
@@ -51,7 +56,13 @@ impl Payload {
     }
 
     pub(crate) unsafe fn deploy(&self) -> usize {
+        putx("data", self.data.addr());
         for region in self.regions {
+            putx("vaddr", region.vaddr.to_usize());
+            putx("offset", region.offset.to_usize());
+            putx("filesz", region.filesz.to_usize());
+            putx("memsz", region.memsz.to_usize());
+            puts("\n");
             unsafe {
                 let src = self.data.add(region.offset.to_usize());
                 let filesz = region.filesz.to_usize();

@@ -68,15 +68,13 @@ extern "C" fn rust_entry(dtb_addr: usize) {
 }
 
 fn main(dtb_addr: usize) {
-    // puts("hello\r\n\r\0");
-    // putc(b'x');
-    debug_println!("hello\n");
-
+    puts("start\n");
     // semihosting::sys::arm_compat::sys_writec(b'x');
-    // let entry = unsafe { get_payload().deploy() };
+    let entry = unsafe { get_payload().deploy() };
+    puts("entering\n");
     // sh_write0(b"xello\n\0");
-    // let entry = unsafe { mem::transmute::<usize, EntryFn>(entry) };
-    // (entry)(dtb_addr)
+    let entry = unsafe { mem::transmute::<usize, EntryFn>(entry) };
+    (entry)(dtb_addr)
 }
 
 unsafe extern "C" {

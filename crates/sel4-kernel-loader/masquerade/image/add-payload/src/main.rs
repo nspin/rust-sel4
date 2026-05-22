@@ -10,7 +10,7 @@ use anyhow::Result;
 use clap::Parser;
 use object::elf::FileHeader64;
 use object::read::elf::ElfFile;
-use object::{Endianness, Object, ObjectSegment};
+use object::{Endianness, Object, ObjectSection, ObjectSegment, ObjectSymbol, RelocationKind};
 
 #[derive(Parser, Debug)]
 struct Cli {

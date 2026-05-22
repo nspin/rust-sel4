@@ -63,4 +63,3 @@ SECTIONS
 
     _payload_start = .;
 }
-
