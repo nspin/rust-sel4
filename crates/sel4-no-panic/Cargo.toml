@@ -10,11 +10,8 @@
 #
 
 [package]
-name = "sel4-kernel-loader-masquerade-image"
+name = "sel4-no-panic"
 version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
 license = "BSD-2-Clause"
-
-[dependencies]
-sel4-no-panic = { path = "../../../sel4-no-panic" }

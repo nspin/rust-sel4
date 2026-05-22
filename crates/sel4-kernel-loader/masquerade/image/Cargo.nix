@@ -4,8 +4,11 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk }:
+{ mk, localCrates }:
 
 mk {
   package.name = "sel4-kernel-loader-masquerade-image";
+  dependencies = {
+    inherit (localCrates) sel4-no-panic;
+  };
 }

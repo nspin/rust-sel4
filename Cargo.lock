@@ -2744,6 +2744,9 @@ dependencies = [
 [[package]]
 name = "sel4-kernel-loader-masquerade-image"
 version = "0.1.0"
+dependencies = [
+ "sel4-no-panic",
+]
 
 [[package]]
 name = "sel4-kernel-loader-payload-types"
@@ -2880,6 +2883,10 @@ dependencies = [
 
 [[package]]
 name = "sel4-no-allocator"
+version = "0.1.0"
+
+[[package]]
+name = "sel4-no-panic"
 version = "0.1.0"
 
 [[package]]
