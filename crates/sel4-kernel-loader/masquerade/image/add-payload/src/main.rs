@@ -57,7 +57,7 @@ fn main() -> Result<()> {
 
     let total_size = (buf.len() + STACK_SIZE).next_multiple_of(STACK_ALIGNMENT);
 
-    buf[WORD_SIZE_BYTES..][..WORD_SIZE_BYTES].copy_from_slice(&total_size.to_be_bytes());
+    buf[2 * WORD_SIZE_BYTES..][..WORD_SIZE_BYTES].copy_from_slice(&total_size.to_le_bytes());
 
     fs::write(&cli.out_file, &buf)?;
 

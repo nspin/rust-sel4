@@ -49,6 +49,16 @@ SECTIONS
 
     ASSERT(SIZEOF(.bss) == 0, ".bss section present")
 
+    .got : { *(.got .got.*) }
+    .got.plt : { *(.got.plt) }
+    .rela.dyn : { *(.rela.dyn .rela.*) }
+    .data.rel.ro : { *(.data.rel.ro .data.rel.ro.*) }
+
+    ASSERT(SIZEOF(.got) == 0, ".got present")
+    ASSERT(SIZEOF(.got.plt) == 0, ".got.plt present")
+    ASSERT(SIZEOF(.rela.dyn) == 0, ".rela.dyn present")
+    ASSERT(SIZEOF(.data.rel.ro) == 0, ".data.rel.ro present")
+
     . = ALIGN(16);
 
     _payload_start = .;

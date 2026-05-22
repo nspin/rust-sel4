@@ -17,6 +17,10 @@ mod payload;
 
 use payload::Payload;
 
+mod io;
+
+use io::{debug_println, debug_print, putc, puts};
+
 // RUSTFLAGS="-Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no"
 
 #[unsafe(naked)]
@@ -34,7 +38,7 @@ unsafe extern "C" fn _start() -> ! {
                 .quad   0                       // res2
                 .quad   0                       // res3
                 .quad   0                       // res4
-                .ascii  "ARM\x64"               // magic
+                .long   0x644d5241              // Magic number, little endian, "ARM\x64"
                 .long   0                       // res5 / PE-COFF offset
 
                 .balign 8
@@ -46,7 +50,7 @@ unsafe extern "C" fn _start() -> ! {
                 adrp    x10, .Limage_size
                 add     x10, x10, :lo12:.Limage_size
                 ldr     x10, [x10]
-                add     x9, x9, 10
+                add     x9, x9, x10
                 mov     sp, x9
 
                 bl      {rust_entry}
@@ -65,10 +69,10 @@ extern "C" fn rust_entry(dtb_addr: usize) {
 
 fn main(dtb_addr: usize) {
     // puts("hello\r\n\r\0");
-    // pc(b'x');
-    // sh_write0(b"hello\n\0");
-    // semihosting::eprintln!("xxx");
-    semihosting::sys::arm_compat::sys_writec(b'x');
+    // putc(b'x');
+    debug_println!("hello\n");
+
+    // semihosting::sys::arm_compat::sys_writec(b'x');
     // let entry = unsafe { get_payload().deploy() };
     // sh_write0(b"xello\n\0");
     // let entry = unsafe { mem::transmute::<usize, EntryFn>(entry) };
@@ -85,71 +89,11 @@ fn get_payload() -> Payload {
 
 type EntryFn = extern "C" fn(usize) -> !;
 
-// #[inline(never)]
-// pub fn sh_putc(c: u8) {
-//     let args = [c as usize];
-
-//     unsafe {
-//         core::arch::asm!(
-//             "hlt #0xf000",
-//             inout("x0") 0x03usize => _, // SYS_WRITEC
-//             inout("x1") args.as_ptr() as usize => _,
-//             options(readonly, preserves_flags),
-//         );
-//     }
-// }
-
-// fn putc(c: u8) {
-//     let s = [c, 0];
-//     sh_write0(&s);
-//     loop {}
-// }
-
-#[inline(never)]
-fn sh_write0(s: &[u8]) {
-    unsafe {
-        core::arch::asm!(
-            "hlt #0xf000",
-            in("x0") 0x04usize, // SYS_WRITE0
-            in("x1") s.as_ptr() as usize,
-            lateout("x0") _,
-            lateout("x1") _,
-            options(readonly, preserves_flags),
-        );
-    }
-}
-
-// #[inline(never)]
-// pub fn sh_putc(c: u8) {
-//     let ch = c;
-
-//     unsafe {
-//         core::arch::asm!(
-//             "hlt #0xf000",
-//             inout("x0") 0x03usize => _,
-//             inout("x1") (&raw const ch) as usize => _,
-//             // Do not use `nomem` or `readonly`.
-//             // QEMU reads guest memory through x1.
-//             options(preserves_flags),
-//         );
-//     }
-// }
-
-// fn pc(c: u8
-// ) {
-//     let mut ch = c;
-//     unsafe {
-//         core::arch::asm!(
-//             "hlt #0xf000",
-//             in("w0") 3, // OPERATION NUMBER REGISTER
-//             in("x1") &mut ch, // PARAMETER REGISTER
-//             options(nostack, preserves_flags, readonly),
-//         );
-//     }
-// }
+// TODO
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-    semihosting::eprintln!("{info}");
-    todo!()
+    // debug_println!("{info}");
+    puts("panic\n");
+    loop {}
 }
