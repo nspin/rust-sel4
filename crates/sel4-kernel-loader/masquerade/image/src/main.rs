@@ -7,8 +7,10 @@
 #![no_std]
 #![no_main]
 
-use core::arch::{asm, naked_asm};
-use core::{num, ptr, slice};
+use core::arch::{naked_asm};
+use core::mem;
+use core::ptr;
+use core::slice;
 
 extern crate sel4_no_panic;
 
@@ -69,8 +71,12 @@ struct BigEndianWord {
 }
 
 impl BigEndianWord {
-    fn get(&self) -> usize {
+    fn to_usize(&self) -> usize {
         usize::from_be_bytes(self.bytes)
+    }
+
+    fn to_mut_ptr(&self) -> *mut u8 {
+        self.to_usize() as *mut u8
     }
 }
 
@@ -80,16 +86,34 @@ struct Payload {
     data: *const u8,
 }
 
+impl Payload {
+    unsafe fn deserialize(start: *const u8) -> Self {
+        let mut de = Deserializer::new(start.cast::<BigEndianWord>());
+        let entry = unsafe { de.next() }.to_usize();
+        let num_regions = unsafe { de.next() }.to_usize();
+        let (regions, data) = unsafe { de.rest(num_regions) };
+        Self { entry, regions, data }
+    }
+
+    unsafe fn deploy(&self) -> Result<usize, Abort> {
+        for region in self.regions {
+            unsafe {
+                let src = self.data.add(region.offset.to_usize());
+                let filesz = region.filesz.to_usize();
+                ptr::copy(src, region.vaddr.to_mut_ptr(), region.filesz.to_usize());
+                ptr::write_bytes(region.vaddr.to_mut_ptr().add(filesz), 0, region.memsz.to_usize() - filesz);
+            }
+        }
+        Ok(self.entry)
+    }
+}
+
 #[repr(C)]
 struct Region {
     vaddr: BigEndianWord,
     offset: BigEndianWord,
     filesz: BigEndianWord,
     memsz: BigEndianWord,
-}
-
-unsafe extern "C" {
-    safe static _payload_start: usize;
 }
 
 struct Deserializer {
@@ -121,25 +145,22 @@ impl Deserializer {
     }
 }
 
-unsafe fn deserialize(start: *const u8) -> Payload {
-    let mut de = Deserializer::new(start.cast::<BigEndianWord>());
-    let entry = unsafe { de.next() }.get();
-    let num_regions = unsafe { de.next() }.get();
-    let (regions, data) = unsafe { de.rest(num_regions) };
-    Payload { entry, regions, data }
-
+unsafe extern "C" {
+    safe static _payload_start: usize;
 }
 
 fn get_payload() -> Payload {
     unsafe {
-        deserialize(ptr::addr_of!(_payload_start).cast::<u8>())
+        Payload::deserialize(ptr::addr_of!(_payload_start).cast::<u8>())
     }
 }
 
 fn main(dtb_addr: usize) -> Result<Never, Abort> {
-    let payload = get_payload();
-    if payload.entry == 0 {
-        unsafe { asm!("wfe") };
-    }
-    Err(Abort)
+    let entry = unsafe {
+        get_payload().deploy()?
+    };
+    let entry = unsafe {
+        mem::transmute::<usize, extern "C" fn(usize) -> !>(entry)
+    };
+    (entry)(dtb_addr)
 }
