@@ -12,7 +12,7 @@ fn main() {
     let script = manifest_dir.join("x.lds");
     println!("cargo::rerun-if-changed={}", script.display());
     println!("cargo::rustc-link-arg=-T{}", script.display());
-    println!("cargo::rustc-link-arg=--no-eh-frame-hdr");
     println!("cargo::rustc-link-arg=--orphan-handling=error");
+    println!("cargo::rustc-link-arg=--no-eh-frame-hdr");
     println!("cargo::rustc-link-arg=--gc-sections");
 }
