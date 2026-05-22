@@ -51,13 +51,6 @@ unsafe extern "C" fn _start() -> ! {
                 add     x9, x9, x10
                 mov     sp, x9
 
-                // HACKING
-                movz    x9, #0xdef0
-                movk    x9, #0x9abc, lsl #16
-                movk    x9, #0x5678, lsl #32
-                movk    x9, #0x1234, lsl #48
-                msr     vbar_el2, x9
-
                 bl      {main}
 
             .Lhang:
@@ -69,13 +62,6 @@ unsafe extern "C" fn _start() -> ! {
 }
 
 extern "C" fn main(dtb_addr: usize) {
-    dbg::putc(b'x');
-    dbg::putc(b'x');
-    dbg::putc(b'x');
-    dbg::putc(b'x');
-    dbg::putc(b'x');
-    dbg::putc(b'x');
-    dbg::putc(b'x');
     let entry_addr = unsafe { get_payload().deploy() };
     let entry_fn = unsafe { mem::transmute::<usize, EntryFn>(entry_addr) };
     (entry_fn)(dtb_addr)

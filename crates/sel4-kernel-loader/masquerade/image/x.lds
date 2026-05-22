@@ -59,7 +59,7 @@ SECTIONS
     ASSERT(SIZEOF(.rela.dyn) == 0, ".rela.dyn present")
     ASSERT(SIZEOF(.data.rel.ro) == 0, ".data.rel.ro present")
 
-    . = ALIGN(16);
+    . = ALIGN(8);
 
     _payload_start = .;
 }
