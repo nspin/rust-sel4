@@ -7,7 +7,7 @@
 use core::ptr;
 use core::slice;
 
-use crate::caches::sync_range;
+use crate::caches::{clean_dcache_range, invalidate_icache_all};
 
 #[repr(C)]
 struct BigEndianWord {
@@ -55,16 +55,17 @@ impl Payload {
     pub(crate) unsafe fn deploy(&self) -> usize {
         for region in self.regions {
             unsafe {
-                let src = self.data.add(region.offset.to_usize());
+                let vaddr = region.vaddr.to_mut_ptr();
                 let filesz = region.filesz.to_usize();
-                ptr::copy(src, region.vaddr.to_mut_ptr(), region.filesz.to_usize());
-                ptr::write_bytes(
-                    region.vaddr.to_mut_ptr().add(filesz),
-                    0,
-                    region.memsz.to_usize() - filesz,
-                );
-                sync_range(region.vaddr.to_usize(), region.memsz.to_usize());
+                let memsz = region.memsz.to_usize();
+                let src = self.data.add(region.offset.to_usize());
+                ptr::copy(src, vaddr, filesz);
+                ptr::write_bytes(vaddr.add(filesz), 0, memsz - filesz);
+                clean_dcache_range(vaddr.addr(), memsz);
             }
+        }
+        unsafe {
+            invalidate_icache_all();
         }
         self.entry
     }

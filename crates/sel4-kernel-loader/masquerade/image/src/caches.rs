@@ -17,7 +17,7 @@ fn cache_line_size() -> usize {
     s
 }
 
-unsafe fn clean_dcache_range(start: usize, len: usize) {
+pub(crate) unsafe fn clean_dcache_range(start: usize, len: usize) {
     let line = cache_line_size();
     let end = start.saturating_add(len);
     let mut p = start & !(line - 1);
@@ -34,20 +34,8 @@ unsafe fn clean_dcache_range(start: usize, len: usize) {
     }
 }
 
-unsafe fn invalidate_icache_all() {
+pub(crate) unsafe fn invalidate_icache_all() {
     unsafe {
-        core::arch::asm!(
-            "ic iallu",
-            "dsb sy",
-            "isb",
-            options(nostack)
-        );
-    }
-}
-
-pub(crate) unsafe fn sync_range(start: usize, len: usize) {
-    unsafe {
-        clean_dcache_range(start, len);
-        invalidate_icache_all();
+        core::arch::asm!("ic iallu", "dsb sy", "isb", options(nostack));
     }
 }

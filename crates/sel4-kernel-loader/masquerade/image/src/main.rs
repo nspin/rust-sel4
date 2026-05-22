@@ -15,9 +15,9 @@ use core::ptr;
 
 extern crate sel4_no_panic;
 
-mod payload;
 mod caches;
 mod dbg;
+mod payload;
 
 use payload::Payload;
 
