@@ -8,6 +8,7 @@ use core::ptr;
 use core::slice;
 
 use crate::io::*;
+use crate::caches::*;
 
 #[repr(C)]
 struct BigEndianWord {
@@ -42,11 +43,10 @@ struct Region {
 impl Payload {
     pub(crate) unsafe fn deserialize(start: *const u8) -> Self {
         let mut de = Deserializer::new(start.cast::<BigEndianWord>());
-        puts("a\n");
+        // puts("a\n");
         let entry = unsafe { de.next() }.to_usize();
-        puts("b\n");
+        // puts("b\n");
         let num_regions = unsafe { de.next() }.to_usize();
-        puts("c\n");
         let (regions, data) = unsafe { de.rest(num_regions) };
         Self {
             entry,
@@ -56,13 +56,13 @@ impl Payload {
     }
 
     pub(crate) unsafe fn deploy(&self) -> usize {
-        putx("data", self.data.addr());
+        // putx("data", self.data.addr());
         for region in self.regions {
-            putx("vaddr", region.vaddr.to_usize());
-            putx("offset", region.offset.to_usize());
-            putx("filesz", region.filesz.to_usize());
-            putx("memsz", region.memsz.to_usize());
-            puts("\n");
+            // putx("vaddr", region.vaddr.to_usize());
+            // putx("offset", region.offset.to_usize());
+            // putx("filesz", region.filesz.to_usize());
+            // putx("memsz", region.memsz.to_usize());
+            // puts("\n");
             unsafe {
                 let src = self.data.add(region.offset.to_usize());
                 let filesz = region.filesz.to_usize();
@@ -72,6 +72,7 @@ impl Payload {
                     0,
                     region.memsz.to_usize() - filesz,
                 );
+                sync_written_code(region.vaddr.to_usize(), region.memsz.to_usize());
             }
         }
         self.entry

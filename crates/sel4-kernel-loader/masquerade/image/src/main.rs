@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+// RUSTFLAGS="-Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no"
+
 #![no_std]
 #![no_main]
 
@@ -11,17 +13,14 @@ use core::arch::naked_asm;
 use core::mem;
 use core::ptr;
 
-// extern crate sel4_no_panic;
+extern crate sel4_no_panic;
 
 mod payload;
+mod caches;
 
 use payload::Payload;
 
 mod io;
-
-use io::{debug_println, debug_print, putc, puts};
-
-// RUSTFLAGS="-Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no"
 
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
@@ -68,11 +67,7 @@ extern "C" fn rust_entry(dtb_addr: usize) {
 }
 
 fn main(dtb_addr: usize) {
-    puts("start\n");
-    // semihosting::sys::arm_compat::sys_writec(b'x');
     let entry = unsafe { get_payload().deploy() };
-    puts("entering\n");
-    // sh_write0(b"xello\n\0");
     let entry = unsafe { mem::transmute::<usize, EntryFn>(entry) };
     (entry)(dtb_addr)
 }
@@ -86,12 +81,3 @@ fn get_payload() -> Payload {
 }
 
 type EntryFn = extern "C" fn(usize) -> !;
-
-// TODO
-
-#[panic_handler]
-fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-    // debug_println!("{info}");
-    puts("panic\n");
-    loop {}
-}
