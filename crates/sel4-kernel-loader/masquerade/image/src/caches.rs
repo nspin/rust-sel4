@@ -6,7 +6,6 @@
 
 use core::arch::asm;
 
-#[unsafe(no_mangle)]
 fn cache_line_size() -> usize {
     let ctr: u64;
     unsafe {
@@ -14,7 +13,7 @@ fn cache_line_size() -> usize {
     }
 
     // DminLine is bits [19:16], log2(words per D-cache line).
-    4usize << ((ctr >> 16) & 0xf)
+    4 << ((ctr >> 16) & 0xf)
 }
 
 pub(crate) unsafe fn clean_dcache_range(start: usize, size: usize) {
