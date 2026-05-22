@@ -8,7 +8,7 @@
 #![no_main]
 
 use core::arch::{asm, naked_asm};
-use core::{ptr, slice};
+use core::{num, ptr, slice};
 
 extern crate sel4_no_panic;
 
@@ -62,21 +62,84 @@ enum Never {}
 
 struct Abort;
 
+#[repr(C)]
+struct BigEndianWord {
+    _align: [usize; 0],
+    bytes: [u8; size_of::<usize>()],
+}
+
+impl BigEndianWord {
+    fn get(&self) -> usize {
+        usize::from_be_bytes(self.bytes)
+    }
+}
+
+struct Payload {
+    entry: usize,
+    regions: &'static [Region],
+    data: *const u8,
+}
+
+#[repr(C)]
+struct Region {
+    vaddr: BigEndianWord,
+    offset: BigEndianWord,
+    filesz: BigEndianWord,
+    memsz: BigEndianWord,
+}
+
 unsafe extern "C" {
     safe static _payload_start: usize;
 }
 
-fn get_payload() -> &'static [u8] {
+struct Deserializer {
+    cursor: *const BigEndianWord,
+}
+
+impl Deserializer {
+    fn new(start: *const BigEndianWord) -> Self {
+        Self {
+            cursor: start,
+        }
+    }
+
+    unsafe fn next(&mut self) -> BigEndianWord {
+        unsafe {
+            let word = self.cursor.read();
+            self.cursor = self.cursor.add(1);
+            word
+        }
+    }
+
+    unsafe fn rest(self, num_regions: usize) -> (&'static [Region], *const u8) {
+        let p = self.cursor.cast::<Region>();
+        unsafe {
+            let regions = slice::from_raw_parts(p, num_regions);
+            let data = p.add(num_regions).cast::<u8>();
+            (regions, data)
+        }
+    }
+}
+
+unsafe fn deserialize(start: *const u8) -> Payload {
+    let mut de = Deserializer::new(start.cast::<BigEndianWord>());
+    let entry = unsafe { de.next() }.get();
+    let num_regions = unsafe { de.next() }.get();
+    let (regions, data) = unsafe { de.rest(num_regions) };
+    Payload { entry, regions, data }
+
+}
+
+fn get_payload() -> Payload {
     unsafe {
-        slice::from_raw_parts(ptr::addr_of!(_payload_start).cast(), 100)
+        deserialize(ptr::addr_of!(_payload_start).cast::<u8>())
     }
 }
 
 fn main(dtb_addr: usize) -> Result<Never, Abort> {
     let payload = get_payload();
-    let x = payload.get(10000).ok_or(Abort);
-    // if x.as_ref() == Some(0) {
-    //     unsafe { asm!("wfe") };
-    // }
+    if payload.entry == 0 {
+        unsafe { asm!("wfe") };
+    }
     Err(Abort)
 }
