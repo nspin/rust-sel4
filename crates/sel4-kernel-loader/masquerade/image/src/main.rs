@@ -5,6 +5,8 @@
 //
 
 // RUSTFLAGS="-Crelocation-model=pie -Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no"
+// -Z build-std=core,compiler_builtins
+// --release
 
 #![no_std]
 #![no_main]
