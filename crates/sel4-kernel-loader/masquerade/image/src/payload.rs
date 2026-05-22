@@ -27,9 +27,10 @@ impl Payload {
     pub(crate) unsafe fn deserialize(start: *const u8) -> Self {
         unsafe {
             let p = start.cast::<usize>();
-            let (entry, p) = deserialize(p);
-            let (num_regions, p) = deserialize(p);
-            let (regions, data) = deserialize_slice(p, num_regions);
+            let (&entry, p) = deserialize(p);
+            let (&num_regions, p) = deserialize(p);
+            let (regions, p) = deserialize_slice(p, num_regions);
+            let data = p;
             Self {
                 entry,
                 regions,
@@ -57,8 +58,8 @@ impl Payload {
     }
 }
 
-unsafe fn deserialize<T, U>(cursor: *const T) -> (T, *const U) {
-    unsafe { (cursor.read(), cursor.add(1).cast()) }
+unsafe fn deserialize<T, U>(cursor: *const T) -> (&'static T, *const U) {
+    unsafe { (&*cursor, cursor.add(1).cast()) }
 }
 
 unsafe fn deserialize_slice<T, U>(cursor: *const T, n: usize) -> (&'static [T], *const U) {
