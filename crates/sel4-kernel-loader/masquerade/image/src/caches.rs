@@ -8,27 +8,27 @@ use core::arch::asm;
 
 fn cache_line_size() -> usize {
     let ctr: u64;
-    // crate::io::putx("xxx", 0);
+    crate::dbg::putv("xxx", 0);
     unsafe {
-        asm!("mrs {0}, ctr_el0", out(reg) ctr, options(nomem, nostack));
+        asm!("mrs {}, ctr_el0", out(reg) ctr, options(nomem, nostack));
     }
 
     // DminLine is bits [19:16], log2(words per D-cache line).
     let s = 4usize << ((ctr >> 16) & 0xf);
     // s
-    // crate::dbg::putv("s", s);
+    crate::dbg::putv("s", s);
     64
 }
 
-pub(crate) unsafe fn clean_dcache_range(start: usize, len: usize) {
-    // let line = cache_line_size();
-    let line = 64;
-    let end = start.saturating_add(len);
+pub(crate) unsafe fn clean_dcache_range(start: usize, size: usize) {
+    let line = cache_line_size();
+    // let line = 64;
+    let end = start.saturating_add(size);
     let mut p = start & !(line - 1);
 
     while p < end {
         unsafe {
-            asm!("dc cvac, {0}", in(reg) p, options(nostack));
+            asm!("dc cvac, {}", in(reg) p, options(nostack));
         }
         p += line;
     }
