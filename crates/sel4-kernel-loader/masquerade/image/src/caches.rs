@@ -21,7 +21,8 @@ fn cache_line_size() -> usize {
 }
 
 pub(crate) unsafe fn clean_dcache_range(start: usize, len: usize) {
-    let line = cache_line_size();
+    // let line = cache_line_size();
+    let line = 64;
     let end = start.saturating_add(len);
     let mut p = start & !(line - 1);
 
@@ -39,6 +40,13 @@ pub(crate) unsafe fn clean_dcache_range(start: usize, len: usize) {
 
 pub(crate) unsafe fn invalidate_icache_all() {
     unsafe {
-        asm!("ic iallu", "dsb sy", "isb", options(nostack));
+        asm! {
+            r#"
+                ic iallu
+                dsb sy
+                isb
+            "#,
+            options(nostack),
+        };
     }
 }
