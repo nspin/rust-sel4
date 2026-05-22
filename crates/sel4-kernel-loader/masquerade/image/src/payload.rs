@@ -44,10 +44,10 @@ impl Payload {
             let vaddr = region.vaddr as *mut u8;
             let filesz = region.filesz;
             let memsz = region.memsz;
+            let src = self.data.wrapping_add(region.offset);
             unsafe {
-                let src = self.data.add(region.offset);
                 ptr::copy(src, vaddr, filesz);
-                ptr::write_bytes(vaddr.add(filesz), 0, memsz - filesz);
+                ptr::write_bytes(vaddr.wrapping_add(filesz), 0, memsz - filesz);
                 clean_dcache_range(vaddr.addr(), memsz);
             }
         }
@@ -59,9 +59,9 @@ impl Payload {
 }
 
 unsafe fn deserialize<T, U>(cursor: *const T) -> (&'static T, *const U) {
-    unsafe { (&*cursor, cursor.add(1).cast()) }
+    unsafe { (&*cursor, cursor.wrapping_add(1).cast()) }
 }
 
 unsafe fn deserialize_slice<T, U>(cursor: *const T, n: usize) -> (&'static [T], *const U) {
-    unsafe { (slice::from_raw_parts(cursor, n), cursor.add(n).cast()) }
+    unsafe { (slice::from_raw_parts(cursor, n), cursor.wrapping_add(n).cast()) }
 }

@@ -68,7 +68,7 @@ extern "C" fn main(dtb_addr: usize) {
 }
 
 unsafe extern "C" {
-    safe static _payload_start: u8;
+    static _payload_start: u8;
 }
 
 fn get_payload() -> Payload {
