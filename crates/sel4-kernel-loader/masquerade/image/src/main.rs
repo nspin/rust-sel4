@@ -21,9 +21,9 @@ mod payload;
 
 use payload::Payload;
 
-#[unsafe(naked)]
-#[unsafe(no_mangle)]
 #[unsafe(link_section = ".text.header")]
+#[unsafe(no_mangle)]
+#[unsafe(naked)]
 unsafe extern "C" fn _start() -> ! {
     naked_asm! {
         r#"
