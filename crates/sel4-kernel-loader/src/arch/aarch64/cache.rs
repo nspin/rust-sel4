@@ -18,14 +18,14 @@ macro_rules! dcache_op {
                         and     x3, x0, #0x7000000
                         lsr     x3, x3, #23
 
-                        cbz     x3, .Ldcache_finished_{self}
+                        cbz     x3, .L{self}_finished
                         mov     x10, #0
 
                     1:  add     x2, x10, x10, lsr #1
                         lsr     x1, x0, x2
                         and     x1, x1, #7
                         cmp     x1, #2
-                        b.lt    .Ldcache_skip_{self}
+                        b.lt    .L{self}_skip
 
                         msr     csselr_el1, x10
                         isb
@@ -51,12 +51,12 @@ macro_rules! dcache_op {
                         subs    x7, x7, #1
                         b.ge    2b
 
-                    .Ldcache_skip_{self}:
+                    .L{self}_skip:
                         add     x10, x10, #2
                         cmp     x3, x10
                         b.gt    1b
 
-                    .Ldcache_finished_{self}:
+                    .L{self}_finished:
                         mov     x10, #0
                         msr     csselr_el1, x10
                         dsb     sy
