@@ -4,12 +4,13 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-// #[inline(always)]
+use core::arch::asm;
+
 fn cache_line_size() -> usize {
     let ctr: u64;
     // crate::io::putx("xxx", 0);
     unsafe {
-        core::arch::asm!("mrs {0}, ctr_el0", out(reg) ctr, options(nomem, nostack));
+        asm!("mrs {0}, ctr_el0", out(reg) ctr, options(nomem, nostack));
     }
 
     // DminLine is bits [19:16], log2(words per D-cache line).
@@ -26,18 +27,18 @@ pub(crate) unsafe fn clean_dcache_range(start: usize, len: usize) {
 
     while p < end {
         unsafe {
-            core::arch::asm!("dc cvac, {0}", in(reg) p, options(nostack));
+            asm!("dc cvac, {0}", in(reg) p, options(nostack));
         }
         p += line;
     }
 
     unsafe {
-        core::arch::asm!("dsb sy", options(nostack));
+        asm!("dsb sy", options(nostack));
     }
 }
 
 pub(crate) unsafe fn invalidate_icache_all() {
     unsafe {
-        core::arch::asm!("ic iallu", "dsb sy", "isb", options(nostack));
+        asm!("ic iallu", "dsb sy", "isb", options(nostack));
     }
 }

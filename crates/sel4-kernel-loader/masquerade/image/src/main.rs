@@ -51,32 +51,28 @@ unsafe extern "C" fn _start() -> ! {
                 add     x9, x9, x10
                 mov     sp, x9
 
-                bl      {rust_entry}
+                bl      {main}
 
             .Lhang:
                 wfe
                 b       .Lhang
         "#,
-        rust_entry = sym rust_entry,
+        main = sym main,
     }
 }
 
-extern "C" fn rust_entry(dtb_addr: usize) {
-    main(dtb_addr)
-}
-
-fn main(dtb_addr: usize) {
-    let entry = unsafe { get_payload().deploy() };
-    let entry = unsafe { mem::transmute::<usize, EntryFn>(entry) };
-    (entry)(dtb_addr)
+extern "C" fn main(dtb_addr: usize) {
+    let entry_addr = unsafe { get_payload().deploy() };
+    let entry_fn = unsafe { mem::transmute::<usize, EntryFn>(entry_addr) };
+    (entry_fn)(dtb_addr)
 }
 
 unsafe extern "C" {
-    safe static _payload_start: usize;
+    safe static _payload_start: u8;
 }
 
 fn get_payload() -> Payload {
-    unsafe { Payload::deserialize(ptr::addr_of!(_payload_start).cast::<u8>()) }
+    unsafe { Payload::deserialize(ptr::addr_of!(_payload_start)) }
 }
 
 type EntryFn = extern "C" fn(usize) -> !;

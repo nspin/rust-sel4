@@ -41,18 +41,23 @@ struct Region {
 
 impl Payload {
     pub(crate) unsafe fn deserialize(start: *const u8) -> Self {
-        let mut de = Deserializer::new(start.cast::<BigEndianWord>());
-        let entry = unsafe { de.next() }.to_usize();
-        let num_regions = unsafe { de.next() }.to_usize();
-        let (regions, data) = unsafe { de.rest(num_regions) };
-        Self {
-            entry,
-            regions,
-            data,
+        unsafe {
+            let mut cursor = start.cast::<BigEndianWord>();
+            let entry = deserialize_word(&mut cursor);
+            let num_regions = deserialize_word(&mut cursor);
+            let cursor = cursor.cast::<Region>();
+            let regions = slice::from_raw_parts(cursor, num_regions);
+            let cursor = cursor.add(num_regions);
+            let data = cursor.cast::<u8>();
+            Self {
+                entry,
+                regions,
+                data,
+            }
         }
     }
 
-    pub(crate) unsafe fn deploy(&self) -> usize {
+    pub(crate) unsafe fn deploy(self) -> usize {
         for region in self.regions {
             let vaddr = region.vaddr.to_mut_ptr();
             let filesz = region.filesz.to_usize();
@@ -71,29 +76,10 @@ impl Payload {
     }
 }
 
-struct Deserializer {
-    cursor: *const BigEndianWord,
-}
-
-impl Deserializer {
-    fn new(start: *const BigEndianWord) -> Self {
-        Self { cursor: start }
-    }
-
-    unsafe fn next(&mut self) -> BigEndianWord {
-        unsafe {
-            let word = self.cursor.read();
-            self.cursor = self.cursor.add(1);
-            word
-        }
-    }
-
-    unsafe fn rest(self, num_regions: usize) -> (&'static [Region], *const u8) {
-        let p = self.cursor.cast::<Region>();
-        unsafe {
-            let regions = slice::from_raw_parts(p, num_regions);
-            let data = p.add(num_regions).cast::<u8>();
-            (regions, data)
-        }
+unsafe fn deserialize_word(cursor: &mut *const BigEndianWord) -> usize {
+    unsafe {
+        let word = cursor.read();
+        *cursor = cursor.add(1);
+        word.to_usize()
     }
 }
