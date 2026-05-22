@@ -14,7 +14,9 @@ fn cache_line_size() -> usize {
 
     // DminLine is bits [19:16], log2(words per D-cache line).
     let s = 4usize << ((ctr >> 16) & 0xf);
-    s
+    // s
+    // crate::dbg::putv("s", s);
+    64
 }
 
 pub(crate) unsafe fn clean_dcache_range(start: usize, len: usize) {
