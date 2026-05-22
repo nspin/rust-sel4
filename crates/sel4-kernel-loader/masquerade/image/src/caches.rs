@@ -18,15 +18,15 @@ fn cache_line_size() -> usize {
 }
 
 pub(crate) unsafe fn clean_dcache_range(start: usize, size: usize) {
-    let line = cache_line_size();
+    let line_size = cache_line_size();
     let end = start.saturating_add(size);
-    let mut p = start & !(line - 1);
+    let mut line_addr = start & !(line_size - 1);
 
-    while p < end {
+    while line_addr < end {
         unsafe {
-            asm!("dc cvac, {}", in(reg) p, options(nostack));
+            asm!("dc cvac, {}", in(reg) line_addr, options(nostack));
         }
-        p += line;
+        line_addr += line_size;
     }
 
     unsafe {
