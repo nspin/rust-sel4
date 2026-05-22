@@ -69,9 +69,6 @@ unsafe extern "C" fn _start() -> ! {
 }
 
 extern "C" fn main(dtb_addr: usize) {
-    unsafe {
-        caches::clean_dcache_range(0x40480000, 1);
-    }
     let entry_addr = unsafe { get_payload().deploy() };
     let entry_fn = unsafe { mem::transmute::<usize, EntryFn>(entry_addr) };
     (entry_fn)(dtb_addr)
