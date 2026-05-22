@@ -1,3 +1,5 @@
+ENTRY(_start)
+
 PHDRS
 {
     all PT_LOAD AT (0);
@@ -9,26 +11,23 @@ SECTIONS
 
     .text :
     {
-        _text = .;
-        *(.text.start)
+        KEEP(*(.text.header))
         *(.text*)
-        *(.rodata)
-        _text_end = .;
+    } :all
+
+    .rodata :
+    {
+        *(.rodata*)
     } :all
 
     .data :
     {
-        _data = .;
         *(.data)
-        _data_end = .;
     } :all
 
     .bss :
     {
-        _bss = .;
         *(.bss)
         *(COMMON)
-        . = ALIGN(4);
-        _bss_end = .;
     } :all
 }

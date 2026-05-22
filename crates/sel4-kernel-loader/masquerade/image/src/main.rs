@@ -7,6 +7,18 @@
 #![no_std]
 #![no_main]
 
+use core::arch::naked_asm;
+
 extern crate sel4_no_panic;
 
-static X: [u32; 10] = [0; _];
+#[unsafe(naked)]
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.header")]
+unsafe extern "C" fn _start() -> ! {
+    naked_asm! {
+        r#"
+                ldr x9, [x9]
+                mov sp, x9
+        "#
+    }
+}
