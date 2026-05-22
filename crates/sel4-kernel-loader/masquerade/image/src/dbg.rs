@@ -19,8 +19,8 @@ pub(crate) fn puts(s: &str) {
 pub(crate) fn putx(v: usize) {
     let mut buf = [0; 16];
     word_to_hex(v, &mut buf);
-    for b in buf {
-        putc(b);
+    for c in buf {
+        putc(c);
     }
 }
 
