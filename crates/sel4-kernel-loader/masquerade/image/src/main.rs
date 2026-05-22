@@ -14,6 +14,8 @@ use core::slice;
 
 extern crate sel4_no_panic;
 
+// RUSTFLAGS="-Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no -Clink-arg=--no-eh-frame-hdr"
+
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".text.header")]

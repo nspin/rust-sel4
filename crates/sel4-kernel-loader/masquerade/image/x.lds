@@ -7,6 +7,16 @@ PHDRS
 
 SECTIONS
 {
+    /DISCARD/ :
+    {
+        *(.eh_frame)
+        *(.eh_frame.*)
+        *(.eh_frame_hdr)
+        *(.gcc_except_table*)
+        *(.note.GNU-stack)
+        *(.comment)
+    }
+
     . = 0;
 
     .text :
@@ -41,3 +51,4 @@ SECTIONS
 
     _payload_start = .;
 }
+
