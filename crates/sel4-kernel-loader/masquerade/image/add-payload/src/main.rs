@@ -104,7 +104,7 @@ impl Payload {
     fn serialize(self, endian: impl Endian) -> Vec<u8> {
         let mut buf = vec![];
         buf.extend_from_slice(&endian.write_u64_bytes(self.entry));
-        buf.extend_from_slice(&endian.write_u64_bytes(u64::try_from(self.regions.len()).unwrap()));
+        buf.extend_from_slice(&endian.write_u64_bytes(self.regions.len().try_into().unwrap()));
         for region in self.regions.iter() {
             buf.extend_from_slice(&endian.write_u64_bytes(region.vaddr));
             buf.extend_from_slice(&endian.write_u64_bytes(region.offset));
