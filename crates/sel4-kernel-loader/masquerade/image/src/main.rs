@@ -62,14 +62,17 @@ unsafe extern "C" fn _start() -> ! {
 }
 
 extern "C" fn main(dtb_addr: usize) {
-    let payload = unsafe { Payload::deserialize(ptr::addr_of!(_payload_start)) };
-    let entry_addr = unsafe { payload.deploy() };
+    let entry_addr = unsafe { get_payload().deploy() };
     let entry_fn = unsafe { mem::transmute::<usize, EntryFn>(entry_addr) };
     (entry_fn)(dtb_addr)
 }
 
 unsafe extern "C" {
     static _payload_start: u8;
+}
+
+fn get_payload() -> Payload {
+    unsafe { Payload::deserialize(ptr::addr_of!(_payload_start)) }
 }
 
 type EntryFn = extern "C" fn(usize) -> !;
