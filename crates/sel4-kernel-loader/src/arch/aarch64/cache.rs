@@ -1,7 +1,10 @@
 //
 // Copyright 2026, Colias Group, LLC
+// Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+// Copyright (C) 2012 ARM Ltd.
+// Copyright (C) 1999-2002 Russell King.
 //
-// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: GPL-2.0-only
 //
 
 use core::arch::naked_asm;
@@ -13,13 +16,15 @@ macro_rules! dcache_op {
         naked_asm! {
             concat!(
                 r#"
-                        dsb     sy
-                        mrs     x0, clidr_el1
+                        dsb     sy                          // ensure ordering with previous memory accesses
+
+                        mrs     x0, clidr_el1               // extract LoC << 1 from CLIDR
                         and     x3, x0, #0x7000000
                         lsr     x3, x3, #23
 
-                        cbz     x3, .L{self}_finished
-                        mov     x10, #0
+                        cbz     x3, .L{self}_finished       // if loc is 0, then no need to clean
+
+                        mov     x10, #0                     // start clean at cache level 0
 
                     1:  add     x2, x10, x10, lsr #1
                         lsr     x1, x0, x2
@@ -61,6 +66,7 @@ macro_rules! dcache_op {
                         msr     csselr_el1, x10
                         dsb     sy
                         isb
+                        ret
                 "#,
             ),
             self = sym $self,
