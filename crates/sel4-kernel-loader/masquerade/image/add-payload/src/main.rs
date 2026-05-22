@@ -10,7 +10,7 @@ use anyhow::Result;
 use clap::Parser;
 use object::elf::FileHeader64;
 use object::read::elf::ElfFile;
-use object::{Endianness, Object, ObjectSegment};
+use object::{Endian, Endianness, Object, ObjectSegment};
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -44,6 +44,8 @@ fn main() -> Result<()> {
         loader_segment.data().unwrap().len().try_into().unwrap()
     );
 
+    let endian = loader_elf.endian();
+
     let payload_elf_bytes = fs::read(&cli.payload)?;
     let payload_elf = ElfFile::<FileHeader64<Endianness>>::parse(&payload_elf_bytes).unwrap();
     let mut payload = Payload::new(payload_elf.entry());
@@ -53,11 +55,12 @@ fn main() -> Result<()> {
 
     let mut buf = loader_segment.data().unwrap().to_owned();
     buf.resize(buf.len().next_multiple_of(PAYLOAD_ALIGNMENT), 0);
-    buf.extend_from_slice(&payload.serialize());
+    buf.extend_from_slice(&payload.serialize(endian));
 
     let total_size = (buf.len() + STACK_SIZE).next_multiple_of(STACK_ALIGNMENT);
 
-    buf[2 * WORD_SIZE_BYTES..][..WORD_SIZE_BYTES].copy_from_slice(&total_size.to_le_bytes());
+    buf[2 * WORD_SIZE_BYTES..][..WORD_SIZE_BYTES]
+        .copy_from_slice(&endian.write_u64_bytes(total_size.try_into().unwrap()));
 
     fs::write(&cli.out_file, &buf)?;
 
@@ -98,15 +101,15 @@ impl Payload {
         })
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn serialize(self, endian: impl Endian) -> Vec<u8> {
         let mut buf = vec![];
-        buf.extend_from_slice(&self.entry.to_be_bytes());
-        buf.extend_from_slice(&u64::try_from(self.regions.len()).unwrap().to_be_bytes());
+        buf.extend_from_slice(&endian.write_u64_bytes(self.entry));
+        buf.extend_from_slice(&endian.write_u64_bytes(u64::try_from(self.regions.len()).unwrap()));
         for region in self.regions.iter() {
-            buf.extend_from_slice(&region.vaddr.to_be_bytes());
-            buf.extend_from_slice(&region.offset.to_be_bytes());
-            buf.extend_from_slice(&region.filesz.to_be_bytes());
-            buf.extend_from_slice(&region.memsz.to_be_bytes());
+            buf.extend_from_slice(&endian.write_u64_bytes(region.vaddr));
+            buf.extend_from_slice(&endian.write_u64_bytes(region.offset));
+            buf.extend_from_slice(&endian.write_u64_bytes(region.filesz));
+            buf.extend_from_slice(&endian.write_u64_bytes(region.memsz));
         }
         buf.extend_from_slice(&self.data);
         buf
