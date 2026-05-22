@@ -2746,6 +2746,7 @@ name = "sel4-kernel-loader-masquerade-image"
 version = "0.1.0"
 dependencies = [
  "sel4-no-panic",
+ "semihosting",
 ]
 
 [[package]]
@@ -3337,6 +3338,12 @@ dependencies = [
  "smoltcp",
  "virtio-drivers",
 ]
+
+[[package]]
+name = "semihosting"
+version = "0.1.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8e4abf97879f4e80db69a9fba7bd64998e9bdad25f58ef045a778e191172fd4"
 
 [[package]]
 name = "semver"

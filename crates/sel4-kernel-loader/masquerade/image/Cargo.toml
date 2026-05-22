@@ -18,3 +18,4 @@ license = "BSD-2-Clause"
 
 [dependencies]
 sel4-no-panic = { path = "../../../sel4-no-panic" }
+semihosting = { version = "0.1.25", features = ["stdio"] }

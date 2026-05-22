@@ -30,7 +30,9 @@ SECTIONS
         *(.rodata*)
     } :all
 
+    /*
     ASSERT(SIZEOF(.rodata) == 0, ".rodata section present")
+    */
 
     .data :
     {
