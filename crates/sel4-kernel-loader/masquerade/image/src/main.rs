@@ -20,7 +20,7 @@ mod caches;
 
 use payload::Payload;
 
-mod io;
+mod dbg;
 
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
@@ -32,19 +32,19 @@ unsafe extern "C" fn _start() -> ! {
                 .long   0                       // code1 padding
                 .quad   0x00080000              // text_offset: conventional 512 KiB
             .Limage_size:
-                .quad   0x2d0                   // image_size
+                .quad   0                       // image_size (to be patched by tool)
                 .quad   0                       // flags: LE, page size unspecified, placement old-style
                 .quad   0                       // res2
                 .quad   0                       // res3
                 .quad   0                       // res4
-                .long   0x644d5241              // Magic number, little endian, "ARM\x64"
-                .long   0                       // res5 / PE-COFF offset
+                .long   0x644d5241              // magic: "ARM\x64"
+                .long   0                       // res5
 
                 .balign 8
 
             .Lreal_start:
 
-                adrp    x9, _start              // compute sp: _start + image size
+                adrp    x9, _start              // set sp = _start + image size
                 add     x9, x9, :lo12:_start
                 adrp    x10, .Limage_size
                 add     x10, x10, :lo12:.Limage_size
