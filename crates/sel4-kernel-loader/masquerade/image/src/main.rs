@@ -17,7 +17,7 @@ mod payload;
 
 use payload::Payload;
 
-// RUSTFLAGS="-Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no -Clink-arg=--no-eh-frame-hdr"
+// RUSTFLAGS="-Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no"
 
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
