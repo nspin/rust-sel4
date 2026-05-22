@@ -63,5 +63,10 @@ unsafe fn deserialize<T, U>(cursor: *const T) -> (&'static T, *const U) {
 }
 
 unsafe fn deserialize_slice<T, U>(cursor: *const T, n: usize) -> (&'static [T], *const U) {
-    unsafe { (slice::from_raw_parts(cursor, n), cursor.wrapping_add(n).cast()) }
+    unsafe {
+        (
+            slice::from_raw_parts(cursor, n),
+            cursor.wrapping_add(n).cast(),
+        )
+    }
 }
