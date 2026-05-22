@@ -26,13 +26,10 @@ struct Region {
 impl Payload {
     pub(crate) unsafe fn deserialize(start: *const u8) -> Self {
         unsafe {
-            let mut cursor = start.cast::<usize>();
-            let entry = deserialize_word(&mut cursor);
-            let num_regions = deserialize_word(&mut cursor);
-            let cursor = cursor.cast::<Region>();
-            let regions = slice::from_raw_parts(cursor, num_regions);
-            let cursor = cursor.add(num_regions);
-            let data = cursor.cast::<u8>();
+            let p = start.cast::<usize>();
+            let (entry, p) = deserialize(p);
+            let (num_regions, p) = deserialize(p);
+            let (regions, data) = deserialize_slice(p, num_regions);
             Self {
                 entry,
                 regions,
@@ -60,10 +57,10 @@ impl Payload {
     }
 }
 
-unsafe fn deserialize_word(cursor: &mut *const usize) -> usize {
-    unsafe {
-        let word = cursor.read();
-        *cursor = cursor.add(1);
-        word
-    }
+unsafe fn deserialize<T, U>(cursor: *const T) -> (T, *const U) {
+    unsafe { (cursor.read(), cursor.add(1).cast()) }
+}
+
+unsafe fn deserialize_slice<T, U>(cursor: *const T, n: usize) -> (&'static [T], *const U) {
+    unsafe { (slice::from_raw_parts(cursor, n), cursor.add(n).cast()) }
 }
