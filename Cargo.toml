@@ -132,6 +132,7 @@ members = [
     "crates/sel4-initialize-tls",
     "crates/sel4-kernel-loader",
     "crates/sel4-kernel-loader/add-payload",
+    "crates/sel4-kernel-loader/masquerade/image",
     "crates/sel4-kernel-loader/payload-types",
     "crates/sel4-logging",
     "crates/sel4-microkit",

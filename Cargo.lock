@@ -2742,6 +2742,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "sel4-kernel-loader-masquerade-image"
+version = "0.1.0"
+
+[[package]]
 name = "sel4-kernel-loader-payload-types"
 version = "0.1.0"
 dependencies = [
