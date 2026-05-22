@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+#![allow(dead_code)]
+
 pub(crate) fn putc(c: u8) {
     semihosting::sys::arm_compat::sys_writec(c);
 }

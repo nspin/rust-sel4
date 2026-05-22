@@ -17,10 +17,9 @@ extern crate sel4_no_panic;
 
 mod payload;
 mod caches;
+mod dbg;
 
 use payload::Payload;
-
-mod dbg;
 
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
