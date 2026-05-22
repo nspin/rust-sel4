@@ -54,7 +54,6 @@ impl Payload {
 
     pub(crate) unsafe fn deploy(&self) -> usize {
         for region in self.regions {
-            crate::dbg::putv("vaddr", 0x124);
             unsafe {
                 let src = self.data.add(region.offset.to_usize());
                 let filesz = region.filesz.to_usize();
