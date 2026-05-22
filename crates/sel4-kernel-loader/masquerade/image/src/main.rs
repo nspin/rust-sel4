@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-// RUSTFLAGS="-Crelocation-model=pie -Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no"
+// RUSTFLAGS="-Crelocation-model=pie -Ccode-model=tiny"
 // -Z build-std=core,compiler_builtins (to ensure all is pie)
 // --release
 
