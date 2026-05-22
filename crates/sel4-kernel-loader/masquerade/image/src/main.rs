@@ -80,6 +80,8 @@ impl BigEndianWord {
     }
 }
 
+type PayloadEntryFn = extern "C" fn(usize) -> !;
+
 struct Payload {
     entry: usize,
     regions: &'static [Region],
@@ -160,7 +162,7 @@ fn main(dtb_addr: usize) -> Result<Never, Abort> {
         get_payload().deploy()?
     };
     let entry = unsafe {
-        mem::transmute::<usize, extern "C" fn(usize) -> !>(entry)
+        mem::transmute::<usize, PayloadEntryFn>(entry)
     };
     (entry)(dtb_addr)
 }
