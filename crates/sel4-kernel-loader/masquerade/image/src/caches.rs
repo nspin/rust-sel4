@@ -6,6 +6,7 @@
 
 use core::arch::asm;
 
+#[unsafe(no_mangle)]
 fn cache_line_size() -> usize {
     let ctr: u64;
     unsafe {

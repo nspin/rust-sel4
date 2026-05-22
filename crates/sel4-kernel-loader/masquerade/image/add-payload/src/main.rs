@@ -60,7 +60,7 @@ fn main() -> Result<()> {
     let total_size = (buf.len() + STACK_SIZE).next_multiple_of(STACK_ALIGNMENT);
 
     buf[2 * WORD_SIZE_BYTES..][..WORD_SIZE_BYTES]
-        .copy_from_slice(&endian.write_u64_bytes(total_size.try_into().unwrap()));
+        .copy_from_slice(&u64::try_from(total_size).unwrap().to_le_bytes());
 
     fs::write(&cli.out_file, &buf)?;
 
