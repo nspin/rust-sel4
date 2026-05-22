@@ -9,9 +9,9 @@
 #![no_std]
 #![no_main]
 
+use core::arch::asm;
 use core::arch::naked_asm;
 use core::mem;
-use core::ptr;
 
 extern crate sel4_no_panic;
 
@@ -68,12 +68,28 @@ extern "C" fn main(dtb_addr: usize) {
     (entry_fn)(dtb_addr)
 }
 
+type EntryFn = extern "C" fn(usize) -> !;
+
+fn get_payload() -> Payload {
+    unsafe { Payload::deserialize(get_payload_ptr()) }
+}
+
 unsafe extern "C" {
     static _payload_start: u8;
 }
 
-fn get_payload() -> Payload {
-    unsafe { Payload::deserialize(ptr::addr_of!(_payload_start)) }
+// HACK
+// ptr::addr_of!(_payload_start)) doesn't work with -Crelocation-model=pie
+fn get_payload_ptr() -> *const u8 {
+    let p: *const u8;
+    unsafe {
+        asm!(
+            "adrp {tmp}, {s}",
+            "add  {tmp}, {tmp}, :lo12:{s}",
+            tmp = lateout(reg) p,
+            s = sym _payload_start,
+            options(nostack, pure, readonly),
+        );
+    }
+    p
 }
-
-type EntryFn = extern "C" fn(usize) -> !;
