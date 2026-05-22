@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-// RUSTFLAGS="-Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no"
+// RUSTFLAGS="-Crelocation-model=pie -Ccode-model=tiny -Cforce-frame-pointers=no -Cforce-unwind-tables=no"
 
 #![no_std]
 #![no_main]
@@ -16,7 +16,7 @@ use core::ptr;
 extern crate sel4_no_panic;
 
 mod caches;
-mod dbg;
+// mod dbg;
 mod payload;
 
 use payload::Payload;
