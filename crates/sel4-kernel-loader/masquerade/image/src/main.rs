@@ -69,6 +69,14 @@ unsafe extern "C" fn _start() -> ! {
 }
 
 extern "C" fn main(dtb_addr: usize) {
+    dbg::putc(b'x');
+    dbg::putc(b'x');
+    dbg::putc(b'x');
+    dbg::putc(b'x');
+    dbg::putc(b'x');
+    dbg::putc(b'x');
+    dbg::putc(b'x');
+    dbg::putc(b'x');
     let entry_addr = unsafe { get_payload().deploy() };
     let entry_fn = unsafe { mem::transmute::<usize, EntryFn>(entry_addr) };
     (entry_fn)(dtb_addr)
