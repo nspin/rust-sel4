@@ -9,26 +9,22 @@ SECTIONS
 {
     . = 0;
 
-    .text :
-    {
+    .text : {
         KEEP(*(.text.header))
         *(.text*)
     } :all
 
-    .rodata :
-    {
+    .rodata : {
         *(.rodata*)
     } :all
 
-    .data :
-    {
+    .data : {
         *(.data)
     } :all
 
     ASSERT(SIZEOF(.data) == 0, ".data section present")
 
-    .bss :
-    {
+    .bss : {
         *(.bss)
         *(COMMON)
     } :all
@@ -43,8 +39,7 @@ SECTIONS
     .strtab 0 : { *(.strtab) }
     .shstrtab 0 : { *(.shstrtab) }
 
-    /DISCARD/ :
-    {
+    /DISCARD/ : {
         *(.eh_frame)
         *(.comment)
     }
