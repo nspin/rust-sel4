@@ -54,7 +54,7 @@ unsafe extern "C" fn _start() -> ! {
 
 extern "C" fn rust_entry(dtb_addr: usize) {
     match main(dtb_addr) {
-        Err(ExplicitPanic) => (),
+        Err(Abort) => (),
     }
 }
 
