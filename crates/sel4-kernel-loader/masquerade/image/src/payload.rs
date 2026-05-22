@@ -54,10 +54,10 @@ impl Payload {
 
     pub(crate) unsafe fn deploy(&self) -> usize {
         for region in self.regions {
+            let vaddr = region.vaddr.to_mut_ptr();
+            let filesz = region.filesz.to_usize();
+            let memsz = region.memsz.to_usize();
             unsafe {
-                let vaddr = region.vaddr.to_mut_ptr();
-                let filesz = region.filesz.to_usize();
-                let memsz = region.memsz.to_usize();
                 let src = self.data.add(region.offset.to_usize());
                 ptr::copy(src, vaddr, filesz);
                 ptr::write_bytes(vaddr.add(filesz), 0, memsz - filesz);
