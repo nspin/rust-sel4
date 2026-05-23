@@ -42,7 +42,6 @@ impl Payload {
     pub(crate) unsafe fn deploy(self) -> usize {
         for region in self.regions {
             let vaddr = region.vaddr as *mut u8;
-            crate::dbg::putv("vaddr", region.vaddr);
             let filesz = region.filesz;
             let memsz = region.memsz;
             let src = self.data.wrapping_add(region.offset);
