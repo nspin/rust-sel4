@@ -14,6 +14,7 @@
 use core::arch::asm;
 use core::arch::naked_asm;
 use core::mem;
+use core::ptr;
 
 extern crate sel4_no_panic;
 
@@ -71,19 +72,13 @@ extern "C" fn _start() -> ! {
 }
 
 #[unsafe(naked)]
-extern "C" fn apply_relocations(runtime_base: usize) -> ! {
+extern "C" fn apply_relocations(link_base: usize) -> ! {
     naked_asm! {
         r#"
-            // Args:
-            //   x0 = runtime_base
-            //   x1 = link_base
-            //
-            // Clobbers:
-            //   x0-x10
+                adrp    x1, _start
+                add     x1, x1, :lo12:_start
 
-            .global apply_relocations
-            apply_relocations:
-                sub     x10, x0, x1          // delta = runtime - link
+                sub     x10, x1, x0          // delta = runtime - link
 
                 adrp    x2, __rela_start
                 add     x2, x2, :lo12:__rela_start
@@ -126,9 +121,10 @@ extern "C" fn apply_relocations(runtime_base: usize) -> ! {
 extern "C" fn main(dtb_addr: usize) {
     let fdt_result = unsafe { fdt::Fdt::from_ptr(dtb_addr as *const u8) };
     match fdt_result {
-        Err(err) => dbg::puts("error"),
+        Err(err) => dbg::println!("error"),
         Ok(fdt) => {
-            dbg::puts("success");
+            dbg::puts("fdjklsa");
+            dbg::println!("success");
             for r in fdt.memory().regions() {
                 dbg::putv("addr", r.starting_address.addr())
             }
@@ -143,27 +139,11 @@ extern "C" fn main(dtb_addr: usize) {
 type EntryFn = extern "C" fn(usize) -> !;
 
 fn get_payload() -> Payload {
-    unsafe { Payload::deserialize(get_payload_ptr()) }
+    unsafe { Payload::deserialize(ptr::addr_of!(_payload_start)) }
 }
 
 unsafe extern "C" {
     static _payload_start: u8;
-}
-
-// HACK
-// ptr::addr_of!(_payload_start)) doesn't work with -Crelocation-model=pie
-fn get_payload_ptr() -> *const u8 {
-    let p: *const u8;
-    unsafe {
-        asm!(
-            "adrp {tmp}, {s}",
-            "add  {tmp}, {tmp}, :lo12:{s}",
-            tmp = lateout(reg) p,
-            s = sym _payload_start,
-            options(nostack, pure, readonly),
-        );
-    }
-    p
 }
 
 #[unsafe(no_mangle)]

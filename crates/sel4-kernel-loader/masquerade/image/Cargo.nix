@@ -10,6 +10,7 @@ mk {
   package.name = "sel4-kernel-loader-masquerade-image";
   dependencies = {
     inherit (localCrates) sel4-no-panic;
-    inherit (versions) fdt semihosting;
+    inherit (versions) fdt;
+    semihosting = { version = versions.semihosting; features = [ "stdio" ]; };
   };
 }

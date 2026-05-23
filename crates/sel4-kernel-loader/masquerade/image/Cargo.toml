@@ -19,4 +19,4 @@ license = "BSD-2-Clause"
 [dependencies]
 fdt = "0.1.5"
 sel4-no-panic = { path = "../../../sel4-no-panic" }
-semihosting = "0.1.25"
+semihosting = { version = "0.1.25", features = ["stdio"] }

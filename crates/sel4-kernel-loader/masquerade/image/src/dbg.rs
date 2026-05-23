@@ -6,6 +6,8 @@
 
 #![allow(dead_code)]
 
+use core::fmt;
+
 pub(crate) fn putc(c: u8) {
     semihosting::sys::arm_compat::sys_writec(c);
 }
@@ -39,3 +41,29 @@ pub(crate) fn putv(n: &str, v: usize) {
     putx(v);
     puts("\n");
 }
+struct DebugWrite;
+
+impl fmt::Write for DebugWrite {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        for &c in s.as_bytes() {
+            putc(c);
+        }
+        Ok(())
+    }
+}
+
+pub(crate) fn debug_print_helper(args: fmt::Arguments) {
+    fmt::write(&mut DebugWrite, args).unwrap_or_else(|err| panic!("write error: {:?}", err))
+}
+
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::dbg::debug_print_helper(format_args!($($arg)*)));
+}
+
+macro_rules! println {
+    () => ($crate::dbg::println!(""));
+    ($($arg:tt)*) => ($crate::dbg::print!("{}\n", format_args!($($arg)*)));
+}
+
+pub(crate) use print;
+pub(crate) use println;

@@ -15,4 +15,6 @@ fn main() {
     println!("cargo::rustc-link-arg=--orphan-handling=error");
     println!("cargo::rustc-link-arg=--no-eh-frame-hdr");
     println!("cargo::rustc-link-arg=--gc-sections");
+    println!("cargo::rustc-link-arg=-pie");
+    println!("cargo::rustc-link-arg=--no-dynamic-linker");
 }
