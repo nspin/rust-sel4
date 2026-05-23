@@ -64,14 +64,15 @@ unsafe extern "C" fn _start() -> ! {
 }
 
 extern "C" fn main(dtb_addr: usize) {
-    let fdt_result = unsafe {
-        fdt::Fdt::from_ptr(dtb_addr as *const u8)
-    };
+    let fdt_result = unsafe { fdt::Fdt::from_ptr(dtb_addr as *const u8) };
     match fdt_result {
         Err(err) => dbg::puts("error"),
-        Ok(fdt) => for r in fdt.memory().regions() {
-            dbg::putv("addr", r.starting_address.addr())
-        },
+        Ok(fdt) => {
+            dbg::puts("success");
+            // for r in fdt.memory().regions() {
+            //     dbg::putv("addr", r.starting_address.addr())
+            // }
+        }
     }
     let payload = get_payload();
     let entry_addr = unsafe { payload.deploy() };
