@@ -77,8 +77,6 @@ fn check_relocations<E: Endian>(elf: &ElfFile<FileHeader64<E>>) {
                 let r_type = rela.r_type(elf.endian(), false);
                 if r_type != R_AARCH64_RELATIVE {
                     panic!("unsupported relocation type {} in {}", r_type, section_name);
-                } else {
-                    // panic!("rel");
                 }
             }
         }
