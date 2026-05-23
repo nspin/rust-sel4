@@ -13,15 +13,19 @@
 
 use core::arch::asm;
 use core::arch::naked_asm;
+use core::fmt::Write;
 use core::mem;
+use core::panic::PanicInfo;
 use core::ptr;
 
-extern crate sel4_no_panic;
+// extern crate sel4_no_panic;
 
 mod caches;
 mod dbg;
 mod payload;
 
+use dbg::D;
+use fdt::Fdt;
 use payload::Payload;
 
 #[unsafe(link_section = ".text.header")]
@@ -119,17 +123,7 @@ extern "C" fn apply_relocations(link_base: usize) -> ! {
 }
 
 extern "C" fn main(dtb_addr: usize) {
-    let fdt_result = unsafe { fdt::Fdt::from_ptr(dtb_addr as *const u8) };
-    match fdt_result {
-        Err(err) => dbg::println!("error"),
-        Ok(fdt) => {
-            dbg::puts("fdjklsa");
-            dbg::println!("success");
-            for r in fdt.memory().regions() {
-                dbg::putv("addr", r.starting_address.addr())
-            }
-        }
-    }
+    inspect_dtb(dtb_addr);
     let payload = get_payload();
     let entry_addr = unsafe { payload.deploy() };
     let entry_fn = unsafe { mem::transmute::<usize, EntryFn>(entry_addr) };
@@ -146,8 +140,16 @@ unsafe extern "C" {
     static _payload_start: u8;
 }
 
-#[unsafe(no_mangle)]
-extern "C" fn __sel4_no_panic__undefined() {
+fn inspect_dtb(dtb_addr: usize) {
+    let fdt = unsafe { Fdt::from_ptr(dtb_addr as *const u8) }.unwrap_or_else(|err| panic!("{err}"));
+    for r in fdt.memory().regions() {
+        writeln!(D, "region: {:#x}", r.starting_address.addr()).unwrap();
+    }
+}
+
+#[panic_handler]
+fn panic_handler(info: &PanicInfo) -> ! {
+    let _ = writeln!(D, "{info}");
     loop {
         unsafe { asm!("wfe") }
     }
