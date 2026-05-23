@@ -18,18 +18,20 @@ SECTIONS
         *(.rodata*)
     } :all
 
-    .data : {
-        *(.data)
+    .rela.dyn : {
+        . = ALIGN(8);
+        __rela_start = .;
+        KEEP(*(.rela.dyn))
+        __rela_end = .;
     } :all
 
-    ASSERT(SIZEOF(.data) == 0, ".data section present")
-
-    .bss : {
-        *(.bss)
-        *(COMMON)
+    .data.rel.ro : {
+        *(.data.rel.ro .data.rel.ro.*)
     } :all
 
-    ASSERT(SIZEOF(.bss) == 0, ".bss section present")
+    .got : {
+        *(.got)
+    } :all
 
     . = ALIGN(8);
 

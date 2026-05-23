@@ -69,9 +69,9 @@ extern "C" fn main(dtb_addr: usize) {
         Err(err) => dbg::puts("error"),
         Ok(fdt) => {
             dbg::puts("success");
-            // for r in fdt.memory().regions() {
-            //     dbg::putv("addr", r.starting_address.addr())
-            // }
+            for r in fdt.memory().regions() {
+                dbg::putv("addr", r.starting_address.addr())
+            }
         }
     }
     let payload = get_payload();
