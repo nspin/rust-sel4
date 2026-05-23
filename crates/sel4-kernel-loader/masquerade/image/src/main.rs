@@ -20,10 +20,10 @@ use fdt::Fdt;
 // TODO
 // extern crate sel4_no_panic;
 
-mod rt;
 mod caches;
 mod dbg;
 mod payload;
+mod rt;
 
 use dbg::D;
 use payload::Payload;

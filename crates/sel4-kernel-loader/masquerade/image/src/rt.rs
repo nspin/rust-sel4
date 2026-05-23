@@ -6,11 +6,11 @@
 
 use core::arch::asm;
 use core::arch::naked_asm;
-use core::panic::PanicInfo;
 use core::fmt::Write;
+use core::panic::PanicInfo;
 
-use crate::main;
 use crate::dbg::D;
+use crate::main;
 
 #[unsafe(link_section = ".text.header")]
 #[unsafe(no_mangle)]
