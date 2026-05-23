@@ -18,6 +18,9 @@ use core::mem;
 use core::panic::PanicInfo;
 use core::ptr;
 
+use fdt::Fdt;
+
+// TODO
 // extern crate sel4_no_panic;
 
 mod caches;
@@ -25,7 +28,6 @@ mod dbg;
 mod payload;
 
 use dbg::D;
-use fdt::Fdt;
 use payload::Payload;
 
 #[unsafe(link_section = ".text.header")]
