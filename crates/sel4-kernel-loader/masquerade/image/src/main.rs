@@ -28,7 +28,6 @@ mod payload;
 use dbg::D;
 use payload::Payload;
 
-
 extern "C" fn main(dtb_addr: usize) {
     inspect_dtb(dtb_addr);
     let payload = get_payload();
