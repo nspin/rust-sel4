@@ -149,8 +149,6 @@ unsafe extern "C" {
 #[unsafe(no_mangle)]
 extern "C" fn __sel4_no_panic__undefined() {
     loop {
-        unsafe {
-            asm!("wfe")
-        }
+        unsafe { asm!("wfe") }
     }
 }

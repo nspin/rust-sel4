@@ -68,7 +68,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn check_relocations<E: Endian>(elf: &ElfFile::<FileHeader64<E>>) {
+fn check_relocations<E: Endian>(elf: &ElfFile<FileHeader64<E>>) {
     for section in elf.sections() {
         let section_name = section.name().unwrap();
         if section_name == ".rela.dyn" {
