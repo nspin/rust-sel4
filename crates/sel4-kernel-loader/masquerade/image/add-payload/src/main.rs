@@ -8,9 +8,9 @@ use std::fs;
 
 use anyhow::Result;
 use clap::Parser;
-use object::elf::FileHeader64;
+use object::elf::{FileHeader64, R_AARCH64_RELATIVE, Rela64};
 use object::read::elf::ElfFile;
-use object::{Endian, Endianness, Object, ObjectSegment};
+use object::{Endian, Endianness, Object, ObjectSection, ObjectSegment, pod};
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -38,6 +38,7 @@ fn main() -> Result<()> {
 
     let loader_elf_bytes = fs::read(&cli.loader)?;
     let loader_elf = ElfFile::<FileHeader64<Endianness>>::parse(&loader_elf_bytes).unwrap();
+    check_relocations(&loader_elf);
     let loader_segment = loader_elf.segments().next().unwrap();
     assert_eq!(
         loader_segment.size(),
@@ -65,6 +66,23 @@ fn main() -> Result<()> {
     fs::write(&cli.out_file, &buf)?;
 
     Ok(())
+}
+
+fn check_relocations<E: Endian>(elf: &ElfFile::<FileHeader64<E>>) {
+    for section in elf.sections() {
+        let section_name = section.name().unwrap();
+        if section_name == ".rela.dyn" {
+            let relas = pod::slice_from_all_bytes::<Rela64<E>>(section.data().unwrap()).unwrap();
+            for rela in relas {
+                let r_type = rela.r_type(elf.endian(), false);
+                if r_type != R_AARCH64_RELATIVE {
+                    panic!("unsupported relocation type {} in {}", r_type, section_name);
+                } else {
+                    panic!("rel");
+                }
+            }
+        }
+    }
 }
 
 struct Payload {
