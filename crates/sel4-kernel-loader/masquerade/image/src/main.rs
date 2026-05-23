@@ -64,6 +64,15 @@ unsafe extern "C" fn _start() -> ! {
 }
 
 extern "C" fn main(dtb_addr: usize) {
+    let fdt_result = unsafe {
+        fdt::Fdt::from_ptr(dtb_addr as *const u8)
+    };
+    match fdt_result {
+        Err(err) => dbg::puts("error"),
+        Ok(fdt) => for r in fdt.memory().regions() {
+            dbg::putv("addr", r.starting_address.addr())
+        },
+    }
     let payload = get_payload();
     let entry_addr = unsafe { payload.deploy() };
     let entry_fn = unsafe { mem::transmute::<usize, EntryFn>(entry_addr) };
@@ -94,4 +103,9 @@ fn get_payload_ptr() -> *const u8 {
         );
     }
     p
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn __sel4_no_panic__undefined() {
+    loop {}
 }

@@ -2745,6 +2745,7 @@ dependencies = [
 name = "sel4-kernel-loader-masquerade-image"
 version = "0.1.0"
 dependencies = [
+ "fdt",
  "sel4-no-panic",
  "semihosting",
 ]
