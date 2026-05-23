@@ -32,10 +32,6 @@ const WORD_SIZE_BYTES: usize = 8;
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    if cli.verbose {
-        eprintln!("{cli:#?}");
-    }
-
     let loader_elf_bytes = fs::read(&cli.loader)?;
     let loader_elf = ElfFile::<FileHeader64<Endianness>>::parse(&loader_elf_bytes).unwrap();
     check_relocations(&loader_elf);
