@@ -26,7 +26,7 @@ use payload::Payload;
 #[unsafe(link_section = ".text.header")]
 #[unsafe(no_mangle)]
 #[unsafe(naked)]
-unsafe extern "C" fn _start() -> ! {
+extern "C" fn _start() -> ! {
     naked_asm! {
         r#"
                 b       .Lreal_start
@@ -44,6 +44,8 @@ unsafe extern "C" fn _start() -> ! {
                 .balign 8
 
             .Lreal_start:
+                
+                mov     x19, x0                 // save dtb addr
 
                 adrp    x9, _start              // set sp = _start + image size
                 add     x9, x9, :lo12:_start
@@ -53,13 +55,71 @@ unsafe extern "C" fn _start() -> ! {
                 add     x9, x9, x10
                 mov     sp, x9
 
+                mov     x0, #0
+                bl      {apply_relocations}
+
+                mov     x0, x19                 // dtb addr
                 bl      {main}
 
-            .Lhang:
+            .Lmain_fallthrough:
                 wfe
-                b       .Lhang
+                b       .Lmain_fallthrough
         "#,
+        apply_relocations = sym apply_relocations,
         main = sym main,
+    }
+}
+
+#[unsafe(naked)]
+extern "C" fn apply_relocations(runtime_base: usize) -> ! {
+    naked_asm! {
+        r#"
+            // Args:
+            //   x0 = runtime_base
+            //   x1 = link_base
+            //
+            // Clobbers:
+            //   x0-x10
+
+            .global apply_relocations
+            apply_relocations:
+                sub     x10, x0, x1          // delta = runtime - link
+
+                adrp    x2, __rela_start
+                add     x2, x2, :lo12:__rela_start
+
+                adrp    x3, __rela_end
+                add     x3, x3, :lo12:__rela_end
+
+            .Lloop:
+                cmp     x2, x3
+                b.hs    .Ldone
+
+                ldr     x4, [x2, #0]         // r_offset
+                ldr     x5, [x2, #8]         // r_info
+                ldr     x6, [x2, #16]        // r_addend
+
+                and     x7, x5, #0xffffffff
+                mov     x8, #1027            // R_AARCH64_RELATIVE
+                cmp     x7, x8
+                b.ne    .Lbad_reloc
+
+                add     x9, x4, x10          // patch_addr = r_offset + delta
+                add     x6, x6, x10          // value      = r_addend + delta
+                str     x6, [x9]
+
+                add     x2, x2, #24
+                b       .Lloop
+
+            .Ldone:
+                dsb     sy
+                isb
+                ret
+
+            .Lbad_reloc:
+                wfe
+                b       .Lbad_reloc
+        "#,
     }
 }
 
@@ -108,5 +168,9 @@ fn get_payload_ptr() -> *const u8 {
 
 #[unsafe(no_mangle)]
 extern "C" fn __sel4_no_panic__undefined() {
-    loop {}
+    loop {
+        unsafe {
+            asm!("wfe")
+        }
+    }
 }
