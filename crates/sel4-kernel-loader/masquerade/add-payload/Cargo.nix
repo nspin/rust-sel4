@@ -7,7 +7,7 @@
 { mk, localCrates, versions }:
 
 mk {
-  package.name = "sel4-kernel-loader-masquerade-image-add-payload";
+  package.name = "sel4-kernel-loader-masquerade-add-payload";
   dependencies = {
     inherit (versions)
       anyhow
