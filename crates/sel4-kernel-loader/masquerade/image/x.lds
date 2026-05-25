@@ -37,9 +37,20 @@ SECTIONS
 
     _payload_start = .;
 
-    .symtab 0 : { *(.symtab) }
-    .strtab 0 : { *(.strtab) }
-    .shstrtab 0 : { *(.shstrtab) }
+    .symtab             0 : { *(.symtab) }
+    .strtab             0 : { *(.strtab) }
+    .shstrtab           0 : { *(.shstrtab) }
+
+    .debug_abbrev       0 : { *(.debug_abbrev*) }
+    .debug_info         0 : { *(.debug_info*) }
+    .debug_aranges      0 : { *(.debug_aranges*) }
+    .debug_ranges       0 : { *(.debug_ranges*) }
+    .debug_rnglists     0 : { *(.debug_rnglists*) }
+    .debug_str          0 : { *(.debug_str*) }
+    .debug_line         0 : { *(.debug_line*) }
+    .debug_line_str     0 : { *(.debug_line_str*) }
+    .debug_loc          0 : { *(.debug_loc*) }
+    .debug_loclists     0 : { *(.debug_loclists*) }
 
     /DISCARD/ : {
         *(.eh_frame)
