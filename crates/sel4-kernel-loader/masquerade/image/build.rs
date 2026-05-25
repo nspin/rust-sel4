@@ -14,7 +14,6 @@ fn main() {
     println!("cargo::rustc-link-arg=-T{}", linker_script.display());
 
     println!("cargo::rustc-link-arg=-pie");
-    println!("cargo::rustc-link-arg=--gc-sections");
     println!("cargo::rustc-link-arg=--no-eh-frame-hdr");
     println!("cargo::rustc-link-arg=--orphan-handling=error");
 }
