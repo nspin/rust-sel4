@@ -24,7 +24,7 @@ struct Cli {
     verbose: bool,
 }
 
-const STACK_SIZE: usize = 4096;
+const STACK_SIZE: usize = 4096 * 4; // one page is enough for --release
 const STACK_ALIGNMENT: usize = 16;
 const PAYLOAD_ALIGNMENT: usize = WORD_SIZE_BYTES;
 const WORD_SIZE_BYTES: usize = 8;
