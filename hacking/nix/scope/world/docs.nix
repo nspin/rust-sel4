@@ -107,9 +107,7 @@ let
             "--sysroot" sysroot
           ];
 
-          # TODO
-          # target.${targetTriple.name}.rustdocflags = [
-          build.rustdocflags = [
+          target.${targetTriple.name}.rustdocflags = [
             "-Zunstable-options"
             "--sysroot" sysroot
           ];
