@@ -5,7 +5,11 @@
 //
 
 use core::ptr;
-use core::sync::atomic::{AtomicI32, AtomicUsize, Ordering};
+use core::sync::atomic::{
+    AtomicI32,
+    AtomicUsize,
+    Ordering,
+};
 
 use sel4_config::sel4_cfg_usize;
 

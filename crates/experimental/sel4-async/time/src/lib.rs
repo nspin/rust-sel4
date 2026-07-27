@@ -13,7 +13,11 @@ use core::cell::RefCell;
 use core::fmt;
 use core::future::Future;
 use core::pin::Pin;
-use core::task::{Context, Poll, Waker};
+use core::task::{
+    Context,
+    Poll,
+    Waker,
+};
 
 use pin_project::pin_project;
 
@@ -22,7 +26,10 @@ mod sub_key;
 mod timer_queue;
 
 use sub_key::SubKey;
-use timer_queue::{Key, TimerQueue};
+use timer_queue::{
+    Key,
+    TimerQueue,
+};
 
 pub use instant::Instant;
 

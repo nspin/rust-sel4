@@ -8,11 +8,17 @@
 
 use alloc::vec::Vec;
 use core::pin::Pin;
-use core::task::{self, Poll};
+use core::task::{
+    self,
+    Poll,
+};
 
 use rustls::unbuffered::InsufficientSizeError;
 
-use sel4_async_io::{Read, Write};
+use sel4_async_io::{
+    Read,
+    Write,
+};
 
 use crate::Error;
 

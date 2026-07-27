@@ -8,10 +8,29 @@ use std::fmt;
 use std::ops::Range;
 
 use object::elf::{
-    FileHeader32, FileHeader64, PF_R, PT_LOAD, PT_PHDR, ProgramHeader32, ProgramHeader64,
+    FileHeader32,
+    FileHeader64,
+    PF_R,
+    PT_LOAD,
+    PT_PHDR,
+    ProgramHeader32,
+    ProgramHeader64,
 };
-use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
-use object::{Endian, Object as _, ObjectSegment as _, ObjectSymbol as _, Pod, U32, U64, pod};
+use object::read::elf::{
+    ElfFile,
+    FileHeader,
+    ProgramHeader,
+};
+use object::{
+    Endian,
+    Object as _,
+    ObjectSegment as _,
+    ObjectSymbol as _,
+    Pod,
+    U32,
+    U64,
+    pod,
+};
 
 pub mod dynamic;
 

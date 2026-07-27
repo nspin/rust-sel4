@@ -4,18 +4,30 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fs::{self, File};
+use std::fs::{
+    self,
+    File,
+};
 use std::path::PathBuf;
 use std::result::Result as StdResult;
 use std::str;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{
+    Context,
+    Result,
+    bail,
+};
 use clap::Parser;
 use serde::Deserialize;
 use similar::TextDiff;
 use toml::Table as TomlTable;
 
-use toml_normalize::{Error as TomlNormalizeError, Formatter, Policy, builtin_policies};
+use toml_normalize::{
+    Error as TomlNormalizeError,
+    Formatter,
+    Policy,
+    builtin_policies,
+};
 
 #[derive(Debug, Parser)]
 struct Args {

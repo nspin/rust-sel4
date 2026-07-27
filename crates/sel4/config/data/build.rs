@@ -6,7 +6,10 @@
 
 use std::env;
 use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::{
+    Path,
+    PathBuf,
+};
 
 use sel4_build_env::find_in_libsel4_include_dirs;
 use sel4_config_types::Configuration;

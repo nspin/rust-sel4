@@ -11,19 +11,40 @@
 
 extern crate alloc;
 
-use alloc::rc::{Rc, Weak};
+use alloc::rc::{
+    Rc,
+    Weak,
+};
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use core::cell::{OnceCell, RefCell};
+use core::cell::{
+    OnceCell,
+    RefCell,
+};
 use core::pin::Pin;
-use core::sync::atomic::{AtomicBool, Ordering};
+use core::sync::atomic::{
+    AtomicBool,
+    Ordering,
+};
 
 use futures::future::Future;
 use futures::stream::FuturesUnordered;
 use futures::stream::StreamExt;
-use futures::task::{ArcWake, waker_ref};
-use futures::task::{Context, Poll};
-use futures::task::{FutureObj, LocalFutureObj, LocalSpawn, Spawn, SpawnError};
+use futures::task::{
+    ArcWake,
+    waker_ref,
+};
+use futures::task::{
+    Context,
+    Poll,
+};
+use futures::task::{
+    FutureObj,
+    LocalFutureObj,
+    LocalSpawn,
+    Spawn,
+    SpawnError,
+};
 
 mod enter;
 

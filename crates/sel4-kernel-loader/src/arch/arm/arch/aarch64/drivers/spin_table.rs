@@ -4,9 +4,15 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::arch::{asm, global_asm};
+use core::arch::{
+    asm,
+    global_asm,
+};
 use core::ptr;
-use core::sync::atomic::{AtomicUsize, Ordering};
+use core::sync::atomic::{
+    AtomicUsize,
+    Ordering,
+};
 
 #[used]
 #[unsafe(no_mangle)]

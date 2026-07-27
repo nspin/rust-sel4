@@ -5,13 +5,24 @@
 //
 
 use fallible_iterator::FallibleIterator;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::{
+    Span,
+    TokenStream,
+};
 use quote::quote_spanned;
 use syn::Token;
-use syn::parse::{Parse, ParseStream, Parser, Result as ParseResult};
+use syn::parse::{
+    Parse,
+    ParseStream,
+    Parser,
+    Result as ParseResult,
+};
 use syn::spanned::Spanned;
 
-use sel4_config_types::{Configuration, Value};
+use sel4_config_types::{
+    Configuration,
+    Value,
+};
 
 pub(crate) enum Condition {
     Key(syn::Ident),

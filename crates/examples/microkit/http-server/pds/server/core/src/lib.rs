@@ -15,20 +15,40 @@ use alloc::vec;
 use core::time::Duration;
 
 use embedded_io_async::ReadExactError;
-use futures::future::{self, LocalBoxFuture};
+use futures::future::{
+    self,
+    LocalBoxFuture,
+};
 use futures::task::LocalSpawnExt;
 use rustls::ServerConfig;
-use rustls::pki_types::{PrivateKeyDer, UnixTime};
+use rustls::pki_types::{
+    PrivateKeyDer,
+    UnixTime,
+};
 use rustls::version::TLS12;
 
-use sel4_async_block_io::{BlockIO, access::ReadOnly, constant_block_sizes};
+use sel4_async_block_io::{
+    BlockIO,
+    access::ReadOnly,
+    constant_block_sizes,
+};
 use sel4_async_block_io_fat as fat;
 use sel4_async_io::EmbeddedIOAsyncAdapter;
-use sel4_async_network::{ManagedInterface, TcpSocket, TcpSocketError};
-use sel4_async_network_rustls::{Error as AsyncRustlsError, ServerConnector};
+use sel4_async_network::{
+    ManagedInterface,
+    TcpSocket,
+    TcpSocketError,
+};
+use sel4_async_network_rustls::{
+    Error as AsyncRustlsError,
+    ServerConnector,
+};
 use sel4_async_network_rustls_utils::TimeProviderImpl;
 use sel4_async_single_threaded_executor::LocalSpawner;
-use sel4_async_time::{Instant, TimerManager};
+use sel4_async_time::{
+    Instant,
+    TimerManager,
+};
 
 mod mime;
 mod server;

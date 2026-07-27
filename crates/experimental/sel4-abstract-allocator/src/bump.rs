@@ -7,7 +7,10 @@
 use core::alloc::Layout;
 use core::ops::Range;
 
-use crate::{AbstractAllocator, AbstractAllocatorAllocation};
+use crate::{
+    AbstractAllocator,
+    AbstractAllocatorAllocation,
+};
 
 pub struct BumpAllocator {
     watermark: usize,

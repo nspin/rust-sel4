@@ -8,12 +8,22 @@
 #![allow(clippy::useless_conversion)]
 
 use core::mem;
-use core::ops::{Deref, Range};
+use core::ops::{
+    Deref,
+    Range,
+};
 use core::slice;
 
 use sel4_config::sel4_cfg;
 
-use crate::{FrameObjectType, IpcBuffer, cap_type, init_thread::SlotRegion, newtype_methods, sys};
+use crate::{
+    FrameObjectType,
+    IpcBuffer,
+    cap_type,
+    init_thread::SlotRegion,
+    newtype_methods,
+    sys,
+};
 
 /// A wrapped pointer to a [`BootInfo`] block.
 ///

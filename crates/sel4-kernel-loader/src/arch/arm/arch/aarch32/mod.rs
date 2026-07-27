@@ -9,7 +9,11 @@ use core::mem;
 
 use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 
-use crate::{arch::Arch, main, secondary_main};
+use crate::{
+    arch::Arch,
+    main,
+    secondary_main,
+};
 
 pub(crate) mod drivers;
 

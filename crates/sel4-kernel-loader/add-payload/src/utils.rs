@@ -9,8 +9,18 @@ use std::ops::Range;
 use std::path::Path;
 
 use object::elf::PT_LOAD;
-use object::read::elf::{ElfFile, ElfSegment, FileHeader, ProgramHeader};
-use object::{Object, ObjectSegment, ReadCache, ReadRef};
+use object::read::elf::{
+    ElfFile,
+    ElfSegment,
+    FileHeader,
+    ProgramHeader,
+};
+use object::{
+    Object,
+    ObjectSegment,
+    ReadCache,
+    ReadRef,
+};
 
 pub(crate) fn with_elf<T: FileHeader, R, F>(path: impl AsRef<Path>, f: F) -> R
 where

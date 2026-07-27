@@ -4,17 +4,36 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{
+    BTreeMap,
+    BTreeSet,
+};
 use std::env;
-use std::fs::{self, File};
-use std::io::{Write, stdout};
+use std::fs::{
+    self,
+    File,
+};
+use std::io::{
+    Write,
+    stdout,
+};
 use std::path::PathBuf;
-use std::process::{Command, Output};
+use std::process::{
+    Command,
+    Output,
+};
 
-use cargo_metadata::{Metadata, MetadataCommand, PackageName};
+use cargo_metadata::{
+    Metadata,
+    MetadataCommand,
+    PackageName,
+};
 use clap::Parser;
 use regex::Regex;
-use serde_json::{Value, json};
+use serde_json::{
+    Value,
+    json,
+};
 
 // HACK
 fn project_root() -> PathBuf {

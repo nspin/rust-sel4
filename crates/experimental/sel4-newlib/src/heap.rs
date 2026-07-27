@@ -5,8 +5,14 @@
 //
 
 use core::cell::UnsafeCell;
-use core::ffi::{c_int, c_void};
-use core::sync::atomic::{AtomicIsize, Ordering};
+use core::ffi::{
+    c_int,
+    c_void,
+};
+use core::sync::atomic::{
+    AtomicIsize,
+    Ordering,
+};
 
 use sel4_panicking_env::abort;
 

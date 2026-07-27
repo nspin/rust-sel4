@@ -10,7 +10,10 @@ use core::fmt;
 use core::ops::Range;
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 #[derive(Debug, Clone, Eq, PartialEq, rkyv::Archive, rkyv::Serialize)]
 pub enum FrameInit {

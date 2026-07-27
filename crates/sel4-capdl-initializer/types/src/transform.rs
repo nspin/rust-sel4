@@ -10,9 +10,21 @@ use core::convert::Infallible;
 use core::ops::Range;
 
 use crate::{
-    BytesContent, Content, DeflatedBytesContent, EmbeddedFrameIndex, Fill, FillEntry,
-    FillEntryContent, FrameInit, NamedObject, Object, ObjectId, OrigCapSlots, Spec,
-    SpecForInitializer, object,
+    BytesContent,
+    Content,
+    DeflatedBytesContent,
+    EmbeddedFrameIndex,
+    Fill,
+    FillEntry,
+    FillEntryContent,
+    FrameInit,
+    NamedObject,
+    Object,
+    ObjectId,
+    OrigCapSlots,
+    Spec,
+    SpecForInitializer,
+    object,
 };
 
 impl<D> Spec<Fill<D>> {

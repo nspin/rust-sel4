@@ -4,10 +4,19 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::cell::{RefCell, RefMut};
-use core::ops::{Deref, DerefMut};
+use core::cell::{
+    RefCell,
+    RefMut,
+};
+use core::ops::{
+    Deref,
+    DerefMut,
+};
 
-use async_unsync::semaphore::{Permit, Semaphore};
+use async_unsync::semaphore::{
+    Permit,
+    Semaphore,
+};
 
 pub struct Mutex<T> {
     data: RefCell<T>, // remove need for unsafe

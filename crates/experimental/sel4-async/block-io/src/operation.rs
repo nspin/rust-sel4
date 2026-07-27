@@ -5,9 +5,18 @@
 //
 
 use core::ops::Range;
-use core::slice::{Chunks, ChunksMut};
+use core::slice::{
+    Chunks,
+    ChunksMut,
+};
 
-use crate::access::{Access, ReadAccess, ReadOnly, WriteAccess, WriteOnly};
+use crate::access::{
+    Access,
+    ReadAccess,
+    ReadOnly,
+    WriteAccess,
+    WriteOnly,
+};
 
 pub enum Operation<'a, A: Access> {
     Read {

@@ -8,7 +8,16 @@
 
 use core::marker::PhantomData;
 use core::mem;
-use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, Range, Shl, Shr};
+use core::ops::{
+    BitAnd,
+    BitAndAssign,
+    BitOr,
+    BitOrAssign,
+    Not,
+    Range,
+    Shl,
+    Shr,
+};
 
 pub trait UnsignedPrimInt:
     UnsignedPrimIntSealed
@@ -56,7 +65,10 @@ where
     }
 }
 
-use sealing::{PrimIntSealed, UnsignedPrimIntSealed};
+use sealing::{
+    PrimIntSealed,
+    UnsignedPrimIntSealed,
+};
 
 mod sealing {
     pub trait UnsignedPrimIntSealed {}

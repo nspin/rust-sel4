@@ -4,8 +4,14 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use super::scheme::{Level, Scheme};
-use super::table::{AbstractEntry, Table};
+use super::scheme::{
+    Level,
+    Scheme,
+};
+use super::table::{
+    AbstractEntry,
+    Table,
+};
 
 impl Table {
     pub(crate) fn embed(&self, scheme: &Scheme, vaddr: u64) -> (Vec<u8>, u64) {

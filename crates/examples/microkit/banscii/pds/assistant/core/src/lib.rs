@@ -11,7 +11,15 @@ extern crate alloc;
 use alloc::vec;
 use alloc::vec::Vec;
 
-use ab_glyph::{Font, FontRef, Glyph, Point, PxScale, ScaleFont, point};
+use ab_glyph::{
+    Font,
+    FontRef,
+    Glyph,
+    Point,
+    PxScale,
+    ScaleFont,
+    point,
+};
 
 #[allow(unused_imports)]
 use num_traits::Float;

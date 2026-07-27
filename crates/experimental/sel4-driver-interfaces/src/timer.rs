@@ -9,9 +9,17 @@ use core::fmt;
 use core::ops::Deref;
 use core::time::Duration;
 
-use lock_api::{Mutex, RawMutex};
+use lock_api::{
+    Mutex,
+    RawMutex,
+};
 
-use crate::{HandleInterrupt, WrappedMutex, WrappedRefCell, WrappedRefCellError};
+use crate::{
+    HandleInterrupt,
+    WrappedMutex,
+    WrappedRefCell,
+    WrappedRefCellError,
+};
 
 pub trait ErrorType {
     type Error: fmt::Debug;

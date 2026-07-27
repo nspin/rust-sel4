@@ -7,12 +7,25 @@
 use core::cell::RefCell;
 use core::ops::Deref;
 
-use lock_api::{Mutex, RawMutex};
+use lock_api::{
+    Mutex,
+    RawMutex,
+};
 
-use crate::{WrappedMutex, WrappedRefCell, WrappedRefCellError};
+use crate::{
+    WrappedMutex,
+    WrappedRefCell,
+    WrappedRefCellError,
+};
 
 pub use embedded_hal_nb::nb;
-pub use embedded_hal_nb::serial::{Error, ErrorKind, ErrorType, Read, Write};
+pub use embedded_hal_nb::serial::{
+    Error,
+    ErrorKind,
+    ErrorType,
+    Read,
+    Write,
+};
 
 mod write_buffered;
 

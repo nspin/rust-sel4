@@ -9,9 +9,19 @@ use core::mem;
 use core::slice;
 
 #[sel4_cfg(KERNEL_INVOCATION_REPORT_ERROR_IPC)]
-use core::str::{self, Utf8Error};
+use core::str::{
+    self,
+    Utf8Error,
+};
 
-use crate::{AbsoluteCPtr, Word, cap, newtype_methods, sel4_cfg, sys};
+use crate::{
+    AbsoluteCPtr,
+    Word,
+    cap,
+    newtype_methods,
+    sel4_cfg,
+    sys,
+};
 
 #[sel4_cfg(KERNEL_INVOCATION_REPORT_ERROR_IPC)]
 use crate::const_helpers::u32_into_usize;

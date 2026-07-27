@@ -8,7 +8,10 @@ use alloc::collections::BTreeMap;
 use core::alloc::Layout;
 use core::ops::Range;
 
-use crate::{AbstractAllocator, AbstractAllocatorAllocation};
+use crate::{
+    AbstractAllocator,
+    AbstractAllocatorAllocation,
+};
 
 pub struct ByRange<A: AbstractAllocator> {
     inner: A,

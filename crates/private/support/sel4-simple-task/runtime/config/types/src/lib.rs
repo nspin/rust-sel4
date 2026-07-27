@@ -18,7 +18,10 @@ use rkyv::rancor;
 use rkyv::util::AlignedVec;
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 #[cfg(target_pointer_width = "32")]
 type NativeWord = u32;

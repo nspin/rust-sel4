@@ -19,6 +19,9 @@ mod short_backtrace;
 pub mod for_generated_code;
 
 pub use {
-    config::{set_config, types::*},
+    config::{
+        set_config,
+        types::*,
+    },
     entry::run_test_main,
 };

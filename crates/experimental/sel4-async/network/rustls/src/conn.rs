@@ -11,23 +11,51 @@ use core::marker::PhantomData;
 use core::mem;
 use core::ops::DerefMut;
 use core::pin::Pin;
-use core::task::{self, Poll};
+use core::task::{
+    self,
+    Poll,
+};
 
 use alloc::sync::Arc;
 
-use rustls::client::{ClientConnectionData, UnbufferedClientConnection};
-use rustls::pki_types::ServerName;
-use rustls::server::{ServerConnectionData, UnbufferedServerConnection};
-use rustls::unbuffered::{
-    AppDataRecord, ConnectionState, EncodeError, EncryptError, UnbufferedStatus,
+use rustls::client::{
+    ClientConnectionData,
+    UnbufferedClientConnection,
 };
-use rustls::{ClientConfig, ServerConfig, SideData, unbuffered::UnbufferedConnectionCommon};
+use rustls::pki_types::ServerName;
+use rustls::server::{
+    ServerConnectionData,
+    UnbufferedServerConnection,
+};
+use rustls::unbuffered::{
+    AppDataRecord,
+    ConnectionState,
+    EncodeError,
+    EncryptError,
+    UnbufferedStatus,
+};
+use rustls::{
+    ClientConfig,
+    ServerConfig,
+    SideData,
+    unbuffered::UnbufferedConnectionCommon,
+};
 
-use sel4_async_io::{ErrorType, Read, Write};
+use sel4_async_io::{
+    ErrorType,
+    Read,
+    Write,
+};
 
 use crate::{
     Error,
-    utils::{Buffer, WriteCursor, poll_read, poll_write, try_or_resize_and_retry},
+    utils::{
+        Buffer,
+        WriteCursor,
+        poll_read,
+        poll_write,
+        try_or_resize_and_retry,
+    },
 };
 
 pub struct ClientConnector {

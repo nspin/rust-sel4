@@ -10,7 +10,11 @@ use core::mem::MaybeUninit;
 use unwinding::abi::*;
 use unwinding::panicking::Exception;
 
-use super::{ExceptionImpl, RustPanic, foreign_exception};
+use super::{
+    ExceptionImpl,
+    RustPanic,
+    foreign_exception,
+};
 
 #[cfg(not(target_thread_local))]
 compile_error!("");

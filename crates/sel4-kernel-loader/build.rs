@@ -13,11 +13,21 @@ use object::{
     ReadRef,
     elf::PT_LOAD,
     endian::Endianness,
-    read::elf::{ElfFile, FileHeader, ProgramHeader},
+    read::elf::{
+        ElfFile,
+        FileHeader,
+        ProgramHeader,
+    },
 };
 
-use sel4_build_env::{get_libsel4_include_dirs, get_with_sel4_prefix_relative_fallback};
-use sel4_config::{sel4_cfg, sel4_cfg_str};
+use sel4_build_env::{
+    get_libsel4_include_dirs,
+    get_with_sel4_prefix_relative_fallback,
+};
+use sel4_config::{
+    sel4_cfg,
+    sel4_cfg_str,
+};
 
 pub const SEL4_KERNEL_ENV: &str = "SEL4_KERNEL";
 

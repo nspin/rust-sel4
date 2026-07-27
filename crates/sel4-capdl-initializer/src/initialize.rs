@@ -14,18 +14,31 @@ use rkyv::ops::ArchivedRange;
 use rkyv::option::ArchivedOption;
 
 #[allow(unused_imports)]
-use log::{debug, error, info, trace};
+use log::{
+    debug,
+    error,
+    info,
+    trace,
+};
 
 use sel4::{
-    CapRights, CapTypeForFrameObjectOfFixedSize, cap_type,
-    init_thread::{self, Slot},
+    CapRights,
+    CapTypeForFrameObjectOfFixedSize,
+    cap_type,
+    init_thread::{
+        self,
+        Slot,
+    },
 };
 use sel4_capdl_initializer_types::*;
 
 use crate::cslot_allocator::CSlotAllocator;
 use crate::error::CapDLInitializerError;
 use crate::hold_slots::HoldSlots;
-use crate::memory::{CopyAddrs, get_user_image_frame_slot};
+use crate::memory::{
+    CopyAddrs,
+    get_user_image_frame_slot,
+};
 
 type Result<T> = CoreResult<T, CapDLInitializerError>;
 

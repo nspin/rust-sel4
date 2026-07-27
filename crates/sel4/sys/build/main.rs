@@ -6,12 +6,18 @@
 
 use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{
+    Path,
+    PathBuf,
+};
 
 use glob::glob;
 use proc_macro2::TokenStream;
 
-use sel4_build_env::{find_in_libsel4_include_dirs, get_libsel4_include_dirs};
+use sel4_build_env::{
+    find_in_libsel4_include_dirs,
+    get_libsel4_include_dirs,
+};
 
 mod bf;
 mod c;

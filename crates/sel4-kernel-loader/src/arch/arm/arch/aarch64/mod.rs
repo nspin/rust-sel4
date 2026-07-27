@@ -7,11 +7,18 @@
 use core::arch::asm;
 use core::mem;
 
-use aarch64_cpu::registers::{CurrentEL, Readable};
+use aarch64_cpu::registers::{
+    CurrentEL,
+    Readable,
+};
 
 use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 
-use crate::{arch::Arch, main, secondary_main};
+use crate::{
+    arch::Arch,
+    main,
+    secondary_main,
+};
 
 pub(crate) mod drivers;
 pub(crate) mod exception_handler;

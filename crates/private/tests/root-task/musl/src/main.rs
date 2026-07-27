@@ -15,12 +15,28 @@ use core::ptr;
 
 use one_shot_mutex::sync::RawOneShotMutex;
 
-use sel4_dlmalloc::{StaticDlmalloc, StaticHeap};
-use sel4_linux_syscall_types::{ENOMEM, ENOSYS, MAP_ANONYMOUS, SEEK_CUR};
-use sel4_musl::{
-    ParseSyscallError, Syscall, SyscallReturnValue, VaListAsSyscallArgs, set_syscall_handler,
+use sel4_dlmalloc::{
+    StaticDlmalloc,
+    StaticHeap,
 };
-use sel4_root_task_with_std::{debug_print, debug_println, declare_root_task};
+use sel4_linux_syscall_types::{
+    ENOMEM,
+    ENOSYS,
+    MAP_ANONYMOUS,
+    SEEK_CUR,
+};
+use sel4_musl::{
+    ParseSyscallError,
+    Syscall,
+    SyscallReturnValue,
+    VaListAsSyscallArgs,
+    set_syscall_handler,
+};
+use sel4_root_task_with_std::{
+    debug_print,
+    debug_println,
+    declare_root_task,
+};
 
 declare_root_task!(main = main);
 

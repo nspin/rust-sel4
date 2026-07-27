@@ -20,8 +20,14 @@ use rkyv::Archive;
 
 use sel4_dlmalloc::StaticHeapBounds;
 use sel4_immediate_sync_once_cell::ImmediateSyncOnceCell;
-use sel4_panicking_env::{AbortInfo, abort};
-use sel4_simple_task_runtime_config_types::{RuntimeConfig, RuntimeThreadConfig};
+use sel4_panicking_env::{
+    AbortInfo,
+    abort,
+};
+use sel4_simple_task_runtime_config_types::{
+    RuntimeConfig,
+    RuntimeThreadConfig,
+};
 use sel4_simple_task_threading::StaticThread;
 
 #[cfg(not(target_arch = "arm"))]
@@ -33,8 +39,15 @@ mod termination;
 #[cfg(feature = "alloc")]
 mod global_allocator;
 
-pub use sel4_panicking_env::{debug_print, debug_println};
-pub use sel4_simple_task_runtime_macros::{main, main_json, main_postcard};
+pub use sel4_panicking_env::{
+    debug_print,
+    debug_println,
+};
+pub use sel4_simple_task_runtime_macros::{
+    main,
+    main_json,
+    main_postcard,
+};
 
 unsafe extern "Rust" {
     pub(crate) fn __sel4_simple_task_main(arg: &[u8]);

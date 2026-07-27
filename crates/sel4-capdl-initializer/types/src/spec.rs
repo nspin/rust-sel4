@@ -14,11 +14,21 @@ use rkyv::Archive;
 use rkyv::option::ArchivedOption;
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
-use sel4_capdl_initializer_types_derive::{HasCapTable, IsCap, IsObject};
+use sel4_capdl_initializer_types_derive::{
+    HasCapTable,
+    IsCap,
+    IsObject,
+};
 
-use crate::{HasArchivedCapTable, HasCapTable};
+use crate::{
+    HasArchivedCapTable,
+    HasCapTable,
+};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

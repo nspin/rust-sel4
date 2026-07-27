@@ -12,7 +12,10 @@ use core::convert::Infallible;
 use core::fmt;
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use crate::*;
 

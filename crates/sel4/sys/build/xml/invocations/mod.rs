@@ -12,12 +12,21 @@ use std::fmt::Write;
 use std::ops::Range;
 use std::path::Path;
 
-use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
+use proc_macro2::{
+    Ident,
+    TokenStream,
+};
+use quote::{
+    format_ident,
+    quote,
+};
 
 use sel4_config::sel4_cfg_bool;
 
-use super::{Condition, parse_xml};
+use super::{
+    Condition,
+    parse_xml,
+};
 
 mod parse;
 use parse::*;

@@ -14,7 +14,14 @@ use core::ops::Deref;
 use futures::future;
 use lru::LruCache;
 
-use crate::{Access, BlockIO, BlockIOLayout, BlockSize, Operation, wrapper_methods};
+use crate::{
+    Access,
+    BlockIO,
+    BlockIOLayout,
+    BlockSize,
+    Operation,
+    wrapper_methods,
+};
 
 pub struct DynamicBlockSize {
     bits: usize,

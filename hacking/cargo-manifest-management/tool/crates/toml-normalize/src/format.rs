@@ -10,11 +10,26 @@ use std::mem;
 
 use thiserror::Error;
 use toml::value::{
-    Array as UnformattedArray, Table as UnformattedTable, Value as UnformattedValue,
+    Array as UnformattedArray,
+    Table as UnformattedTable,
+    Value as UnformattedValue,
 };
-use toml_edit::{Array, ArrayOfTables, Document, Formatted, InlineTable, Item, Key, Table, Value};
+use toml_edit::{
+    Array,
+    ArrayOfTables,
+    Document,
+    Formatted,
+    InlineTable,
+    Item,
+    Key,
+    Table,
+    Value,
+};
 
-use toml_path_regex::{Path, PathSegment};
+use toml_path_regex::{
+    Path,
+    PathSegment,
+};
 
 pub trait AbstractPolicy {
     fn max_width(&self) -> usize;

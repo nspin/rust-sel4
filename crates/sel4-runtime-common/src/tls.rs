@@ -11,7 +11,11 @@ use sel4_phdrs::PT_TLS;
 use sel4_phdrs::locate_phdrs;
 
 #[allow(unused_imports)]
-use sel4_initialize_tls::{DEFAULT_SET_THREAD_POINTER_FN, SetThreadPointerFn, UncheckedTlsImage};
+use sel4_initialize_tls::{
+    DEFAULT_SET_THREAD_POINTER_FN,
+    SetThreadPointerFn,
+    UncheckedTlsImage,
+};
 
 #[allow(clippy::missing_safety_doc)]
 pub(crate) unsafe fn with_tls(f: impl FnOnce() -> !) -> ! {

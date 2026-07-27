@@ -7,7 +7,10 @@
 use core::arch::asm;
 use core::fmt;
 
-use crate::arch::{Arch, ArchImpl};
+use crate::arch::{
+    Arch,
+    ArchImpl,
+};
 use crate::fmt::debug_println_without_synchronization;
 
 #[used]

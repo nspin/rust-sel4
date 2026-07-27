@@ -9,12 +9,30 @@ use std::path::PathBuf;
 
 use anyhow::Error;
 use clap::Parser;
-use object::elf::{PF_R, PF_W, PT_LOAD};
-use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
-use object::{File, Object, ObjectSection, Pod, pod};
+use object::elf::{
+    PF_R,
+    PF_W,
+    PT_LOAD,
+};
+use object::read::elf::{
+    ElfFile,
+    FileHeader,
+    ProgramHeader,
+};
+use object::{
+    File,
+    Object,
+    ObjectSection,
+    Pod,
+    pod,
+};
 use rangemap::RangeSet;
 
-use sel4_patch_elf::{FileHeaderExt, GenericProgramHeader, Patching};
+use sel4_patch_elf::{
+    FileHeaderExt,
+    GenericProgramHeader,
+    Patching,
+};
 use sel4_phdrs_constants::PT_SEL4_RESET_REGIONS;
 
 #[derive(Parser, Debug)]

@@ -5,13 +5,29 @@
 //
 
 use std::os::unix;
-use std::path::{Path, PathBuf};
+use std::path::{
+    Path,
+    PathBuf,
+};
 use std::process::Command;
-use std::{env, fs, iter};
+use std::{
+    env,
+    fs,
+    iter,
+};
 
-use anyhow::{Error, ensure};
+use anyhow::{
+    Error,
+    ensure,
+};
 use clap::Parser;
-use object::{Architecture, File, Object, ObjectSection as _, ObjectSymbol};
+use object::{
+    Architecture,
+    File,
+    Object,
+    ObjectSection as _,
+    ObjectSymbol,
+};
 use tempfile::TempDir;
 
 #[derive(Parser, Debug)]

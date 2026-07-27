@@ -6,13 +6,25 @@
 
 #![no_std]
 
-use core::alloc::{GlobalAlloc, Layout};
+use core::alloc::{
+    GlobalAlloc,
+    Layout,
+};
 use core::cell::UnsafeCell;
 use core::ptr;
-use core::sync::atomic::{AtomicUsize, Ordering};
+use core::sync::atomic::{
+    AtomicUsize,
+    Ordering,
+};
 
-use dlmalloc::{Allocator, Dlmalloc};
-use lock_api::{Mutex, RawMutex};
+use dlmalloc::{
+    Allocator,
+    Dlmalloc,
+};
+use lock_api::{
+    Mutex,
+    RawMutex,
+};
 
 // TODO implement core::alloc::Allocator for StaticDlmalloc once stable
 

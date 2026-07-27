@@ -4,7 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::arch::{asm, global_asm};
+use core::arch::{
+    asm,
+    global_asm,
+};
 use core::ptr;
 
 #[used]

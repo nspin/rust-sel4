@@ -7,7 +7,10 @@
 use core::error::Error;
 use core::fmt;
 
-use crate::{MessageLabel, MessageRegisterValue};
+use crate::{
+    MessageLabel,
+    MessageRegisterValue,
+};
 
 pub struct MessageParser<'a> {
     label: MessageLabel,

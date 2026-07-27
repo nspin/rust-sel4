@@ -12,8 +12,16 @@ use core::ops::Range;
 use sel4_config::sel4_cfg;
 
 use crate::{
-    CPtr, CPtrBits, Cap, CapType, cap_type,
-    const_helpers::{u32_into_usize, usize_into_word, word_into_usize},
+    CPtr,
+    CPtrBits,
+    Cap,
+    CapType,
+    cap_type,
+    const_helpers::{
+        u32_into_usize,
+        usize_into_word,
+        word_into_usize,
+    },
     sys,
 };
 
@@ -111,7 +119,12 @@ impl<T: CapType> SlotRegion<T> {
 
 /// Initial CSpace slot constants corresponding to `seL4_Cap*`.
 pub mod slot {
-    use super::{Slot, cap_type, sel4_cfg, sys};
+    use super::{
+        Slot,
+        cap_type,
+        sel4_cfg,
+        sys,
+    };
 
     macro_rules! mk {
         [

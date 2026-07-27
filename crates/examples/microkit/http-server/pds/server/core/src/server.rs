@@ -7,10 +7,17 @@
 use alloc::borrow::ToOwned;
 use alloc::format;
 use alloc::rc::Rc;
-use alloc::string::{String, ToString};
+use alloc::string::{
+    String,
+    ToString,
+};
 use alloc::vec;
 
-use embedded_io_async::{Read, ReadExactError, Write};
+use embedded_io_async::{
+    Read,
+    ReadExactError,
+    Write,
+};
 
 use sel4_async_block_io_fat as fat;
 use sel4_async_unsync::Mutex;

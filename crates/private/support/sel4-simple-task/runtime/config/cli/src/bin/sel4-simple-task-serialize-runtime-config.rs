@@ -5,7 +5,10 @@
 //
 
 use std::fs;
-use std::io::{self, Write};
+use std::io::{
+    self,
+    Write,
+};
 use std::path::PathBuf;
 
 use sel4_simple_task_runtime_config_types::GenericRuntimeConfig;

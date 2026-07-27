@@ -5,7 +5,10 @@
 //
 
 use core::ffi::c_int;
-use core::mem::{self, MaybeUninit};
+use core::mem::{
+    self,
+    MaybeUninit,
+};
 use core::panic::UnwindSafe;
 use core::ptr;
 

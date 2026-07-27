@@ -8,7 +8,10 @@
 
 use core::alloc::Layout;
 use core::arch::global_asm;
-use core::mem::{ManuallyDrop, MaybeUninit};
+use core::mem::{
+    ManuallyDrop,
+    MaybeUninit,
+};
 use core::slice;
 
 // TODO:

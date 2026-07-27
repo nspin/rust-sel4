@@ -10,7 +10,10 @@ use std::io;
 use clap::Parser;
 use object::read::elf::ElfFile;
 
-use sel4_patch_elf::{FileHeaderExt, Patching};
+use sel4_patch_elf::{
+    FileHeaderExt,
+    Patching,
+};
 use sel4_phdrs_constants::PT_SEL4_EMBEDDED_DEBUG_INFO;
 
 #[derive(Parser, Debug)]

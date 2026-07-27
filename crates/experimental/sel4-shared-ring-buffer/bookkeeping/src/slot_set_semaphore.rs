@@ -10,7 +10,10 @@ use core::cell::Cell;
 use core::future::Future;
 use core::mem;
 
-use crate::slot_count_tracker::{SlotCountTracker, SlotCountTrackerError};
+use crate::slot_count_tracker::{
+    SlotCountTracker,
+    SlotCountTrackerError,
+};
 
 pub trait SlotSemaphore {
     fn new(count: usize) -> Self;
@@ -259,7 +262,10 @@ impl SlotSemaphore for Rc<DummySlotSemaphore> {
 
 #[cfg(feature = "async-unsync")]
 mod async_unsync_impl {
-    use async_unsync::semaphore::{Semaphore, TryAcquireError};
+    use async_unsync::semaphore::{
+        Semaphore,
+        TryAcquireError,
+    };
 
     use super::*;
 

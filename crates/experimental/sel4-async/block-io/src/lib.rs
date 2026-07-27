@@ -21,15 +21,27 @@ pub mod disk;
 
 mod operation;
 
-pub use operation::{Operation, OperationType};
+pub use operation::{
+    Operation,
+    OperationType,
+};
 
-use access::{Access, ReadAccess, ReadOnly, ReadWrite, WriteAccess};
+use access::{
+    Access,
+    ReadAccess,
+    ReadOnly,
+    ReadWrite,
+    WriteAccess,
+};
 
 #[cfg(feature = "alloc")]
 mod when_alloc;
 
 #[cfg(feature = "alloc")]
-pub use when_alloc::{CachedBlockIO, DynamicBlockSize};
+pub use when_alloc::{
+    CachedBlockIO,
+    DynamicBlockSize,
+};
 
 pub trait BlockIOLayout {
     type Error: fmt::Debug;
@@ -107,7 +119,12 @@ pub trait HasPrevBlockSize: ConstantBlockSize {
 }
 
 pub mod constant_block_sizes {
-    use super::{BlockSize, ConstantBlockSize, HasNextBlockSize, HasPrevBlockSize};
+    use super::{
+        BlockSize,
+        ConstantBlockSize,
+        HasNextBlockSize,
+        HasPrevBlockSize,
+    };
 
     macro_rules! declare_block_size {
         ($ident:ident, $n:literal) => {

@@ -36,5 +36,8 @@ macro_rules! rodata_static {
 #[doc(hidden)]
 pub mod _private {
     pub use core::arch::global_asm;
-    pub use core::mem::{align_of, size_of};
+    pub use core::mem::{
+        align_of,
+        size_of,
+    };
 }

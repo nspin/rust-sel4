@@ -23,7 +23,10 @@ mod transform;
 #[cfg(feature = "sel4")]
 mod when_sel4;
 
-pub use cap_table::{HasArchivedCapTable, HasCapTable};
+pub use cap_table::{
+    HasArchivedCapTable,
+    HasCapTable,
+};
 pub use frame_init::*;
 pub use spec::*;
 

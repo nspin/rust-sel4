@@ -16,7 +16,15 @@ use std::path::Path;
 
 use rustc_target::json::ToJson;
 use rustc_target::spec::{
-    Cc, Env, LinkerFlavor, Lld, Os, PanicStrategy, RelocModel, RelroLevel, Target,
+    Cc,
+    Env,
+    LinkerFlavor,
+    Lld,
+    Os,
+    PanicStrategy,
+    RelocModel,
+    RelroLevel,
+    Target,
 };
 
 cfg_if! {
@@ -28,7 +36,10 @@ cfg_if! {
 }
 
 use cfg_if::cfg_if;
-use clap::{Parser, Subcommand};
+use clap::{
+    Parser,
+    Subcommand,
+};
 
 const CHOSEN_LINKER_FLAVOR: LinkerFlavor = LinkerFlavor::Gnu(Cc::No, Lld::Yes);
 

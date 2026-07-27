@@ -10,10 +10,15 @@ use core::ptr::NonNull;
 
 use smoltcp::phy::DeviceCapabilities;
 
-use sel4_abstract_allocator::{AbstractAllocator, AbstractAllocatorAllocation};
+use sel4_abstract_allocator::{
+    AbstractAllocator,
+    AbstractAllocatorAllocation,
+};
 use sel4_shared_memory::SharedMemoryRef;
 use sel4_shared_ring_buffer::{
-    Descriptor, PeerMisbehaviorError as SharedRingBuffersPeerMisbehaviorError, RingBuffers,
+    Descriptor,
+    PeerMisbehaviorError as SharedRingBuffersPeerMisbehaviorError,
+    RingBuffers,
     roles::Provide,
 };
 use sel4_shared_ring_buffer_bookkeeping::slot_tracker::*;

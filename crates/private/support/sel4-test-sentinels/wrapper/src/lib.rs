@@ -5,10 +5,20 @@
 //
 
 use std::io;
-use std::io::{Read, Write};
-use std::process::{Command, ExitStatus, Stdio};
+use std::io::{
+    Read,
+    Write,
+};
+use std::process::{
+    Command,
+    ExitStatus,
+    Stdio,
+};
 
-use anyhow::{Error, bail};
+use anyhow::{
+    Error,
+    bail,
+};
 
 pub struct Sentinels<T> {
     pub sequences: Vec<Sequence<T>>,

@@ -17,7 +17,10 @@ use core::fmt;
 
 use addr2line::fallible_iterator::FallibleIterator;
 use addr2line::gimli;
-use addr2line::{Context, Location};
+use addr2line::{
+    Context,
+    Location,
+};
 
 fn print_loc(w: &mut impl fmt::Write, loc: Option<&Location<'_>>) -> Result<(), fmt::Error> {
     if let Some(loc) = loc {

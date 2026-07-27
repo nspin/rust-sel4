@@ -5,7 +5,10 @@
 //
 
 use core::hint;
-use core::sync::atomic::{AtomicUsize, Ordering};
+use core::sync::atomic::{
+    AtomicUsize,
+    Ordering,
+};
 
 // ::spin::Barrier appears to use too tight of a loop
 
