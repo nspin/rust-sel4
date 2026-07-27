@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::fmt;
-use core::sync::atomic::{
-    AtomicBool,
-    Ordering,
+use core::{
+    fmt,
+    sync::atomic::{
+        AtomicBool,
+        Ordering,
+    },
 };
 
 static PANICKING: AtomicBool = AtomicBool::new(false);

@@ -9,10 +9,14 @@
 
 extern crate alloc;
 
-use alloc::boxed::Box;
-use alloc::collections::BTreeMap;
-use core::pin::Pin;
-use core::ptr::NonNull;
+use alloc::{
+    boxed::Box,
+    collections::BTreeMap,
+};
+use core::{
+    pin::Pin,
+    ptr::NonNull,
+};
 
 use virtio_drivers::{
     device::blk::*,

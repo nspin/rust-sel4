@@ -8,9 +8,11 @@
 
 extern crate alloc;
 
-use rkyv::Archive;
-use rkyv::rancor;
-use rkyv::util::AlignedVec;
+use rkyv::{
+    Archive,
+    rancor,
+    util::AlignedVec,
+};
 
 mod cap_table;
 mod frame_init;

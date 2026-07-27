@@ -6,39 +6,41 @@
 
 // Derived from https://github.com/rustls/rustls/pull/1648 by https://github.com/japaric
 
-use core::future::Future;
-use core::marker::PhantomData;
-use core::mem;
-use core::ops::DerefMut;
-use core::pin::Pin;
-use core::task::{
-    self,
-    Poll,
+use core::{
+    future::Future,
+    marker::PhantomData,
+    mem,
+    ops::DerefMut,
+    pin::Pin,
+    task::{
+        self,
+        Poll,
+    },
 };
 
 use alloc::sync::Arc;
 
-use rustls::client::{
-    ClientConnectionData,
-    UnbufferedClientConnection,
-};
-use rustls::pki_types::ServerName;
-use rustls::server::{
-    ServerConnectionData,
-    UnbufferedServerConnection,
-};
-use rustls::unbuffered::{
-    AppDataRecord,
-    ConnectionState,
-    EncodeError,
-    EncryptError,
-    UnbufferedStatus,
-};
 use rustls::{
     ClientConfig,
     ServerConfig,
     SideData,
-    unbuffered::UnbufferedConnectionCommon,
+    client::{
+        ClientConnectionData,
+        UnbufferedClientConnection,
+    },
+    pki_types::ServerName,
+    server::{
+        ServerConnectionData,
+        UnbufferedServerConnection,
+    },
+    unbuffered::{
+        AppDataRecord,
+        ConnectionState,
+        EncodeError,
+        EncryptError,
+        UnbufferedConnectionCommon,
+        UnbufferedStatus,
+    },
 };
 
 use sel4_async_io::{

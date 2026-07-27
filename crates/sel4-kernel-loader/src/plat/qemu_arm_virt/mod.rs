@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use embedded_hal_nb::nb;
-use embedded_hal_nb::serial::Write;
+use embedded_hal_nb::{
+    nb,
+    serial::Write,
+};
 use spin::lock_api::Mutex;
 
 use sel4_config::sel4_cfg_bool;

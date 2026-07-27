@@ -6,17 +6,19 @@
 
 #![no_std]
 
-use core::marker::PhantomData;
-use core::mem;
-use core::ops::{
-    BitAnd,
-    BitAndAssign,
-    BitOr,
-    BitOrAssign,
-    Not,
-    Range,
-    Shl,
-    Shr,
+use core::{
+    marker::PhantomData,
+    mem,
+    ops::{
+        BitAnd,
+        BitAndAssign,
+        BitOr,
+        BitOrAssign,
+        Not,
+        Range,
+        Shl,
+        Shr,
+    },
 };
 
 pub trait UnsignedPrimInt:
@@ -370,8 +372,10 @@ mod test {
 
     extern crate std;
 
-    use std::eprintln;
-    use std::fmt;
+    use std::{
+        eprintln,
+        fmt,
+    };
 
     use super::*;
 

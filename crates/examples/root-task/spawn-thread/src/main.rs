@@ -11,11 +11,13 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
-use core::cell::UnsafeCell;
-use core::mem;
-use core::ops::Range;
-use core::panic::UnwindSafe;
-use core::ptr;
+use core::{
+    cell::UnsafeCell,
+    mem,
+    ops::Range,
+    panic::UnwindSafe,
+    ptr,
+};
 
 use cfg_if::cfg_if;
 

@@ -4,14 +4,16 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use alloc::borrow::ToOwned;
-use alloc::format;
-use alloc::rc::Rc;
-use alloc::string::{
-    String,
-    ToString,
+use alloc::{
+    borrow::ToOwned,
+    format,
+    rc::Rc,
+    string::{
+        String,
+        ToString,
+    },
+    vec,
 };
-use alloc::vec;
 
 use embedded_io_async::{
     Read,

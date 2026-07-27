@@ -4,14 +4,20 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use alloc::boxed::Box;
-use alloc::string::String;
-use alloc::vec::Vec;
-use core::num::NonZero;
-use core::ops::Range;
+use alloc::{
+    boxed::Box,
+    string::String,
+    vec::Vec,
+};
+use core::{
+    num::NonZero,
+    ops::Range,
+};
 
-use rkyv::Archive;
-use rkyv::option::ArchivedOption;
+use rkyv::{
+    Archive,
+    option::ArchivedOption,
+};
 
 #[cfg(feature = "serde")]
 use serde::{

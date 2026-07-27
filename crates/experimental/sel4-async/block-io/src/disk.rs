@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::mem;
-use core::ops::Range;
+use core::{
+    mem,
+    ops::Range,
+};
 
 use gpt_disk_types::{
     GptHeader,

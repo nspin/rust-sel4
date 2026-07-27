@@ -9,22 +9,26 @@
 extern crate rustc_driver;
 extern crate rustc_target;
 
-use std::borrow::Cow;
-use std::collections::BTreeMap;
-use std::fs;
-use std::path::Path;
+use std::{
+    borrow::Cow,
+    collections::BTreeMap,
+    fs,
+    path::Path,
+};
 
-use rustc_target::json::ToJson;
-use rustc_target::spec::{
-    Cc,
-    Env,
-    LinkerFlavor,
-    Lld,
-    Os,
-    PanicStrategy,
-    RelocModel,
-    RelroLevel,
-    Target,
+use rustc_target::{
+    json::ToJson,
+    spec::{
+        Cc,
+        Env,
+        LinkerFlavor,
+        Lld,
+        Os,
+        PanicStrategy,
+        RelocModel,
+        RelroLevel,
+        Target,
+    },
 };
 
 cfg_if! {

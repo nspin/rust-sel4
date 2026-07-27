@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::arch::asm;
-use core::ffi::c_int;
+use core::{
+    arch::asm,
+    ffi::c_int,
+};
 
 use sel4_config::sel4_cfg;
 

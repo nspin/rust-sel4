@@ -6,8 +6,10 @@
 
 #![no_std]
 
-use core::alloc::Layout;
-use core::ops::Range;
+use core::{
+    alloc::Layout,
+    ops::Range,
+};
 
 use offset_allocator::NodeIndex;
 

@@ -4,9 +4,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::cmp::Ordering;
-use std::fmt;
-use std::mem;
+use std::{
+    cmp::Ordering,
+    fmt,
+    mem,
+};
 
 use thiserror::Error;
 use toml::value::{

@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fs;
-use std::io;
+use std::{
+    fs,
+    io,
+};
 
 use clap::Parser;
 use object::read::elf::ElfFile;

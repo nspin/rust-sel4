@@ -4,11 +4,13 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::env;
-use std::fs;
-use std::path::{
-    Path,
-    PathBuf,
+use std::{
+    env,
+    fs,
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
 use glob::glob;

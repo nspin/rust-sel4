@@ -13,8 +13,10 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-use core::panic::PanicInfo;
-use core::slice;
+use core::{
+    panic::PanicInfo,
+    slice,
+};
 
 use rkyv::Archive;
 

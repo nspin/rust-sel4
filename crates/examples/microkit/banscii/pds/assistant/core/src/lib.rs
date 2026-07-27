@@ -8,8 +8,10 @@
 
 extern crate alloc;
 
-use alloc::vec;
-use alloc::vec::Vec;
+use alloc::{
+    vec,
+    vec::Vec,
+};
 
 use ab_glyph::{
     Font,

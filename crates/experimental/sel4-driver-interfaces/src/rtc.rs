@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::cell::RefCell;
-use core::ops::Deref;
+use core::{
+    cell::RefCell,
+    ops::Deref,
+};
 
 use lock_api::{
     Mutex,

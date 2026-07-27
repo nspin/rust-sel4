@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::ffi::c_int;
-use core::sync::atomic::{
-    Ordering,
-    compiler_fence,
+use core::{
+    ffi::c_int,
+    sync::atomic::{
+        Ordering,
+        compiler_fence,
+    },
 };
 
 use sel4_config::{

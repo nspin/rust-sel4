@@ -4,23 +4,25 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::collections::{
-    BTreeMap,
-    BTreeSet,
-};
-use std::env;
-use std::fs::{
-    self,
-    File,
-};
-use std::io::{
-    Write,
-    stdout,
-};
-use std::path::PathBuf;
-use std::process::{
-    Command,
-    Output,
+use std::{
+    collections::{
+        BTreeMap,
+        BTreeSet,
+    },
+    env,
+    fs::{
+        self,
+        File,
+    },
+    io::{
+        Write,
+        stdout,
+    },
+    path::PathBuf,
+    process::{
+        Command,
+        Output,
+    },
 };
 
 use cargo_metadata::{

@@ -6,8 +6,10 @@
 
 use alloc::boxed::Box;
 
-use unwinding::abi::*;
-use unwinding::panicking::Exception;
+use unwinding::{
+    abi::*,
+    panicking::Exception,
+};
 
 use super::{
     ExceptionImpl,

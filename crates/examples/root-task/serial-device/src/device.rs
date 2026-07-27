@@ -6,18 +6,18 @@
 
 use core::ops::Deref;
 
-use tock_registers::interfaces::{
-    Readable,
-    Writeable,
-};
-use tock_registers::registers::{
-    ReadOnly,
-    ReadWrite,
-    WriteOnly,
-};
 use tock_registers::{
+    interfaces::{
+        Readable,
+        Writeable,
+    },
     register_bitfields,
     register_structs,
+    registers::{
+        ReadOnly,
+        ReadWrite,
+        WriteOnly,
+    },
 };
 
 register_structs! {

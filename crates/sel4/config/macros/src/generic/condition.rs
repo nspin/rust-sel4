@@ -10,14 +10,16 @@ use proc_macro2::{
     TokenStream,
 };
 use quote::quote_spanned;
-use syn::Token;
-use syn::parse::{
-    Parse,
-    ParseStream,
-    Parser,
-    Result as ParseResult,
+use syn::{
+    Token,
+    parse::{
+        Parse,
+        ParseStream,
+        Parser,
+        Result as ParseResult,
+    },
+    spanned::Spanned,
 };
-use syn::spanned::Spanned;
 
 use sel4_config_types::{
     Configuration,

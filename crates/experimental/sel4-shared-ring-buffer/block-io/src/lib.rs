@@ -10,13 +10,15 @@
 extern crate alloc;
 
 use alloc::rc::Rc;
-use core::cell::RefCell;
-use core::future::Future;
-use core::marker::PhantomData;
-use core::pin::Pin;
-use core::task::{
-    Context,
-    Poll,
+use core::{
+    cell::RefCell,
+    future::Future,
+    marker::PhantomData,
+    pin::Pin,
+    task::{
+        Context,
+        Poll,
+    },
 };
 
 use async_unsync::semaphore::Semaphore;

@@ -6,8 +6,10 @@
 
 #![no_std]
 
-use core::error::Error;
-use core::fmt;
+use core::{
+    error::Error,
+    fmt,
+};
 
 use serde::{
     Deserialize,

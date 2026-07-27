@@ -10,30 +10,36 @@
 extern crate alloc;
 
 use alloc::rc::Rc;
-use core::cell::RefCell;
-use core::convert::Infallible;
+use core::{
+    cell::RefCell,
+    convert::Infallible,
+};
 
 use log::trace;
-use sel4_driver_interfaces::HandleInterrupt;
-use sel4_driver_interfaces::net::{
-    GetNetDeviceMeta,
-    MacAddress,
+use sel4_driver_interfaces::{
+    HandleInterrupt,
+    net::{
+        GetNetDeviceMeta,
+        MacAddress,
+    },
 };
-use smoltcp::phy::{
-    Device,
-    DeviceCapabilities,
-    Medium,
-    RxToken,
-    TxToken,
-};
-use smoltcp::time::Instant;
-use virtio_drivers::device::net::{
-    RxBuffer,
-    VirtIONet,
+use smoltcp::{
+    phy::{
+        Device,
+        DeviceCapabilities,
+        Medium,
+        RxToken,
+        TxToken,
+    },
+    time::Instant,
 };
 use virtio_drivers::{
     Error,
     Hal,
+    device::net::{
+        RxBuffer,
+        VirtIONet,
+    },
     transport::Transport,
 };
 

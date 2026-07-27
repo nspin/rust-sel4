@@ -6,8 +6,10 @@
 
 #![no_std]
 
-use core::arch::global_asm;
-use core::slice;
+use core::{
+    arch::global_asm,
+    slice,
+};
 
 use sel4_panicking_env::abort;
 use sel4_phdrs::{

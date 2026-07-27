@@ -6,9 +6,11 @@
 
 #![no_std]
 
-use core::fmt;
-use core::marker::PhantomData;
-use core::mem;
+use core::{
+    fmt,
+    marker::PhantomData,
+    mem,
+};
 
 use serde::{
     Deserialize,

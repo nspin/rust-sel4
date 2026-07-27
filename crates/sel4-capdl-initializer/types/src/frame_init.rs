@@ -4,10 +4,14 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use alloc::string::String;
-use alloc::vec::Vec;
-use core::fmt;
-use core::ops::Range;
+use alloc::{
+    string::String,
+    vec::Vec,
+};
+use core::{
+    fmt,
+    ops::Range,
+};
 
 #[cfg(feature = "serde")]
 use serde::{

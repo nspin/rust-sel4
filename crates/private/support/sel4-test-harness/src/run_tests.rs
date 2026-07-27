@@ -5,8 +5,10 @@
 //
 
 use alloc::string::String;
-use core::fmt;
-use core::panic::AssertUnwindSafe;
+use core::{
+    fmt,
+    panic::AssertUnwindSafe,
+};
 
 use sel4_panicking::catch_unwind;
 use sel4_panicking_env::{

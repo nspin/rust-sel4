@@ -4,23 +4,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fmt;
-use std::ops::Range;
+use std::{
+    fmt,
+    ops::Range,
+};
 
-use object::elf::{
-    FileHeader32,
-    FileHeader64,
-    PF_R,
-    PT_LOAD,
-    PT_PHDR,
-    ProgramHeader32,
-    ProgramHeader64,
-};
-use object::read::elf::{
-    ElfFile,
-    FileHeader,
-    ProgramHeader,
-};
 use object::{
     Endian,
     Object as _,
@@ -29,7 +17,21 @@ use object::{
     Pod,
     U32,
     U64,
+    elf::{
+        FileHeader32,
+        FileHeader64,
+        PF_R,
+        PT_LOAD,
+        PT_PHDR,
+        ProgramHeader32,
+        ProgramHeader64,
+    },
     pod,
+    read::elf::{
+        ElfFile,
+        FileHeader,
+        ProgramHeader,
+    },
 };
 
 pub mod dynamic;

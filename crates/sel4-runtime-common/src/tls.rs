@@ -7,8 +7,10 @@
 use cfg_if::cfg_if;
 
 use sel4_panicking_env::abort;
-use sel4_phdrs::PT_TLS;
-use sel4_phdrs::locate_phdrs;
+use sel4_phdrs::{
+    PT_TLS,
+    locate_phdrs,
+};
 
 #[allow(unused_imports)]
 use sel4_initialize_tls::{

@@ -9,11 +9,15 @@
 
 extern crate alloc;
 
-use alloc::vec;
-use alloc::vec::Vec;
-use core::fmt::Write;
-use core::mem;
-use core::str;
+use alloc::{
+    vec,
+    vec::Vec,
+};
+use core::{
+    fmt::Write,
+    mem,
+    str,
+};
 
 use embedded_hal_nb::serial::{
     self,

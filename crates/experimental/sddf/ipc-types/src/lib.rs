@@ -6,9 +6,11 @@
 
 #![no_std]
 
-use core::convert::Infallible;
-use core::error::Error;
-use core::fmt;
+use core::{
+    convert::Infallible,
+    error::Error,
+    fmt,
+};
 
 // // //
 

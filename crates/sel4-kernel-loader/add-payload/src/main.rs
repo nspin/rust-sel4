@@ -11,18 +11,18 @@ use std::fs::{
 
 use anyhow::Result;
 use clap::Parser;
-use object::elf::{
-    FileHeader32,
-    FileHeader64,
-};
-use object::read::elf::{
-    ElfFile,
-    FileHeader,
-    ProgramHeader,
-};
 use object::{
     Endianness,
     ReadRef,
+    elf::{
+        FileHeader32,
+        FileHeader64,
+    },
+    read::elf::{
+        ElfFile,
+        FileHeader,
+        ProgramHeader,
+    },
 };
 use rkyv::util::AlignedVec;
 
@@ -39,10 +39,12 @@ mod page_tables;
 mod serialize_payload;
 mod utils;
 
-use crate::page_tables::Scheme;
-use crate::utils::{
-    virt_footprint,
-    with_elf,
+use crate::{
+    page_tables::Scheme,
+    utils::{
+        virt_footprint,
+        with_elf,
+    },
 };
 
 type ArchiveAlignedVec = AlignedVec;

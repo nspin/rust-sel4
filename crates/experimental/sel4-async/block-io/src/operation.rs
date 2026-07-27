@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::ops::Range;
-use core::slice::{
-    Chunks,
-    ChunksMut,
+use core::{
+    ops::Range,
+    slice::{
+        Chunks,
+        ChunksMut,
+    },
 };
 
 use crate::access::{

@@ -4,10 +4,14 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use alloc::vec;
-use alloc::vec::Vec;
-use core::convert::Infallible;
-use core::ops::Range;
+use alloc::{
+    vec,
+    vec::Vec,
+};
+use core::{
+    convert::Infallible,
+    ops::Range,
+};
 
 use crate::{
     BytesContent,

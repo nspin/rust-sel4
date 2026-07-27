@@ -16,8 +16,10 @@ use smoltcp::{
     time::Instant,
 };
 
-use sel4_driver_interfaces::HandleInterrupt;
-use sel4_driver_interfaces::net::GetNetDeviceMeta;
+use sel4_driver_interfaces::{
+    HandleInterrupt,
+    net::GetNetDeviceMeta,
+};
 use sel4_microkit::{
     Channel,
     ChannelSet,

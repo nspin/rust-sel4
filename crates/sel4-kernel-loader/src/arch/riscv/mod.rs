@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::arch::asm;
-use core::mem;
+use core::{
+    arch::asm,
+    mem,
+};
 
 use riscv::register::satp;
 

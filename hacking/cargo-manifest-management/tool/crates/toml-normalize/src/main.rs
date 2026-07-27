@@ -4,12 +4,14 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fs;
-use std::io::{
-    Read,
-    Write,
+use std::{
+    fs,
+    io::{
+        Read,
+        Write,
+    },
+    path::PathBuf,
 };
-use std::path::PathBuf;
 
 use clap::{
     CommandFactory,

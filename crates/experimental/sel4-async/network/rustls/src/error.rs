@@ -6,10 +6,12 @@
 
 use core::fmt::Debug;
 
-use rustls::Error as TlsError;
-use rustls::unbuffered::{
-    EncodeError,
-    EncryptError,
+use rustls::{
+    Error as TlsError,
+    unbuffered::{
+        EncodeError,
+        EncryptError,
+    },
 };
 use thiserror::Error;
 

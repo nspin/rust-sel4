@@ -4,9 +4,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::borrow::Borrow;
-use std::fmt;
-use std::str::FromStr;
+use std::{
+    borrow::Borrow,
+    fmt,
+    str::FromStr,
+};
 
 use pest::error::{
     Error as PestError,

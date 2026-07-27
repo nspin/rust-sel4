@@ -8,10 +8,14 @@
 #![allow(unreachable_patterns)]
 #![allow(unused_variables)]
 
-use core::alloc::GlobalAlloc;
-use core::alloc::Layout;
-use core::ffi::c_char;
-use core::ptr;
+use core::{
+    alloc::{
+        GlobalAlloc,
+        Layout,
+    },
+    ffi::c_char,
+    ptr,
+};
 
 use one_shot_mutex::sync::RawOneShotMutex;
 

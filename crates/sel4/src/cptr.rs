@@ -5,9 +5,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::fmt;
-use core::hash::Hash;
-use core::marker::PhantomData;
+use core::{
+    fmt,
+    hash::Hash,
+    marker::PhantomData,
+};
 
 use crate::{
     InvocationContext,

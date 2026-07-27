@@ -5,8 +5,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::mem;
-use core::slice;
+use core::{
+    mem,
+    slice,
+};
 
 #[sel4_cfg(KERNEL_INVOCATION_REPORT_ERROR_IPC)]
 use core::str::{

@@ -8,24 +8,30 @@
 
 extern crate alloc;
 
-use alloc::boxed::Box;
-use alloc::rc::Rc;
-use alloc::sync::Arc;
-use alloc::vec;
+use alloc::{
+    boxed::Box,
+    rc::Rc,
+    sync::Arc,
+    vec,
+};
 use core::time::Duration;
 
 use embedded_io_async::ReadExactError;
-use futures::future::{
-    self,
-    LocalBoxFuture,
+use futures::{
+    future::{
+        self,
+        LocalBoxFuture,
+    },
+    task::LocalSpawnExt,
 };
-use futures::task::LocalSpawnExt;
-use rustls::ServerConfig;
-use rustls::pki_types::{
-    PrivateKeyDer,
-    UnixTime,
+use rustls::{
+    ServerConfig,
+    pki_types::{
+        PrivateKeyDer,
+        UnixTime,
+    },
+    version::TLS12,
 };
-use rustls::version::TLS12;
 
 use sel4_async_block_io::{
     BlockIO,

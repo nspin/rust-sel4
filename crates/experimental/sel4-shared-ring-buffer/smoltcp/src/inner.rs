@@ -4,9 +4,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::alloc::Layout;
-use core::marker::PhantomData;
-use core::ptr::NonNull;
+use core::{
+    alloc::Layout,
+    marker::PhantomData,
+    ptr::NonNull,
+};
 
 use smoltcp::phy::DeviceCapabilities;
 

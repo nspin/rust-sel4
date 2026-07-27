@@ -7,12 +7,14 @@
 
 #![allow(clippy::useless_conversion)]
 
-use core::mem;
-use core::ops::{
-    Deref,
-    Range,
+use core::{
+    mem,
+    ops::{
+        Deref,
+        Range,
+    },
+    slice,
 };
-use core::slice;
 
 use sel4_config::sel4_cfg;
 

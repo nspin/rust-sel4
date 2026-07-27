@@ -4,14 +4,18 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::arch::asm;
-use core::fmt;
-
-use crate::arch::{
-    Arch,
-    ArchImpl,
+use core::{
+    arch::asm,
+    fmt,
 };
-use crate::fmt::debug_println_without_synchronization;
+
+use crate::{
+    arch::{
+        Arch,
+        ArchImpl,
+    },
+    fmt::debug_println_without_synchronization,
+};
 
 #[used]
 #[unsafe(no_mangle)]

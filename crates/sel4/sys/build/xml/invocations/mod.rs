@@ -7,10 +7,12 @@
 #![allow(clippy::eq_op)]
 #![allow(clippy::nonminimal_bool)]
 
-use std::collections::BTreeMap;
-use std::fmt::Write;
-use std::ops::Range;
-use std::path::Path;
+use std::{
+    collections::BTreeMap,
+    fmt::Write,
+    ops::Range,
+    path::Path,
+};
 
 use proc_macro2::{
     Ident,

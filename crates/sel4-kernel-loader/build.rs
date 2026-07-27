@@ -6,8 +6,10 @@
 
 #![allow(clippy::useless_conversion)]
 
-use std::fs;
-use std::ops::Range;
+use std::{
+    fs,
+    ops::Range,
+};
 
 use object::{
     ReadRef,

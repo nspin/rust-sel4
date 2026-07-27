@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::arch::asm;
-use core::mem;
+use core::{
+    arch::asm,
+    mem,
+};
 
 use aarch64_cpu::registers::{
     CurrentEL,

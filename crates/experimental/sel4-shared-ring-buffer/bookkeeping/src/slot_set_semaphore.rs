@@ -5,10 +5,12 @@
 //
 
 use alloc::rc::Rc;
-use core::array;
-use core::cell::Cell;
-use core::future::Future;
-use core::mem;
+use core::{
+    array,
+    cell::Cell,
+    future::Future,
+    mem,
+};
 
 use crate::slot_count_tracker::{
     SlotCountTracker,

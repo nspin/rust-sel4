@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::convert::Infallible;
-use core::marker::PhantomData;
+use core::{
+    convert::Infallible,
+    marker::PhantomData,
+};
 
 use futures::future;
 

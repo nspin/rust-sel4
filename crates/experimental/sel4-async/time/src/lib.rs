@@ -9,14 +9,16 @@
 extern crate alloc;
 
 use alloc::rc::Rc;
-use core::cell::RefCell;
-use core::fmt;
-use core::future::Future;
-use core::pin::Pin;
-use core::task::{
-    Context,
-    Poll,
-    Waker,
+use core::{
+    cell::RefCell,
+    fmt,
+    future::Future,
+    pin::Pin,
+    task::{
+        Context,
+        Poll,
+        Waker,
+    },
 };
 
 use pin_project::pin_project;

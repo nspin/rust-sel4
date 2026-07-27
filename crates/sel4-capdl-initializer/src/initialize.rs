@@ -4,14 +4,18 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::array;
-use core::ops::Range;
-use core::result::Result as CoreResult;
-use core::slice;
+use core::{
+    array,
+    ops::Range,
+    result::Result as CoreResult,
+    slice,
+};
 
-use rkyv::Archive;
-use rkyv::ops::ArchivedRange;
-use rkyv::option::ArchivedOption;
+use rkyv::{
+    Archive,
+    ops::ArchivedRange,
+    option::ArchivedOption,
+};
 
 #[allow(unused_imports)]
 use log::{
@@ -32,12 +36,14 @@ use sel4::{
 };
 use sel4_capdl_initializer_types::*;
 
-use crate::cslot_allocator::CSlotAllocator;
-use crate::error::CapDLInitializerError;
-use crate::hold_slots::HoldSlots;
-use crate::memory::{
-    CopyAddrs,
-    get_user_image_frame_slot,
+use crate::{
+    cslot_allocator::CSlotAllocator,
+    error::CapDLInitializerError,
+    hold_slots::HoldSlots,
+    memory::{
+        CopyAddrs,
+        get_user_image_frame_slot,
+    },
 };
 
 type Result<T> = CoreResult<T, CapDLInitializerError>;

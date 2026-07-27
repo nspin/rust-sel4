@@ -9,10 +9,12 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-use core::cell::RefCell;
-use core::convert::Infallible;
-use core::fmt;
-use core::ops::Range;
+use core::{
+    cell::RefCell,
+    convert::Infallible,
+    fmt,
+    ops::Range,
+};
 
 use futures::future;
 

@@ -4,13 +4,15 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use super::scheme::{
-    Level,
-    Scheme,
-};
-use super::table::{
-    AbstractEntry,
-    Table,
+use super::{
+    scheme::{
+        Level,
+        Scheme,
+    },
+    table::{
+        AbstractEntry,
+        Table,
+    },
 };
 
 impl Table {

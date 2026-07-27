@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::hint;
-use core::sync::atomic::{
-    AtomicUsize,
-    Ordering,
+use core::{
+    hint,
+    sync::atomic::{
+        AtomicUsize,
+        Ordering,
+    },
 };
 
 // ::spin::Barrier appears to use too tight of a loop

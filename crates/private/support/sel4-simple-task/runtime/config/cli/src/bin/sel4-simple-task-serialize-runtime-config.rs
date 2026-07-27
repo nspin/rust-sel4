@@ -4,12 +4,14 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fs;
-use std::io::{
-    self,
-    Write,
+use std::{
+    fs,
+    io::{
+        self,
+        Write,
+    },
+    path::PathBuf,
 };
-use std::path::PathBuf;
 
 use sel4_simple_task_runtime_config_types::GenericRuntimeConfig;
 

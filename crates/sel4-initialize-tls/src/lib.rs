@@ -17,10 +17,12 @@
 
 #![no_std]
 
-use core::alloc::Layout;
-use core::mem;
-use core::ptr;
-use core::slice;
+use core::{
+    alloc::Layout,
+    mem,
+    ptr,
+    slice,
+};
 
 #[cfg(feature = "alloc")]
 extern crate alloc;

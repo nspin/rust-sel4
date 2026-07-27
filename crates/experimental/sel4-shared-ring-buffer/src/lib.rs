@@ -6,11 +6,13 @@
 
 #![no_std]
 
-use core::marker::PhantomData;
-use core::num::Wrapping;
-use core::sync::atomic::{
-    AtomicU32,
-    Ordering,
+use core::{
+    marker::PhantomData,
+    num::Wrapping,
+    sync::atomic::{
+        AtomicU32,
+        Ordering,
+    },
 };
 
 use zerocopy::{

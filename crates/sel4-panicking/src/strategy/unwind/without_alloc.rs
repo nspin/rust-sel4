@@ -4,11 +4,15 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::cell::Cell;
-use core::mem::MaybeUninit;
+use core::{
+    cell::Cell,
+    mem::MaybeUninit,
+};
 
-use unwinding::abi::*;
-use unwinding::panicking::Exception;
+use unwinding::{
+    abi::*,
+    panicking::Exception,
+};
 
 use super::{
     ExceptionImpl,

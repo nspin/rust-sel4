@@ -4,22 +4,24 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::collections::{
-    BTreeMap,
-    BTreeSet,
-    HashMap,
+use std::{
+    collections::{
+        BTreeMap,
+        BTreeSet,
+        HashMap,
+    },
+    fs,
+    path::PathBuf,
 };
-use std::fs;
-use std::path::PathBuf;
 
 use anyhow::bail;
-use cargo_metadata::semver::{
-    Version,
-    VersionReq,
-};
 use cargo_metadata::{
     Metadata,
     MetadataCommand,
+    semver::{
+        Version,
+        VersionReq,
+    },
 };
 use clap::{
     Parser,

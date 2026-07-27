@@ -15,11 +15,11 @@ extern crate alloc;
 use alloc::borrow::Cow;
 use core::fmt;
 
-use addr2line::fallible_iterator::FallibleIterator;
-use addr2line::gimli;
 use addr2line::{
     Context,
     Location,
+    fallible_iterator::FallibleIterator,
+    gimli,
 };
 
 fn print_loc(w: &mut impl fmt::Write, loc: Option<&Location<'_>>) -> Result<(), fmt::Error> {

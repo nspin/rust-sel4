@@ -13,12 +13,14 @@ use lock_api::{
     RawMutex,
 };
 use one_shot_mutex::unsync::RawOneShotMutex;
-use smoltcp::phy::{
-    self,
-    Device,
-    DeviceCapabilities,
+use smoltcp::{
+    phy::{
+        self,
+        Device,
+        DeviceCapabilities,
+    },
+    time::Instant,
 };
-use smoltcp::time::Instant;
 
 use sel4_abstract_allocator::AbstractAllocator;
 use sel4_abstract_rc::{

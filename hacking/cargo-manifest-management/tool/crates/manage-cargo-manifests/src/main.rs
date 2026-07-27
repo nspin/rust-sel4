@@ -4,13 +4,15 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fs::{
-    self,
-    File,
+use std::{
+    fs::{
+        self,
+        File,
+    },
+    path::PathBuf,
+    result::Result as StdResult,
+    str,
 };
-use std::path::PathBuf;
-use std::result::Result as StdResult;
-use std::str;
 
 use anyhow::{
     Context,

@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::any;
-use std::fmt::Debug;
-use std::marker::PhantomData;
-use std::str::FromStr;
+use std::{
+    any,
+    fmt::Debug,
+    marker::PhantomData,
+    str::FromStr,
+};
 
 use proc_macro2::TokenStream;
 use quote::{

@@ -4,20 +4,22 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fs;
-use std::ops::Range;
-use std::path::Path;
+use std::{
+    fs,
+    ops::Range,
+    path::Path,
+};
 
 use num::Integer;
-use object::read::elf::{
-    ElfFile,
-    FileHeader,
-    ProgramHeader,
-};
 use object::{
     Object,
     ObjectSegment,
     ReadRef,
+    read::elf::{
+        ElfFile,
+        FileHeader,
+        ProgramHeader,
+    },
 };
 
 use sel4_kernel_loader_payload_types::{

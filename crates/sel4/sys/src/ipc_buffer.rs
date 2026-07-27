@@ -4,9 +4,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::mem;
-use core::ops::Range;
-use core::slice;
+use core::{
+    mem,
+    ops::Range,
+    slice,
+};
 
 use sel4_bitfield_ops::{
     PrimInt,

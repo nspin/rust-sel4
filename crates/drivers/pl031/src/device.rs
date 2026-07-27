@@ -8,15 +8,15 @@
 
 use core::ops::Deref;
 
-use tock_registers::interfaces::Readable;
-use tock_registers::registers::{
-    ReadOnly,
-    ReadWrite,
-    WriteOnly,
-};
 use tock_registers::{
+    interfaces::Readable,
     register_bitfields,
     register_structs,
+    registers::{
+        ReadOnly,
+        ReadWrite,
+        WriteOnly,
+    },
 };
 
 register_structs! {

@@ -6,15 +6,17 @@
 
 #![no_std]
 
-use core::alloc::{
-    GlobalAlloc,
-    Layout,
-};
-use core::cell::UnsafeCell;
-use core::ptr;
-use core::sync::atomic::{
-    AtomicUsize,
-    Ordering,
+use core::{
+    alloc::{
+        GlobalAlloc,
+        Layout,
+    },
+    cell::UnsafeCell,
+    ptr,
+    sync::atomic::{
+        AtomicUsize,
+        Ordering,
+    },
 };
 
 use dlmalloc::{

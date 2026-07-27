@@ -6,16 +6,18 @@
 
 #![no_std]
 
-use core::convert::Infallible;
-use core::ops::Deref;
+use core::{
+    convert::Infallible,
+    ops::Deref,
+};
 
 use sel4_driver_interfaces::block::GetBlockDeviceLayout;
-use virtio_drivers::device::blk::{
-    SECTOR_SIZE,
-    VirtIOBlk,
-};
 use virtio_drivers::{
     Hal,
+    device::blk::{
+        SECTOR_SIZE,
+        VirtIOBlk,
+    },
     transport::Transport,
 };
 

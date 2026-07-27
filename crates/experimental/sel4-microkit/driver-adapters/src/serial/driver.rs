@@ -7,8 +7,10 @@
 
 use core::convert::Infallible;
 
-use embedded_hal_nb::nb;
-use embedded_hal_nb::serial;
+use embedded_hal_nb::{
+    nb,
+    serial,
+};
 use heapless::Deque;
 
 use sel4_driver_interfaces::HandleInterrupt;

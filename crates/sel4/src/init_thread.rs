@@ -6,8 +6,10 @@
 
 //! Items that are applicable within the context of the root task's initial thread's CSpace.
 
-use core::marker::PhantomData;
-use core::ops::Range;
+use core::{
+    marker::PhantomData,
+    ops::Range,
+};
 
 use sel4_config::sel4_cfg;
 

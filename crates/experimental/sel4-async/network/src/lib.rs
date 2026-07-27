@@ -11,16 +11,20 @@
 
 extern crate alloc;
 
-use alloc::rc::Rc;
-use alloc::vec;
-use alloc::vec::Vec;
-use core::cell::RefCell;
-use core::future::poll_fn;
-use core::marker::PhantomData;
-use core::pin::Pin;
-use core::task::{
-    self,
-    Poll,
+use alloc::{
+    rc::Rc,
+    vec,
+    vec::Vec,
+};
+use core::{
+    cell::RefCell,
+    future::poll_fn,
+    marker::PhantomData,
+    pin::Pin,
+    task::{
+        self,
+        Poll,
+    },
 };
 
 use thiserror::Error;

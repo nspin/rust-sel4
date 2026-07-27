@@ -4,11 +4,13 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::alloc::Layout;
-use core::marker::PhantomData;
-use core::task::{
-    Poll,
-    Waker,
+use core::{
+    alloc::Layout,
+    marker::PhantomData,
+    task::{
+        Poll,
+        Waker,
+    },
 };
 
 use sel4_abstract_allocator::{

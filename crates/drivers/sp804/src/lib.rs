@@ -6,15 +6,19 @@
 
 #![no_std]
 
-use core::convert::Infallible;
-use core::time::Duration;
+use core::{
+    convert::Infallible,
+    time::Duration,
+};
 use tock_registers::interfaces::ReadWriteable;
 
-use sel4_driver_interfaces::HandleInterrupt;
-use sel4_driver_interfaces::timer::{
-    Clock,
-    ErrorType,
-    Timer as TimerTrait,
+use sel4_driver_interfaces::{
+    HandleInterrupt,
+    timer::{
+        Clock,
+        ErrorType,
+        Timer as TimerTrait,
+    },
 };
 
 mod device;
