@@ -11,10 +11,10 @@ mk {
   lib.proc-macro = true;
   dependencies = {
     inherit (versions)
-      fallible-iterator
       proc-macro2
       quote
     ;
+    fallible-iterator = { version = versions.fallible-iterator; default-features = false; };
     syn = { version = versions.syn; features = [ "full" ]; };
     inherit (localCrates)
       sel4-config-types
