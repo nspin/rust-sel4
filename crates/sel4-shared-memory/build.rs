@@ -36,7 +36,7 @@ fn main() {
     }
 
     if rustversion::cfg!(any(
-        all(not(nightly), before(1.00)),
+        all(not(nightly), before(1.100)),
         all(nightly, before(2026 - 08 - 16))
     )) {
         println!("cargo::rustc-cfg={before_volatile_key}");
