@@ -2378,7 +2378,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
- "num",
  "object",
  "rkyv",
  "sel4-capdl-initializer-types",
