@@ -35,14 +35,9 @@ compile_error!("unsupported architecture");
 
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn with_local_init(f: impl FnOnce() -> !) -> ! {
-    cfg_if::cfg_if! {
-        if #[cfg(target_thread_local)] {
-            unsafe {
-                tls::with_tls(f)
-            }
-        } else {
-            f()
-        }
+    cfg_select! {
+        target_thread_local => unsafe { tls::with_tls(f) },
+        _ => f(),
     }
 }
 
@@ -115,7 +110,6 @@ macro_rules! declare_rust_entrypoint {
 #[doc(hidden)]
 pub mod _private {
     pub use super::_run_entrypoint;
-    pub use cfg_if::cfg_if;
     pub use core::arch::global_asm;
     pub use sel4_stack::{Stack, StackBottom};
 }

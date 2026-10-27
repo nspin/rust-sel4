@@ -9,7 +9,6 @@
 mk {
   package.name = "example-root-task-without-runtime";
   dependencies = {
-    inherit (versions) cfg-if;
     sel4 = localCrates.sel4 // { default-features = false; };
   };
 }

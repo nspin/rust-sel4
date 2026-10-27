@@ -113,8 +113,8 @@ mod stack {
     static __stack_bottom: StackBottom = STACK.bottom();
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(target_arch = "aarch64")] {
+cfg_select! {
+    target_arch = "aarch64" => {
         global_asm! {
             r#"
                 .extern __rust_entry
@@ -132,9 +132,10 @@ cfg_if::cfg_if! {
                 1:  b 1b
             "#
         }
-    } else if #[cfg(target_arch = "arm")] {
-            global_asm! {
-                r#"
+    }
+    target_arch = "arm" => {
+        global_asm! {
+            r#"
                     .extern __rust_entry
                     .extern __stack_bottom
 
@@ -149,8 +150,9 @@ cfg_if::cfg_if! {
 
                     1:  b 1b
                 "#
-            }
-    } else if #[cfg(any(target_arch = "riscv64", target_arch = "riscv32"))] {
+        }
+    }
+    any(target_arch = "riscv64", target_arch = "riscv32") => {
         macro_rules! riscv_common {
             () => {
                 r#"
@@ -197,7 +199,8 @@ cfg_if::cfg_if! {
             "#,
             riscv_common!()
         }
-    } else if #[cfg(target_arch = "x86_64")] {
+    }
+    target_arch = "x86_64" => {
         global_asm! {
             r#"
                 .extern __rust_entry
@@ -216,7 +219,8 @@ cfg_if::cfg_if! {
                 1:  jmp 1b
             "#
         }
-    } else {
+    }
+    _ => {
         compile_error!("unsupported architecture");
     }
 }
