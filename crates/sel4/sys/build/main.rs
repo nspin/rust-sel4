@@ -91,12 +91,7 @@ impl OutDir {
     }
 
     fn write_file(&self, toks: TokenStream, filename: impl AsRef<Path>) {
-        let formatted =
-            cfg_select! {
-                feature = "prettyplease" => prettyplease::unparse(&syn::parse2(toks).unwrap()),
-                _ => toks.to_string(),
-            };
         let out_path = self.path.join(filename);
-        fs::write(out_path, formatted).unwrap();
+        fs::write(out_path, toks.to_string()).unwrap();
     }
 }

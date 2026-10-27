@@ -3115,7 +3115,6 @@ dependencies = [
  "log",
  "pest",
  "pest_derive",
- "prettyplease 0.3.0",
  "proc-macro2",
  "quote",
  "regex",
@@ -3123,7 +3122,6 @@ dependencies = [
  "sel4-build-env",
  "sel4-config",
  "sel4-config-data",
- "syn 3.0.9",
  "xmltree",
 ]
 

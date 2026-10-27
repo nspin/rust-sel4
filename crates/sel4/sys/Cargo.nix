@@ -23,15 +23,10 @@ mk {
       bindgen xmltree glob
       regex pest pest_derive
     ;
-    prettyplease = { version = versions.prettyplease; optional = true; };
-    syn = { version = versions.syn; features = [ "parsing" ]; optional = true; };
     inherit (localCrates)
       sel4-build-env
       sel4-config
       sel4-config-data
     ;
-  };
-  features = {
-    prettyplease = [ "dep:prettyplease" "dep:syn" ];
   };
 }
