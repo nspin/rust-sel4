@@ -4,14 +4,13 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, localCrates, versions, postcardWith, objectWith }:
+{ mk, localCrates, versions, objectWith }:
 
 mk {
   package.name = "sel4-kernel-loader";
   package.license = "BSD-2-Clause AND GPL-2.0-only";
   dependencies = {
     inherit (versions) log embedded-hal-nb;
-    rkyv = { version = versions.rkyv; default-features = false; };
     spin = { version = versions.spin; features = [ "lock_api" ]; };
     inherit (localCrates)
       sel4-platform-info
@@ -36,21 +35,13 @@ mk {
   };
   build-dependencies = {
     inherit (versions)
-      proc-macro2
-      quote
-      serde
-      prettyplease
       cc
       glob
     ;
     object = objectWith [];
-    postcard = postcardWith [ "alloc" ];
-    syn = { version = versions.syn; features = [ "parsing" ]; };
     inherit (localCrates)
-      sel4-platform-info
       sel4-config
       sel4-build-env
-      sel4-kernel-loader-payload-types
     ;
   };
 }
