@@ -15,11 +15,15 @@ microkit-http-server-example-sp804-driver
 microkit-http-server-example-virtio-blk-driver
 microkit-http-server-example-virtio-net-driver
 sddf
+sddf-async-block-io
+sddf-async-io
+sddf-embedded-hal-nb
+sddf-smoltcp
 sddf-sys
 sel4
 sel4-capdl-initializer
-sel4-config-data
 sel4-config
+sel4-config-data
 sel4-kernel-loader
 sel4-microkit
 sel4-microkit-base

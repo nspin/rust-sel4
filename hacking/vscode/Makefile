@@ -40,7 +40,7 @@ all-private: $(all_private)
 .PHONY: http-server
 http-server:
 	cargo run -p create-vscode-workspace -- \
-		--config .cargo/gen/target/aarch64-sel4-microkit.toml \
+		--config .cargo/gen/target/aarch64-sel4-unwind.toml \
 		--config .cargo/gen/world/aarch64.microkitDefault.toml \
 		-i microkit-http-server-example-server \
 		-o $(private_workspaces_dir)/$@$(ws)
@@ -48,7 +48,7 @@ http-server:
 .PHONY: all-sel4
 all-sel4:
 	cargo run -p create-vscode-workspace -- \
-		--config .cargo/gen/target/aarch64-sel4-microkit-unwind.toml \
+		--config .cargo/gen/target/aarch64-sel4-unwind.toml \
 		--config .cargo/gen/world/aarch64.microkitDefault.toml \
 		--include-dependents sel4 \
 		-e banscii-serial-driver \
