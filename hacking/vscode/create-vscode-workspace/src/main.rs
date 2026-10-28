@@ -308,7 +308,7 @@ impl Env {
             .join(" ");
 
         let mut new_settings = json!({
-            "rust-analyzer.server.path": "hacking/vscode/rust-analyzer-wrapper",
+            "rust-analyzer.server.path": "${workspaceFolder}/hacking/vscode/rust-analyzer-wrapper",
             "rust-analyzer.linkedProjects": [
                 "Cargo.toml",
             ],
