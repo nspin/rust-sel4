@@ -10,7 +10,7 @@ use std::sync::LazyLock;
 
 pub use sel4_config_types::Configuration;
 
-pub fn get_kernel_config() -> &'static Configuration {
+pub fn get_config() -> &'static Configuration {
     &KERNEL_CONFIG
 }
 

@@ -8,14 +8,14 @@ use std::marker::PhantomData;
 
 use proc_macro::TokenStream;
 
-use sel4_config_data::get_kernel_config;
+use sel4_config_data::get_config;
 
 mod generic;
 
 use generic::MacroImpls;
 
 fn get_impls() -> MacroImpls<'static> {
-    MacroImpls::new(get_kernel_config(), "sel4_cfg")
+    MacroImpls::new(get_config(), "sel4_cfg")
 }
 
 /// Make the attached code conditional on a seL4 kernel configuration expression.

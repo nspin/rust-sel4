@@ -26,7 +26,6 @@ mk {
     roxmltree = { version = versions.roxmltree; default-features = false; };
     inherit (localCrates)
       sel4-build-env
-      sel4-config
       sel4-config-data
     ;
   };

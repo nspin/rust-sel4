@@ -6,9 +6,8 @@
 
 use roxmltree::Node;
 
-use sel4_config_data::Configuration;
-
 use super::child_elements;
+use crate::config::get_config;
 
 #[derive(Debug, Clone)]
 pub enum Condition {
@@ -52,7 +51,7 @@ impl Condition {
 
     pub fn eval(&self) -> bool {
         match self {
-            Condition::Variable(name) => Self::defined(name),
+            Condition::Variable(name) => Self::defined_as_true(name),
             Condition::Not(inner) => !inner.eval(),
             Condition::And(inners) => inners.iter().all(Self::eval),
             Condition::Or(inners) => inners.iter().any(Self::eval),
@@ -66,15 +65,11 @@ impl Condition {
         }
     }
 
-    fn defined(name: &str) -> bool {
+    fn defined_as_true(name: &str) -> bool {
         // Unlike in the `sel4_cfg` macro, we interpret undefined values as false rather than failing
-        Self::get_kernel_config()
+        get_config()
             .get(name)
             .map(|value| value.as_bool().unwrap())
             .unwrap_or(false)
-    }
-
-    fn get_kernel_config() -> &'static Configuration {
-        sel4_config_data::get_kernel_config()
     }
 }

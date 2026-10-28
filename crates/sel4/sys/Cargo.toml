@@ -31,5 +31,4 @@ proc-macro2 = { version = "1.0.103", default-features = false }
 quote = { version = "1.0.41", default-features = false }
 roxmltree = { version = "0.21.2", default-features = false }
 sel4-build-env = { path = "../build-env" }
-sel4-config = { path = "../config" }
 sel4-config-data = { path = "../config/data" }
