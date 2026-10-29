@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use sel4_config_types::Configuration;
+use sel4_config_types::Config;
 
 mod attr_macros;
 mod cfg_if;
@@ -16,19 +16,19 @@ use common_helpers::parse_or_return;
 use condition::{Condition, EvalError};
 
 pub struct MacroImpls<'a> {
-    config: &'a Configuration,
+    config: &'a Config,
     synthetic_attr: &'a str,
 }
 
 impl<'a> MacroImpls<'a> {
-    pub fn new(config: &'a Configuration, synthetic_attr: &'a str) -> Self {
+    pub fn new(config: &'a Config, synthetic_attr: &'a str) -> Self {
         Self {
             config,
             synthetic_attr,
         }
     }
 
-    pub const fn config(&self) -> &'a Configuration {
+    pub const fn config(&self) -> &'a Config {
         self.config
     }
 

@@ -10,7 +10,7 @@ use syn::Token;
 use syn::parse::{Parse, ParseStream, Parser, Result as ParseResult};
 use syn::spanned::Spanned;
 
-use sel4_config_types::{Configuration, Value};
+use sel4_config_types::{Config, Value};
 
 pub(crate) enum Condition {
     Key(syn::Ident),
@@ -21,8 +21,8 @@ pub(crate) enum Condition {
 }
 
 impl Condition {
-    pub(crate) fn eval(&self, config: &Configuration) -> Result<bool, EvalError> {
-        ConfigurationForEval(config).eval(self)
+    pub(crate) fn eval(&self, config: &Config) -> Result<bool, EvalError> {
+        ConfigForEval(config).eval(self)
     }
 }
 
@@ -89,9 +89,9 @@ fn err<T, U: ToString>(node: impl Spanned, message: U) -> Result<T, EvalError> {
     Err(EvalError::new(node.span(), message.to_string()))
 }
 
-struct ConfigurationForEval<'a>(&'a Configuration);
+struct ConfigForEval<'a>(&'a Config);
 
-impl ConfigurationForEval<'_> {
+impl ConfigForEval<'_> {
     fn lookup_key(&self, k: &syn::Ident) -> Result<&Value, EvalError> {
         self.0
             .get(&k.to_string())

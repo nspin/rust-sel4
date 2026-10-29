@@ -8,7 +8,7 @@ use core::ops::Range;
 
 use bitfield::{BitMut, BitRangeMut};
 
-use sel4_config_types::Configuration;
+use sel4_config_types::Config;
 
 pub(crate) type RawDescriptor = u64;
 
@@ -22,7 +22,7 @@ pub(crate) enum Scheme {
 }
 
 impl Scheme {
-    pub(crate) fn from_config(kernel_config: &Configuration) -> Self {
+    pub(crate) fn from_config(kernel_config: &Config) -> Self {
         let sel4_arch = kernel_config.get("SEL4_ARCH").unwrap().as_str().unwrap();
         let pt_levels = || {
             kernel_config

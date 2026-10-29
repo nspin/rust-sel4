@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Configuration(BTreeMap<Key, Value>);
+pub struct Config(BTreeMap<Key, Value>);
 
 pub type Key = String;
 
@@ -28,13 +28,9 @@ pub enum Value {
     String(String),
 }
 
-impl Configuration {
-    pub fn new(map: BTreeMap<Key, Value>) -> Self {
-        Self(map)
-    }
-
+impl Config {
     pub fn empty() -> Self {
-        Self::new(BTreeMap::new())
+        Self(BTreeMap::new())
     }
 
     pub fn get(&self, key: &str) -> Option<&Value> {
@@ -43,10 +39,6 @@ impl Configuration {
 
     pub fn iter(&self) -> impl Iterator<Item = (&String, &Value)> {
         self.0.iter()
-    }
-
-    pub fn insert(&mut self, key: Key, value: Value) -> Option<Value> {
-        self.0.insert(key, value)
     }
 
     pub fn append(&mut self, mut other: Self) {

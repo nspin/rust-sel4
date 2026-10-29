@@ -12,7 +12,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use sel4_config_data::get_config;
-use sel4_config_types::{Configuration, Value};
+use sel4_config_types::{Config, Value};
 
 fn main() {
     let toks = generate_consts(get_config());
@@ -21,7 +21,7 @@ fn main() {
     fs::write(out_path, toks.to_string()).unwrap();
 }
 
-pub fn generate_consts(config: &Configuration) -> TokenStream {
+pub fn generate_consts(config: &Config) -> TokenStream {
     let items = config.iter().map(|(k, v)| {
         let k = format_ident!("{}", k);
         let tv = match v {

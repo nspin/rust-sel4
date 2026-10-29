@@ -13,7 +13,7 @@ use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
 use object::{Endianness, ReadRef};
 use rkyv::util::AlignedVec;
 
-use sel4_config_types::Configuration;
+use sel4_config_types::Config;
 use sel4_patch_elf::{FileHeaderExt, Patching};
 use sel4_phdrs_constants::PT_SEL4_KERNEL_LOADER_PAYLOAD;
 use sel4_platform_info_types::OwnedPlatformInfo;
@@ -106,7 +106,7 @@ fn main() -> Result<()> {
 
     let paths = Paths::get(&cli);
 
-    let kernel_config: Configuration =
+    let kernel_config: Config =
         serde_json::from_reader(File::open(&paths.sel4_config_path).unwrap()).unwrap();
 
     match kernel_config.get("WORD_SIZE").unwrap().as_str().unwrap() {
@@ -118,7 +118,7 @@ fn main() -> Result<()> {
     }
 }
 
-fn continue_with_type<T>(paths: &Paths, kernel_config: &Configuration) -> Result<()>
+fn continue_with_type<T>(paths: &Paths, kernel_config: &Config) -> Result<()>
 where
     T: FileHeaderExt,
 {
