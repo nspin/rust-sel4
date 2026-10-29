@@ -8,6 +8,6 @@
 
 runCommandCC "dummy-libunwind" {} ''
   mkdir -p $out/lib
-  touch empty.o
+  $CC -c -x c /dev/null -o empty.o
   $AR r $out/lib/libunwind.a empty.o
 ''
