@@ -153,6 +153,38 @@ pub fn sel4_cfg_if(toks: TokenStream) -> TokenStream {
     get_impls().cfg_if_impl(toks.into()).into()
 }
 
+/// Like `core::cfg_select!`, except using the seL4 kernel configuration.
+///
+/// Expands to the body of the first arm whose configuration expression evaluates to true. An arm
+/// with `_` always matches. If no arm matches, expansion results in a compile-time error.
+///
+/// See [`macro@sel4_cfg`] for documentation on the configuration expression syntax.
+///
+/// # Example
+///
+/// ```ignore
+/// sel4_cfg_select! {
+///     KERNEL_MCS => {
+///         ...
+///     }
+///     MAX_NUM_NODES = "1" => {
+///         ...
+///     }
+///     _ => {
+///         ...
+///     }
+/// }
+///
+/// let x = sel4_cfg_select! {
+///     KERNEL_MCS => 1,
+///     _ => 2,
+/// };
+/// ```
+#[proc_macro]
+pub fn sel4_cfg_select(toks: TokenStream) -> TokenStream {
+    get_impls().cfg_select_impl(toks.into()).into()
+}
+
 /// Like `core::cfg!`, except using the seL4 kernel configuration.
 ///
 /// Unlike `core::cfg!`, this macro requires the configuration key to correspond to a boolean

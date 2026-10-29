@@ -6,24 +6,28 @@
 
 use core::ffi::c_int;
 
-use sel4_config_macros::sel4_cfg_if;
+use sel4_config_macros::sel4_cfg_select;
 
 use crate::seL4_Word;
 
-sel4_cfg_if! {
-    if #[sel4_cfg(ARCH_AARCH64)] {
+sel4_cfg_select! {
+    ARCH_AARCH64 => {
         #[path = "aarch64.rs"]
         mod imp;
-    } else if #[sel4_cfg(ARCH_AARCH32)] {
+    }
+    ARCH_AARCH32 => {
         #[path = "aarch32.rs"]
         mod imp;
-    } else if #[sel4_cfg(ARCH_RISCV)] {
+    }
+    ARCH_RISCV => {
         #[path = "riscv.rs"]
         mod imp;
-    } else if #[sel4_cfg(ARCH_X86_64)] {
+    }
+    ARCH_X86_64 => {
         #[path = "x86_64.rs"]
         mod imp;
     }
+    _ => {}
 }
 
 // HACK for rustfmt

@@ -8,7 +8,7 @@ use core::arch::naked_asm;
 
 use riscv::register::satp;
 
-use sel4_config_macros::{sel4_cfg_if, sel4_cfg_usize};
+use sel4_config_macros::{sel4_cfg_select, sel4_cfg_usize};
 
 use crate::{
     arch::Arch,
@@ -108,14 +108,9 @@ impl Arch for ArchImpl {
 }
 
 fn switch_page_tables() {
-    const MODE: satp::Mode = sel4_cfg_if! {
-        if #[sel4_cfg(all(SEL4_ARCH = "riscv64", PT_LEVELS = "3"))] {
-            satp::Mode::Sv39
-        } else if #[sel4_cfg(all(SEL4_ARCH = "riscv32", PT_LEVELS = "2"))] {
-            satp::Mode::Sv32
-        } else {
-            compiler_error!("unsupported configuration");
-        }
+    const MODE: satp::Mode = sel4_cfg_select! {
+        all(SEL4_ARCH = "riscv64", PT_LEVELS = "3") => satp::Mode::Sv39,
+        all(SEL4_ARCH = "riscv32", PT_LEVELS = "2") => satp::Mode::Sv32,
     };
 
     let ppn = kernel_boot_level_0_table.get() >> 12;

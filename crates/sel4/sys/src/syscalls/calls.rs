@@ -7,7 +7,7 @@
 use core::ffi::c_int;
 use core::sync::atomic::{Ordering, compiler_fence};
 
-use sel4_config_macros::{sel4_cfg, sel4_cfg_if};
+use sel4_config_macros::{sel4_cfg, sel4_cfg_if, sel4_cfg_select};
 
 #[allow(unused_imports)]
 use crate::{
@@ -23,12 +23,9 @@ use super::helpers::*;
 const UNUSED_REPLY_ARG: seL4_Word = 0;
 
 fn reply_authority_to_sys_arg(#[allow(unused_variables)] authority: ReplyAuthority) -> seL4_Word {
-    sel4_cfg_if! {
-        if #[sel4_cfg(KERNEL_MCS)] {
-            authority
-        } else {
-            UNUSED_REPLY_ARG
-        }
+    sel4_cfg_select! {
+        KERNEL_MCS => authority,
+        _ => UNUSED_REPLY_ARG,
     }
 }
 
@@ -471,12 +468,9 @@ impl seL4_IPCBuffer {
     }
 
     pub fn seL4_Poll(&mut self, src: seL4_CPtr) -> (seL4_MessageInfo, seL4_Word) {
-        sel4_cfg_if! {
-            if #[sel4_cfg(KERNEL_MCS)] {
-                self.seL4_NBWait(src)
-            } else {
-                self.seL4_NBRecv(src, ())
-            }
+        sel4_cfg_select! {
+            KERNEL_MCS => self.seL4_NBWait(src),
+            _ => self.seL4_NBRecv(src, ()),
         }
     }
 }

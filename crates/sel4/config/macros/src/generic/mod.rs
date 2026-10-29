@@ -8,6 +8,7 @@ use sel4_config_data::types::Config;
 
 mod attr_macros;
 mod cfg_if;
+mod cfg_select;
 mod common_helpers;
 mod condition;
 mod expr_macros;

@@ -4,19 +4,22 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use sel4_config_macros::sel4_cfg_if;
+use sel4_config_macros::sel4_cfg_select;
 
-sel4_cfg_if! {
-    if #[sel4_cfg(all(ARCH_ARM, PLAT_QEMU_ARM_VIRT))] {
+sel4_cfg_select! {
+    all(ARCH_ARM, PLAT_QEMU_ARM_VIRT) => {
         #[path = "qemu_arm_virt/mod.rs"]
         mod imp;
-    } else if #[sel4_cfg(all(ARCH_ARM, PLAT_BCM2711))] {
+    }
+    all(ARCH_ARM, PLAT_BCM2711) => {
         #[path = "bcm2711/mod.rs"]
         mod imp;
-    } else if #[sel4_cfg(all(ARCH_RISCV, any(PLAT_SPIKE, PLAT_QEMU_RISCV_VIRT, PLAT_HIFIVE)))] {
+    }
+    all(ARCH_RISCV, any(PLAT_SPIKE, PLAT_QEMU_RISCV_VIRT, PLAT_HIFIVE)) => {
         #[path = "riscv_generic/mod.rs"]
         mod imp;
     }
+    _ => {}
 }
 
 // HACK for rustfmt

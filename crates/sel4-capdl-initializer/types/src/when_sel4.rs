@@ -160,19 +160,22 @@ impl HasVmAttributes for cap::ArchivedPageTable {
     }
 }
 
-sel4::sel4_cfg_if! {
-    if #[sel4_cfg(ARCH_ARM)] {
+sel4::sel4_cfg_select! {
+    ARCH_ARM => {
         const CACHED: VmAttributes = VmAttributes::DEFAULT;
         const UNCACHED: VmAttributes = VmAttributes::NONE;
         const NO_EXEC: VmAttributes = VmAttributes::EXECUTE_NEVER;
-    } else if #[sel4_cfg(ARCH_RISCV)] {
+    }
+    ARCH_RISCV => {
         const CACHED: VmAttributes = VmAttributes::DEFAULT;
         const UNCACHED: VmAttributes = VmAttributes::NONE;
         const NO_EXEC: VmAttributes = VmAttributes::EXECUTE_NEVER;
-    } else if #[sel4_cfg(ARCH_X86_64)] {
+    }
+    ARCH_X86_64 => {
         const CACHED: VmAttributes = VmAttributes::DEFAULT;
         const UNCACHED: VmAttributes = VmAttributes::CACHE_DISABLED;
     }
+    _ => {}
 }
 
 sel4::sel4_cfg_if! {

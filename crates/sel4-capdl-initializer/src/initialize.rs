@@ -1056,8 +1056,8 @@ impl<'a> Initializer<'a> {
 
     #[sel4::sel4_cfg(KERNEL_MCS)]
     fn us_to_ticks(&self, duration_us: u64) -> Result<sel4::Time> {
-        sel4::sel4_cfg_if! {
-            if #[sel4_cfg(any(ARCH_ARM, ARCH_RISCV))] {
+        sel4::sel4_cfg_select! {
+            any(ARCH_ARM, ARCH_RISCV) => {
                 const US_IN_SECOND: u64 = 1000 * 1000;
 
                 // On 32-bit platforms, Word is 32-bits, but on 64-bit platforms
@@ -1083,26 +1083,30 @@ impl<'a> Initializer<'a> {
                 let ticks = s * f + ((us * f + US_IN_SECOND / 2) / US_IN_SECOND);
 
                 Ok(ticks)
-            } else if #[sel4_cfg(any(ARCH_X86, ARCH_X86_64))] {
+            }
+            any(ARCH_X86, ARCH_X86_64) => {
                 let tsc_freq_bi = self
                     .bootinfo
                     .extra()
                     .find(|bi| bi.id == sel4::BootInfoExtraId::X86TscFreq)
-                    .expect("Unable to determine timer frequency as \
-                             no TSC frequency provided in bootinfo");
+                    .expect(
+                        "Unable to determine timer frequency as \
+                             no TSC frequency provided in bootinfo",
+                    );
 
                 // For x86 platforms, the timer frequency is provided in MHz by the bootinfo
                 let tsc_freq_mhz = u32::from_le_bytes(tsc_freq_bi.content().try_into().unwrap());
 
                 let ticks = duration_us
                     .checked_mul(tsc_freq_mhz.into())
-                    .unwrap_or_else(|| panic!(
+                    .unwrap_or_else(|| {
+                        panic!(
                             "Output would overflow when computing ticks for duration \
-                             {duration_us} us @ freq {tsc_freq_mhz} MHz"));
+                             {duration_us} us @ freq {tsc_freq_mhz} MHz"
+                        )
+                    });
 
                 Ok(ticks)
-            } else {
-                compile_error!("unsupported architecture");
             }
         }
     }
@@ -1260,12 +1264,9 @@ impl<'a> Initializer<'a> {
     fn orig_cslot(&self, obj_id: ArchivedObjectId) -> Slot {
         match self.object(obj_id) {
             ArchivedObject::ArmSmc => {
-                sel4::sel4_cfg_if! {
-                    if #[sel4_cfg(all(ARCH_AARCH64, ALLOW_SMC_CALLS))] {
-                        init_thread::slot::SMC.upcast()
-                    } else {
-                        panic!()
-                    }
+                sel4::sel4_cfg_select! {
+                    all(ARCH_AARCH64, ALLOW_SMC_CALLS) => init_thread::slot::SMC.upcast(),
+                    _ => panic!(),
                 }
             }
             ArchivedObject::DomainSet => init_thread::slot::DOMAIN_SET.upcast(),
