@@ -6,8 +6,6 @@
 
 #![allow(clippy::eq_op)]
 
-use sel4_config_macros::sel4_cfg_wrap_match;
-
 #[allow(unused_imports)]
 use crate::{
     CapTypeForFrameObject, CapTypeForFrameObjectOfFixedSize, CapTypeForTranslationTableObject,
@@ -15,7 +13,7 @@ use crate::{
 };
 
 /// Frame object types for this kernel configuration.
-#[sel4_config_macros::sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum FrameObjectType {
     _4kPage,
@@ -28,7 +26,7 @@ impl FrameObjectType {
     pub const GRANULE: Self = Self::_4kPage;
 
     pub const fn blueprint(self) -> ObjectBlueprint {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 FrameObjectType::_4kPage => ObjectBlueprint::Arch(ObjectBlueprintRiscV::_4kPage),
                 FrameObjectType::MegaPage => ObjectBlueprint::Arch(ObjectBlueprintRiscV::MegaPage),
@@ -39,7 +37,7 @@ impl FrameObjectType {
     }
 
     pub const fn from_bits(bits: usize) -> Option<Self> {
-        Some(sel4_cfg_wrap_match! {
+        Some(sel4_config_macros::cfg_wrap_match! {
             match bits {
                 Self::_4K_PAGE_BITS => Self::_4kPage,
                 Self::MEGA_PAGE_BITS => Self::MegaPage,
@@ -111,12 +109,13 @@ impl CapTypeForTranslationTableObject for cap_type::PageTable {
 }
 
 pub mod vspace_levels {
-    use sel4_config_macros::sel4_cfg_usize;
 
-    pub const NUM_LEVELS: usize = sel4_cfg_usize!(PT_LEVELS);
+    pub const NUM_LEVELS: usize = sel4_config_macros::cfg_usize!(PT_LEVELS);
 
     pub const HIGHEST_LEVEL_WITH_PAGE_ENTRIES: usize = NUM_LEVELS
-        - if sel4_cfg_usize!(PT_LEVELS) == 3 || sel4_cfg_usize!(PT_LEVELS) == 4 {
+        - if sel4_config_macros::cfg_usize!(PT_LEVELS) == 3
+            || sel4_config_macros::cfg_usize!(PT_LEVELS) == 4
+        {
             3
         } else {
             2

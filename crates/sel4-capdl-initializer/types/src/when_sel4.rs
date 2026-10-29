@@ -15,7 +15,7 @@ use crate::{
 
 impl<D: Archive> ArchivedObject<D> {
     pub fn blueprint(&self) -> Option<ObjectBlueprint> {
-        Some(sel4::sel4_cfg_wrap_match! {
+        Some(sel4::cfg_wrap_match! {
             match self {
                 ArchivedObject::Untyped(obj) => ObjectBlueprint::Untyped {
                     size_bits: obj.size_bits.into(),
@@ -160,7 +160,7 @@ impl HasVmAttributes for cap::ArchivedPageTable {
     }
 }
 
-sel4::sel4_cfg_select! {
+sel4::cfg_select! {
     ARCH_ARM => {
         const CACHED: VmAttributes = VmAttributes::DEFAULT;
         const UNCACHED: VmAttributes = VmAttributes::NONE;
@@ -178,7 +178,7 @@ sel4::sel4_cfg_select! {
     _ => {}
 }
 
-sel4::sel4_cfg_if! {
+sel4::cfg_if! {
     if #[sel4_cfg(all(ARCH_X86_64, VTX))] {
         const EPT_CACHED: VmAttributes = VmAttributes::EPT_DEFAULT;
         const EPT_UNCACHED: VmAttributes = VmAttributes::EPT_CACHE_DISABLED;
@@ -194,7 +194,7 @@ pub fn vm_attributes_from_whether_cached_and_exec(
 ) -> VmAttributes {
     #[allow(unused_mut)]
     let mut vmattr = if x86_ept {
-        sel4::sel4_cfg_if! {
+        sel4::cfg_if! {
             if #[sel4_cfg(all(ARCH_X86_64, VTX))] {
                 if cached {
                     EPT_CACHED
@@ -211,7 +211,7 @@ pub fn vm_attributes_from_whether_cached_and_exec(
         UNCACHED
     };
 
-    sel4::sel4_cfg_if! {
+    sel4::cfg_if! {
         if #[sel4_cfg(any(ARCH_AARCH64, ARCH_AARCH32, ARCH_RISCV64, ARCH_RISCV32))] {
             if !executable {
                 vmattr |= NO_EXEC

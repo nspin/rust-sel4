@@ -6,8 +6,6 @@
 
 use core::array;
 
-use sel4_config_macros::{sel4_cfg, sel4_cfg_if};
-
 use crate::{
     Cap, CapType, ConveysReplyAuthority, InvocationContext, MessageInfo,
     NUM_FAST_MESSAGE_REGISTERS, Word, cap, const_helpers::u32_into_usize, sys,
@@ -15,6 +13,7 @@ use crate::{
 
 #[sel4_cfg(not(KERNEL_MCS))]
 use crate::IpcBuffer;
+use sel4_config_macros::sel4_cfg;
 
 /// Number of message registers in the IPC buffer.
 pub const NUM_MESSAGE_REGISTERS: usize = u32_into_usize(sys::seL4_MsgLimits::seL4_MsgMaxLength);
@@ -22,7 +21,7 @@ pub const NUM_MESSAGE_REGISTERS: usize = u32_into_usize(sys::seL4_MsgLimits::seL
 /// A capability badge.
 pub type Badge = Word;
 
-sel4_cfg_if! {
+sel4_config_macros::cfg_if! {
     if #[sel4_cfg(KERNEL_MCS)] {
         pub type WaitMessageInfo = MessageInfo;
 

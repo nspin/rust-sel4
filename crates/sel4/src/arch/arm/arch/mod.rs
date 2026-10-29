@@ -4,9 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use sel4_config_macros::sel4_cfg_select;
-
-sel4_cfg_select! {
+sel4_config_macros::cfg_select! {
     ARCH_AARCH64 => {
         #[path = "aarch64/mod.rs"]
         mod imp;
@@ -17,11 +15,5 @@ sel4_cfg_select! {
     }
     _ => {}
 }
-
-// HACK for rustfmt
-#[cfg(false)]
-mod aarch32;
-#[cfg(false)]
-mod aarch64;
 
 pub(crate) use imp::*;

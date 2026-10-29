@@ -7,9 +7,9 @@
 use core::ops::Range;
 use core::ptr;
 
-use sel4::{CapTypeForFrameObjectOfFixedSize, cap_type, init_thread, sel4_cfg_attr, sel4_cfg_bool};
+use sel4::{CapTypeForFrameObjectOfFixedSize, cap_type, init_thread, sel4_cfg_attr};
 
-const SMALL_PAGE_PLACEHOLDER_SIZE: usize = if sel4_cfg_bool!(ARCH_AARCH32) {
+const SMALL_PAGE_PLACEHOLDER_SIZE: usize = if sel4::cfg_bool!(ARCH_AARCH32) {
     1 << 16
 } else {
     1 << 12

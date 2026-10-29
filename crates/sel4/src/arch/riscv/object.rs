@@ -6,15 +6,13 @@
 
 use core::ffi::c_uint;
 
-use sel4_config_macros::{sel4_cfg_enum, sel4_cfg_wrap_match};
-
 use crate::{const_helpers::u32_into_usize, sys};
 
 pub type ObjectTypeArch = ObjectTypeRISCV;
 
 pub type ObjectBlueprintArch = ObjectBlueprintRiscV;
 
-#[sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ObjectTypeRISCV {
     _4kPage,
@@ -26,7 +24,7 @@ pub enum ObjectTypeRISCV {
 
 impl ObjectTypeRISCV {
     pub(crate) const fn into_sys(self) -> c_uint {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 Self::_4kPage => sys::_object::seL4_RISCV_4K_Page,
                 Self::MegaPage => sys::_object::seL4_RISCV_Mega_Page,
@@ -38,7 +36,7 @@ impl ObjectTypeRISCV {
     }
 }
 
-#[sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ObjectBlueprintRiscV {
     _4kPage,
@@ -50,7 +48,7 @@ pub enum ObjectBlueprintRiscV {
 
 impl ObjectBlueprintRiscV {
     pub(crate) const fn ty(self) -> ObjectTypeRISCV {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 Self::_4kPage => ObjectTypeRISCV::_4kPage,
                 Self::MegaPage => ObjectTypeRISCV::MegaPage,
@@ -62,7 +60,7 @@ impl ObjectBlueprintRiscV {
     }
 
     pub(crate) const fn physical_size_bits(self) -> usize {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 Self::_4kPage => u32_into_usize(sys::seL4_PageBits),
                 Self::MegaPage => u32_into_usize(sys::seL4_LargePageBits),

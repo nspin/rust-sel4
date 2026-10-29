@@ -24,12 +24,12 @@ pub use c::*;
 pub use invocations::*;
 pub use syscalls::*;
 
-pub type ReplyAuthority = sel4_config_macros::sel4_cfg_select! {
+pub type ReplyAuthority = sel4_config_macros::cfg_select! {
     KERNEL_MCS => seL4_CPtr,
     _ => (),
 };
 
-pub type WaitMessageInfo = sel4_config_macros::sel4_cfg_select! {
+pub type WaitMessageInfo = sel4_config_macros::cfg_select! {
     KERNEL_MCS => seL4_MessageInfo,
     _ => (),
 };

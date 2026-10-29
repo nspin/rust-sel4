@@ -38,10 +38,7 @@ impl MacroImpls<'_> {
                 }
             }
         }
-        let message = format!(
-            "none of the predicates in this `{}_select` evaluated to true",
-            self.synthetic_attr()
-        );
+        let message = "none of the predicates in this `cfg_select` evaluated to true";
         quote! {
             compile_error!(#message);
         }

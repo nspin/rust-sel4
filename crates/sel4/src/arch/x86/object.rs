@@ -6,8 +6,6 @@
 
 use core::ffi::c_uint;
 
-use sel4_config_macros::{sel4_cfg_enum, sel4_cfg_wrap_match};
-
 use crate::{
     ObjectBlueprint, ObjectBlueprintSeL4Arch, ObjectType, ObjectTypeSeL4Arch,
     const_helpers::u32_into_usize, sys,
@@ -17,7 +15,7 @@ pub type ObjectTypeArch = ObjectTypeX86;
 
 pub type ObjectBlueprintArch = ObjectBlueprintX86;
 
-#[sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ObjectTypeX86 {
     _4k,
@@ -37,7 +35,7 @@ pub enum ObjectTypeX86 {
 
 impl ObjectTypeX86 {
     pub(crate) const fn into_sys(self) -> c_uint {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 Self::_4k => sys::_object::seL4_X86_4K,
                 Self::LargePage => sys::_object::seL4_X86_LargePageObject,
@@ -69,7 +67,7 @@ impl From<ObjectTypeSeL4Arch> for ObjectType {
     }
 }
 
-#[sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ObjectBlueprintX86 {
     _4k,
@@ -89,7 +87,7 @@ pub enum ObjectBlueprintX86 {
 
 impl ObjectBlueprintX86 {
     pub(crate) const fn ty(self) -> ObjectTypeX86 {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 Self::_4k => ObjectTypeX86::_4k,
                 Self::LargePage => ObjectTypeX86::LargePage,
@@ -109,7 +107,7 @@ impl ObjectBlueprintX86 {
     }
 
     pub(crate) const fn physical_size_bits(self) -> usize {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 Self::_4k => u32_into_usize(sys::seL4_PageBits),
                 Self::LargePage => u32_into_usize(sys::seL4_LargePageBits),

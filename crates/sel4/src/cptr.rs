@@ -172,8 +172,6 @@ pub mod cap_type {
     //!
     //! These types are used for marking [`Cap`](crate::Cap).
 
-    use sel4_config_macros::sel4_cfg_if;
-
     use crate::{
         declare_cap_type, declare_cap_type_for_object_of_fixed_size,
         declare_cap_type_for_object_of_variable_size,
@@ -251,7 +249,7 @@ pub mod cap_type {
         UnspecifiedIntermediateTranslationTable
     }
 
-    sel4_cfg_if! {
+    sel4_config_macros::cfg_if! {
         if #[sel4_cfg(KERNEL_MCS)] {
             declare_cap_type! {
                 /// Corresponds to the reply capability type (MCS only).
@@ -278,8 +276,6 @@ pub mod cap {
     //!
     //! Each type `$t<C = NoExplicitInvocationContext>` in this module is an alias for `Cap<$t, C>`.
 
-    use sel4_config_macros::sel4_cfg_if;
-
     use crate::declare_cap_alias;
 
     pub use crate::arch::cap_arch::*;
@@ -303,7 +299,7 @@ pub mod cap {
     declare_cap_alias!(VSpace);
     declare_cap_alias!(Granule);
 
-    sel4_cfg_if! {
+    sel4_config_macros::cfg_if! {
         if #[sel4_cfg(KERNEL_MCS)] {
             declare_cap_alias!(Reply);
             declare_cap_alias!(SchedContext);

@@ -4,9 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use sel4_config_macros::sel4_cfg_select;
-
-sel4_cfg_select! {
+sel4_config_macros::cfg_select! {
     all(ARCH_ARM, PLAT_QEMU_ARM_VIRT) => {
         #[path = "qemu_arm_virt/mod.rs"]
         mod imp;
@@ -21,14 +19,6 @@ sel4_cfg_select! {
     }
     _ => {}
 }
-
-// HACK for rustfmt
-#[cfg(false)]
-mod bcm2711;
-#[cfg(false)]
-mod qemu_arm_virt;
-#[cfg(false)]
-mod riscv_generic;
 
 #[allow(unused_imports)]
 pub(crate) use imp::*;

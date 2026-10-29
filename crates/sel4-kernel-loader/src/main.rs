@@ -13,7 +13,6 @@ use core::sync::atomic::{AtomicBool, Ordering};
 
 use fdt::Fdt;
 
-use sel4_config_macros::sel4_cfg_usize;
 use sel4_immediate_sync_once_cell::ImmediateSyncOnceCell;
 use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 
@@ -37,7 +36,7 @@ use crate::{
     plat::{Plat, PlatImpl},
 };
 
-const MAX_NUM_NODES: usize = sel4_cfg_usize!(MAX_NUM_NODES);
+const MAX_NUM_NODES: usize = sel4_config_macros::cfg_usize!(MAX_NUM_NODES);
 
 static PAYLOAD_INFO: ImmediateSyncOnceCell<ArchivedPayloadInfo> = ImmediateSyncOnceCell::new();
 

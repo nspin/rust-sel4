@@ -39,7 +39,7 @@ macro_rules! use_default_set_thread_pointer_fn {
 
 cfg_select! {
     feature = "sel4" => {
-        sel4::sel4_cfg_if! {
+        sel4::cfg_if! {
             if #[sel4_cfg(all(ARCH_X86_64, SET_TLS_BASE_SELF))] {
                 const CHOSEN_SET_THREAD_POINTER_FN: SetThreadPointerFn = set_thread_pointer_via_syscall;
 

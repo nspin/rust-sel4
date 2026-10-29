@@ -6,11 +6,9 @@
 
 use core::ffi::c_int;
 
-use sel4_config_macros::sel4_cfg_select;
-
 use crate::seL4_Word;
 
-sel4_cfg_select! {
+sel4_config_macros::cfg_select! {
     ARCH_AARCH64 => {
         #[path = "aarch64.rs"]
         mod imp;
@@ -29,16 +27,6 @@ sel4_cfg_select! {
     }
     _ => {}
 }
-
-// HACK for rustfmt
-#[cfg(false)]
-mod aarch32;
-#[cfg(false)]
-mod aarch64;
-#[cfg(false)]
-mod riscv;
-#[cfg(false)]
-mod x86_64;
 
 pub use imp::*;
 

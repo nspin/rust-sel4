@@ -5,7 +5,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-use sel4_config_macros::sel4_cfg_if;
 
 use crate::{sys, Error, Result, cap, Word};
 
@@ -21,7 +20,7 @@ pub fn benchmark_set_log_buffer(frame: cap::UnspecifiedPage) -> Result<()> {
     Error::wrap(sys::seL4_BenchmarkSetLogBuffer(frame.bits()))
 }
 
-sel4_cfg_if! {
+sel4_config_macros::cfg_if! {
     if #[sel4_cfg(BENCHMARK_TRACK_UTILISATION)] {
         pub fn benchmark_get_thread_utilisation(tcb: cap::Tcb) {
             sys::seL4_BenchmarkGetThreadUtilisation(tcb.bits())
@@ -31,7 +30,7 @@ sel4_cfg_if! {
             sys::seL4_BenchmarkResetThreadUtilisation(tcb.bits())
         }
 
-        sel4_cfg_if! {
+        sel4_config_macros::cfg_if! {
             if #[sel4_cfg(DEBUG_BUILD)] {
                 pub fn benchmark_dump_all_thread_utilisation() {
                     sys::seL4_BenchmarkDumpAllThreadsUtilisation()

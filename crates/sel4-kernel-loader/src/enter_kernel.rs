@@ -6,7 +6,6 @@
 
 use core::mem;
 
-use sel4_config_macros::sel4_cfg_if;
 use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 
 #[allow(unused_imports)]
@@ -32,7 +31,7 @@ pub(crate) fn mk_enter_kernel(payload_info: &ArchivedPayloadInfo, core_id: usize
         .map(|x| x.size.to_usize())
         .unwrap_or(0);
 
-    sel4_cfg_if! {
+    sel4_config_macros::cfg_if! {
         if #[sel4_cfg(all(ARCH_RISCV, not(MAX_NUM_NODES = "1")))] {
             let hart_id = ArchImpl::logical_to_physical_core_id(core_id);
             move || {
@@ -62,7 +61,7 @@ pub(crate) fn mk_enter_kernel(payload_info: &ArchivedPayloadInfo, core_id: usize
     }
 }
 
-sel4_cfg_if! {
+sel4_config_macros::cfg_if! {
     if #[sel4_cfg(all(ARCH_RISCV, not(MAX_NUM_NODES = "1")))] {
         type KernelEntry = extern "C" fn(
             ui_p_reg_start: usize,

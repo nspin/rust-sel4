@@ -4,12 +4,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-use sel4_config_macros::sel4_cfg;
-
 use crate::{
     AbsoluteCPtr, Cap, CapRights, CapTypeForFrameObject, Error, InvocationContext, Result,
-    TranslationTableObjectType, VmAttributes, Word, cap::*, cap_type, sel4_cfg_wrap_match,
+    TranslationTableObjectType, VmAttributes, Word, cap::*, cap_type,
 };
+use sel4_config_macros::sel4_cfg;
 
 #[sel4_cfg(VTX)]
 impl<C: InvocationContext> VCpu<C> {
@@ -229,7 +228,7 @@ impl<C: InvocationContext> UnspecifiedIntermediateTranslationTable<C> {
         vaddr: usize,
         attr: VmAttributes,
     ) -> Result<()> {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match ty {
                 #[sel4_cfg(ARCH_X86_64)]
                 TranslationTableObjectType::PDPT => self.cast::<cap_type::PDPT>().pdpt_map(vspace, vaddr, attr),
@@ -252,7 +251,7 @@ impl<C: InvocationContext> UnspecifiedIntermediateTranslationTable<C> {
         vaddr: usize,
         attr: VmAttributes,
     ) -> Result<()> {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match ty {
                 #[sel4_cfg(ARCH_X86_64)]
                 TranslationTableObjectType::EPTPDPT => self.cast::<cap_type::EPTPDPT>().eptpdpt_map(vspace, vaddr, attr),

@@ -143,9 +143,9 @@ impl<'a> Helper<'a> {
     }
 
     fn process_attrs(&mut self, attrs: &mut Vec<syn::Attribute>) -> bool /* keep */ {
-        let synthetic_attr = self.impls.synthetic_attr();
+        let impls = self.impls;
         attrs
-            .extract_if(.., |attr| attr.path().is_ident(synthetic_attr))
+            .extract_if(.., |attr| impls.is_synthetic_attr(attr.path()))
             .all(|attr| match attr.parse_args::<Condition>() {
                 Ok(cond) => {
                     let r = self.impls.eval(&cond);

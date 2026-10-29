@@ -91,9 +91,8 @@
 #![allow(clippy::unit_arg)]
 
 pub use sel4_config_macros::{
-    sel4_cfg, sel4_cfg_attr, sel4_cfg_bool, sel4_cfg_enum, sel4_cfg_if, sel4_cfg_match,
-    sel4_cfg_select, sel4_cfg_str, sel4_cfg_struct, sel4_cfg_usize, sel4_cfg_word,
-    sel4_cfg_wrap_match,
+    cfg_bool, cfg_enum, cfg_if, cfg_match, cfg_select, cfg_str, cfg_struct, cfg_usize, cfg_word,
+    cfg_wrap_match, sel4_cfg, sel4_cfg_attr,
 };
 
 pub use sel4_sys as sys;
@@ -159,7 +158,7 @@ pub(crate) use helper_macros::{
     declare_fault_newtype, newtype_methods,
 };
 
-sel4_cfg_if! {
+sel4_config_macros::cfg_if! {
     if #[sel4_cfg(PRINTING)] {
         mod printing;
 
@@ -167,7 +166,7 @@ sel4_cfg_if! {
     }
 }
 
-sel4_cfg_if! {
+sel4_config_macros::cfg_if! {
     if #[sel4_cfg(DEBUG_BUILD)] {
         mod debug;
 
@@ -175,7 +174,7 @@ sel4_cfg_if! {
     }
 }
 
-sel4_cfg_if! {
+sel4_config_macros::cfg_if! {
     if #[sel4_cfg(ENABLE_BENCHMARKS)] {
         mod benchmark;
 
@@ -185,7 +184,7 @@ sel4_cfg_if! {
             benchmark_set_log_buffer,
         };
 
-        sel4_cfg_if! {
+        sel4_config_macros::cfg_if! {
             if #[sel4_cfg(BENCHMARK_TRACK_UTILISATION)] {
                 pub use benchmark::{
                     benchmark_get_thread_utilisation,
@@ -215,7 +214,7 @@ pub use state::{
 pub type Word = sys::seL4_Word;
 
 /// The size of [`Word`] in bits.
-pub const WORD_SIZE: usize = sel4_cfg_usize!(WORD_SIZE);
+pub const WORD_SIZE: usize = sel4_config_macros::cfg_usize!(WORD_SIZE);
 
 #[doc(hidden)]
 pub mod _private {

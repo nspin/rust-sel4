@@ -4,16 +4,15 @@
 // SPDX-License-Identifier: MIT
 //
 
-use sel4_config_macros::{sel4_cfg, sel4_cfg_enum, sel4_cfg_if, sel4_cfg_wrap_match};
-
 use crate::{
     CapTypeForFrameObject, CapTypeForFrameObjectOfFixedSize, CapTypeForTranslationTableObject,
     ObjectBlueprint, ObjectBlueprintX64, ObjectBlueprintX86, cap_type,
     const_helpers::u32_into_usize, sys,
 };
+use sel4_config_macros::sel4_cfg;
 
 /// Frame object types for this kernel configuration.
-#[sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum FrameObjectType {
     _4k,
@@ -26,7 +25,7 @@ impl FrameObjectType {
     pub const GRANULE: Self = Self::_4k;
 
     pub const fn blueprint(self) -> ObjectBlueprint {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 Self::_4k => ObjectBlueprint::Arch(ObjectBlueprintX86::_4k),
                 Self::LargePage => ObjectBlueprint::Arch(ObjectBlueprintX86::LargePage),
@@ -39,7 +38,7 @@ impl FrameObjectType {
     }
 
     pub const fn from_bits(bits: usize) -> Option<Self> {
-        Some(sel4_cfg_wrap_match! {
+        Some(sel4_config_macros::cfg_wrap_match! {
             match bits {
                 Self::_4K_BITS => Self::_4k,
                 Self::LARGE_PAGE_BITS => Self::LargePage,
@@ -70,7 +69,7 @@ impl CapTypeForFrameObjectOfFixedSize for cap_type::LargePage {
     const FRAME_OBJECT_TYPE: FrameObjectType = FrameObjectType::LargePage;
 }
 
-sel4_cfg_if! {
+sel4_config_macros::cfg_if! {
     if #[sel4_cfg(HUGE_PAGE)] {
         impl CapTypeForFrameObject for cap_type::HugePage {}
 
@@ -83,7 +82,7 @@ sel4_cfg_if! {
 // // //
 
 /// Translation table object types for this kernel configuration.
-#[sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TranslationTableObjectType {
     PML4,
@@ -104,7 +103,7 @@ pub enum TranslationTableObjectType {
 
 impl TranslationTableObjectType {
     pub const fn blueprint(&self) -> ObjectBlueprint {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 Self::PML4 => {
                     ObjectBlueprint::Arch(ObjectBlueprintX86::SeL4Arch(ObjectBlueprintX64::PML4))
@@ -133,7 +132,7 @@ impl TranslationTableObjectType {
     }
 
     pub const fn index_bits(&self) -> usize {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 Self::PML4 => u32_into_usize(sys::seL4_PML4IndexBits),
                 Self::PDPT => u32_into_usize(sys::seL4_PDPTIndexBits),

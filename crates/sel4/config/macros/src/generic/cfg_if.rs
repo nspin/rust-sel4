@@ -16,9 +16,7 @@ use super::{Condition, MacroImpls};
 
 impl MacroImpls<'_> {
     pub fn cfg_if_impl(&self, toks: TokenStream) -> TokenStream {
-        let parser = move |parse_stream: ParseStream| {
-            parse_cfg_if_input(self.synthetic_attr(), parse_stream)
-        };
+        let parser = move |parse_stream: ParseStream| parse_cfg_if_input(self, parse_stream);
         let input = match parser.parse2(toks) {
             Ok(parsed) => parsed,
             Err(err) => {
@@ -50,14 +48,14 @@ struct CfgIfInput {
 }
 
 fn parse_cfg_if_input(
-    synthetic_attr: &str,
+    impls: &MacroImpls,
     input: syn::parse::ParseStream,
 ) -> syn::Result<CfgIfInput> {
-    let mut branches_with_conditions = vec![parse_branch_with_condition(synthetic_attr, input)?];
+    let mut branches_with_conditions = vec![parse_branch_with_condition(impls, input)?];
     while input.peek(Token![else]) {
         input.parse::<Token![else]>()?;
         if input.peek(Token![if]) {
-            branches_with_conditions.push(parse_branch_with_condition(synthetic_attr, input)?);
+            branches_with_conditions.push(parse_branch_with_condition(impls, input)?);
         } else {
             break;
         }
@@ -79,15 +77,15 @@ struct BranchWithCondition {
 }
 
 fn parse_branch_with_condition(
-    synthetic_attr: &str,
+    impls: &MacroImpls,
     input: syn::parse::ParseStream,
 ) -> syn::Result<BranchWithCondition> {
-    let condition = parse_condition(synthetic_attr, input)?;
+    let condition = parse_condition(impls, input)?;
     let branch = parse_branch(input)?;
     Ok(BranchWithCondition { condition, branch })
 }
 
-fn parse_condition(synthetic_attr: &str, input: syn::parse::ParseStream) -> syn::Result<Condition> {
+fn parse_condition(impls: &MacroImpls, input: syn::parse::ParseStream) -> syn::Result<Condition> {
     input.parse::<Token![if]>()?;
     let attrs = syn::Attribute::parse_outer(input)?;
     let attr = match attrs.len() {
@@ -100,10 +98,10 @@ fn parse_condition(synthetic_attr: &str, input: syn::parse::ParseStream) -> syn:
             ));
         }
     };
-    if !attr.path().is_ident(synthetic_attr) {
+    if !impls.is_synthetic_attr(attr.path()) {
         return Err(syn::Error::new(
             attr.span(),
-            format!("expected '{synthetic_attr}'"),
+            format!("expected '{}'", impls.synthetic_attr()),
         ));
     }
     attr.parse_args()

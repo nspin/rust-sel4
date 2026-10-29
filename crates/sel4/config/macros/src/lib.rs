@@ -66,14 +66,14 @@ pub fn sel4_cfg_attr(input: TokenStream, item: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// #[sel4_cfg_struct]
+/// #[sel4::cfg_struct]
 /// struct Foo {
 ///     #[sel4_cfg(KERNEL_MCS)]
 ///     bar: bool,
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn sel4_cfg_struct(input: TokenStream, item: TokenStream) -> TokenStream {
+pub fn cfg_struct(input: TokenStream, item: TokenStream) -> TokenStream {
     get_impls()
         .cfg_struct_impl(input.into(), item.into())
         .into()
@@ -84,44 +84,44 @@ pub fn sel4_cfg_struct(input: TokenStream, item: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// #[sel4_cfg_enum]
+/// #[sel4::cfg_enum]
 /// enum Foo {
 ///     #[sel4_cfg(KERNEL_MCS)]
 ///     Bar,
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn sel4_cfg_enum(input: TokenStream, item: TokenStream) -> TokenStream {
+pub fn cfg_enum(input: TokenStream, item: TokenStream) -> TokenStream {
     get_impls().cfg_enum_impl(input.into(), item.into()).into()
 }
 
 /// Allows a `match` expression's variants to use the [`macro@sel4_cfg`] attribute.
 ///
 /// Using this attribute macro currently requires nightly (`#![feature(proc_macro_hygiene)]` and
-/// `#![feature(stmt_expr_attributes)]`). The less elegant [`macro@sel4_cfg_wrap_match`] serves the
+/// `#![feature(stmt_expr_attributes)]`). The less elegant [`macro@cfg_wrap_match`] serves the
 /// same purpose and works on stable.
 ///
 /// # Example
 ///
 /// ```ignore
-/// #[sel4_cfg_match]
+/// #[sel4::cfg_match]
 /// match foo {
 ///     #[sel4_cfg(KERNEL_MCS)]
 ///     1337 => bar,
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn sel4_cfg_match(input: TokenStream, item: TokenStream) -> TokenStream {
+pub fn cfg_match(input: TokenStream, item: TokenStream) -> TokenStream {
     get_impls().cfg_match_impl(input.into(), item.into()).into()
 }
 
-/// Like [`macro@sel4_cfg_match`], except it works on stable, at the expense of not being an
+/// Like [`macro@cfg_match`], except it works on stable, at the expense of not being an
 /// attribute macro.
 ///
 /// # Example
 ///
 /// ```ignore
-/// sel4_cfg_wrap_match! {
+/// sel4::cfg_wrap_match! {
 ///     match foo {
 ///         #[sel4_cfg(KERNEL_MCS)]
 ///         1337 => bar,
@@ -129,7 +129,7 @@ pub fn sel4_cfg_match(input: TokenStream, item: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro]
-pub fn sel4_cfg_wrap_match(item: TokenStream) -> TokenStream {
+pub fn cfg_wrap_match(item: TokenStream) -> TokenStream {
     get_impls().cfg_wrap_match_impl(item.into()).into()
 }
 
@@ -138,7 +138,7 @@ pub fn sel4_cfg_wrap_match(item: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// sel4_cfg_if! {
+/// sel4::cfg_if! {
 ///     if #[sel4_cfg(KERNEL_MCS)] {
 ///         ...
 ///     } else if #[sel4_cfg(MAX_NUM_NODES = "1")] {
@@ -149,11 +149,14 @@ pub fn sel4_cfg_wrap_match(item: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro]
-pub fn sel4_cfg_if(toks: TokenStream) -> TokenStream {
+pub fn cfg_if(toks: TokenStream) -> TokenStream {
     get_impls().cfg_if_impl(toks.into()).into()
 }
 
 /// Like `core::cfg_select!`, except using the seL4 kernel configuration.
+///
+/// To avoid confusion with `core::cfg_select!`, refer to this macro by its path (e.g.
+/// `sel4::cfg_select!`) rather than importing it.
 ///
 /// Expands to the body of the first arm whose configuration expression evaluates to true. An arm
 /// with `_` always matches. If no arm matches, expansion results in a compile-time error.
@@ -163,7 +166,7 @@ pub fn sel4_cfg_if(toks: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// sel4_cfg_select! {
+/// sel4::cfg_select! {
 ///     KERNEL_MCS => {
 ///         ...
 ///     }
@@ -175,13 +178,13 @@ pub fn sel4_cfg_if(toks: TokenStream) -> TokenStream {
 ///     }
 /// }
 ///
-/// let x = sel4_cfg_select! {
+/// let x = sel4::cfg_select! {
 ///     KERNEL_MCS => 1,
 ///     _ => 2,
 /// };
 /// ```
 #[proc_macro]
-pub fn sel4_cfg_select(toks: TokenStream) -> TokenStream {
+pub fn cfg_select(toks: TokenStream) -> TokenStream {
     get_impls().cfg_select_impl(toks.into()).into()
 }
 
@@ -195,12 +198,12 @@ pub fn sel4_cfg_select(toks: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// if sel4_cfg_bool!(KERNEL_MCS) {
+/// if sel4::cfg_bool!(KERNEL_MCS) {
 ///     ...
 /// }
 /// ```
 #[proc_macro]
-pub fn sel4_cfg_bool(key_toks: TokenStream) -> TokenStream {
+pub fn cfg_bool(key_toks: TokenStream) -> TokenStream {
     get_impls().cfg_bool_impl(key_toks.into()).into()
 }
 
@@ -214,10 +217,10 @@ pub fn sel4_cfg_bool(key_toks: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// assert_eq!(1usize, sel4_cfg_usize!(MAX_NUM_NODES));
+/// assert_eq!(1usize, sel4::cfg_usize!(MAX_NUM_NODES));
 /// ```
 #[proc_macro]
-pub fn sel4_cfg_str(key_toks: TokenStream) -> TokenStream {
+pub fn cfg_str(key_toks: TokenStream) -> TokenStream {
     get_impls()
         .cfg_from_str_impl::<String>(PhantomData, key_toks.into())
         .into()
@@ -233,10 +236,10 @@ pub fn sel4_cfg_str(key_toks: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// assert_eq!(1usize, sel4_cfg_usize!(MAX_NUM_NODES));
+/// assert_eq!(1usize, sel4::cfg_usize!(MAX_NUM_NODES));
 /// ```
 #[proc_macro]
-pub fn sel4_cfg_usize(key_toks: TokenStream) -> TokenStream {
+pub fn cfg_usize(key_toks: TokenStream) -> TokenStream {
     get_impls()
         .cfg_from_str_impl::<usize>(PhantomData, key_toks.into())
         .into()
@@ -253,10 +256,10 @@ pub fn sel4_cfg_usize(key_toks: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// assert_eq!(1u64, sel4_cfg_word!(MAX_NUM_NODES));
+/// assert_eq!(1u64, sel4::cfg_word!(MAX_NUM_NODES));
 /// ```
 #[proc_macro]
-pub fn sel4_cfg_word(key_toks: TokenStream) -> TokenStream {
+pub fn cfg_word(key_toks: TokenStream) -> TokenStream {
     let impls = get_impls();
     let word_size = impls
         .config()

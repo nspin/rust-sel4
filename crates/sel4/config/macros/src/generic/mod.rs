@@ -37,6 +37,15 @@ impl<'a> MacroImpls<'a> {
         self.synthetic_attr
     }
 
+    fn is_synthetic_attr(&self, path: &syn::Path) -> bool {
+        path.leading_colon.is_none()
+            && path
+                .segments
+                .iter()
+                .map(|segment| segment.ident.to_string())
+                .eq(self.synthetic_attr.split("::"))
+    }
+
     fn eval(&self, cond: &Condition) -> Result<bool, EvalError> {
         cond.eval(self.config())
     }

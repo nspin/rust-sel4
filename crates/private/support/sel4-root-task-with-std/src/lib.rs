@@ -6,8 +6,6 @@
 
 #![feature(linkage)]
 
-use sel4::sel4_cfg_if;
-
 pub use sel4_panicking_env::{abort, debug_print, debug_println};
 
 mod entry;
@@ -42,7 +40,7 @@ pub const DEFAULT_STACK_SIZE: usize = 1024
         64
     };
 
-sel4_cfg_if! {
+sel4::cfg_if! {
     if #[sel4_cfg(PRINTING)] {
         use sel4::debug_put_char;
     } else {

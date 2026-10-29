@@ -8,8 +8,6 @@
 
 use core::mem;
 
-use sel4_config_macros::{sel4_cfg, sel4_cfg_if};
-
 use crate::{
     AbsoluteCPtr, CNodeCapData, CPtr, CapRights, Error, InvocationContext, ObjectBlueprint, Result,
     UserContext, Word, cap::*, sys,
@@ -17,6 +15,7 @@ use crate::{
 
 #[sel4_cfg(KERNEL_MCS)]
 use crate::Badge;
+use sel4_config_macros::sel4_cfg;
 
 /// Corresponds to `seL4_Time`.
 pub type Time = u64;
@@ -165,7 +164,7 @@ impl<C: InvocationContext> Tcb<C> {
         Error::or(ret.error, ret.flags)
     }
 
-    sel4_cfg_if! {
+    sel4_config_macros::cfg_if! {
         if #[sel4_cfg(KERNEL_MCS)] {
             /// Corresponds to `seL4_TCB_Configure`.
             pub fn tcb_configure(
@@ -235,7 +234,7 @@ impl<C: InvocationContext> Tcb<C> {
         }))
     }
 
-    sel4_cfg_if! {
+    sel4_config_macros::cfg_if! {
         if #[sel4_cfg(KERNEL_MCS)] {
             /// Corresponds to `seL4_TCB_SetSchedParams`.
             pub fn tcb_set_sched_params(

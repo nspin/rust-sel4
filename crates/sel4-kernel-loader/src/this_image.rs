@@ -38,7 +38,6 @@ static loader_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
 pub(crate) static kernel_boot_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
 
 pub(crate) mod stacks {
-    use sel4_config_macros::sel4_cfg_usize;
     use sel4_stack::{Stack, StackBottom};
 
     const PRIMARY_STACK_SIZE: usize = 4096 * 8; // TODO this is excessive
@@ -51,7 +50,7 @@ pub(crate) mod stacks {
     #[unsafe(no_mangle)]
     static __primary_stack_bottom: StackBottom = PRIMARY_STACK.bottom();
 
-    const MAX_NUM_NODES: usize = sel4_cfg_usize!(MAX_NUM_NODES);
+    const MAX_NUM_NODES: usize = sel4_config_macros::cfg_usize!(MAX_NUM_NODES);
 
     const SECONDARY_STACK_SIZE: usize = 4096 * 2;
 

@@ -94,7 +94,7 @@ fn run_secondary_thread(thread_config: &<RuntimeThreadConfig as Archive>::Archiv
     let endpoint =
         sel4::cap::Endpoint::from_bits(thread_config.endpoint.as_ref().unwrap().to_native());
     let reply_authority = {
-        sel4::sel4_cfg_if! {
+        sel4::cfg_if! {
             if #[sel4_cfg(KERNEL_MCS)] {
                 sel4::cap::Reply::from_bits(thread_config.reply_authority().unwrap().to_native().try_into().unwrap())
             } else {

@@ -4,14 +4,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-use sel4_config_macros::sel4_cfg_enum;
-
 use crate::sys;
 
 /// Corresponds to `seL4_VCPUReg`.
 #[repr(u32)]
 #[allow(non_camel_case_types)]
-#[sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 pub enum VCpuReg {
     // TODO
 }

@@ -7,7 +7,6 @@
 use embedded_hal_nb::nb;
 use embedded_hal_nb::serial::Write;
 
-use sel4_config_macros::sel4_cfg_bool;
 use sel4_pl011_driver::Driver as Pl011Driver;
 
 use crate::{
@@ -25,7 +24,7 @@ pub(crate) enum PlatImpl {}
 
 impl Plat for PlatImpl {
     fn init_per_core() {
-        if sel4_cfg_bool!(ARM_HYPERVISOR_SUPPORT) {
+        if sel4_config_macros::cfg_bool!(ARM_HYPERVISOR_SUPPORT) {
             unsafe {
                 reset_cntvoff();
             }

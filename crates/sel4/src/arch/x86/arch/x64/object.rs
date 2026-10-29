@@ -6,15 +6,13 @@
 
 use core::ffi::c_uint;
 
-use sel4_config_macros::{sel4_cfg_enum, sel4_cfg_wrap_match};
-
 use crate::{const_helpers::u32_into_usize, sys};
 
 pub type ObjectTypeSeL4Arch = ObjectTypeX64;
 
 pub type ObjectBlueprintSeL4Arch = ObjectBlueprintX64;
 
-#[sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ObjectTypeX64 {
     #[sel4_cfg(HUGE_PAGE)]
@@ -29,7 +27,7 @@ pub enum ObjectTypeX64 {
 
 impl ObjectTypeX64 {
     pub(crate) const fn into_sys(self) -> c_uint {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 #[sel4_cfg(HUGE_PAGE)]
                 Self::HugePage => sys::_mode_object::seL4_X64_HugePageObject,
@@ -44,7 +42,7 @@ impl ObjectTypeX64 {
     }
 }
 
-#[sel4_cfg_enum]
+#[sel4_config_macros::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ObjectBlueprintX64 {
     #[sel4_cfg(HUGE_PAGE)]
@@ -59,7 +57,7 @@ pub enum ObjectBlueprintX64 {
 
 impl ObjectBlueprintX64 {
     pub(crate) const fn ty(self) -> ObjectTypeX64 {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 #[sel4_cfg(HUGE_PAGE)]
                 Self::HugePage => ObjectTypeX64::HugePage,
@@ -74,7 +72,7 @@ impl ObjectBlueprintX64 {
     }
 
     pub(crate) const fn physical_size_bits(self) -> usize {
-        sel4_cfg_wrap_match! {
+        sel4_config_macros::cfg_wrap_match! {
             match self {
                 #[sel4_cfg(HUGE_PAGE)]
                 Self::HugePage => u32_into_usize(sys::seL4_HugePageBits),

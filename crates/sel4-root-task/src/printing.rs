@@ -4,9 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use sel4::sel4_cfg_if;
-
-sel4_cfg_if! {
+sel4::cfg_if! {
     if #[sel4_cfg(PRINTING)] {
         use sel4::debug_put_char;
 

@@ -6,9 +6,8 @@
 
 #![allow(clippy::assertions_on_constants)]
 
-use sel4_config_macros::sel4_cfg_attr;
-
 use crate::Word;
+use sel4_config_macros::sel4_cfg_attr;
 
 const _: () = assert!(Word::BITS == usize::BITS);
 const _: () = assert!(u32::BITS <= usize::BITS);

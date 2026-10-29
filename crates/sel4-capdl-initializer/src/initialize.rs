@@ -89,13 +89,13 @@ impl<'a> Initializer<'a> {
         self.init_asids()?;
         self.init_frames()?;
         self.init_vspaces()?;
-        sel4::sel4_cfg_if! {
+        sel4::cfg_if! {
             if #[sel4_cfg(all(ARCH_X86_64,IOMMU))] {
                 self.init_iospaces()?;
             }
         }
 
-        sel4::sel4_cfg_if! {
+        sel4::cfg_if! {
             if #[sel4_cfg(KERNEL_MCS)] {
                 self.init_sched_contexts()?;
             }
@@ -119,8 +119,8 @@ impl<'a> Initializer<'a> {
         debug!("Creating objects");
 
         // Sort untypeds by paddr
-        let mut _uts_by_paddr_backing: [usize;
-            sel4::sel4_cfg_usize!(MAX_NUM_BOOTINFO_UNTYPED_CAPS)] = array::from_fn(|i| i); // TODO (not a big deal) allocate in image rather than on stack
+        let mut _uts_by_paddr_backing: [usize; sel4::cfg_usize!(MAX_NUM_BOOTINFO_UNTYPED_CAPS)] =
+            array::from_fn(|i| i); // TODO (not a big deal) allocate in image rather than on stack
         let uts = self.bootinfo.untyped_list();
         let uts_by_paddr = {
             let arr = &mut _uts_by_paddr_backing[..uts.len()];
@@ -400,7 +400,7 @@ impl<'a> Initializer<'a> {
         {
             for ArchivedIrqEntry { irq, handler } in self.spec.irqs.iter() {
                 let slot = self.orig_cslot(*handler);
-                sel4::sel4_cfg_wrap_match! {
+                sel4::cfg_wrap_match! {
                     match self.object(*handler) {
                         ArchivedObject::Irq(_) => {
                             init_thread::slot::IRQ_CONTROL.cap()
@@ -408,7 +408,7 @@ impl<'a> Initializer<'a> {
                         }
                         #[sel4_cfg(ARCH_ARM)]
                         ArchivedObject::ArmIrq(obj) => {
-                            sel4::sel4_cfg_if! {
+                            sel4::cfg_if! {
                                 if #[sel4_cfg(MAX_NUM_NODES = "1")] {
                                     init_thread::slot::IRQ_CONTROL.cap().irq_control_get_trigger(
                                         irq.to_sel4(),
@@ -464,7 +464,7 @@ impl<'a> Initializer<'a> {
         }
 
         // Create IOPort caps
-        sel4::sel4_cfg_if! {
+        sel4::cfg_if! {
             if #[sel4_cfg(ARCH_X86_64)] {
                 {
                     let ioports = self
@@ -609,7 +609,7 @@ impl<'a> Initializer<'a> {
         {
             let root_level = obj.level.unwrap_or(0).into();
             if obj.x86_ept {
-                sel4::sel4_cfg_if! {
+                sel4::cfg_if! {
                     if #[sel4_cfg(all(ARCH_X86_64, VTX))] {
                         let vspace = self.orig_cap::<cap_type::EPTPML4>(obj_id);
                         self.init_vspace_x86_ept(vspace, root_level, 0, obj)?;
@@ -867,7 +867,7 @@ impl<'a> Initializer<'a> {
                 tcb.tcb_bind_notification(bound_notification)?;
             }
 
-            sel4::sel4_cfg_if! {
+            sel4::cfg_if! {
                 if #[sel4_cfg(any(all(ARCH_ARM, ARM_HYPERVISOR_SUPPORT), all(ARCH_X86_64, VTX)))] {
                     if let Some(vcpu) = obj.vcpu() {
                         let vcpu = self.orig_cap::<cap_type::VCpu>(vcpu.object);
@@ -875,7 +875,7 @@ impl<'a> Initializer<'a> {
                     }
                 }
             }
-            sel4::sel4_cfg_if! {
+            sel4::cfg_if! {
                 if #[sel4_cfg(all(ARCH_X86_64, VTX))] {
                     if let Some(_vcpu) = obj.vcpu() {
                         let eptpml4 = self.orig_cap::<cap_type::EPTPML4>(obj.x86_eptpml4().unwrap().object);
@@ -898,7 +898,7 @@ impl<'a> Initializer<'a> {
                 let max_prio = obj.extra.max_prio.into();
                 let prio = obj.extra.prio.into();
 
-                sel4::sel4_cfg_if! {
+                sel4::cfg_if! {
                     if #[sel4_cfg(not(NUM_DOMAINS = "1"))] {
                         if let ArchivedOption::Some(domain_id) = obj.extra.domain {
                             init_thread::slot::DOMAIN_SET.cap().domain_set_set(domain_id, tcb)
@@ -912,7 +912,7 @@ impl<'a> Initializer<'a> {
                 #[allow(unused_variables)]
                 let affinity = obj.extra.affinity.to_sel4();
 
-                sel4::sel4_cfg_if! {
+                sel4::cfg_if! {
                     if #[sel4_cfg(KERNEL_MCS)] {
                         if let Some(sched_context_cap) = obj.sc() {
                             self.init_sched_context(sched_context_cap.object, affinity.try_into().unwrap())?;
@@ -1000,7 +1000,7 @@ impl<'a> Initializer<'a> {
                             tcb_flags,
                         )?;
 
-                        sel4::sel4_cfg_if! {
+                        sel4::cfg_if! {
                             if #[sel4_cfg(not(MAX_NUM_NODES = "1"))] {
                                 tcb.tcb_set_affinity(affinity)?;
                             }
@@ -1019,7 +1019,7 @@ impl<'a> Initializer<'a> {
                 tcb.tcb_write_all_registers(false, &mut regs)?;
             }
 
-            sel4::sel4_cfg_if! {
+            sel4::cfg_if! {
                 if #[sel4_cfg(DEBUG_BUILD)] {
                     if let Some(name) = object_name(self.named_object(obj_id)) {
                         tcb.debug_name(name.as_bytes());
@@ -1056,14 +1056,14 @@ impl<'a> Initializer<'a> {
 
     #[sel4::sel4_cfg(KERNEL_MCS)]
     fn us_to_ticks(&self, duration_us: u64) -> Result<sel4::Time> {
-        sel4::sel4_cfg_select! {
+        sel4::cfg_select! {
             any(ARCH_ARM, ARCH_RISCV) => {
                 const US_IN_SECOND: u64 = 1000 * 1000;
 
                 // On 32-bit platforms, Word is 32-bits, but on 64-bit platforms
                 // it is also a u64 and deemed "unnecessary".
                 #[allow(clippy::useless_conversion)]
-                let f: u64 = sel4::sel4_cfg_word!(TIMER_FREQUENCY).into();
+                let f: u64 = sel4::cfg_word!(TIMER_FREQUENCY).into();
 
                 // TODO: Formal correctness of this implementation
                 //       https://github.com/seL4/capdl/issues/98
@@ -1119,7 +1119,7 @@ impl<'a> Initializer<'a> {
         // On 32-bit platforms, Word is 32-bits, but on 64-bit platforms it is
         // also a u64 and deemed "unnecessary".
         #[allow(clippy::unnecessary_cast)]
-        const TIMER_TICK_MS: u64 = sel4::sel4_cfg_word!(TIMER_TICK_MS) as u64;
+        const TIMER_TICK_MS: u64 = sel4::cfg_word!(TIMER_TICK_MS) as u64;
         let period_us: u64 = 1000 * TIMER_TICK_MS;
         let ticks: u64 = duration_us / period_us;
         let remainder: u64 = duration_us % period_us;
@@ -1264,7 +1264,7 @@ impl<'a> Initializer<'a> {
     fn orig_cslot(&self, obj_id: ArchivedObjectId) -> Slot {
         match self.object(obj_id) {
             ArchivedObject::ArmSmc => {
-                sel4::sel4_cfg_select! {
+                sel4::cfg_select! {
                     all(ARCH_AARCH64, ALLOW_SMC_CALLS) => init_thread::slot::SMC.upcast(),
                     _ => panic!(),
                 }

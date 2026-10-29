@@ -6,7 +6,7 @@
 
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
 
-use crate::{newtype_methods, sel4_cfg_if, sys};
+use crate::{newtype_methods, sys};
 
 /// Corresponds to `seL4_X86_VMAttributes`.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -19,7 +19,7 @@ impl VmAttributes {
     pub const CACHE_DISABLED: Self =
         Self::from_inner(sys::seL4_X86_VMAttributes::seL4_X86_CacheDisabled);
 
-    sel4_cfg_if! {
+    sel4_config_macros::cfg_if! {
         if #[sel4_cfg(all(ARCH_X86_64, VTX))] {
             pub const EPT_DEFAULT: Self =
                 Self::from_inner(sys::seL4_X86_EPT_VMAttributes::seL4_X86_EPT_Default_VMAttributes);

@@ -4,8 +4,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-use sel4_config_macros::{sel4_cfg, sel4_cfg_if};
-
 use crate::{NoExplicitInvocationContext, sys};
 
 #[sel4_cfg(KERNEL_MCS)]
@@ -13,11 +11,12 @@ use crate::cap;
 
 #[sel4_cfg(not(KERNEL_MCS))]
 use crate::{InvocationContext, MessageInfo};
+use sel4_config_macros::sel4_cfg;
 
 /// Configuration-dependant alias for conveying reply authority to syscalls.
 pub type ReplyAuthority<C = NoExplicitInvocationContext> = ReplyAuthorityImpl<C>;
 
-sel4_cfg_if! {
+sel4_config_macros::cfg_if! {
     if #[sel4_cfg(KERNEL_MCS)] {
         pub type ReplyAuthorityImpl<C> = cap::Reply<C>;
 

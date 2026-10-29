@@ -9,13 +9,12 @@
 use core::marker::PhantomData;
 use core::ops::Range;
 
-use sel4_config_macros::sel4_cfg;
-
 use crate::{
     CPtr, CPtrBits, Cap, CapType, cap_type,
     const_helpers::{u32_into_usize, usize_into_word, word_into_usize},
     sys,
 };
+use sel4_config_macros::sel4_cfg;
 
 /// The index of a slot in the initial thread's root CNode.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]

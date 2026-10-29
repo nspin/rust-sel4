@@ -8,15 +8,12 @@ mod fault;
 mod object;
 mod user_context;
 
-sel4_config_macros::sel4_cfg_if! {
-    if #[sel4_cfg(ARM_HYPERVISOR_SUPPORT)] {
+sel4_config_macros::cfg_select! {
+    ARM_HYPERVISOR_SUPPORT => {
         mod vcpu_reg;
     }
+    _ => {}
 }
-
-// HACK for rustfmt
-#[cfg(false)]
-mod vcpu_reg;
 
 pub(crate) mod top_level {
     pub use super::{

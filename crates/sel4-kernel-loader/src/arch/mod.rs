@@ -4,8 +4,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use sel4_config_macros::sel4_cfg_usize;
-
 cfg_select! {
     target_arch = "aarch64" => {
         mod aarch64;
@@ -23,7 +21,7 @@ cfg_select! {
 
 pub(crate) trait Arch {
     fn physical_to_logical_core_id(physical_core_id: usize) -> Option<usize> {
-        if physical_core_id < sel4_cfg_usize!(MAX_NUM_NODES) {
+        if physical_core_id < sel4_config_macros::cfg_usize!(MAX_NUM_NODES) {
             Some(physical_core_id)
         } else {
             None
