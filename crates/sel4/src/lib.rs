@@ -14,6 +14,8 @@
 //! This crate's implementation is based on the lower-level [`sel4-sys`](::sel4_sys) crate, which is
 //! generated from the libsel4 headers and interface definition files.
 //!
+//! [seL4 config JSON](../../../doc/sel4_config_data/rendered_json/index.html)
+//!
 //! ### Features
 //!
 //! #### `"state"`

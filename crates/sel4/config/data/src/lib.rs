@@ -5,7 +5,6 @@
 //
 
 #![allow(unused_imports)]
-#![doc = concat!("```json\n", include_str!(concat!(env!("OUT_DIR"), "/config.json")), "\n```\n")]
 
 use std::sync::LazyLock;
 
@@ -20,3 +19,6 @@ pub fn get_config() -> &'static Config {
 static CONFIG: LazyLock<Config> = LazyLock::new(|| serde_json::from_str(CONFIG_JSON).unwrap());
 
 const CONFIG_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/config.json"));
+
+#[doc = concat!("```json\n", include_str!(concat!(env!("OUT_DIR"), "/config.json")), "\n```\n")]
+pub mod rendered_json {}
