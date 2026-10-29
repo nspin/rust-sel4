@@ -23,7 +23,7 @@ def run(args):
     child.expect('echo> ', timeout=5)
     time.sleep(1)
     child.send('xxx')
-    child.expect('\[x\]\[x\]\[x\]', timeout=5)
+    child.expect(r'\[x\]\[x\]\[x\]', timeout=5)
     print()
 
 

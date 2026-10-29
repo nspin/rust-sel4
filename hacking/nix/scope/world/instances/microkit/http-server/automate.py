@@ -8,11 +8,13 @@ import sys
 import time
 import argparse
 import pexpect
+import urllib3
 from requests import Session
 
 HTTP_URL_BASE = 'http://localhost:8080'
 HTTPS_URL_BASE = 'https://localhost:8443'
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def mk_url(path):
     return URL_BASE + path
