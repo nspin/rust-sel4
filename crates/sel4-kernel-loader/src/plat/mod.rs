@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use sel4_config::sel4_cfg_if;
+use sel4_config_macros::sel4_cfg_if;
 
 sel4_cfg_if! {
     if #[sel4_cfg(all(ARCH_ARM, PLAT_QEMU_ARM_VIRT))] {

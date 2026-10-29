@@ -6,7 +6,7 @@
 
 #![allow(clippy::eq_op)]
 
-use sel4_config::sel4_cfg_wrap_match;
+use sel4_config_macros::sel4_cfg_wrap_match;
 
 #[allow(unused_imports)]
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
 };
 
 /// Frame object types for this kernel configuration.
-#[sel4_config::sel4_cfg_enum]
+#[sel4_config_macros::sel4_cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum FrameObjectType {
     _4kPage,
@@ -55,7 +55,7 @@ impl FrameObjectType {
     pub const _4K_PAGE_BITS: usize = Self::_4kPage.bits();
     pub const MEGA_PAGE_BITS: usize = Self::MegaPage.bits();
 
-    #[sel4_config::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
+    #[sel4_config_macros::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
     pub const GIGA_PAGE_BITS: usize = Self::GigaPage.bits();
 }
 
@@ -71,10 +71,10 @@ impl CapTypeForFrameObjectOfFixedSize for cap_type::MegaPage {
     const FRAME_OBJECT_TYPE: FrameObjectType = FrameObjectType::MegaPage;
 }
 
-#[sel4_config::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
+#[sel4_config_macros::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
 impl CapTypeForFrameObject for cap_type::GigaPage {}
 
-#[sel4_config::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
+#[sel4_config_macros::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
 impl CapTypeForFrameObjectOfFixedSize for cap_type::GigaPage {
     const FRAME_OBJECT_TYPE: FrameObjectType = FrameObjectType::GigaPage;
 }
@@ -111,7 +111,7 @@ impl CapTypeForTranslationTableObject for cap_type::PageTable {
 }
 
 pub mod vspace_levels {
-    use sel4_config::sel4_cfg_usize;
+    use sel4_config_macros::sel4_cfg_usize;
 
     pub const NUM_LEVELS: usize = sel4_cfg_usize!(PT_LEVELS);
 

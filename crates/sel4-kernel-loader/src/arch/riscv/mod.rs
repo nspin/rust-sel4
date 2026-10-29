@@ -8,7 +8,7 @@ use core::arch::naked_asm;
 
 use riscv::register::satp;
 
-use sel4_config::{sel4_cfg_if, sel4_cfg_usize};
+use sel4_config_macros::{sel4_cfg_if, sel4_cfg_usize};
 
 use crate::{
     arch::Arch,

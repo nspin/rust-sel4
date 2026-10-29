@@ -6,7 +6,7 @@
 
 use core::ffi::c_int;
 
-use sel4_config::sel4_cfg_if;
+use sel4_config_macros::sel4_cfg_if;
 
 use crate::seL4_Word;
 

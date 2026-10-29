@@ -8,7 +8,7 @@ mod fault;
 mod object;
 mod user_context;
 
-sel4_config::sel4_cfg_if! {
+sel4_config_macros::sel4_cfg_if! {
     if #[sel4_cfg(ARM_HYPERVISOR_SUPPORT)] {
         mod vcpu_reg;
     }
@@ -26,6 +26,6 @@ pub(crate) mod top_level {
         user_context::UserContext,
     };
 
-    #[sel4_config::sel4_cfg(ARM_HYPERVISOR_SUPPORT)]
+    #[sel4_config_macros::sel4_cfg(ARM_HYPERVISOR_SUPPORT)]
     pub use super::vcpu_reg::VCpuReg;
 }

@@ -22,7 +22,7 @@ start address is the same as that of the kernel provided at boot, and that kerne
 range's end address is no greater than that of the kernel provided at boot.
 
 `sel4-kernel-loader` also depends on the `libsel4` headers. These are provided in the same way as
-they are for the `sel4-config` crate and its dependants (i.e. via `SEL4_PREFIX` or
+they are for the `sel4-config-data` crate and its dependants (i.e. via `SEL4_PREFIX` or
 `SEL4_INCLUDE_DIRS`).
 
 Here is an example of how to build and use this crate. First, independantly of the application,

@@ -15,7 +15,7 @@ mk rec {
   package.rust-version = "1.95"; # tracks Ferrous and Verus
   dependencies = {
     inherit (localCrates)
-      sel4-config
+      sel4-config-macros
       sel4-sys
     ;
   };

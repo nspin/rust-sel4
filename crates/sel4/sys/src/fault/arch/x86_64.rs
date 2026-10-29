@@ -7,7 +7,7 @@
 use crate::bf::*;
 use crate::c::*;
 
-use sel4_config::sel4_cfg_wrap_match;
+use sel4_config_macros::sel4_cfg_wrap_match;
 
 impl seL4_Fault {
     pub(crate) fn arch_get_with(

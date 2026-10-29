@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use sel4_config::sel4_cfg_usize;
+use sel4_config_macros::sel4_cfg_usize;
 
 cfg_select! {
     target_arch = "aarch64" => {

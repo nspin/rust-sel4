@@ -38,7 +38,7 @@ pub(crate) mod cap_type_arch {
         ObjectBlueprintArch
     });
 
-    #[sel4_config::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
+    #[sel4_config_macros::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
     declare_cap_type_for_object_of_fixed_size!(GigaPage {
         ObjectTypeArch,
         ObjectBlueprintArch
@@ -59,7 +59,7 @@ pub(crate) mod cap_arch {
     declare_cap_alias!(_4kPage);
     declare_cap_alias!(MegaPage);
 
-    #[sel4_config::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
+    #[sel4_config_macros::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
     declare_cap_alias!(GigaPage);
 
     declare_cap_alias!(PageTable);

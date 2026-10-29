@@ -9,7 +9,7 @@
 use core::marker::PhantomData;
 use core::ops::Range;
 
-use sel4_config::sel4_cfg;
+use sel4_config_macros::sel4_cfg;
 
 use crate::{
     CPtr, CPtrBits, Cap, CapType, cap_type,

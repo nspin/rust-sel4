@@ -6,7 +6,7 @@
 
 use core::ffi::c_uint;
 
-use sel4_config::{sel4_cfg_enum, sel4_cfg_wrap_match};
+use sel4_config_macros::{sel4_cfg_enum, sel4_cfg_wrap_match};
 
 use crate::{
     ObjectBlueprint, ObjectBlueprintSeL4Arch, ObjectType, ObjectTypeSeL4Arch,

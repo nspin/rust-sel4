@@ -23,6 +23,6 @@ sel4-platform-info-types = { path = "types" }
 proc-macro2 = "1.0.103"
 quote = "1.0.41"
 sel4-build-env = { path = "../sel4/build-env" }
-sel4-config = { path = "../sel4/config" }
+sel4-config-macros = { path = "../sel4/config/macros" }
 sel4-platform-info-types = { path = "types", features = ["owned"] }
 serde_json = "1.0.145"

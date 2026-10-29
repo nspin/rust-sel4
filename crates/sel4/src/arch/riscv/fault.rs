@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use sel4_config::{sel4_cfg, sel4_cfg_enum, sel4_cfg_wrap_match};
+use sel4_config_macros::{sel4_cfg, sel4_cfg_enum, sel4_cfg_wrap_match};
 
 use crate::{declare_fault_newtype, sys};
 

@@ -13,7 +13,7 @@ use core::sync::atomic::{AtomicBool, Ordering};
 
 use fdt::Fdt;
 
-use sel4_config::sel4_cfg_usize;
+use sel4_config_macros::sel4_cfg_usize;
 use sel4_immediate_sync_once_cell::ImmediateSyncOnceCell;
 use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 

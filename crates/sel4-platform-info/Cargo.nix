@@ -17,7 +17,7 @@ mk {
     inherit (versions) proc-macro2 quote serde_json;
     inherit (localCrates)
       sel4-build-env
-      sel4-config
+      sel4-config-macros
     ;
     sel4-platform-info-types = localCrates.sel4-platform-info-types // {
       features = [ "owned" ];

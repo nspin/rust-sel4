@@ -7,7 +7,7 @@
 use core::arch::asm;
 use core::ffi::c_int;
 
-use sel4_config::sel4_cfg;
+use sel4_config_macros::sel4_cfg;
 
 use super::sys_id_to_word;
 use crate::{seL4_MessageInfo, seL4_Word};

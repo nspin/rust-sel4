@@ -21,7 +21,7 @@ a CLI component called `sel4-capdl-initializer-add-spec` which is used to append
 `sel4-capdl-initializer` ELF image in a seperate preparation phase.
 
 `sel4-capdl-initializer` depends on the `libsel4` headers. These are provided in the same way as
-they are for the `sel4-config` crate and its dependants (i.e. via `SEL4_PREFIX` or
+they are for the `sel4-config-data` crate and its dependants (i.e. via `SEL4_PREFIX` or
 `SEL4_INCLUDE_DIRS`).
 
 Here is an example of how to build and use this crate, from the root directory of this repository.

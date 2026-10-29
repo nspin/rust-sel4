@@ -7,7 +7,7 @@
 use crate::bf::*;
 use crate::c::*;
 
-use sel4_config::sel4_cfg_wrap_match;
+use sel4_config_macros::sel4_cfg_wrap_match;
 
 mod arch;
 

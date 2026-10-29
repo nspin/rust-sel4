@@ -21,7 +21,7 @@ links = "sel4"
 [dependencies]
 log = "0.4.28"
 sel4-bitfield-ops = { path = "../bitfield-ops" }
-sel4-config = { path = "../config" }
+sel4-config-macros = { path = "../config/macros" }
 
 [build-dependencies]
 bindgen = { version = "0.73.2", default-features = false, features = ["runtime"] }

@@ -15,8 +15,8 @@
 //! - [`sel4_sys`]: Raw bindings to the seL4 API, generated from the libsel4 headers and interface
 //!   definition files. This crate is not intended to be used directly by application code, but
 //!   rather serves as a basis for the `sel4` crate's implementation.
-//! - [`sel4_config`]: Macros and constants corresponding to the seL4 kernel configuration. Can be
-//!   used by all targets (i.e. in all of: application code, build scripts, and build-time tools).
+//! - [`sel4_config_macros`]: Macros corresponding to the seL4 kernel configuration. Can be used by
+//!   all targets (i.e. in all of: application code, build scripts, and build-time tools).
 //! - [`sel4_platform_info`]: Constants corresponding to the contents of `platform_info.h`. Can be
 //!   used by all targets, on configurations where this file exists.
 //! - [`sel4_sync`]: Synchronization constructs using seL4 IPC. Currently only supports
@@ -82,7 +82,7 @@ pub mod absent {}
 definitely! {
     sel4
     sel4_sys
-    sel4_config
+    sel4_config_macros
 
     sel4_abstract_ptr
     sel4_abstract_rc

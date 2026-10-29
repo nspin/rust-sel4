@@ -6,7 +6,7 @@
 
 use core::mem;
 
-use sel4_config::sel4_cfg_if;
+use sel4_config_macros::sel4_cfg_if;
 use sel4_kernel_loader_payload_types::ArchivedPayloadInfo;
 
 #[allow(unused_imports)]

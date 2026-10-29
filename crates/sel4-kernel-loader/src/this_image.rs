@@ -28,7 +28,7 @@ pub(crate) fn get_user_image_bounds() -> Range<usize> {
     locate_phdrs().unwrap().footprint().unwrap()
 }
 
-#[sel4_config::sel4_cfg(ARCH_ARM)]
+#[sel4_config_macros::sel4_cfg(ARCH_ARM)]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 static loader_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
@@ -38,7 +38,7 @@ static loader_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
 pub(crate) static kernel_boot_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
 
 pub(crate) mod stacks {
-    use sel4_config::sel4_cfg_usize;
+    use sel4_config_macros::sel4_cfg_usize;
     use sel4_stack::{Stack, StackBottom};
 
     const PRIMARY_STACK_SIZE: usize = 4096 * 8; // TODO this is excessive

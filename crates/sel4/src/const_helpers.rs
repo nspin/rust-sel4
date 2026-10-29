@@ -6,7 +6,7 @@
 
 #![allow(clippy::assertions_on_constants)]
 
-use sel4_config::sel4_cfg_attr;
+use sel4_config_macros::sel4_cfg_attr;
 
 use crate::Word;
 

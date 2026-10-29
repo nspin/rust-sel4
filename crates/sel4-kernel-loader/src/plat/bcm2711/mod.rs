@@ -8,7 +8,7 @@ use embedded_hal_nb::nb;
 use embedded_hal_nb::serial::Write;
 
 use sel4_bcm2835_aux_uart_driver::Driver as Bcm2835AuxUartDriver;
-use sel4_config::{sel4_cfg, sel4_cfg_bool};
+use sel4_config_macros::{sel4_cfg, sel4_cfg_bool};
 
 use crate::{arch::reset_cntvoff, plat::Plat};
 

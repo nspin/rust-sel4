@@ -51,7 +51,7 @@ following versions of those related projects:
 - [`sel4-sys`](./crates/sel4/sys): Raw bindings to the seL4 API, generated from the libsel4 headers
   and interface definition files. This crate is not intended to be used directly by application
   code, but rather serves as a basis for the `sel4` crate's implementation.
-- [`sel4-config`](./crates/sel4/config): Macros and constants corresponding to the seL4 kernel
+- [`sel4-config-macros`](./crates/sel4/config/macros): Macros corresponding to the seL4 kernel
   configuration. Can be used by all targets (i.e. in all of: application code, build scripts, and
   build-time tools).
 - [`sel4-platform-info`](./crates/sel4-platform-info): Constants corresponding to the contents of
@@ -94,8 +94,8 @@ information for locating these dependencies is passed to the dependant crates vi
 variables which are interpreted by `build.rs` scripts. Here is a list of environment variables and
 the crates which use them:
 
-- `sel4-config` and `sel4-sys`, whose dependants include `sel4`, `sel4-root-task`, `sel4-microkit`,
-  and many more, use `$SEL4_INCLUDE_DIRS` (defaulting to `$SEL4_PREFIX/libsel4/include` if
+- `sel4-config-data` and `sel4-sys`, whose dependants include `sel4`, `sel4-root-task`,
+  `sel4-microkit`, and many more, use `$SEL4_INCLUDE_DIRS` (defaulting to `$SEL4_PREFIX/libsel4/include` if
   `$SEL4_PREFIX` is set) which must contain a colon-separated list of include paths for the libsel4
   headers. See the the `sel4` crate's rustdoc for more information.
 - `sel4-platform-info`, whose dependants include `sel4-kernel-loader`, uses `$SEL4_PLATFORM_INFO`

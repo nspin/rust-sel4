@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use sel4_config::sel4_cfg;
+use sel4_config_macros::sel4_cfg;
 
 use crate::{
     AbsoluteCPtr, Cap, CapRights, CapTypeForFrameObject, Error, InvocationContext, Result,

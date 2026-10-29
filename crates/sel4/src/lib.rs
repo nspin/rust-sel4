@@ -88,10 +88,9 @@
 #![allow(unused_features)]
 #![allow(clippy::unit_arg)]
 
-pub use sel4_config::{
-    self as config, sel4_cfg, sel4_cfg_attr, sel4_cfg_bool, sel4_cfg_enum, sel4_cfg_if,
-    sel4_cfg_match, sel4_cfg_str, sel4_cfg_struct, sel4_cfg_usize, sel4_cfg_word,
-    sel4_cfg_wrap_match,
+pub use sel4_config_macros::{
+    sel4_cfg, sel4_cfg_attr, sel4_cfg_bool, sel4_cfg_enum, sel4_cfg_if, sel4_cfg_match,
+    sel4_cfg_str, sel4_cfg_struct, sel4_cfg_usize, sel4_cfg_word, sel4_cfg_wrap_match,
 };
 
 pub use sel4_sys as sys;
@@ -217,6 +216,6 @@ pub const WORD_SIZE: usize = sel4_cfg_usize!(WORD_SIZE);
 
 #[doc(hidden)]
 pub mod _private {
-    #[sel4_config::sel4_cfg(PRINTING)]
+    #[sel4_config_macros::sel4_cfg(PRINTING)]
     pub use super::printing::_private as printing;
 }

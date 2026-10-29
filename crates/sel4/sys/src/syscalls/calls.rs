@@ -7,7 +7,7 @@
 use core::ffi::c_int;
 use core::sync::atomic::{Ordering, compiler_fence};
 
-use sel4_config::{sel4_cfg, sel4_cfg_if};
+use sel4_config_macros::{sel4_cfg, sel4_cfg_if};
 
 #[allow(unused_imports)]
 use crate::{

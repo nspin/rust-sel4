@@ -172,7 +172,7 @@ pub mod cap_type {
     //!
     //! These types are used for marking [`Cap`](crate::Cap).
 
-    use sel4_config::sel4_cfg_if;
+    use sel4_config_macros::sel4_cfg_if;
 
     use crate::{
         declare_cap_type, declare_cap_type_for_object_of_fixed_size,
@@ -278,7 +278,7 @@ pub mod cap {
     //!
     //! Each type `$t<C = NoExplicitInvocationContext>` in this module is an alias for `Cap<$t, C>`.
 
-    use sel4_config::sel4_cfg_if;
+    use sel4_config_macros::sel4_cfg_if;
 
     use crate::declare_cap_alias;
 

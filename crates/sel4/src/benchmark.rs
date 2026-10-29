@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use sel4_config::sel4_cfg_if;
+use sel4_config_macros::sel4_cfg_if;
 
 use crate::{sys, Error, Result, cap, Word};
 
