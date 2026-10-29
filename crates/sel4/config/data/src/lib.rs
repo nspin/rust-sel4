@@ -5,10 +5,11 @@
 //
 
 #![allow(unused_imports)]
+#![doc = concat!("```json\n", include_str!(concat!(env!("OUT_DIR"), "/config.json")), "\n```\n")]
 
 use std::sync::LazyLock;
 
-pub use sel4_config_types::Config;
+pub use sel4_config_types::*;
 
 pub fn get_config() -> &'static Config {
     &CONFIG

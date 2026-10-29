@@ -2406,11 +2406,7 @@ dependencies = [
 name = "sel4-config"
 version = "0.1.0"
 dependencies = [
- "proc-macro2",
- "quote",
- "sel4-config-data",
  "sel4-config-macros",
- "sel4-config-types",
 ]
 
 [[package]]
@@ -2429,7 +2425,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "sel4-config-data",
- "sel4-config-types",
  "syn 3.0.9",
 ]
 

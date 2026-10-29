@@ -23,5 +23,4 @@ proc-macro = true
 proc-macro2 = "1.0.103"
 quote = "1.0.41"
 sel4-config-data = { path = "../data" }
-sel4-config-types = { path = "../types" }
 syn = { version = "3.0.4", features = ["full"] }

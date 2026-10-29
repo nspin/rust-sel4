@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use sel4_config_types::Config;
+use sel4_config_data::Config;
 
 mod attr_macros;
 mod cfg_if;

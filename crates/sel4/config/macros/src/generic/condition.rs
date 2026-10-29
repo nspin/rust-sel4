@@ -10,7 +10,7 @@ use syn::Token;
 use syn::parse::{Parse, ParseStream, Parser, Result as ParseResult};
 use syn::spanned::Spanned;
 
-use sel4_config_types::{Config, Value};
+use sel4_config_data::{Config, Value};
 
 pub(crate) enum Condition {
     Key(syn::Ident),

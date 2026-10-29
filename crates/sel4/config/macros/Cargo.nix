@@ -16,7 +16,6 @@ mk {
     ;
     syn = { version = versions.syn; features = [ "full" ]; };
     inherit (localCrates)
-      sel4-config-types
       sel4-config-data
     ;
   };
