@@ -19,7 +19,7 @@ sddf-sys
 sel4
 sel4-capdl-initializer
 sel4-config-data
-sel4-config-macros
+sel4-config
 sel4-kernel-loader
 sel4-microkit
 sel4-microkit-base

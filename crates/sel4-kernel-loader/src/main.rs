@@ -36,7 +36,7 @@ use crate::{
     plat::{Plat, PlatImpl},
 };
 
-const MAX_NUM_NODES: usize = sel4_config_macros::cfg_usize!(MAX_NUM_NODES);
+const MAX_NUM_NODES: usize = sel4_config::cfg_usize!(MAX_NUM_NODES);
 
 static PAYLOAD_INFO: ImmediateSyncOnceCell<ArchivedPayloadInfo> = ImmediateSyncOnceCell::new();
 

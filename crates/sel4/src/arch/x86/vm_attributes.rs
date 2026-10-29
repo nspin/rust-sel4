@@ -19,7 +19,7 @@ impl VmAttributes {
     pub const CACHE_DISABLED: Self =
         Self::from_inner(sys::seL4_X86_VMAttributes::seL4_X86_CacheDisabled);
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(all(ARCH_X86_64, VTX))] {
             pub const EPT_DEFAULT: Self =
                 Self::from_inner(sys::seL4_X86_EPT_VMAttributes::seL4_X86_EPT_Default_VMAttributes);

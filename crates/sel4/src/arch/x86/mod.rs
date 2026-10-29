@@ -34,7 +34,7 @@ pub const NUM_FAST_MESSAGE_REGISTERS: usize = u32_into_usize(sys::seL4_FastMessa
 pub(crate) mod cap_type_arch {
     use crate::{declare_cap_type, declare_cap_type_for_object_of_fixed_size};
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(VTX)] {
             declare_cap_type_for_object_of_fixed_size!(
                 /// Corresponds to `seL4_X86_VCPU`.
@@ -63,7 +63,7 @@ pub(crate) mod cap_type_arch {
         }
     }
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(IOMMU)] {
             declare_cap_type_for_object_of_fixed_size!(
                 IOPageTable { ObjectTypeArch, ObjectBlueprintArch }
@@ -82,7 +82,7 @@ pub(crate) mod cap_type_arch {
         ObjectBlueprintArch
     });
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(HUGE_PAGE)] {
             declare_cap_type_for_object_of_fixed_size!(HugePage {
                 ObjectTypeSeL4Arch,
@@ -117,7 +117,7 @@ pub(crate) mod cap_type_arch {
 pub(crate) mod cap_arch {
     use crate::declare_cap_alias;
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(VTX)] {
             declare_cap_alias!(VCpu);
             declare_cap_alias!(EPTPML4);
@@ -127,7 +127,7 @@ pub(crate) mod cap_arch {
         }
     }
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(IOMMU)] {
             declare_cap_alias!(IOPageTable);
             declare_cap_alias!(IOSpace);
@@ -137,7 +137,7 @@ pub(crate) mod cap_arch {
     declare_cap_alias!(_4k);
     declare_cap_alias!(LargePage);
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(HUGE_PAGE)] {
             declare_cap_alias!(HugePage);
         }

@@ -17,7 +17,7 @@ use object::{
 };
 
 use sel4_build_env::{get_libsel4_include_dirs, get_with_sel4_prefix_relative_fallback};
-use sel4_config_macros::sel4_cfg;
+use sel4_config::sel4_cfg;
 
 pub const SEL4_KERNEL_ENV: &str = "SEL4_KERNEL";
 
@@ -32,17 +32,11 @@ const KERNEL_HEADROOM: u64 = 256 * 1024; // TODO: make configurable
 const GRANULE_SIZE: u64 = 4096;
 
 fn main() {
-    if !sel4_config_macros::cfg_bool!(ARCH_RISCV) {
+    if !sel4_config::cfg_bool!(ARCH_RISCV) {
         let asm_files = []
             .into_iter()
-            .chain(glob::glob(&format!("asm/{}/*.S", sel4_config_macros::cfg_str!(ARCH))).unwrap())
-            .chain(
-                glob::glob(&format!(
-                    "asm/{}/*.S",
-                    sel4_config_macros::cfg_str!(SEL4_ARCH)
-                ))
-                .unwrap(),
-            )
+            .chain(glob::glob(&format!("asm/{}/*.S", sel4_config::cfg_str!(ARCH))).unwrap())
+            .chain(glob::glob(&format!("asm/{}/*.S", sel4_config::cfg_str!(SEL4_ARCH))).unwrap())
             .collect::<Result<Vec<_>, _>>()
             .unwrap();
 

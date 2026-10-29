@@ -12,7 +12,7 @@ use core::ops::{Deref, Range};
 use core::slice;
 
 use crate::{FrameObjectType, IpcBuffer, cap_type, init_thread::SlotRegion, newtype_methods, sys};
-use sel4_config_macros::sel4_cfg;
+use sel4_config::sel4_cfg;
 
 /// A wrapped pointer to a [`BootInfo`] block.
 ///

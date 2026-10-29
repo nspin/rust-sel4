@@ -11,7 +11,7 @@ use crate::{
 
 #[sel4_cfg(ARM_HYPERVISOR_SUPPORT)]
 use crate::VCpuReg;
-use sel4_config_macros::sel4_cfg;
+use sel4_config::sel4_cfg;
 
 #[sel4_cfg(ARM_HYPERVISOR_SUPPORT)]
 impl<C: InvocationContext> VCpu<C> {

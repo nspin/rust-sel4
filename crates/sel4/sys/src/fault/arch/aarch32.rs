@@ -13,7 +13,7 @@ impl seL4_Fault {
         length: seL4_Word,
         f: impl Fn(core::ffi::c_ulong) -> seL4_Word,
     ) -> Option<Self> {
-        Some(sel4_config_macros::cfg_wrap_match! {
+        Some(sel4_config::cfg_wrap_match! {
             match label {
                 seL4_Fault_tag::seL4_Fault_UnknownSyscall => {
                     assert!(length == seL4_UnknownSyscall_Msg::seL4_UnknownSyscall_Length);

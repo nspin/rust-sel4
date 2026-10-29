@@ -249,7 +249,7 @@ pub mod cap_type {
         UnspecifiedIntermediateTranslationTable
     }
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(KERNEL_MCS)] {
             declare_cap_type! {
                 /// Corresponds to the reply capability type (MCS only).
@@ -299,7 +299,7 @@ pub mod cap {
     declare_cap_alias!(VSpace);
     declare_cap_alias!(Granule);
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(KERNEL_MCS)] {
             declare_cap_alias!(Reply);
             declare_cap_alias!(SchedContext);

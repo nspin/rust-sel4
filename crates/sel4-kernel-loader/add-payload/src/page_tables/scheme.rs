@@ -8,7 +8,7 @@ use core::ops::Range;
 
 use bitfield::{BitMut, BitRangeMut};
 
-use sel4_config_types::Config;
+use sel4_config_data_types::Config;
 
 pub(crate) type RawDescriptor = u64;
 

@@ -13,7 +13,7 @@ use object::read::elf::{ElfFile, FileHeader, ProgramHeader};
 use object::{Endianness, ReadRef};
 use rkyv::util::AlignedVec;
 
-use sel4_config_types::Config;
+use sel4_config_data_types::Config;
 use sel4_patch_elf::{FileHeaderExt, Patching};
 use sel4_phdrs_constants::PT_SEL4_KERNEL_LOADER_PAYLOAD;
 use sel4_platform_info_types::OwnedPlatformInfo;

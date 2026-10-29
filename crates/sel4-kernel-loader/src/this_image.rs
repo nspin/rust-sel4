@@ -28,7 +28,7 @@ pub(crate) fn get_user_image_bounds() -> Range<usize> {
     locate_phdrs().unwrap().footprint().unwrap()
 }
 
-#[sel4_config_macros::sel4_cfg(ARCH_ARM)]
+#[sel4_config::sel4_cfg(ARCH_ARM)]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".data")]
 static loader_level_0_table: ImmutableCell<usize> = ImmutableCell::new(0);
@@ -50,7 +50,7 @@ pub(crate) mod stacks {
     #[unsafe(no_mangle)]
     static __primary_stack_bottom: StackBottom = PRIMARY_STACK.bottom();
 
-    const MAX_NUM_NODES: usize = sel4_config_macros::cfg_usize!(MAX_NUM_NODES);
+    const MAX_NUM_NODES: usize = sel4_config::cfg_usize!(MAX_NUM_NODES);
 
     const SECONDARY_STACK_SIZE: usize = 4096 * 2;
 

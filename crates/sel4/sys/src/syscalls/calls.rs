@@ -17,12 +17,12 @@ use crate::{
 use crate::seL4_Error;
 
 use super::helpers::*;
-use sel4_config_macros::sel4_cfg;
+use sel4_config::sel4_cfg;
 
 const UNUSED_REPLY_ARG: seL4_Word = 0;
 
 fn reply_authority_to_sys_arg(#[allow(unused_variables)] authority: ReplyAuthority) -> seL4_Word {
-    sel4_config_macros::cfg_select! {
+    sel4_config::cfg_select! {
         KERNEL_MCS => authority,
         _ => UNUSED_REPLY_ARG,
     }
@@ -340,7 +340,7 @@ impl seL4_IPCBuffer {
         ret
     }
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(KERNEL_MCS)] {
             pub fn seL4_NBSendRecv(
                 &mut self,
@@ -467,7 +467,7 @@ impl seL4_IPCBuffer {
     }
 
     pub fn seL4_Poll(&mut self, src: seL4_CPtr) -> (seL4_MessageInfo, seL4_Word) {
-        sel4_config_macros::cfg_select! {
+        sel4_config::cfg_select! {
             KERNEL_MCS => self.seL4_NBWait(src),
             _ => self.seL4_NBRecv(src, ()),
         }
@@ -625,7 +625,7 @@ pub fn seL4_DebugPutChar(c: u8) {
     sys_send_recv_simple(syscall_id::DebugPutChar, c as seL4_Word);
 }
 
-sel4_config_macros::cfg_if! {
+sel4_config::cfg_if! {
     if #[sel4_cfg(DEBUG_BUILD)] {
         pub fn seL4_DebugHalt() {
             sys_null(syscall_id::DebugHalt);
@@ -665,7 +665,7 @@ sel4_config_macros::cfg_if! {
     }
 }
 
-sel4_config_macros::cfg_if! {
+sel4_config::cfg_if! {
     if #[sel4_cfg(ENABLE_BENCHMARKS)] {
         pub fn seL4_BenchmarkResetLog() -> seL4_Error::Type {
             sys_send_recv_simple(
@@ -688,7 +688,7 @@ sel4_config_macros::cfg_if! {
             ) as seL4_Error::Type
         }
 
-        sel4_config_macros::cfg_if! {
+        sel4_config::cfg_if! {
             if #[sel4_cfg(BENCHMARK_TRACK_UTILISATION)] {
                 pub fn seL4_BenchmarkGetThreadUtilisation(tcb: seL4_CPtr) {
                     sys_send_recv_simple(
@@ -704,7 +704,7 @@ sel4_config_macros::cfg_if! {
                     );
                 }
 
-                sel4_config_macros::cfg_if! {
+                sel4_config::cfg_if! {
                     if #[sel4_cfg(DEBUG_BUILD)] {
                         pub fn seL4_BenchmarkDumpAllThreadsUtilisation() {
                             sys_send_recv_simple(

@@ -13,7 +13,7 @@ mk {
 
     inherit (localCrates)
       sel4
-      sel4-config-macros
+      sel4-config
       sel4-sys
 
       sel4-abstract-ptr

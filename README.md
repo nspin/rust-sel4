@@ -51,9 +51,9 @@ following versions of those related projects:
 - [`sel4-sys`](./crates/sel4/sys): Raw bindings to the seL4 API, generated from the libsel4 headers
   and interface definition files. This crate is not intended to be used directly by application
   code, but rather serves as a basis for the `sel4` crate's implementation.
-- [`sel4-config-macros`](./crates/sel4/config/macros): Macros corresponding to the seL4 kernel
-  configuration. Can be used by all targets (i.e. in all of: application code, build scripts, and
-  build-time tools).
+- [`sel4-config`](./crates/sel4/config): Macros corresponding to the seL4 kernel configuration.
+  Can be used by all targets (i.e. in all of: application code, build scripts, and build-time
+  tools).
 - [`sel4-platform-info`](./crates/sel4-platform-info): Constants corresponding to the contents of
   `platform_info.h`. Can be used by all targets, on configurations where this file exists..
 - [`sel4-sync`](./crates/sel4-sync): Synchronization constructs using seL4 IPC. Currently only

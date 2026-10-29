@@ -20,7 +20,7 @@ license = "BSD-2-Clause AND GPL-2.0-only"
 embedded-hal-nb = "1.0"
 fdt = "0.1.5"
 log = "0.4.28"
-sel4-config-macros = { path = "../sel4/config/macros" }
+sel4-config = { path = "../sel4/config" }
 sel4-immediate-sync-once-cell = { path = "../sel4-immediate-sync-once-cell" }
 sel4-immutable-cell = { path = "../sel4-immutable-cell" }
 sel4-kernel-loader-payload-types = { path = "payload-types" }
@@ -37,7 +37,7 @@ cc = "1.2.43"
 glob = "0.3.3"
 object = { version = "0.40.0", default-features = false, features = ["read_core", "elf"] }
 sel4-build-env = { path = "../sel4/build-env" }
-sel4-config-macros = { path = "../sel4/config/macros" }
+sel4-config = { path = "../sel4/config" }
 
 [target."cfg(any(target_arch = \"arm\", target_arch = \"aarch64\"))".dependencies]
 sel4-bcm2835-aux-uart-driver = { path = "../drivers/bcm2835-aux-uart" }

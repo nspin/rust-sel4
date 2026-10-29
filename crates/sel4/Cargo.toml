@@ -28,5 +28,5 @@ thread-local-state = []
 tls = []
 
 [dependencies]
-sel4-config-macros = { path = "config/macros" }
+sel4-config = { path = "config" }
 sel4-sys = { path = "sys" }

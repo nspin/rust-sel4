@@ -18,7 +18,7 @@ use crate::const_helpers::usize_max;
 pub const MIN_SCHED_CONTEXT_BITS: usize = u32_into_usize(sys::seL4_MinSchedContextBits);
 
 /// Corresponds to `seL4_ObjectType`.
-#[sel4_config_macros::cfg_enum]
+#[sel4_config::cfg_enum]
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ObjectType {
     Untyped,
@@ -35,7 +35,7 @@ pub enum ObjectType {
 
 impl ObjectType {
     pub const fn into_sys(self) -> c_uint {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::Untyped => sys::api_object::seL4_UntypedObject,
                 Self::Endpoint => sys::api_object::seL4_EndpointObject,
@@ -59,7 +59,7 @@ impl From<ObjectTypeArch> for ObjectType {
 }
 
 /// An object description for [`Untyped::untyped_retype`](crate::cap::Untyped::untyped_retype).
-#[sel4_config_macros::cfg_enum]
+#[sel4_config::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ObjectBlueprint {
     Untyped {
@@ -82,7 +82,7 @@ pub enum ObjectBlueprint {
 
 impl ObjectBlueprint {
     pub const fn ty(self) -> ObjectType {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::Untyped { .. } => ObjectType::Untyped,
                 Self::Endpoint => ObjectType::Endpoint,
@@ -99,7 +99,7 @@ impl ObjectBlueprint {
     }
 
     pub const fn api_size_bits(self) -> Option<usize> {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::Untyped { size_bits } => Some(size_bits),
                 Self::CNode { size_bits } => Some(size_bits),
@@ -111,7 +111,7 @@ impl ObjectBlueprint {
     }
 
     pub const fn physical_size_bits(self) -> usize {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::Untyped { size_bits } => size_bits,
                 Self::Endpoint => u32_into_usize(sys::seL4_EndpointBits),

@@ -33,7 +33,7 @@ sel4-async-network = { path = "../../experimental/sel4-async/network" }
 sel4-async-time = { path = "../../experimental/sel4-async/time" }
 sel4-async-unsync = { path = "../../experimental/sel4-async/unsync" }
 sel4-bcm2835-aux-uart-driver = { path = "../../drivers/bcm2835-aux-uart" }
-sel4-config-macros = { path = "../../sel4/config/macros" }
+sel4-config = { path = "../../sel4/config" }
 sel4-dlmalloc = { path = "../../sel4-dlmalloc" }
 sel4-driver-interfaces = { path = "../../experimental/sel4-driver-interfaces" }
 sel4-immediate-sync-once-cell = { path = "../../sel4-immediate-sync-once-cell" }

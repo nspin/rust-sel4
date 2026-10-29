@@ -13,7 +13,7 @@ mk {
   dependencies = {
     inherit (versions) log;
     inherit (localCrates)
-      sel4-config-macros
+      sel4-config
       sel4-bitfield-ops
     ;
   };

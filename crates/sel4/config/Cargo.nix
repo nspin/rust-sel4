@@ -7,7 +7,7 @@
 { mk, versions, localCrates }:
 
 mk {
-  package.name = "sel4-config-macros";
+  package.name = "sel4-config";
   lib.proc-macro = true;
   dependencies = {
     inherit (versions)

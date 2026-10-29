@@ -23,7 +23,7 @@ mk {
       sel4-phdrs-constants
       sel4-kernel-loader-payload-types
     ;
-    sel4-config-types = localCrates.sel4-config-types // { features = [ "serde" ]; };
+    sel4-config-data-types = localCrates.sel4-config-data-types // { features = [ "serde" ]; };
     sel4-platform-info-types = localCrates.sel4-platform-info-types // { features = [ "owned" ]; };
   };
 }

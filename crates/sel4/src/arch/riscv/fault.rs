@@ -5,7 +5,7 @@
 //
 
 use crate::{declare_fault_newtype, sys};
-use sel4_config_macros::sel4_cfg;
+use sel4_config::sel4_cfg;
 
 declare_fault_newtype!(NullFault, seL4_Fault_NullFault);
 declare_fault_newtype!(CapFault, seL4_Fault_CapFault);
@@ -16,7 +16,7 @@ declare_fault_newtype!(VmFault, seL4_Fault_VMFault);
 #[sel4_cfg(KERNEL_MCS)]
 declare_fault_newtype!(Timeout, seL4_Fault_Timeout);
 
-#[sel4_config_macros::cfg_enum]
+#[sel4_config::cfg_enum]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Fault {
     NullFault(NullFault),
@@ -30,7 +30,7 @@ pub enum Fault {
 
 impl Fault {
     pub fn from_sys(raw: sys::seL4_Fault) -> Self {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match raw.splay() {
                 sys::seL4_Fault_Splayed::NullFault(inner) => {
                     Self::NullFault(NullFault::from_inner(inner))

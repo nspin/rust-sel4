@@ -14,10 +14,10 @@ use crate::ObjectBlueprintAArch64;
 
 #[sel4_cfg(ARCH_AARCH32)]
 use crate::ObjectBlueprintAArch32;
-use sel4_config_macros::sel4_cfg;
+use sel4_config::sel4_cfg;
 
 /// Frame object types for this kernel configuration.
-#[sel4_config_macros::cfg_enum]
+#[sel4_config::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum FrameObjectType {
     SmallPage,
@@ -32,7 +32,7 @@ impl FrameObjectType {
     pub const GRANULE: Self = Self::SmallPage;
 
     pub const fn blueprint(self) -> ObjectBlueprint {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::SmallPage => ObjectBlueprint::Arch(ObjectBlueprintArm::SmallPage),
                 Self::LargePage => ObjectBlueprint::Arch(ObjectBlueprintArm::LargePage),
@@ -49,7 +49,7 @@ impl FrameObjectType {
     }
 
     pub const fn from_bits(bits: usize) -> Option<Self> {
-        Some(sel4_config_macros::cfg_wrap_match! {
+        Some(sel4_config::cfg_wrap_match! {
             match bits {
                 Self::SMALL_PAGE_BITS => Self::SmallPage,
                 Self::LARGE_PAGE_BITS => Self::LargePage,
@@ -104,7 +104,7 @@ impl CapTypeForFrameObjectOfFixedSize for cap_type::Section {
 // // //
 
 /// Translation table object types for this kernel configuration.
-#[sel4_config_macros::cfg_enum]
+#[sel4_config::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TranslationTableObjectType {
     PT,
@@ -116,7 +116,7 @@ pub enum TranslationTableObjectType {
 
 impl TranslationTableObjectType {
     pub const fn blueprint(&self) -> ObjectBlueprint {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::PT => ObjectBlueprint::Arch(ObjectBlueprintArm::PT),
                 #[sel4_cfg(ARCH_AARCH64)]
@@ -132,7 +132,7 @@ impl TranslationTableObjectType {
     }
 
     pub const fn index_bits(&self) -> usize {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::PT => u32_into_usize(sys::seL4_PageTableIndexBits),
                 #[sel4_cfg(ARCH_AARCH64)]
@@ -144,7 +144,7 @@ impl TranslationTableObjectType {
     }
 
     pub const fn from_level(level: usize) -> Option<Self> {
-        Some(sel4_config_macros::cfg_wrap_match! {
+        Some(sel4_config::cfg_wrap_match! {
             match level {
                 #[sel4_cfg(ARCH_AARCH64)]
                 0 => Self::VSpace,
@@ -179,14 +179,14 @@ impl CapTypeForTranslationTableObject for cap_type::PD {
 
 pub mod vspace_levels {
 
-    pub const NUM_LEVELS: usize = if sel4_config_macros::cfg_bool!(ARCH_AARCH64) {
+    pub const NUM_LEVELS: usize = if sel4_config::cfg_bool!(ARCH_AARCH64) {
         4
     } else {
         2
     };
 
     pub const HIGHEST_LEVEL_WITH_PAGE_ENTRIES: usize = NUM_LEVELS
-        - if sel4_config_macros::cfg_bool!(ARCH_AARCH64) {
+        - if sel4_config::cfg_bool!(ARCH_AARCH64) {
             3
         } else {
             2

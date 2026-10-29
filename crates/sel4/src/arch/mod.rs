@@ -10,7 +10,7 @@
 //   - ARCH_RISCV
 //   - ARCH_X86
 
-sel4_config_macros::cfg_select! {
+sel4_config::cfg_select! {
     ARCH_ARM => {
         #[path = "arm/mod.rs"]
         mod imp;

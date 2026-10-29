@@ -21,7 +21,7 @@ impl seL4_Fault {
         length: seL4_Word,
         f: impl Fn(core::ffi::c_ulong) -> seL4_Word,
     ) -> Self {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match label {
                 seL4_Fault_tag::seL4_Fault_NullFault => {
                     // TODO

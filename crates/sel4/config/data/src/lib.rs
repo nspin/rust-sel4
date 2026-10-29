@@ -8,9 +8,9 @@
 
 use std::sync::LazyLock;
 
-use sel4_config_types::Config;
+use sel4_config_data_types::Config;
 
-pub use sel4_config_types as types;
+pub use sel4_config_data_types as types;
 
 pub fn get_config() -> &'static Config {
     &CONFIG

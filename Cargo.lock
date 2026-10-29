@@ -1224,7 +1224,7 @@ dependencies = [
  "sel4-async-time",
  "sel4-async-unsync",
  "sel4-bcm2835-aux-uart-driver",
- "sel4-config-macros",
+ "sel4-config",
  "sel4-dlmalloc",
  "sel4-driver-interfaces",
  "sel4-immediate-sync-once-cell",
@@ -2137,7 +2137,7 @@ dependencies = [
 name = "sel4"
 version = "0.1.0"
 dependencies = [
- "sel4-config-macros",
+ "sel4-config",
  "sel4-sys",
 ]
 
@@ -2403,16 +2403,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sel4-config-data"
-version = "0.1.0"
-dependencies = [
- "sel4-build-env",
- "sel4-config-types",
- "serde_json",
-]
-
-[[package]]
-name = "sel4-config-macros"
+name = "sel4-config"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
@@ -2422,7 +2413,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "sel4-config-types"
+name = "sel4-config-data"
+version = "0.1.0"
+dependencies = [
+ "sel4-build-env",
+ "sel4-config-data-types",
+ "serde_json",
+]
+
+[[package]]
+name = "sel4-config-data-types"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -2497,7 +2497,7 @@ dependencies = [
  "sbi",
  "sel4-bcm2835-aux-uart-driver",
  "sel4-build-env",
- "sel4-config-macros",
+ "sel4-config",
  "sel4-immediate-sync-once-cell",
  "sel4-immutable-cell",
  "sel4-kernel-loader-payload-types",
@@ -2522,7 +2522,7 @@ dependencies = [
  "num",
  "object",
  "rkyv",
- "sel4-config-types",
+ "sel4-config-data-types",
  "sel4-kernel-loader-payload-types",
  "sel4-patch-elf",
  "sel4-phdrs-constants",
@@ -2760,7 +2760,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "sel4-build-env",
- "sel4-config-macros",
+ "sel4-config",
  "sel4-platform-info-types",
  "serde_json",
 ]
@@ -3036,8 +3036,8 @@ dependencies = [
  "roxmltree",
  "sel4-bitfield-ops",
  "sel4-build-env",
+ "sel4-config",
  "sel4-config-data",
- "sel4-config-macros",
 ]
 
 [[package]]

@@ -19,7 +19,7 @@ mk {
     inherit (localCrates)
       sel4-platform-info
       sel4-logging
-      sel4-config-macros
+      sel4-config
       sel4-kernel-loader-payload-types
       sel4-stack
       sel4-phdrs
@@ -49,7 +49,7 @@ mk {
     ;
     object = objectWith [];
     inherit (localCrates)
-      sel4-config-macros
+      sel4-config
       sel4-build-env
     ;
   };

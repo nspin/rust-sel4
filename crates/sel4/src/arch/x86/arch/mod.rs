@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-sel4_config_macros::cfg_select! {
+sel4_config::cfg_select! {
     ARCH_X86_64 => {
         #[path = "x64/mod.rs"]
         mod imp;

@@ -83,8 +83,8 @@ pub(crate) enum ArchImpl {}
 impl Arch for ArchImpl {
     fn physical_to_logical_core_id(physical_core_id: usize) -> Option<usize> {
         let logical_core_id =
-            physical_core_id.checked_sub(sel4_config_macros::cfg_usize!(FIRST_HART_ID))?;
-        if logical_core_id < sel4_config_macros::cfg_usize!(MAX_NUM_NODES) {
+            physical_core_id.checked_sub(sel4_config::cfg_usize!(FIRST_HART_ID))?;
+        if logical_core_id < sel4_config::cfg_usize!(MAX_NUM_NODES) {
             Some(logical_core_id)
         } else {
             None
@@ -92,7 +92,7 @@ impl Arch for ArchImpl {
     }
 
     fn logical_to_physical_core_id(logical_core_id: usize) -> usize {
-        logical_core_id + sel4_config_macros::cfg_usize!(FIRST_HART_ID)
+        logical_core_id + sel4_config::cfg_usize!(FIRST_HART_ID)
     }
 
     fn idle() -> ! {
@@ -107,7 +107,7 @@ impl Arch for ArchImpl {
 }
 
 fn switch_page_tables() {
-    const MODE: satp::Mode = sel4_config_macros::cfg_select! {
+    const MODE: satp::Mode = sel4_config::cfg_select! {
         all(SEL4_ARCH = "riscv64", PT_LEVELS = "3") => satp::Mode::Sv39,
         all(SEL4_ARCH = "riscv32", PT_LEVELS = "2") => satp::Mode::Sv32,
     };

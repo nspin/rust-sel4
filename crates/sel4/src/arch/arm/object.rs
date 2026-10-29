@@ -19,7 +19,7 @@ pub type ObjectTypeArch = ObjectTypeArm;
 pub type ObjectBlueprintArch = ObjectBlueprintArm;
 
 /// Corresponds to `seL4_ArchObjectType`.
-#[sel4_config_macros::cfg_enum]
+#[sel4_config::cfg_enum]
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ObjectTypeArm {
     SmallPage,
@@ -32,7 +32,7 @@ pub enum ObjectTypeArm {
 
 impl ObjectTypeArm {
     pub(crate) const fn into_sys(self) -> c_uint {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::SmallPage => sys::_object::seL4_ARM_SmallPageObject,
                 Self::LargePage => sys::_object::seL4_ARM_LargePageObject,
@@ -58,7 +58,7 @@ impl From<ObjectTypeSeL4Arch> for ObjectType {
 }
 
 /// Arm-specific variants of [`ObjectBlueprint`].
-#[sel4_config_macros::cfg_enum]
+#[sel4_config::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ObjectBlueprintArm {
     SmallPage,
@@ -71,7 +71,7 @@ pub enum ObjectBlueprintArm {
 
 impl ObjectBlueprintArm {
     pub(crate) const fn ty(self) -> ObjectTypeArch {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::SmallPage => ObjectTypeArm::SmallPage,
                 Self::LargePage => ObjectTypeArm::LargePage,
@@ -84,7 +84,7 @@ impl ObjectBlueprintArm {
     }
 
     pub(crate) const fn physical_size_bits(self) -> usize {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 Self::SmallPage => u32_into_usize(sys::seL4_PageBits),
                 Self::LargePage => u32_into_usize(sys::seL4_LargePageBits),

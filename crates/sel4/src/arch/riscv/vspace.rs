@@ -13,7 +13,7 @@ use crate::{
 };
 
 /// Frame object types for this kernel configuration.
-#[sel4_config_macros::cfg_enum]
+#[sel4_config::cfg_enum]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum FrameObjectType {
     _4kPage,
@@ -26,7 +26,7 @@ impl FrameObjectType {
     pub const GRANULE: Self = Self::_4kPage;
 
     pub const fn blueprint(self) -> ObjectBlueprint {
-        sel4_config_macros::cfg_wrap_match! {
+        sel4_config::cfg_wrap_match! {
             match self {
                 FrameObjectType::_4kPage => ObjectBlueprint::Arch(ObjectBlueprintRiscV::_4kPage),
                 FrameObjectType::MegaPage => ObjectBlueprint::Arch(ObjectBlueprintRiscV::MegaPage),
@@ -37,7 +37,7 @@ impl FrameObjectType {
     }
 
     pub const fn from_bits(bits: usize) -> Option<Self> {
-        Some(sel4_config_macros::cfg_wrap_match! {
+        Some(sel4_config::cfg_wrap_match! {
             match bits {
                 Self::_4K_PAGE_BITS => Self::_4kPage,
                 Self::MEGA_PAGE_BITS => Self::MegaPage,
@@ -53,7 +53,7 @@ impl FrameObjectType {
     pub const _4K_PAGE_BITS: usize = Self::_4kPage.bits();
     pub const MEGA_PAGE_BITS: usize = Self::MegaPage.bits();
 
-    #[sel4_config_macros::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
+    #[sel4_config::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
     pub const GIGA_PAGE_BITS: usize = Self::GigaPage.bits();
 }
 
@@ -69,10 +69,10 @@ impl CapTypeForFrameObjectOfFixedSize for cap_type::MegaPage {
     const FRAME_OBJECT_TYPE: FrameObjectType = FrameObjectType::MegaPage;
 }
 
-#[sel4_config_macros::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
+#[sel4_config::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
 impl CapTypeForFrameObject for cap_type::GigaPage {}
 
-#[sel4_config_macros::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
+#[sel4_config::sel4_cfg(any(PT_LEVELS = "3", PT_LEVELS = "4"))]
 impl CapTypeForFrameObjectOfFixedSize for cap_type::GigaPage {
     const FRAME_OBJECT_TYPE: FrameObjectType = FrameObjectType::GigaPage;
 }
@@ -110,12 +110,10 @@ impl CapTypeForTranslationTableObject for cap_type::PageTable {
 
 pub mod vspace_levels {
 
-    pub const NUM_LEVELS: usize = sel4_config_macros::cfg_usize!(PT_LEVELS);
+    pub const NUM_LEVELS: usize = sel4_config::cfg_usize!(PT_LEVELS);
 
     pub const HIGHEST_LEVEL_WITH_PAGE_ENTRIES: usize = NUM_LEVELS
-        - if sel4_config_macros::cfg_usize!(PT_LEVELS) == 3
-            || sel4_config_macros::cfg_usize!(PT_LEVELS) == 4
-        {
+        - if sel4_config::cfg_usize!(PT_LEVELS) == 3 || sel4_config::cfg_usize!(PT_LEVELS) == 4 {
             3
         } else {
             2

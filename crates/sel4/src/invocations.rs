@@ -15,7 +15,7 @@ use crate::{
 
 #[sel4_cfg(KERNEL_MCS)]
 use crate::Badge;
-use sel4_config_macros::sel4_cfg;
+use sel4_config::sel4_cfg;
 
 /// Corresponds to `seL4_Time`.
 pub type Time = u64;
@@ -164,7 +164,7 @@ impl<C: InvocationContext> Tcb<C> {
         Error::or(ret.error, ret.flags)
     }
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(KERNEL_MCS)] {
             /// Corresponds to `seL4_TCB_Configure`.
             pub fn tcb_configure(
@@ -234,7 +234,7 @@ impl<C: InvocationContext> Tcb<C> {
         }))
     }
 
-    sel4_config_macros::cfg_if! {
+    sel4_config::cfg_if! {
         if #[sel4_cfg(KERNEL_MCS)] {
             /// Corresponds to `seL4_TCB_SetSchedParams`.
             pub fn tcb_set_sched_params(

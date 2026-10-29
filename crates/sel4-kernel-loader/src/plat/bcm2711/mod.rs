@@ -8,7 +8,7 @@ use embedded_hal_nb::nb;
 use embedded_hal_nb::serial::Write;
 
 use sel4_bcm2835_aux_uart_driver::Driver as Bcm2835AuxUartDriver;
-use sel4_config_macros::sel4_cfg;
+use sel4_config::sel4_cfg;
 
 use crate::{arch::reset_cntvoff, plat::Plat};
 
@@ -22,7 +22,7 @@ pub(crate) enum PlatImpl {}
 
 impl Plat for PlatImpl {
     fn init_per_core() {
-        if sel4_config_macros::cfg_bool!(ARM_HYPERVISOR_SUPPORT) {
+        if sel4_config::cfg_bool!(ARM_HYPERVISOR_SUPPORT) {
             unsafe {
                 reset_cntvoff();
             }

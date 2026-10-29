@@ -8,7 +8,7 @@ use core::ffi::c_int;
 
 use crate::seL4_Word;
 
-sel4_config_macros::cfg_select! {
+sel4_config::cfg_select! {
     ARCH_AARCH64 => {
         #[path = "aarch64.rs"]
         mod imp;

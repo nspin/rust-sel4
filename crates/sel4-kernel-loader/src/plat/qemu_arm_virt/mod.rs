@@ -24,7 +24,7 @@ pub(crate) enum PlatImpl {}
 
 impl Plat for PlatImpl {
     fn init_per_core() {
-        if sel4_config_macros::cfg_bool!(ARM_HYPERVISOR_SUPPORT) {
+        if sel4_config::cfg_bool!(ARM_HYPERVISOR_SUPPORT) {
             unsafe {
                 reset_cntvoff();
             }

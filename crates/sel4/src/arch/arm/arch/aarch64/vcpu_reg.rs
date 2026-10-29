@@ -10,7 +10,7 @@ use crate::sys;
 /// Corresponds to `seL4_VCPUReg`.
 #[repr(u64)]
 #[allow(non_camel_case_types)]
-#[sel4_config_macros::cfg_enum]
+#[sel4_config::cfg_enum]
 pub enum VCpuReg {
     SCTLR = sys::seL4_VCPUReg::seL4_VCPUReg_SCTLR,
     TTBR0 = sys::seL4_VCPUReg::seL4_VCPUReg_TTBR0,

@@ -10,14 +10,17 @@
 #
 
 [package]
-name = "sel4-config-types"
+name = "sel4-config"
 version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
 license = "BSD-2-Clause"
 
-[dependencies.serde]
-version = "1.0.228"
-default-features = false
-features = ["alloc", "derive"]
-optional = true
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.103"
+quote = "1.0.41"
+sel4-config-data = { path = "data" }
+syn = { version = "3.0.4", features = ["full"] }

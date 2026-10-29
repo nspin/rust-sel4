@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-sel4_config_macros::cfg_select! {
+sel4_config::cfg_select! {
     all(ARCH_ARM, PLAT_QEMU_ARM_VIRT) => {
         #[path = "qemu_arm_virt/mod.rs"]
         mod imp;
