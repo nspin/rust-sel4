@@ -14,6 +14,7 @@
 , perl
 , python3Packages
 , cmake
+, qemu
 
 , kani
 , verus
@@ -21,6 +22,7 @@
 , strace
 , cntr
 , cachix
+, rustfilt
 
 , openssl
 
@@ -31,6 +33,7 @@ mkShell (shellForMakefile.apply {
 
   depsBuildBuild = [
     buildPackages.stdenv.cc
+    qemu
   ];
 
   nativeBuildInputs = [
@@ -44,6 +47,7 @@ mkShell (shellForMakefile.apply {
     strace
     cntr
     cachix
+    rustfilt
   ] ++ lib.optionals stdenv.hostPlatform.isx86_64 [
     kani
     verus

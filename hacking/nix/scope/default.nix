@@ -306,6 +306,8 @@ superCallPackage ../rust-utils {} self //
 
   ferrocene = callBuildBuildPackage ./ferrocene {};
 
+  rustfilt = callBuildBuildPackage ./rustfilt.nix {};
+
   ### local tools
 
   mkTool = rootCrate: buildCratesInLayers {
