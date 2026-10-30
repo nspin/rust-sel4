@@ -167,6 +167,13 @@ impl<'a, A: Access> Iterator for OperationChunks<'a, A> {
             }),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self {
+            Self::Read { it, .. } => it.size_hint(),
+            Self::Write { it, .. } => it.size_hint(),
+        }
+    }
 }
 
 impl<'a> Operation<'a, ReadOnly> {
