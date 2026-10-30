@@ -2290,6 +2290,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "sel4-backtrace-collect"
+version = "0.1.0"
+dependencies = [
+ "unwinding",
+]
+
+[[package]]
 name = "sel4-backtrace-embedded-debug-info"
 version = "0.1.0"
 dependencies = [
