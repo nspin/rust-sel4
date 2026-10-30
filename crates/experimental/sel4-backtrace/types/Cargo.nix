@@ -34,6 +34,10 @@ mk rec {
       "alloc"
       "sel4-backtrace-symbolize"
     ];
+    loader = [
+      "symbolize"
+      "sel4-backtrace-symbolize/loader"
+    ];
     full = [
       "alloc"
       "serde"

@@ -4,11 +4,9 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use std::fs;
-
+use addr2line::Loader;
 use clap::Parser;
 
-use sel4_backtrace_addr2line_context_helper::new_context;
 use sel4_backtrace_types::Backtrace;
 
 #[derive(Parser, Debug)]
@@ -27,11 +25,9 @@ fn main() {
         .as_ref()
         .or(bt.preamble.image.as_ref())
         .expect("ELF file neither embedded nor provided");
-    let elf_file_contents = fs::read(elf_file_path).unwrap();
-    let obj = object::File::parse(&*elf_file_contents).unwrap();
-    let ctx = new_context(&obj).unwrap();
+    let loader = Loader::new(elf_file_path).unwrap();
     println!("backtrace: {elf_file_path}");
     let mut s = String::new();
-    bt.symbolize(&ctx, &mut s).unwrap();
+    bt.symbolize(&loader, &mut s).unwrap();
     print!("{s}");
 }

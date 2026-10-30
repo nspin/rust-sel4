@@ -16,6 +16,9 @@ authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
 
+[features]
+loader = ["addr2line/loader"]
+
 [dependencies.addr2line]
 version = "0.27.1"
 default-features = false

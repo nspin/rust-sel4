@@ -58,7 +58,6 @@ members = [
     "crates/experimental/sel4-async/time",
     "crates/experimental/sel4-async/unsync",
     "crates/experimental/sel4-backtrace",
-    "crates/experimental/sel4-backtrace/addr2line-context-helper",
     "crates/experimental/sel4-backtrace/cli",
     "crates/experimental/sel4-backtrace/embedded-debug-info",
     "crates/experimental/sel4-backtrace/embedded-debug-info/cli",

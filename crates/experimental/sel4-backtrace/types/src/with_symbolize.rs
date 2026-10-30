@@ -9,20 +9,14 @@
 
 use core::fmt;
 
-use addr2line::Context;
 use addr2line::gimli::Error;
-use addr2line::gimli::read::Reader;
 
-use sel4_backtrace_symbolize::symbolize;
+use sel4_backtrace_symbolize::{FindFrames, symbolize};
 
 use crate::Backtrace;
 
 impl<T> Backtrace<T> {
-    pub fn symbolize<R: Reader>(
-        &self,
-        ctx: &Context<R>,
-        w: &mut impl fmt::Write,
-    ) -> Result<(), Error> {
+    pub fn symbolize(&self, ctx: &impl FindFrames, w: &mut impl fmt::Write) -> Result<(), Error> {
         if let Some(ref err) = self.postamble.error {
             writeln!(w, "    error: {err:?}").unwrap();
         }

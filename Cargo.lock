@@ -53,8 +53,11 @@ dependencies = [
  "cpp_demangle",
  "fallible-iterator",
  "gimli",
+ "memmap2",
+ "object",
  "rustc-demangle",
  "smallvec",
+ "typed-arena",
 ]
 
 [[package]]
@@ -930,6 +933,9 @@ name = "gimli"
 version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1033caf0b349c518623b5396bfb2cf0bddf44f0306d543a250e5743297aafd10"
+dependencies = [
+ "stable_deref_trait",
+]
 
 [[package]]
 name = "glob"
@@ -1203,6 +1209,15 @@ name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+
+[[package]]
+name = "memmap2"
+version = "0.9.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b0ca1155a9ecc25aa12e8313a119f32edf0255fea2f44839c4ac0a12b2ac157"
+dependencies = [
+ "libc",
+]
 
 [[package]]
 name = "meta"
@@ -2265,23 +2280,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "sel4-backtrace-addr2line-context-helper"
-version = "0.1.0"
-dependencies = [
- "addr2line",
- "gimli",
- "object",
- "thiserror",
-]
-
-[[package]]
 name = "sel4-backtrace-cli"
 version = "0.1.0"
 dependencies = [
+ "addr2line",
  "clap",
  "hex",
- "object",
- "sel4-backtrace-addr2line-context-helper",
  "sel4-backtrace-types",
 ]
 
@@ -2290,10 +2294,11 @@ name = "sel4-backtrace-embedded-debug-info"
 version = "0.1.0"
 dependencies = [
  "addr2line",
+ "gimli",
  "object",
- "sel4-backtrace-addr2line-context-helper",
  "sel4-phdrs",
  "sel4-phdrs-patched",
+ "thiserror",
 ]
 
 [[package]]
@@ -3671,6 +3676,12 @@ name = "twox-hash"
 version = "2.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86a801b3cea342a06d468c8710662aa29e5e05e4f5c0d62f00bbb7f2ad7941c2"
+
+[[package]]
+name = "typed-arena"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6af6ae20167a9ece4bcb41af5b80f8a1f1df981f6391189ce00fd257af04126a"
 
 [[package]]
 name = "typenum"

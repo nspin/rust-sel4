@@ -12,11 +12,64 @@
 
 extern crate alloc;
 
+#[cfg(feature = "loader")]
+extern crate std;
+
 use alloc::borrow::Cow;
 use core::fmt;
 
 use addr2line::gimli;
-use addr2line::{Context, Location};
+use addr2line::{Context, FrameIter, Location};
+
+pub trait FindFrames {
+    type Error: fmt::Debug;
+
+    fn find_frames(
+        &self,
+        probe: u64,
+    ) -> Result<FrameIter<'_, impl gimli::Reader + '_>, Self::Error>;
+
+    fn find_location(&self, probe: u64) -> Result<Option<Location<'_>>, Self::Error>;
+
+    fn find_symbol(&self, _probe: u64) -> Option<&str> {
+        None
+    }
+}
+
+impl<R: gimli::Reader> FindFrames for Context<R> {
+    type Error = gimli::Error;
+
+    fn find_frames(
+        &self,
+        probe: u64,
+    ) -> Result<FrameIter<'_, impl gimli::Reader + '_>, Self::Error> {
+        Context::find_frames(self, probe).skip_all_loads()
+    }
+
+    fn find_location(&self, probe: u64) -> Result<Option<Location<'_>>, Self::Error> {
+        Context::find_location(self, probe)
+    }
+}
+
+#[cfg(feature = "loader")]
+impl FindFrames for addr2line::Loader {
+    type Error = alloc::boxed::Box<dyn std::error::Error>;
+
+    fn find_frames(
+        &self,
+        probe: u64,
+    ) -> Result<FrameIter<'_, impl gimli::Reader + '_>, Self::Error> {
+        addr2line::Loader::find_frames(self, probe)
+    }
+
+    fn find_location(&self, probe: u64) -> Result<Option<Location<'_>>, Self::Error> {
+        addr2line::Loader::find_location(self, probe)
+    }
+
+    fn find_symbol(&self, probe: u64) -> Option<&str> {
+        addr2line::Loader::find_symbol(self, probe)
+    }
+}
 
 fn print_loc(w: &mut impl fmt::Write, loc: Option<&Location<'_>>) -> Result<(), fmt::Error> {
     if let Some(loc) = loc {
@@ -74,7 +127,7 @@ impl Default for Options {
 
 pub fn symbolize(
     w: &mut impl fmt::Write,
-    ctx: &Context<impl gimli::Reader>,
+    ctx: &impl FindFrames,
     opts: &Options,
     addrs: impl Iterator<Item = u64>,
 ) -> Result<(), fmt::Error> {
@@ -83,7 +136,7 @@ pub fn symbolize(
 
         if opts.do_functions || opts.do_inlines {
             let mut printed_anything = false;
-            let mut frames = ctx.find_frames(probe).skip_all_loads().unwrap();
+            let mut frames = ctx.find_frames(probe).unwrap();
             let mut first = true;
             while let Some(frame) = frames.next().unwrap() {
                 if !first {
@@ -120,9 +173,7 @@ pub fn symbolize(
 
             if !printed_anything {
                 if opts.do_functions {
-                    // TODO
-                    // let name = ctx.find_symbol(probe);
-                    let name = None;
+                    let name = ctx.find_symbol(probe);
 
                     print_function(w, name, None, opts.demangle)?;
 

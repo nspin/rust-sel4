@@ -17,12 +17,7 @@ edition = "2024"
 license = "BSD-2-Clause"
 
 [dependencies]
+addr2line = { version = "0.27.1", default-features = false, features = ["loader"] }
 clap = { version = "4.5.50", features = ["derive"] }
 hex = "0.4.3"
-sel4-backtrace-addr2line-context-helper = { path = "../addr2line-context-helper" }
-sel4-backtrace-types = { path = "../types", features = ["full"] }
-
-[dependencies.object]
-version = "0.40.0"
-default-features = false
-features = ["read_core", "elf", "compression"]
+sel4-backtrace-types = { path = "../types", features = ["full", "loader"] }

@@ -19,6 +19,7 @@ license = "MIT"
 [features]
 alloc = ["serde?/alloc"]
 full = ["alloc", "serde", "postcard", "symbolize"]
+loader = ["symbolize", "sel4-backtrace-symbolize/loader"]
 postcard = ["serde", "dep:postcard"]
 serde = ["dep:serde"]
 symbolize = ["addr2line", "alloc", "sel4-backtrace-symbolize"]

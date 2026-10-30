@@ -19,4 +19,9 @@ mk rec {
       features = [ "rustc-demangle" "cpp_demangle" "fallible-iterator" "smallvec" ];
     };
   };
+  features = {
+    loader = [
+      "addr2line/loader"
+    ];
+  };
 }
