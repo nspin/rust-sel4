@@ -17,11 +17,10 @@ mk {
     };
     bytemuck = { version = versions.bytemuck; default-features = false; };
     gpt_disk_types = { version = versions.gpt_disk_types; features = [ "bytemuck" ]; };
-    lru = { version = versions.lru; optional = true; };
     inherit (localCrates) sel4-never-polyfill;
   };
   features = {
-    alloc = [ "futures/alloc" "lru" ];
+    alloc = [];
     default = [ "alloc" ];
   };
 }

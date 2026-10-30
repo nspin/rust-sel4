@@ -22,8 +22,9 @@ use smoltcp::wire::{EthernetAddress, HardwareAddress};
 use sel4_abstract_allocator::WithAlignmentBound;
 use sel4_abstract_allocator::basic::BasicAllocator;
 use sel4_async_block_io::{
-    BlockSize, CachedBlockIO, ConstantBlockSize, constant_block_sizes::BlockSize512, disk::Disk,
+    BlockSize, ConstantBlockSize, constant_block_sizes::BlockSize512, disk::Disk,
 };
+use sel4_async_block_io_cached::CachedBlockIO;
 use sel4_async_time::Instant;
 use sel4_driver_interfaces::block::GetBlockDeviceLayout;
 use sel4_driver_interfaces::net::GetNetDeviceMeta;

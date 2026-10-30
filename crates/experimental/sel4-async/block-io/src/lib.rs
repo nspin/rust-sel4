@@ -29,7 +29,7 @@ use access::{Access, ReadAccess, ReadOnly, ReadWrite, WriteAccess};
 mod when_alloc;
 
 #[cfg(feature = "alloc")]
-pub use when_alloc::{CachedBlockIO, DynamicBlockSize};
+pub use when_alloc::DynamicBlockSize;
 
 pub trait BlockIOLayout {
     type Error: fmt::Debug;
@@ -197,8 +197,6 @@ macro_rules! wrapper_methods {
         }
     };
 }
-
-use wrapper_methods;
 
 #[derive(Clone, Debug)]
 pub struct NextBlockSizeAdapter<T> {

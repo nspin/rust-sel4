@@ -1234,6 +1234,7 @@ dependencies = [
  "sel4-abstract-ptr",
  "sel4-abstract-rc",
  "sel4-async-block-io",
+ "sel4-async-block-io-cached",
  "sel4-async-block-io-fat",
  "sel4-async-io",
  "sel4-async-network",
@@ -1305,6 +1306,7 @@ dependencies = [
  "sel4",
  "sel4-abstract-allocator",
  "sel4-async-block-io",
+ "sel4-async-block-io-cached",
  "sel4-async-block-io-fat",
  "sel4-async-network",
  "sel4-async-single-threaded-executor",
@@ -2186,9 +2188,17 @@ dependencies = [
  "futures",
  "gpt_disk_types",
  "log",
- "lru",
  "num_enum",
  "sel4-never-polyfill",
+]
+
+[[package]]
+name = "sel4-async-block-io-cached"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "lru",
+ "sel4-async-block-io",
 ]
 
 [[package]]

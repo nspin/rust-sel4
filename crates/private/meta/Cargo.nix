@@ -19,6 +19,7 @@ mk {
       sel4-abstract-ptr
       sel4-abstract-rc
       sel4-async-block-io
+      sel4-async-block-io-cached
       sel4-async-block-io-fat
       sel4-async-io
       sel4-async-network
