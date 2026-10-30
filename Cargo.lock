@@ -3478,10 +3478,9 @@ name = "tests-root-task-backtrace"
 version = "0.1.0"
 dependencies = [
  "sel4",
- "sel4-backtrace",
+ "sel4-backtrace-collect",
  "sel4-backtrace-embedded-debug-info",
- "sel4-backtrace-simple",
- "sel4-backtrace-types",
+ "sel4-backtrace-symbolize",
  "sel4-root-task",
  "sel4-test-root-task",
 ]
