@@ -18,6 +18,6 @@ license = "BSD-2-Clause"
 
 [dependencies]
 postcard = { version = "1.1.3", default-features = false }
-sel4-microkit-base = { path = "../../../sel4-microkit/base" }
+sel4-microkit-base = { path = "../base" }
 serde = { version = "1.0.228", default-features = false }
 thiserror = { version = "2.0.17", default-features = false }

@@ -41,7 +41,7 @@ sel4-immutable-cell = { path = "../../sel4-immutable-cell" }
 sel4-initialize-tls = { path = "../../sel4-initialize-tls" }
 sel4-logging = { path = "../../sel4-logging" }
 sel4-microkit = { path = "../../sel4-microkit", features = ["full"], optional = true }
-sel4-microkit-simple-ipc = { path = "../../experimental/sel4-microkit/simple-ipc", optional = true }
+sel4-microkit-simple-ipc = { path = "../../sel4-microkit/simple-ipc", optional = true }
 sel4-newlib = { path = "../../experimental/sel4-newlib" }
 sel4-one-ref-cell = { path = "../../sel4-one-ref-cell" }
 sel4-panicking = { path = "../../sel4-panicking" }
