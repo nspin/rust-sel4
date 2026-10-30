@@ -168,7 +168,6 @@ impl Handler for HandlerImpl {
                     .as_mut_ptr()
                     .index(buf_range)
                     .as_raw_ptr();
-                assert_eq!(buf_ptr.len(), 512);
                 let token = unsafe {
                     let pending_entry = &mut *pending_entry;
                     self.dev
