@@ -62,7 +62,7 @@ where
         msg_info: MessageInfo,
     ) -> Result<MessageInfo, Self::Error> {
         if channel == self.client {
-            Ok(match simple_ipc::recv::<Request>(msg_info) {
+            Ok(match simple_ipc::try_recv::<Request>(msg_info) {
                 Ok(req) => {
                     let resp = match req {
                         Request::GetTime => self

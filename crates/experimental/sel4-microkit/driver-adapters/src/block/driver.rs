@@ -14,7 +14,7 @@ pub fn handle_client_request<T: GetBlockDeviceLayout>(
     dev: &mut T,
     msg_info: MessageInfo,
 ) -> MessageInfo {
-    match simple_ipc::recv::<Request>(msg_info) {
+    match simple_ipc::try_recv::<Request>(msg_info) {
         Ok(req) => {
             let resp: Response = match req {
                 Request::GetNumBlocks => dev

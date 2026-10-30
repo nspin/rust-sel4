@@ -6,14 +6,11 @@
 
 #![no_std]
 
-use core::error::Error;
-use core::fmt;
-
 use serde::{Deserialize, Serialize};
-use zerocopy::IntoBytes;
+use thiserror::Error;
 
 use sel4_microkit_base::{
-    Channel, MessageInfo, MessageLabel, MessageRegisterValue, with_msg_regs, with_msg_regs_mut,
+    Channel, MessageInfo, MessageLabel, MessageRegisterValue, with_msg_bytes, with_msg_bytes_mut,
 };
 
 const MAX_MESSAGE_LABEL: MessageLabel =
@@ -25,9 +22,9 @@ pub fn send_unspecified_error() -> MessageInfo {
     MessageInfo::new(UNSPECIFIED_ERROR_MESSAGE_LABEL, 0)
 }
 
-pub fn try_send<T: Serialize>(val: T) -> Result<MessageInfo, postcard::Error> {
-    with_msg_regs_mut(|buf| {
-        let used = postcard::to_slice(&val, buf.as_mut_bytes())?;
+pub fn try_send<T: Serialize>(val: T) -> Result<MessageInfo, SendError> {
+    with_msg_bytes_mut(|buf| {
+        let used = postcard::to_slice(&val, buf).map_err(SendError::PostcardError)?;
         let count = bytes_to_words(used.len());
         Ok(MessageInfo::new(0, count))
     })
@@ -37,21 +34,25 @@ pub fn send<T: Serialize>(val: T) -> MessageInfo {
     try_send(val).unwrap()
 }
 
-pub fn recv<T: for<'a> Deserialize<'a>>(msg_info: MessageInfo) -> Result<T, RecvError> {
+pub fn try_recv<T: for<'a> Deserialize<'a>>(msg_info: MessageInfo) -> Result<T, RecvError> {
     let label = msg_info.label();
     if label != 0 {
         return Err(RecvError::UnexpectedLabel { label });
     }
-    with_msg_regs(|buf| postcard::from_bytes(buf.as_bytes()).map_err(RecvError::PostcardError))
+    with_msg_bytes(|buf| postcard::from_bytes(buf).map_err(RecvError::PostcardError))
+}
+
+pub fn recv<T: for<'a> Deserialize<'a>>(msg_info: MessageInfo) -> T {
+    try_recv(msg_info).unwrap()
 }
 
 pub fn try_call<T: Serialize, U: for<'a> Deserialize<'a>>(
     channel: Channel,
     val: T,
-) -> Result<U, TryCallError> {
-    let req_msg_info = try_send(val).map_err(TryCallError::SendError)?;
+) -> Result<U, CallError> {
+    let req_msg_info = try_send(val).map_err(CallError::SendError)?;
     let resp_msg_info = channel.pp_call(req_msg_info);
-    recv(resp_msg_info).map_err(TryCallError::RecvError)
+    try_recv(resp_msg_info).map_err(CallError::RecvError)
 }
 
 pub fn call<T: Serialize, U: for<'a> Deserialize<'a>>(
@@ -59,44 +60,32 @@ pub fn call<T: Serialize, U: for<'a> Deserialize<'a>>(
     val: T,
 ) -> Result<U, RecvError> {
     try_call(channel, val).map_err(|err| match err {
-        TryCallError::SendError(err) => panic!("send error: {err}"),
-        TryCallError::RecvError(err) => err,
+        CallError::SendError(err) => panic!("send error: {err}"),
+        CallError::RecvError(err) => err,
     })
 }
 
-#[derive(Clone, Debug)]
-pub enum RecvError {
-    UnexpectedLabel { label: MessageLabel },
+#[derive(Clone, Debug, Error)]
+pub enum SendError {
+    #[error("postcard error: {0}")]
     PostcardError(postcard::Error),
 }
 
-impl fmt::Display for RecvError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::UnexpectedLabel { label } => write!(f, "unexpected label: {label}"),
-            Self::PostcardError(err) => write!(f, "postcard error: {err}"),
-        }
-    }
+#[derive(Clone, Debug, Error)]
+pub enum RecvError {
+    #[error("unexpected label: {label}")]
+    UnexpectedLabel { label: MessageLabel },
+    #[error("postcard error: {0}")]
+    PostcardError(postcard::Error),
 }
 
-impl Error for RecvError {}
-
-#[derive(Clone, Debug)]
-pub enum TryCallError {
-    SendError(postcard::Error),
+#[derive(Clone, Debug, Error)]
+pub enum CallError {
+    #[error("send error: {0}")]
+    SendError(SendError),
+    #[error("recv error: {0}")]
     RecvError(RecvError),
 }
-
-impl fmt::Display for TryCallError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::SendError(err) => write!(f, "send error: {err}"),
-            Self::RecvError(err) => write!(f, "recv error: {err}"),
-        }
-    }
-}
-
-impl Error for TryCallError {}
 
 // // //
 

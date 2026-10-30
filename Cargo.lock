@@ -2627,7 +2627,7 @@ dependencies = [
  "postcard",
  "sel4-microkit-base",
  "serde",
- "zerocopy",
+ "thiserror",
 ]
 
 [[package]]

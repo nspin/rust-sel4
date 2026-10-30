@@ -9,9 +9,9 @@
 mk {
   package.name = "sel4-microkit-simple-ipc";
   dependencies = {
-    inherit (versions) zerocopy;
     serde = serdeWith [];
     postcard = postcardWith [];
+    thiserror = { version = versions.thiserror; default-features = false; };
     inherit (localCrates)
       sel4-microkit-base
     ;

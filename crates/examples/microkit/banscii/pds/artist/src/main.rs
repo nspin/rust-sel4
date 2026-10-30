@@ -69,7 +69,7 @@ impl Handler for HandlerImpl {
         msg_info: MessageInfo,
     ) -> Result<MessageInfo, Self::Error> {
         Ok(if channel == self.assistant {
-            match simple_ipc::recv::<Request>(msg_info) {
+            match simple_ipc::try_recv::<Request>(msg_info) {
                 Ok(req) => {
                     let draft_height = req.height;
                     let draft_width = req.width;
