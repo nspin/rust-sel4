@@ -11,7 +11,7 @@ use core::fmt;
 
 use addr2line::gimli::Error;
 
-use sel4_backtrace_symbolize::{FindFrames, symbolize};
+use sel4_backtrace_symbolize::{FindFrames, Options, Symbolizer};
 
 use crate::Backtrace;
 
@@ -20,15 +20,12 @@ impl<T> Backtrace<T> {
         if let Some(ref err) = self.postamble.error {
             writeln!(w, "    error: {err:?}").unwrap();
         }
-        symbolize(
-            w,
-            ctx,
-            &Default::default(),
-            self.entries
-                .iter()
-                .map(|entry| entry.stack_frame.ip.try_into().unwrap()),
-        )
-        .unwrap();
+        let mut symbolizer = Symbolizer::new(w, ctx, Options::default());
+        for entry in &self.entries {
+            symbolizer
+                .symbolize(entry.stack_frame.ip.try_into().unwrap())
+                .unwrap();
+        }
         Ok(())
     }
 }
