@@ -213,8 +213,8 @@ in rec {
   };
 
   fatSource = {
-    git = "https://github.com/coliasgroup/rust-embedded-fat.git";
-    tag = mkKeepRef "e1465a43c9f550ef58701a275b3133105deb9183"; # branch sel4
+    git = "https://github.com/MabezDev/embedded-fatfs";
+    rev = "7961cd4eb64de51818d8cdda991713784fa98366";
   };
 
   ringWith = features: {

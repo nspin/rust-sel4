@@ -6,28 +6,27 @@
 
 use alloc::borrow::ToOwned;
 use alloc::format;
-use alloc::rc::Rc;
 use alloc::string::{String, ToString};
 use alloc::vec;
 
 use embedded_io_async::{Read, ReadExactError, Write};
 
 use sel4_async_block_io_fat as fat;
-use sel4_async_unsync::Mutex;
 
 use crate::mime::content_type_from_name;
 
-pub(crate) struct Server<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static> {
-    volume_manager: Rc<Mutex<fat::Volume<D, T, 4, 4>>>,
-    dir: fat::Directory,
+pub(crate) type FileSystem<IO> =
+    fat::FileSystem<IO, fat::DefaultTimeProvider, fat::LossyOemCpConverter>;
+
+type File<'a, IO> = fat::File<'a, IO, fat::DefaultTimeProvider, fat::LossyOemCpConverter>;
+
+pub(crate) struct Server<IO: fat::ReadWriteSeek> {
+    fs: FileSystem<IO>,
 }
 
-impl<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static> Server<D, T> {
-    pub(crate) fn new(volume_manager: fat::Volume<D, T, 4, 4>, dir: fat::Directory) -> Self {
-        Self {
-            volume_manager: Rc::new(Mutex::new(volume_manager)),
-            dir,
-        }
+impl<IO: fat::ReadWriteSeek> Server<IO> {
+    pub(crate) fn new(fs: FileSystem<IO>) -> Self {
+        Self { fs }
     }
 
     pub(crate) async fn handle_connection<U: Read + Write + Unpin>(
@@ -75,9 +74,13 @@ impl<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static> Server<D, T> {
         request_path: &str,
     ) -> Result<(), ReadExactError<U::Error>> {
         match self.lookup_request_path(request_path).await {
-            RequestPathStatus::Ok { file_name, file } => {
+            RequestPathStatus::Ok {
+                file_name,
+                file,
+                file_len,
+            } => {
                 let content_type = content_type_from_name(&file_name);
-                self.serve_file(conn, content_type, file).await?;
+                self.serve_file(conn, content_type, file, file_len).await?;
             }
             RequestPathStatus::MovedPermanently { location } => {
                 self.serve_moved_permanently(conn, &location).await?;
@@ -93,16 +96,10 @@ impl<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static> Server<D, T> {
         &self,
         conn: &mut U,
         content_type: &str,
-        file: fat::File,
+        mut file: File<'_, IO>,
+        file_len: u64,
     ) -> Result<(), ReadExactError<U::Error>> {
-        let file_len: usize = self
-            .volume_manager
-            .lock()
-            .await
-            .file_length(file)
-            .unwrap()
-            .try_into()
-            .unwrap();
+        let file_len: usize = file_len.try_into().unwrap();
         self.start_response_headers(conn, 200, "OK").await?;
         self.send_response_header(conn, "Content-Type", content_type.as_bytes())
             .await?;
@@ -114,23 +111,13 @@ impl<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static> Server<D, T> {
             let mut pos = 0;
             while pos < file_len {
                 let n = buf.len().min(file_len - pos);
-                self.volume_manager
-                    .lock()
-                    .await
-                    .read(file, &mut buf[..n])
-                    .await
-                    .unwrap();
+                file.read_exact(&mut buf[..n]).await.unwrap();
                 conn.write_all(&buf[..n]).await?;
                 pos += n;
             }
         }
-        assert!(self.volume_manager.lock().await.file_eof(file).unwrap());
-        self.volume_manager
-            .lock()
-            .await
-            .close_file(file)
-            .await
-            .unwrap();
+        assert_eq!(file.read(&mut [0]).await.unwrap(), 0);
+        file.close().await.unwrap();
         Ok(())
     }
 
@@ -202,45 +189,30 @@ impl<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static> Server<D, T> {
         Ok(())
     }
 
-    async fn lookup_request_path(&self, request_path: &str) -> RequestPathStatus {
-        let mut volume_manager = self.volume_manager.lock().await;
+    async fn lookup_request_path(&self, request_path: &str) -> RequestPathStatus<File<'_, IO>> {
         if !request_path.starts_with('/') {
             return RequestPathStatus::NotFound;
         }
         let has_trailing_slash = request_path.ends_with('/');
-        let mut cur = self.dir;
+        let mut cur = self.fs.root_dir();
         for seg in request_path.split('/') {
             if seg.is_empty() {
                 continue;
             }
-            let entry = volume_manager.find_lfn_directory_entry(cur, seg).await;
-            match entry {
+            match cur.open_meta(seg).await {
                 Ok(entry) => {
-                    if entry.attributes.is_directory() {
-                        let new = volume_manager.open_dir(cur, entry.name).await.unwrap();
-                        if cur != self.dir {
-                            volume_manager.close_dir(cur).unwrap();
-                        }
-                        cur = new;
+                    if entry.is_dir() {
+                        cur = entry.to_dir();
                     } else {
-                        let file = volume_manager
-                            .open_file_in_dir(cur, entry.name, fat::Mode::ReadOnly)
-                            .await
-                            .unwrap();
-                        if cur != self.dir {
-                            volume_manager.close_dir(cur).unwrap();
-                        }
                         return RequestPathStatus::Ok {
                             file_name: seg.to_owned(),
-                            file,
+                            file: entry.to_file(),
+                            file_len: entry.len(),
                         };
                     }
                 }
                 Err(err) => {
                     log::warn!("{err:?}: {request_path:?}");
-                    if cur != self.dir {
-                        volume_manager.close_dir(cur).unwrap();
-                    }
                     return RequestPathStatus::NotFound; // TODO
                 }
             }
@@ -251,30 +223,25 @@ impl<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static> Server<D, T> {
             }
         } else {
             let file_name = "index.html";
-            let seg = file_name;
-            let entry = volume_manager
-                .find_lfn_directory_entry(cur, seg)
-                .await
-                .unwrap();
-            let file = volume_manager
-                .open_file_in_dir(cur, entry.name, fat::Mode::ReadOnly)
-                .await
-                .unwrap();
-            if cur != self.dir {
-                volume_manager.close_dir(cur).unwrap();
-            }
+            let entry = cur.open_meta(file_name).await.unwrap();
             RequestPathStatus::Ok {
                 file_name: file_name.to_owned(),
-                file,
+                file: entry.to_file(),
+                file_len: entry.len(),
             }
         }
     }
 }
 
-#[derive(Debug)]
-enum RequestPathStatus {
-    Ok { file_name: String, file: fat::File },
-    MovedPermanently { location: String },
+enum RequestPathStatus<F> {
+    Ok {
+        file_name: String,
+        file: F,
+        file_len: u64,
+    },
+    MovedPermanently {
+        location: String,
+    },
     NotFound,
 }
 

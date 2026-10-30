@@ -9,19 +9,16 @@
 mk {
   package.name = "sel4-async-block-io-fat";
   dependencies = {
-    inherit (versions) log heapless lru;
+    inherit (versions) log heapless lru aligned;
     hex = { version = versions.hex; default-features = false; };
-    futures = {
-      version = versions.futures;
+    embedded-fatfs = fatSource // {
       default-features = false;
-      features = [
-        "alloc"
-      ];
+      features = [ "lfn" "log" ];
     };
-    embedded-fat = fatSource;
+    block-device-driver = fatSource;
+    block-device-adapters = fatSource;
     inherit (localCrates)
       sel4-async-block-io
-      # embedded-fat
     ;
   };
 }

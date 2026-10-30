@@ -6,10 +6,9 @@
 
 #![no_std]
 
-pub use embedded_fat::*;
+pub use block_device_adapters::BufStream;
+pub use embedded_fatfs::*;
 
 mod block_io_wrapper;
-mod dummy_time_source;
 
 pub use block_io_wrapper::BlockIOWrapper;
-pub use dummy_time_source::DummyTimeSource;

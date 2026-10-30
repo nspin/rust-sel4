@@ -88,13 +88,13 @@ pub async fn run_server<
                     let fs_block_io = fs_block_io.clone();
                     async move {
                         loop {
-                            let fs_block_io = fat::BlockIOWrapper::new(fs_block_io.clone());
-                            let mut volume_manager =
-                                fat::Volume::new(fs_block_io, fat::DummyTimeSource::new())
-                                    .await
-                                    .unwrap();
-                            let dir = volume_manager.open_root_dir().unwrap();
-                            let server = Server::new(volume_manager, dir);
+                            let fs_io = fat::BufStream::<_, 512>::new(fat::BlockIOWrapper::new(
+                                fs_block_io.clone(),
+                            ));
+                            let fs = fat::FileSystem::new(fs_io, fat::FsOptions::new())
+                                .await
+                                .unwrap();
+                            let server = Server::new(fs);
                             let socket = network_ctx.new_tcp_socket_with_buffer_sizes(8192, 65535);
                             f(server, socket).await;
                         }
@@ -109,13 +109,13 @@ pub async fn run_server<
 
 type SocketUser<T> = Box<
     dyn Fn(
-        Server<fat::BlockIOWrapper<T, ReadOnly>, fat::DummyTimeSource>,
+        Server<fat::BufStream<fat::BlockIOWrapper<T, ReadOnly>, 512>>,
         TcpSocket,
     ) -> LocalBoxFuture<'static, ()>,
 >;
 
-async fn use_socket_for_http<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static>(
-    server: Server<D, T>,
+async fn use_socket_for_http<IO: fat::ReadWriteSeek>(
+    server: Server<IO>,
     mut socket: TcpSocket,
 ) -> Result<(), ReadExactError<TcpSocketError>> {
     socket.accept(HTTP_PORT).await?;
@@ -126,8 +126,8 @@ async fn use_socket_for_http<D: fat::BlockDevice + 'static, T: fat::TimeSource +
     Ok(())
 }
 
-async fn use_socket_for_https<D: fat::BlockDevice + 'static, T: fat::TimeSource + 'static>(
-    server: Server<D, T>,
+async fn use_socket_for_https<IO: fat::ReadWriteSeek>(
+    server: Server<IO>,
     tls_config: Arc<ServerConfig>,
     mut socket: TcpSocket,
 ) -> Result<(), ReadExactError<AsyncRustlsError<TcpSocketError>>> {
