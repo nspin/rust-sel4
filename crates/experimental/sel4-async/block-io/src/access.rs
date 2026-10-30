@@ -4,18 +4,11 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+use sel4_never_polyfill::Never;
+
 pub trait Access: AccessSealed {
     type ReadWitness: Witness;
     type WriteWitness: Witness;
-}
-
-#[derive(Copy, Clone)]
-pub enum Absurdity {}
-
-impl Absurdity {
-    pub(crate) fn absurd<T>(self) -> T {
-        match self {}
-    }
 }
 
 pub trait Witness: Sized + Copy + Unpin {
@@ -26,7 +19,7 @@ impl Witness for () {
     const TRY_WITNESS: Option<Self> = Some(());
 }
 
-impl Witness for Absurdity {
+impl Witness for Never {
     const TRY_WITNESS: Option<Self> = None;
 }
 
@@ -54,7 +47,7 @@ pub enum ReadOnly {}
 
 impl Access for ReadOnly {
     type ReadWitness = ();
-    type WriteWitness = Absurdity;
+    type WriteWitness = Never;
 }
 
 impl ReadAccess for ReadOnly {
@@ -64,7 +57,7 @@ impl ReadAccess for ReadOnly {
 pub enum WriteOnly {}
 
 impl Access for WriteOnly {
-    type ReadWitness = Absurdity;
+    type ReadWitness = Never;
     type WriteWitness = ();
 }
 

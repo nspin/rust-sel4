@@ -2188,6 +2188,7 @@ dependencies = [
  "log",
  "lru",
  "num_enum",
+ "sel4-never-polyfill",
 ]
 
 [[package]]

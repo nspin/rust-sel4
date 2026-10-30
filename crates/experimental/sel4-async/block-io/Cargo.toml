@@ -27,3 +27,4 @@ gpt_disk_types = { version = "0.16.1", features = ["bytemuck"] }
 log = "0.4.28"
 lru = { version = "0.19.0", optional = true }
 num_enum = { version = "0.7.5", default-features = false }
+sel4-never-polyfill = { path = "../../../sel4-never-polyfill" }
