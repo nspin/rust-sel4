@@ -11,7 +11,7 @@ use sel4_phdrs::{PT_SEL4_EMBEDDED_DEBUG_INFO, locate_phdrs};
 
 use sel4_phdrs_patched as _;
 
-pub fn get_context() -> Result<Context, Error> {
+pub fn get_context() -> Result<Context<'static>, Error> {
     let embedded_debug_info = unsafe {
         locate_phdrs()
             .unwrap()

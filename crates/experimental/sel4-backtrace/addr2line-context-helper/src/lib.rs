@@ -6,14 +6,10 @@
 
 #![no_std]
 
-extern crate alloc;
-
-use alloc::rc::Rc;
-
 use addr2line::Context as AbstractContext;
-use object::{Object, ObjectSection};
+use object::{CompressionFormat, Object, ObjectSection};
 
-pub type Context = AbstractContext<gimli::EndianRcSlice<gimli::RunTimeEndian>>;
+pub type Context<'data> = AbstractContext<gimli::EndianSlice<'data, gimli::RunTimeEndian>>;
 
 #[derive(thiserror::Error, Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Error {
@@ -21,18 +17,18 @@ pub enum Error {
     ObjectError(#[from] object::Error),
     #[error("DWARF error")]
     GimliError(#[from] gimli::Error),
+    #[error("compressed section: {0}")]
+    CompressedSection(&'static str),
 }
 
-pub fn new_context<'data: 'file, 'file, O: Object<'data>>(
-    file: &'file O,
-) -> Result<Context, Error> {
+pub fn new_context<'data, O: Object<'data>>(file: &O) -> Result<Context<'data>, Error> {
     new_context_with_sup(file, None)
 }
 
-pub fn new_context_with_sup<'data: 'file, 'file, O: Object<'data>>(
-    file: &'file O,
-    sup_file: Option<&'file O>,
-) -> Result<Context, Error> {
+pub fn new_context_with_sup<'data, O: Object<'data>>(
+    file: &O,
+    sup_file: Option<&O>,
+) -> Result<Context<'data>, Error> {
     let endian = match file.endianness() {
         object::Endianness::Little => gimli::RunTimeEndian::Little,
         object::Endianness::Big => gimli::RunTimeEndian::Big,
@@ -44,18 +40,24 @@ pub fn new_context_with_sup<'data: 'file, 'file, O: Object<'data>>(
     Ok(Context::from_dwarf(dwarf)?)
 }
 
-fn load_section<'data: 'file, 'file, O, Endian>(
+fn load_section<'data, O, Endian>(
     id: gimli::SectionId,
-    file: &'file O,
+    file: &O,
     endian: Endian,
-) -> Result<gimli::EndianRcSlice<Endian>, Error>
+) -> Result<gimli::EndianSlice<'data, Endian>, Error>
 where
     O: Object<'data>,
     Endian: gimli::Endianity,
 {
     let data = match file.section_by_name(id.name()) {
-        Some(section) => section.uncompressed_data()?,
-        None => Default::default(),
+        Some(section) => {
+            let compressed = section.compressed_data()?;
+            if compressed.format != CompressionFormat::None {
+                return Err(Error::CompressedSection(id.name()));
+            }
+            compressed.data
+        }
+        None => &[],
     };
-    Ok(gimli::EndianRcSlice::new(Rc::from(data), endian))
+    Ok(gimli::EndianSlice::new(data, endian))
 }
