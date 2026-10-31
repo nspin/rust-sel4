@@ -7,7 +7,9 @@
 use core::ops::Range;
 use core::slice::{Chunks, ChunksMut};
 
-use crate::access::{Access, ReadAccess, ReadOnly, WriteAccess, WriteOnly};
+use thiserror::Error;
+
+use crate::access::{Access, ReadAccess, ReadOnly, Witness, WriteAccess, WriteOnly};
 
 pub enum Operation<'a, A: Access> {
     Read {
@@ -209,5 +211,49 @@ impl<'a, A: WriteAccess> Operation<'a, A> {
             buf,
             witness: A::WRITE_WITNESS,
         }
+    }
+}
+
+#[derive(Error, Debug, Copy, Clone, PartialEq, Eq)]
+#[error("no read access")]
+pub struct NoReadAccess(());
+
+#[derive(Error, Debug, Copy, Clone, PartialEq, Eq)]
+#[error("no write access")]
+pub struct NoWriteAccess(());
+
+#[derive(Error, Debug, Copy, Clone, PartialEq, Eq)]
+pub enum CastAccessError {
+    #[error(transparent)]
+    Read(#[from] NoReadAccess),
+    #[error(transparent)]
+    Write(#[from] NoWriteAccess),
+}
+
+impl<'a, A: Access> Operation<'a, A> {
+    pub fn try_read(buf: &'a mut [u8]) -> Result<Self, NoReadAccess> {
+        Ok(Self::Read {
+            buf,
+            witness: A::ReadWitness::TRY_WITNESS.ok_or(NoReadAccess(()))?,
+        })
+    }
+
+    pub fn try_write(buf: &'a [u8]) -> Result<Self, NoWriteAccess> {
+        Ok(Self::Write {
+            buf,
+            witness: A::WriteWitness::TRY_WITNESS.ok_or(NoWriteAccess(()))?,
+        })
+    }
+
+    pub fn try_cast_access<A1: Access>(self) -> Result<Operation<'a, A1>, CastAccessError> {
+        Ok(match self {
+            Self::Read { buf, .. } => Operation::try_read(buf)?,
+            Self::Write { buf, .. } => Operation::try_write(buf)?,
+        })
+    }
+
+    pub(crate) fn cast_access<A1: Access>(self) -> Operation<'a, A1> {
+        self.try_cast_access()
+            .unwrap_or_else(|err| panic!("invalid operation access cast: {err}"))
     }
 }

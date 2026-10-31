@@ -9,10 +9,7 @@ use core::marker::PhantomData;
 use aligned::{A1, Aligned};
 use block_device_driver::{BlockDevice, blocks_to_slice, blocks_to_slice_mut};
 
-use sel4_async_block_io::{
-    BlockIO, ConstantBlockSize, Operation,
-    access::{Access, Witness},
-};
+use sel4_async_block_io::{BlockIO, ConstantBlockSize, Operation, access::Access};
 
 const BLOCK_SIZE: usize = 512;
 
@@ -45,10 +42,7 @@ impl<T: BlockIO<A, BlockSize = ConstantBlockSize<512>>, A: Access> BlockDevice<B
         self.inner
             .read_or_write_blocks(
                 block_address.into(),
-                Operation::Read {
-                    buf: blocks_to_slice_mut(data),
-                    witness: A::ReadWitness::TRY_WITNESS.unwrap(),
-                },
+                Operation::try_read(blocks_to_slice_mut(data)).unwrap(),
             )
             .await
     }
@@ -61,10 +55,7 @@ impl<T: BlockIO<A, BlockSize = ConstantBlockSize<512>>, A: Access> BlockDevice<B
         self.inner
             .read_or_write_blocks(
                 block_address.into(),
-                Operation::Write {
-                    buf: blocks_to_slice(data),
-                    witness: A::WriteWitness::TRY_WITNESS.unwrap(),
-                },
+                Operation::try_write(blocks_to_slice(data)).unwrap(),
             )
             .await
     }

@@ -12,6 +12,7 @@ extern crate alloc;
 use core::cell::RefCell;
 use core::convert::Infallible;
 use core::fmt;
+use core::marker::PhantomData;
 use core::ops::Range;
 
 use futures::future;
@@ -20,7 +21,7 @@ pub mod access;
 
 mod operation;
 
-pub use operation::{Operation, OperationType};
+pub use operation::{CastAccessError, NoReadAccess, NoWriteAccess, Operation, OperationType};
 
 use access::{Access, ReadAccess, ReadOnly, ReadWrite, WriteAccess};
 
@@ -194,6 +195,69 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for Partition<T> {
         let inner_block_idx = self.range.start + start_block_idx;
         self.inner()
             .read_or_write_blocks(inner_block_idx, operation)
+            .await
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CastAccessAdapter<T, A> {
+    inner: T,
+    _phantom: PhantomData<A>,
+}
+
+impl<T, A> CastAccessAdapter<T, A> {
+    pub fn new(inner: T) -> Self {
+        Self {
+            inner,
+            _phantom: PhantomData,
+        }
+    }
+
+    wrapper_methods!(T);
+}
+
+impl<T: BlockIOLayout, A> BlockIOLayout for CastAccessAdapter<T, A> {
+    type Error = T::Error;
+
+    type BlockSize = T::BlockSize;
+
+    fn block_size(&self) -> Self::BlockSize {
+        self.inner().block_size()
+    }
+
+    fn num_blocks(&self) -> u64 {
+        self.inner().num_blocks()
+    }
+}
+
+impl<T: BlockIO<A>, A: Access, A1: Access> BlockIO<A1> for CastAccessAdapter<T, A> {
+    async fn read_or_write_blocks(
+        &self,
+        start_block_idx: u64,
+        operation: Operation<'_, A1>,
+    ) -> Result<(), Self::Error> {
+        self.inner()
+            .read_or_write_blocks(start_block_idx, operation.cast_access())
+            .await
+    }
+}
+
+impl<T: ByteIOLayout, A> ByteIOLayout for CastAccessAdapter<T, A> {
+    type Error = T::Error;
+
+    fn size(&self) -> u64 {
+        self.inner().size()
+    }
+}
+
+impl<T: ByteIO<A>, A: Access, A1: Access> ByteIO<A1> for CastAccessAdapter<T, A> {
+    async fn read_or_write(
+        &self,
+        offset: u64,
+        operation: Operation<'_, A1>,
+    ) -> Result<(), Self::Error> {
+        self.inner()
+            .read_or_write(offset, operation.cast_access())
             .await
     }
 }

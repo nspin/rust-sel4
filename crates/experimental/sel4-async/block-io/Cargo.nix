@@ -14,12 +14,12 @@ mk {
       default-features = false;
     };
     embedded-io-async = { version = versions.embedded-io-async; optional = true; };
-    thiserror = { version = versions.thiserror; default-features = false; optional = true; };
+    thiserror = { version = versions.thiserror; default-features = false; };
     inherit (localCrates) sel4-never-polyfill;
   };
   features = {
     alloc = [];
     default = [ "alloc" ];
-    embedded-io-async = [ "dep:embedded-io-async" "dep:thiserror" ];
+    embedded-io-async = [ "dep:embedded-io-async" ];
   };
 }
