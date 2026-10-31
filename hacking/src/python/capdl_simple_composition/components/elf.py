@@ -39,10 +39,10 @@ class ElfComponent(BaseComponent):
         self.update_guard_size = update_guard_size
 
         elf_fname = '{}.elf'.format(self.name)
-        self.elf_path = composition.find_in_search_dirs(elf_name)
-        self.elf = ELF(str(self.elf_path), elf_fname, self.composition.arch)
+        elf_path = composition.find_in_search_dirs(elf_name)
+        self.elf = ELF(str(elf_path), elf_fname, self.composition.arch)
 
-        self.composition.register_file(elf_fname, self.elf_path)
+        self.composition.register_file(elf_fname, elf_path)
 
         self.set_cursor(self.first_vaddr_after_elf())
 
@@ -141,7 +141,6 @@ class ElfComponent(BaseComponent):
                 read=True,
             ),
             'threads': [thread.get_thread_runtime_config() for thread in self.threads()],
-            'image_identifier': str(self.elf_path),
             'app_config': str(self.composition.out_dir / arg_bin),
         }
 

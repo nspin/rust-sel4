@@ -206,10 +206,6 @@ self: with self;
           loaderELF = loader.elf;
         };
 
-      symbolizeRootTaskBacktrace = writeScript "x.sh" ''
-        #!${buildPackages.runtimeShell}
-        exec ${buildPackages.this.sel4-backtrace-cli}/bin/sel4-symbolize-backtrace -f ${rootTask.elf} "$@"
-      '';
     in {
       inherit loader rootTask;
       rootTaskImage = rootTask.elf;
@@ -217,10 +213,6 @@ self: with self;
       debuggingLinks = [
         { name = "kernel.elf"; path = "${seL4ForBoot}/bin/kernel.elf"; }
         { name = "root-task.elf"; path = rootTask.elf; }
-        { name = "symbolize-root-task-backtrace"; path = symbolizeRootTaskBacktrace; }
-        { name = "sel4-symbolize-backtrace";
-          path = "${buildPackages.this.sel4-backtrace-cli}/bin/sel4-symbolize-backtrace";
-        }
       ] ++ lib.optionals worldConfig.platformRequiresLoader [
         { name = "loader.elf"; path = loader.elf; }
         { name = "loader.debug.elf"; path = loader.split.full; }

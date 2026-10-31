@@ -22,9 +22,6 @@ use sel4_panicking_env::{AbortInfo, abort};
 use sel4_simple_task_runtime_config_types::{RuntimeConfig, RuntimeThreadConfig};
 use sel4_simple_task_threading::StaticThread;
 
-#[cfg(not(target_arch = "arm"))]
-use sel4_backtrace_simple::SimpleBacktracing;
-
 mod declare_main;
 mod termination;
 
@@ -135,11 +132,6 @@ sel4_panicking_env::register_debug_put_char!(sel4::debug_put_char);
 
 fn panic_hook(info: &PanicInfo<'_>) {
     debug_println!("{}", info);
-
-    #[cfg(not(target_arch = "arm"))]
-    {
-        get_backtracing().collect_and_send();
-    }
 }
 
 fn get_static_heap_bounds() -> StaticHeapBounds {
@@ -160,21 +152,6 @@ fn get_static_heap_mutex_notification() -> sel4::cap::Notification {
             .unwrap()
             .to_native(),
     )
-}
-
-#[cfg(not(target_arch = "arm"))]
-pub fn get_backtracing() -> SimpleBacktracing {
-    SimpleBacktracing::new(get_backtrace_image_identifier())
-}
-
-#[allow(dead_code)]
-fn get_backtrace_image_identifier() -> Option<&'static str> {
-    CONFIG
-        .get()
-        .unwrap()
-        .image_identifier
-        .as_ref()
-        .map(|s| s.as_str())
 }
 
 // // //

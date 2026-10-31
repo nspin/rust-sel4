@@ -17,12 +17,7 @@ edition = "2024"
 license = "BSD-2-Clause"
 
 [features]
-alloc = [
-    "sel4-backtrace/alloc",
-    "sel4-backtrace-simple/alloc",
-    "sel4-simple-task-threading/alloc",
-    "serde_json?/alloc",
-]
+alloc = ["sel4-simple-task-threading/alloc", "serde_json?/alloc"]
 default = ["serde_json", "alloc"]
 serde_json = ["dep:serde_json"]
 
@@ -45,10 +40,3 @@ serde_json = { version = "1.0.145", default-features = false, optional = true }
 [dependencies.sel4-panicking]
 path = "../../../../sel4-panicking"
 features = ["personality", "panic-handler"]
-
-[target."cfg(not(target_arch = \"arm\"))".dependencies]
-sel4-backtrace-simple = { path = "../../../../experimental/sel4-backtrace/simple" }
-
-[target."cfg(not(target_arch = \"arm\"))".dependencies.sel4-backtrace]
-path = "../../../../experimental/sel4-backtrace"
-features = ["unwinding", "postcard"]

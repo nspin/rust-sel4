@@ -34,17 +34,11 @@ mk {
       features = [ "sel4" ];
     };
   };
-  target."cfg(not(target_arch = \"arm\"))".dependencies = {
-    sel4-backtrace = localCrates.sel4-backtrace // { features = [ "unwinding" "postcard" ]; };
-    inherit (localCrates) sel4-backtrace-simple;
-  };
   features = {
     serde_json = [
       "dep:serde_json"
     ];
     alloc = [
-      "sel4-backtrace/alloc"
-      "sel4-backtrace-simple/alloc"
       "sel4-simple-task-threading/alloc"
       "serde_json?/alloc"
     ];

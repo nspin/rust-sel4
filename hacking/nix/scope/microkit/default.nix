@@ -229,9 +229,6 @@ let
             { name = "${imageName}.img"; path = system.image; }
             { name = "report.txt"; path = "${system}/report.txt"; }
             { name = "sdk/elf"; path = "${sdk}/board/${board}/${config}/elf"; }
-            { name = "sel4-symbolize-backtrace";
-              path = "${buildPackages.this.sel4-backtrace-cli}/bin/sel4-symbolize-backtrace";
-            }
           ] ++ extraDebuggingLinks;
         } // passthru;
 

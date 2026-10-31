@@ -2270,26 +2270,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sel4-backtrace"
-version = "0.1.0"
-dependencies = [
- "postcard",
- "sel4-backtrace-types",
- "serde",
- "unwinding",
-]
-
-[[package]]
-name = "sel4-backtrace-cli"
-version = "0.1.0"
-dependencies = [
- "addr2line",
- "clap",
- "hex",
- "sel4-backtrace-types",
-]
-
-[[package]]
 name = "sel4-backtrace-collect"
 version = "0.1.0"
 dependencies = [
@@ -2319,28 +2299,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "sel4-backtrace-simple"
-version = "0.1.0"
-dependencies = [
- "sel4-backtrace",
- "sel4-panicking-env",
-]
-
-[[package]]
 name = "sel4-backtrace-symbolize"
 version = "0.1.0"
 dependencies = [
  "addr2line",
-]
-
-[[package]]
-name = "sel4-backtrace-types"
-version = "0.1.0"
-dependencies = [
- "addr2line",
- "postcard",
- "sel4-backtrace-symbolize",
- "serde",
 ]
 
 [[package]]
@@ -2961,8 +2923,6 @@ dependencies = [
  "postcard",
  "rkyv",
  "sel4",
- "sel4-backtrace",
- "sel4-backtrace-simple",
  "sel4-dlmalloc",
  "sel4-immediate-sync-once-cell",
  "sel4-never-polyfill",

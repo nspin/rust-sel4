@@ -315,7 +315,6 @@ superCallPackage ../rust-utils {} self //
   };
 
   sel4-backtrace-embedded-debug-cli = mkTool crates.sel4-backtrace-embedded-debug-info-cli;
-  sel4-backtrace-cli = mkTool crates.sel4-backtrace-cli;
   sel4-reset-cli = mkTool crates.sel4-reset-cli;
   sel4-test-sentinels-wrapper = mkTool crates.sel4-test-sentinels-wrapper;
 
@@ -352,10 +351,6 @@ superCallPackage ../rust-utils {} self //
     rootCrates = with crates; [
       sel4-bitfield-ops
       sel4-kernel-loader-add-payload
-      sel4-backtrace-types
-    ];
-    features = [
-      "sel4-backtrace-types/full"
     ];
     commonModifications = {
       modifyManifest = lib.flip crateUtils.combineConfig {

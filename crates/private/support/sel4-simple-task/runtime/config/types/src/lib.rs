@@ -10,7 +10,6 @@ extern crate alloc;
 
 use core::ops::Range;
 
-use alloc::string::String;
 use alloc::vec::Vec;
 
 use rkyv::Archive;
@@ -52,7 +51,6 @@ pub struct GenericRuntimeConfig<T> {
     pub static_heap_mutex_notification: Option<CPtrBits>,
     pub idle_notification: Option<CPtrBits>,
     pub threads: Vec<RuntimeThreadConfig>,
-    pub image_identifier: Option<String>,
     pub app_config: T,
 }
 
@@ -75,7 +73,6 @@ impl<T> GenericRuntimeConfig<T> {
             static_heap_mutex_notification: self.static_heap_mutex_notification,
             idle_notification: self.idle_notification,
             threads: self.threads,
-            image_identifier: self.image_identifier,
             app_config: f(self.app_config)?,
         })
     }
