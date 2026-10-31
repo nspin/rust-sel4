@@ -1235,6 +1235,7 @@ dependencies = [
  "sel4-abstract-rc",
  "sel4-async-block-io",
  "sel4-async-block-io-cached",
+ "sel4-async-block-io-disk",
  "sel4-async-block-io-fat",
  "sel4-async-io",
  "sel4-async-network",
@@ -1307,6 +1308,7 @@ dependencies = [
  "sel4-abstract-allocator",
  "sel4-async-block-io",
  "sel4-async-block-io-cached",
+ "sel4-async-block-io-disk",
  "sel4-async-block-io-fat",
  "sel4-async-network",
  "sel4-async-single-threaded-executor",
@@ -2184,11 +2186,7 @@ version = "0.1.0"
 name = "sel4-async-block-io"
 version = "0.1.0"
 dependencies = [
- "bytemuck",
  "futures",
- "gpt_disk_types",
- "log",
- "num_enum",
  "sel4-never-polyfill",
 ]
 
@@ -2198,6 +2196,16 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "lru",
+ "sel4-async-block-io",
+]
+
+[[package]]
+name = "sel4-async-block-io-disk"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "gpt_disk_types",
+ "num_enum",
  "sel4-async-block-io",
 ]
 

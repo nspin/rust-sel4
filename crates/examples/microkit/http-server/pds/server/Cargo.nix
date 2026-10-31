@@ -46,6 +46,7 @@ mk {
       sel4-shared-ring-buffer-block-io-types
       sel4-async-block-io
       sel4-async-block-io-cached
+      sel4-async-block-io-disk
       sel4-async-block-io-fat
     ;
 

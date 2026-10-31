@@ -21,9 +21,5 @@ alloc = []
 default = ["alloc"]
 
 [dependencies]
-bytemuck = { version = "1.24.0", default-features = false }
 futures = { version = "0.3.31", default-features = false }
-gpt_disk_types = { version = "0.16.1", features = ["bytemuck"] }
-log = "0.4.28"
-num_enum = { version = "0.7.5", default-features = false }
 sel4-never-polyfill = { path = "../../../sel4-never-polyfill" }

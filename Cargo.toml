@@ -50,6 +50,7 @@ members = [
     "crates/experimental/sel4-abstract-rc",
     "crates/experimental/sel4-async/block-io",
     "crates/experimental/sel4-async/block-io/cached",
+    "crates/experimental/sel4-async/block-io/disk",
     "crates/experimental/sel4-async/block-io/fat",
     "crates/experimental/sel4-async/io",
     "crates/experimental/sel4-async/network",

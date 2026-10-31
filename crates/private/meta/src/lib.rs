@@ -88,6 +88,7 @@ definitely! {
     sel4_abstract_rc
     sel4_async_block_io
     sel4_async_block_io_cached
+    sel4_async_block_io_disk
     sel4_async_block_io_fat
     sel4_async_io
     sel4_async_network

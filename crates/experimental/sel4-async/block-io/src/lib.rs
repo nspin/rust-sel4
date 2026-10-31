@@ -17,7 +17,6 @@ use core::ops::Range;
 use futures::future;
 
 pub mod access;
-pub mod disk;
 
 mod operation;
 
