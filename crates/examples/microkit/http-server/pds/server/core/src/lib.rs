@@ -21,7 +21,7 @@ use rustls::ServerConfig;
 use rustls::pki_types::{PrivateKeyDer, UnixTime};
 use rustls::version::TLS12;
 
-use sel4_async_block_io::{BlockIO, access::ReadOnly, constant_block_sizes};
+use sel4_async_block_io::{BlockIO, ConstantBlockSize, access::ReadOnly};
 use sel4_async_block_io_fat as fat;
 use sel4_async_io::EmbeddedIOAsyncAdapter;
 use sel4_async_network::{ManagedInterface, TcpSocket, TcpSocketError};
@@ -40,7 +40,7 @@ const HTTPS_PORT: u16 = 443;
 
 #[allow(clippy::too_many_arguments)] // TODO
 pub async fn run_server<
-    T: BlockIO<ReadOnly, BlockSize = constant_block_sizes::BlockSize512> + Clone + 'static,
+    T: BlockIO<ReadOnly, BlockSize = ConstantBlockSize<512>> + Clone + 'static,
 >(
     now_unix_time: Duration,
     now_fn: impl 'static + Send + Sync + Fn() -> Instant,

@@ -10,9 +10,8 @@ use aligned::{A1, Aligned};
 use block_device_driver::{BlockDevice, blocks_to_slice, blocks_to_slice_mut};
 
 use sel4_async_block_io::{
-    BlockIO, Operation,
+    BlockIO, ConstantBlockSize, Operation,
     access::{Access, Witness},
-    constant_block_sizes,
 };
 
 const BLOCK_SIZE: usize = 512;
@@ -31,8 +30,8 @@ impl<T, A> BlockIOWrapper<T, A> {
     }
 }
 
-impl<T: BlockIO<A, BlockSize = constant_block_sizes::BlockSize512>, A: Access>
-    BlockDevice<BLOCK_SIZE> for BlockIOWrapper<T, A>
+impl<T: BlockIO<A, BlockSize = ConstantBlockSize<512>>, A: Access> BlockDevice<BLOCK_SIZE>
+    for BlockIOWrapper<T, A>
 {
     type Error = T::Error;
 

@@ -91,70 +91,19 @@ pub trait BlockSize {
     fn zeroed_block(&self) -> Self::Block;
 }
 
-pub trait ConstantBlockSize: BlockSize {
-    const BLOCK_SIZE: Self;
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+pub struct ConstantBlockSize<const N: usize>;
 
-    const BYTES: usize;
-}
+impl<const N: usize> BlockSize for ConstantBlockSize<N> {
+    type Block = [u8; N];
 
-pub trait HasNextBlockSize: ConstantBlockSize {
-    type NextBlockSize: ConstantBlockSize;
-}
-
-pub trait HasPrevBlockSize: ConstantBlockSize {
-    type PrevBlockSize: ConstantBlockSize;
-}
-
-pub mod constant_block_sizes {
-    use super::{BlockSize, ConstantBlockSize, HasNextBlockSize, HasPrevBlockSize};
-
-    macro_rules! declare_block_size {
-        ($ident:ident, $n:literal) => {
-            #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-            pub struct $ident;
-
-            impl BlockSize for $ident {
-                type Block = [u8; $n];
-
-                fn bytes(&self) -> usize {
-                    Self::BYTES
-                }
-
-                fn zeroed_block(&self) -> Self::Block {
-                    [0; $n]
-                }
-            }
-
-            impl ConstantBlockSize for $ident {
-                const BLOCK_SIZE: Self = $ident;
-
-                const BYTES: usize = $n;
-            }
-        };
+    fn bytes(&self) -> usize {
+        N
     }
 
-    macro_rules! declare_next_block_size {
-        ($cur:ident, $next:ident) => {
-            impl HasNextBlockSize for $cur {
-                type NextBlockSize = $next;
-            }
-
-            impl HasPrevBlockSize for $next {
-                type PrevBlockSize = $cur;
-            }
-        };
+    fn zeroed_block(&self) -> Self::Block {
+        [0; N]
     }
-
-    declare_block_size!(BlockSize512, 512);
-    declare_block_size!(BlockSize1024, 1024);
-    declare_block_size!(BlockSize2048, 2048);
-    declare_block_size!(BlockSize4096, 4096);
-    declare_block_size!(BlockSize8192, 8192);
-
-    declare_next_block_size!(BlockSize512, BlockSize1024);
-    declare_next_block_size!(BlockSize1024, BlockSize2048);
-    declare_next_block_size!(BlockSize2048, BlockSize4096);
-    declare_next_block_size!(BlockSize4096, BlockSize8192);
 }
 
 impl<T: BlockIOLayout> BlockIOLayout for &T {
@@ -195,89 +144,6 @@ macro_rules! wrapper_methods {
             &mut self.inner
         }
     };
-}
-
-#[derive(Clone, Debug)]
-pub struct NextBlockSizeAdapter<T> {
-    inner: T,
-}
-
-impl<T> NextBlockSizeAdapter<T> {
-    pub fn new(inner: T) -> Self {
-        Self { inner }
-    }
-
-    wrapper_methods!(T);
-}
-
-impl<T: BlockIOLayout<BlockSize: HasNextBlockSize>> BlockIOLayout for NextBlockSizeAdapter<T> {
-    type Error = T::Error;
-
-    type BlockSize = <T::BlockSize as HasNextBlockSize>::NextBlockSize;
-
-    fn block_size(&self) -> Self::BlockSize {
-        Self::BlockSize::BLOCK_SIZE
-    }
-
-    fn num_blocks(&self) -> u64 {
-        let inner_num_blocks = self.inner().num_blocks();
-        assert_eq!(inner_num_blocks % 2, 0);
-        inner_num_blocks / 2
-    }
-}
-
-impl<T: BlockIO<A, BlockSize: HasNextBlockSize>, A: Access> BlockIO<A> for NextBlockSizeAdapter<T> {
-    async fn read_or_write_blocks(
-        &self,
-        start_block_idx: u64,
-        operation: Operation<'_, A>,
-    ) -> Result<(), Self::Error> {
-        let inner_start_block_idx = start_block_idx.checked_mul(2).unwrap();
-        self.inner()
-            .read_or_write_blocks(inner_start_block_idx, operation)
-            .await
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct PrevBlockSizeAdapter<T> {
-    inner: T,
-}
-
-impl<T> PrevBlockSizeAdapter<T> {
-    pub fn new(inner: T) -> Self {
-        Self { inner }
-    }
-
-    wrapper_methods!(T);
-}
-
-impl<T: BlockIOLayout<BlockSize: HasPrevBlockSize>> BlockIOLayout for PrevBlockSizeAdapter<T> {
-    type Error = T::Error;
-
-    type BlockSize = <T::BlockSize as HasPrevBlockSize>::PrevBlockSize;
-
-    fn block_size(&self) -> Self::BlockSize {
-        Self::BlockSize::BLOCK_SIZE
-    }
-
-    fn num_blocks(&self) -> u64 {
-        self.inner().num_blocks().checked_mul(2).unwrap()
-    }
-}
-
-impl<T: BlockIO<A, BlockSize: HasPrevBlockSize>, A: ReadAccess> BlockIO<A>
-    for PrevBlockSizeAdapter<T>
-{
-    async fn read_or_write_blocks(
-        &self,
-        start_block_idx: u64,
-        operation: Operation<'_, A>,
-    ) -> Result<(), Self::Error> {
-        let block_size = Self::BlockSize::BYTES.try_into().unwrap();
-        let start_byte_idx = start_block_idx.checked_mul(block_size).unwrap();
-        read_or_write_bytes(self.inner(), start_byte_idx, operation).await
-    }
 }
 
 #[derive(Clone, Debug)]

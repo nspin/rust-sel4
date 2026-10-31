@@ -21,7 +21,7 @@ use smoltcp::wire::{EthernetAddress, HardwareAddress};
 
 use sel4_abstract_allocator::WithAlignmentBound;
 use sel4_abstract_allocator::basic::BasicAllocator;
-use sel4_async_block_io::{BlockSize, ConstantBlockSize, constant_block_sizes::BlockSize512};
+use sel4_async_block_io::{BlockSize, ConstantBlockSize};
 use sel4_async_block_io_cached::CachedBlockIO;
 use sel4_async_block_io_disk::Disk;
 use sel4_async_time::Instant;
@@ -145,7 +145,7 @@ fn init() -> impl Handler {
     };
 
     let block_size = block_client.get_block_size().unwrap();
-    assert_eq!(block_size, BlockSize512::BLOCK_SIZE.bytes());
+    assert_eq!(block_size, ConstantBlockSize::<512>.bytes());
 
     let num_blocks = block_client.get_num_blocks().unwrap();
 
@@ -160,7 +160,7 @@ fn init() -> impl Handler {
             WithAlignmentBound::new(BasicAllocator::new(dma_region.as_ptr().len()), 1);
 
         SharedRingBufferBlockIO::new(
-            BlockSize512::BLOCK_SIZE,
+            ConstantBlockSize::<512>,
             num_blocks,
             dma_region,
             bounce_buffer_allocator,
