@@ -9,11 +9,12 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-use core::cell::RefCell;
-use core::convert::Infallible;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Range;
+
+#[cfg(feature = "alloc")]
+use alloc::rc::Rc;
 
 use futures::future;
 
@@ -23,7 +24,7 @@ mod operation;
 
 pub use operation::{CastAccessError, NoReadAccess, NoWriteAccess, Operation, OperationType};
 
-use access::{Access, ReadAccess, ReadOnly, ReadWrite, WriteAccess};
+use access::{Access, ReadAccess, ReadOnly, WriteAccess};
 
 macro_rules! wrapper_methods {
     ($inner:path) => {
@@ -41,25 +42,19 @@ macro_rules! wrapper_methods {
     };
 }
 
-#[cfg(feature = "alloc")]
-mod when_alloc;
+mod block_size;
 
-#[cfg(feature = "alloc")]
-pub use when_alloc::DynamicBlockSize;
+pub use block_size::{BlockSize, BlockType, ConstantBlockSize, RuntimeBlockSize};
+
+mod byte_io;
+
+pub use byte_io::{ByteIO, ByteIOLayout, SliceByteIO};
 
 #[cfg(feature = "embedded-io-async")]
 mod when_embedded_io_async;
 
 #[cfg(feature = "embedded-io-async")]
 pub use when_embedded_io_async::{EmbeddedIOAsyncAdapter, EmbeddedIOAsyncAdapterError};
-
-pub trait BlockSize {
-    type Block: AsRef<[u8]> + AsMut<[u8]>;
-
-    fn bytes(&self) -> usize;
-
-    fn zeroed_block(&self) -> Self::Block;
-}
 
 pub trait BlockIOLayout {
     type Error: fmt::Debug;
@@ -110,21 +105,6 @@ pub trait BlockIO<A: Access>: BlockIOLayout {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
-pub struct ConstantBlockSize<const N: usize>;
-
-impl<const N: usize> BlockSize for ConstantBlockSize<N> {
-    type Block = [u8; N];
-
-    fn bytes(&self) -> usize {
-        N
-    }
-
-    fn zeroed_block(&self) -> Self::Block {
-        [0; N]
-    }
-}
-
 impl<T: BlockIOLayout> BlockIOLayout for &T {
     type Error = T::Error;
 
@@ -145,6 +125,32 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for &T {
         start_block_idx: u64,
         operation: Operation<'_, A>,
     ) -> Result<(), <&T as BlockIOLayout>::Error> {
+        T::read_or_write_blocks(self, start_block_idx, operation).await
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T: BlockIOLayout> BlockIOLayout for Rc<T> {
+    type Error = T::Error;
+
+    type BlockSize = T::BlockSize;
+
+    fn block_size(&self) -> Self::BlockSize {
+        T::block_size(self)
+    }
+
+    fn num_blocks(&self) -> u64 {
+        T::num_blocks(self)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T: BlockIO<A>, A: Access> BlockIO<A> for Rc<T> {
+    async fn read_or_write_blocks(
+        &self,
+        start_block_idx: u64,
+        operation: Operation<'_, A>,
+    ) -> Result<(), Self::Error> {
         T::read_or_write_blocks(self, start_block_idx, operation).await
     }
 }
@@ -262,37 +268,6 @@ impl<T: ByteIO<A>, A: Access, A1: Access> ByteIO<A1> for CastAccessAdapter<T, A>
     }
 }
 
-pub trait ByteIOLayout {
-    type Error: fmt::Debug;
-
-    fn size(&self) -> u64;
-}
-
-pub trait ByteIO<A: Access>: ByteIOLayout {
-    #[allow(async_fn_in_trait)]
-    async fn read_or_write(
-        &self,
-        offset: u64,
-        operation: Operation<'_, A>,
-    ) -> Result<(), Self::Error>;
-
-    #[allow(async_fn_in_trait)]
-    async fn read(&self, offset: u64, buf: &mut [u8]) -> Result<(), Self::Error>
-    where
-        A: ReadAccess,
-    {
-        self.read_or_write(offset, Operation::read(buf)).await
-    }
-
-    #[allow(async_fn_in_trait)]
-    async fn write(&self, offset: u64, buf: &[u8]) -> Result<(), Self::Error>
-    where
-        A: WriteAccess,
-    {
-        self.read_or_write(offset, Operation::write(buf)).await
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct ByteIOAdapter<T> {
     inner: T,
@@ -314,7 +289,7 @@ impl<T: BlockIOLayout> ByteIOLayout for ByteIOAdapter<T> {
     }
 }
 
-impl<T: BlockIO<A>, A: ReadAccess> ByteIO<A> for ByteIOAdapter<T> {
+impl<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess> ByteIO<A> for ByteIOAdapter<T> {
     async fn read_or_write(
         &self,
         offset: u64,
@@ -365,67 +340,7 @@ impl<T: ByteIO<A>, A: Access, N: BlockSize + Copy> BlockIO<A> for BlockIOAdapter
     }
 }
 
-pub struct SliceByteIO<T> {
-    inner: T,
-}
-
-impl<T> SliceByteIO<T> {
-    pub fn new(inner: T) -> Self {
-        Self { inner }
-    }
-
-    wrapper_methods!(T);
-}
-
-impl<T: AsRef<[u8]>> ByteIOLayout for SliceByteIO<T> {
-    type Error = Infallible;
-
-    fn size(&self) -> u64 {
-        usize_to_u64(self.inner().as_ref().len())
-    }
-}
-
-impl<T: AsRef<[u8]>> ByteIO<ReadOnly> for SliceByteIO<T> {
-    async fn read_or_write(
-        &self,
-        offset: u64,
-        operation: Operation<'_, ReadOnly>,
-    ) -> Result<(), Self::Error> {
-        let offset = offset.try_into().unwrap();
-        let Operation::Read { buf, .. } = operation;
-        buf.copy_from_slice(&self.inner().as_ref()[offset..][..buf.len()]);
-        Ok(())
-    }
-}
-
-impl<T: AsRef<[u8]> + AsMut<[u8]>> ByteIOLayout for RefCell<SliceByteIO<T>> {
-    type Error = Infallible;
-
-    fn size(&self) -> u64 {
-        self.borrow().size()
-    }
-}
-
-impl<T: AsRef<[u8]> + AsMut<[u8]>> ByteIO<ReadWrite> for RefCell<SliceByteIO<T>> {
-    async fn read_or_write(
-        &self,
-        offset: u64,
-        operation: Operation<'_, ReadWrite>,
-    ) -> Result<(), Self::Error> {
-        let offset = offset.try_into().unwrap();
-        match operation {
-            Operation::Read { buf, .. } => {
-                buf.copy_from_slice(&self.borrow().inner().as_ref()[offset..][..buf.len()]);
-            }
-            Operation::Write { buf, .. } => {
-                self.borrow_mut().inner_mut().as_mut()[offset..][..buf.len()].copy_from_slice(buf);
-            }
-        }
-        Ok(())
-    }
-}
-
-async fn read_or_write_partial_block<T: BlockIO<A>, A: ReadAccess>(
+async fn read_or_write_partial_block<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess>(
     io: &T,
     block_idx: u64,
     offset_into_block: usize,
@@ -453,7 +368,7 @@ async fn read_or_write_partial_block<T: BlockIO<A>, A: ReadAccess>(
     Ok(())
 }
 
-async fn read_or_write_bytes<T: BlockIO<A>, A: ReadAccess>(
+async fn read_or_write_bytes<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess>(
     io: &T,
     offset: u64,
     mut operation: Operation<'_, A>,
@@ -518,7 +433,7 @@ async fn read_or_write_bytes<T: BlockIO<A>, A: ReadAccess>(
     Ok(())
 }
 
-pub async fn read_bytes<T: BlockIO<A>, A: ReadAccess>(
+pub async fn read_bytes<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess>(
     io: &T,
     offset: u64,
     buf: &mut [u8],
@@ -526,7 +441,7 @@ pub async fn read_bytes<T: BlockIO<A>, A: ReadAccess>(
     read_or_write_bytes(io, offset, Operation::read(buf)).await
 }
 
-pub async fn write_bytes<T: BlockIO<A>, A: ReadAccess + WriteAccess>(
+pub async fn write_bytes<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess + WriteAccess>(
     io: &T,
     offset: u64,
     buf: &[u8],

@@ -16,15 +16,15 @@ use futures::future;
 use lru::LruCache;
 
 use sel4_async_block_io::access::ReadOnly;
-use sel4_async_block_io::{BlockIO, BlockIOLayout, BlockSize, Operation};
+use sel4_async_block_io::{BlockIO, BlockIOLayout, BlockSize, BlockType, Operation};
 
 #[derive(Debug)]
-pub struct CachedBlockIO<T: BlockIOLayout> {
+pub struct CachedBlockIO<T: BlockIOLayout<BlockSize: BlockType>> {
     inner: T,
-    lru: RefCell<LruCache<u64, <T::BlockSize as BlockSize>::Block>>,
+    lru: RefCell<LruCache<u64, <T::BlockSize as BlockType>::Block>>,
 }
 
-impl<T: BlockIOLayout> CachedBlockIO<T> {
+impl<T: BlockIOLayout<BlockSize: BlockType>> CachedBlockIO<T> {
     pub fn new(inner: T, cache_size_in_blocks: usize) -> Self {
         Self {
             inner,
@@ -47,7 +47,7 @@ impl<T: BlockIOLayout> CachedBlockIO<T> {
     }
 }
 
-impl<T: BlockIOLayout> BlockIOLayout for CachedBlockIO<T> {
+impl<T: BlockIOLayout<BlockSize: BlockType>> BlockIOLayout for CachedBlockIO<T> {
     type Error = <T as BlockIOLayout>::Error;
 
     type BlockSize = <T as BlockIOLayout>::BlockSize;
@@ -61,7 +61,7 @@ impl<T: BlockIOLayout> BlockIOLayout for CachedBlockIO<T> {
     }
 }
 
-impl<T: BlockIO<ReadOnly>> BlockIO<ReadOnly> for CachedBlockIO<T> {
+impl<T: BlockIO<ReadOnly, BlockSize: BlockType>> BlockIO<ReadOnly> for CachedBlockIO<T> {
     async fn read_or_write_blocks(
         &self,
         start_block_idx: u64,

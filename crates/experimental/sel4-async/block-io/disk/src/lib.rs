@@ -12,7 +12,7 @@ use core::ops::Range;
 use gpt_disk_types::{GptHeader, MasterBootRecord, MbrPartitionRecord};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use sel4_async_block_io::{BlockIO, Partition, access::ReadOnly, read_bytes};
+use sel4_async_block_io::{BlockIO, BlockType, Partition, access::ReadOnly, read_bytes};
 
 pub struct Disk<T> {
     io: T,
@@ -105,13 +105,19 @@ impl<T: BlockIO<ReadOnly>> Disk<T> {
         &self.io
     }
 
-    pub async fn read_mbr(&self) -> Result<Mbr, DiskError<T::Error>> {
+    pub async fn read_mbr(&self) -> Result<Mbr, DiskError<T::Error>>
+    where
+        T::BlockSize: BlockType,
+    {
         let mut buf = [0; mem::size_of::<MasterBootRecord>()];
         read_bytes(self.io(), 0, &mut buf[..]).await?;
         Mbr::new(*bytemuck::from_bytes(&buf[..]))
     }
 
-    pub async fn read_gpt_header(&self) -> Result<GptHeader, T::Error> {
+    pub async fn read_gpt_header(&self) -> Result<GptHeader, T::Error>
+    where
+        T::BlockSize: BlockType,
+    {
         let mut buf = [0; mem::size_of::<GptHeader>()];
         read_bytes(self.io(), 0, &mut buf[..]).await?;
         Ok(*bytemuck::from_bytes(&buf[..]))
