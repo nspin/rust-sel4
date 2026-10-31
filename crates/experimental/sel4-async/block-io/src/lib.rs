@@ -52,6 +52,14 @@ mod when_embedded_io_async;
 #[cfg(feature = "embedded-io-async")]
 pub use when_embedded_io_async::{EmbeddedIOAsyncAdapter, EmbeddedIOAsyncAdapterError};
 
+pub trait BlockSize {
+    type Block: AsRef<[u8]> + AsMut<[u8]>;
+
+    fn bytes(&self) -> usize;
+
+    fn zeroed_block(&self) -> Self::Block;
+}
+
 pub trait BlockIOLayout {
     type Error: fmt::Debug;
 
@@ -99,18 +107,6 @@ pub trait BlockIO<A: Access>: BlockIOLayout {
         )
         .await
     }
-}
-
-pub trait BlockSize {
-    type Block: AsRef<[u8]> + AsMut<[u8]>;
-
-    fn bytes(&self) -> usize;
-
-    fn bytes_u64(&self) -> u64 {
-        self.bytes().try_into().unwrap()
-    }
-
-    fn zeroed_block(&self) -> Self::Block;
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
@@ -192,7 +188,7 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for Partition<T> {
     ) -> Result<(), Self::Error> {
         assert!(
             start_block_idx
-                + u64::try_from(operation.len()).unwrap() / self.block_size().bytes_u64()
+                + usize_to_u64(operation.len()) / usize_to_u64(self.block_size().bytes())
                 <= self.num_blocks()
         );
         let inner_block_idx = self.range.start + start_block_idx;
@@ -250,7 +246,7 @@ impl<T: BlockIOLayout> ByteIOLayout for ByteIOAdapter<T> {
     type Error = T::Error;
 
     fn size(&self) -> u64 {
-        self.inner().num_blocks() * self.inner().block_size().bytes_u64()
+        self.inner().num_blocks() * usize_to_u64(self.inner().block_size().bytes())
     }
 }
 
@@ -288,7 +284,7 @@ impl<T: ByteIOLayout, N: BlockSize + Copy> BlockIOLayout for BlockIOAdapter<T, N
     }
 
     fn num_blocks(&self) -> u64 {
-        self.inner().size() / self.block_size().bytes_u64()
+        self.inner().size() / usize_to_u64(self.block_size().bytes())
     }
 }
 
@@ -299,7 +295,7 @@ impl<T: ByteIO<A>, A: Access, N: BlockSize + Copy> BlockIO<A> for BlockIOAdapter
         operation: Operation<'_, A>,
     ) -> Result<(), Self::Error> {
         let start_byte_idx = start_block_idx
-            .checked_mul(self.block_size().bytes_u64())
+            .checked_mul(usize_to_u64(self.block_size().bytes()))
             .unwrap();
         self.inner().read_or_write(start_byte_idx, operation).await
     }
@@ -321,7 +317,7 @@ impl<T: AsRef<[u8]>> ByteIOLayout for SliceByteIO<T> {
     type Error = Infallible;
 
     fn size(&self) -> u64 {
-        self.inner().as_ref().len().try_into().unwrap()
+        usize_to_u64(self.inner().as_ref().len())
     }
 }
 
@@ -399,13 +395,13 @@ async fn read_or_write_bytes<T: BlockIO<A>, A: ReadAccess>(
     mut operation: Operation<'_, A>,
 ) -> Result<(), T::Error> {
     let block_size = io.block_size().bytes();
-    let block_size_u64 = io.block_size().bytes_u64();
+    let block_size_u64 = usize_to_u64(block_size);
     let byte_offset_of_first_full_block = offset.next_multiple_of(block_size_u64);
     let byte_offset_of_first_full_block_in_buf =
         usize::try_from(byte_offset_of_first_full_block - offset).unwrap();
     let first_full_block_idx = byte_offset_of_first_full_block / block_size_u64;
     let num_full_blocks = (operation.len() - byte_offset_of_first_full_block_in_buf) / block_size;
-    if byte_offset_of_first_full_block > offset + u64::try_from(operation.len()).unwrap() {
+    if byte_offset_of_first_full_block > offset + usize_to_u64(operation.len()) {
         let block_idx = first_full_block_idx - 1;
         let offset_into_block = offset - block_idx * block_size_u64;
         read_or_write_partial_block(
@@ -440,7 +436,7 @@ async fn read_or_write_bytes<T: BlockIO<A>, A: ReadAccess>(
             },
             async {
                 if !right_partial_block.is_empty() {
-                    let block_idx = first_full_block_idx + u64::try_from(num_full_blocks).unwrap();
+                    let block_idx = first_full_block_idx + usize_to_u64(num_full_blocks);
                     let offset_into_block = 0;
                     read_or_write_partial_block(
                         io,
@@ -472,4 +468,8 @@ pub async fn write_bytes<T: BlockIO<A>, A: ReadAccess + WriteAccess>(
     buf: &[u8],
 ) -> Result<(), T::Error> {
     read_or_write_bytes(io, offset, Operation::write(buf)).await
+}
+
+fn usize_to_u64(n: usize) -> u64 {
+    n.try_into().unwrap()
 }
