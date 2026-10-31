@@ -19,7 +19,10 @@ license = "BSD-2-Clause"
 [features]
 alloc = []
 default = ["alloc"]
+embedded-io-async = ["dep:embedded-io-async", "dep:thiserror"]
 
 [dependencies]
+embedded-io-async = { version = "0.7.0", optional = true }
 futures = { version = "0.3.31", default-features = false }
 sel4-never-polyfill = { path = "../../../sel4-never-polyfill" }
+thiserror = { version = "2.0.17", default-features = false, optional = true }

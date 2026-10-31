@@ -2186,8 +2186,10 @@ version = "0.1.0"
 name = "sel4-async-block-io"
 version = "0.1.0"
 dependencies = [
+ "embedded-io-async",
  "futures",
  "sel4-never-polyfill",
+ "thiserror",
 ]
 
 [[package]]

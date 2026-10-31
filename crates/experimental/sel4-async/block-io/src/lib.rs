@@ -24,11 +24,33 @@ pub use operation::{Operation, OperationType};
 
 use access::{Access, ReadAccess, ReadOnly, ReadWrite, WriteAccess};
 
+macro_rules! wrapper_methods {
+    ($inner:path) => {
+        pub fn into_inner(self) -> $inner {
+            self.inner
+        }
+
+        pub const fn inner(&self) -> &$inner {
+            &self.inner
+        }
+
+        pub fn inner_mut(&mut self) -> &mut $inner {
+            &mut self.inner
+        }
+    };
+}
+
 #[cfg(feature = "alloc")]
 mod when_alloc;
 
 #[cfg(feature = "alloc")]
 pub use when_alloc::DynamicBlockSize;
+
+#[cfg(feature = "embedded-io-async")]
+mod when_embedded_io_async;
+
+#[cfg(feature = "embedded-io-async")]
+pub use when_embedded_io_async::{EmbeddedIOAsyncAdapter, EmbeddedIOAsyncAdapterError};
 
 pub trait BlockIOLayout {
     type Error: fmt::Debug;
@@ -128,22 +150,6 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for &T {
     ) -> Result<(), <&T as BlockIOLayout>::Error> {
         T::read_or_write_blocks(self, start_block_idx, operation).await
     }
-}
-
-macro_rules! wrapper_methods {
-    ($inner:path) => {
-        pub fn into_inner(self) -> $inner {
-            self.inner
-        }
-
-        pub const fn inner(&self) -> &$inner {
-            &self.inner
-        }
-
-        pub fn inner_mut(&mut self) -> &mut $inner {
-            &mut self.inner
-        }
-    };
 }
 
 #[derive(Clone, Debug)]
