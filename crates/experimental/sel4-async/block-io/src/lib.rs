@@ -9,14 +9,11 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
+#[cfg(feature = "alloc")]
+use alloc::rc::Rc;
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Range;
-
-#[cfg(feature = "alloc")]
-use alloc::rc::Rc;
-
-use futures::future;
 
 pub mod access;
 
@@ -48,7 +45,9 @@ pub use block_size::{BlockSize, BlockType, ConstantBlockSize, RuntimeBlockSize};
 
 mod byte_io;
 
-pub use byte_io::{ByteIO, ByteIOLayout, SliceByteIO};
+pub use byte_io::{
+    BlockIOAdapter, ByteIO, ByteIOAdapter, ByteIOLayout, SliceByteIO, read_bytes, write_bytes,
+};
 
 #[cfg(feature = "embedded-io-async")]
 mod when_embedded_io_async;
@@ -105,6 +104,47 @@ pub trait BlockIO<A: Access>: BlockIOLayout {
     }
 }
 
+pub trait PartialBlockIO<A: Access>: BlockIO<A> {
+    /// Reads or writes `operation.len()` bytes, starting `offset` bytes into block `block_idx`.
+    ///
+    /// `offset + operation.len()` must not exceed the block size.
+    #[allow(async_fn_in_trait)]
+    async fn read_or_write_block_at_offset(
+        &self,
+        block_idx: u64,
+        offset: usize,
+        operation: Operation<'_, A>,
+    ) -> Result<(), Self::Error>;
+
+    #[allow(async_fn_in_trait)]
+    async fn read_block_at_offset(
+        &self,
+        block_idx: u64,
+        offset: usize,
+        buf: &mut [u8],
+    ) -> Result<(), Self::Error>
+    where
+        A: ReadAccess,
+    {
+        self.read_or_write_block_at_offset(block_idx, offset, Operation::read(buf))
+            .await
+    }
+
+    #[allow(async_fn_in_trait)]
+    async fn write_block_at_offset(
+        &self,
+        block_idx: u64,
+        offset: usize,
+        buf: &[u8],
+    ) -> Result<(), Self::Error>
+    where
+        A: WriteAccess,
+    {
+        self.read_or_write_block_at_offset(block_idx, offset, Operation::write(buf))
+            .await
+    }
+}
+
 impl<T: BlockIOLayout> BlockIOLayout for &T {
     type Error = T::Error;
 
@@ -126,6 +166,17 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for &T {
         operation: Operation<'_, A>,
     ) -> Result<(), <&T as BlockIOLayout>::Error> {
         T::read_or_write_blocks(self, start_block_idx, operation).await
+    }
+}
+
+impl<T: PartialBlockIO<A>, A: Access> PartialBlockIO<A> for &T {
+    async fn read_or_write_block_at_offset(
+        &self,
+        block_idx: u64,
+        offset: usize,
+        operation: Operation<'_, A>,
+    ) -> Result<(), Self::Error> {
+        T::read_or_write_block_at_offset(self, block_idx, offset, operation).await
     }
 }
 
@@ -152,6 +203,18 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for Rc<T> {
         operation: Operation<'_, A>,
     ) -> Result<(), Self::Error> {
         T::read_or_write_blocks(self, start_block_idx, operation).await
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<T: PartialBlockIO<A>, A: Access> PartialBlockIO<A> for Rc<T> {
+    async fn read_or_write_block_at_offset(
+        &self,
+        block_idx: u64,
+        offset: usize,
+        operation: Operation<'_, A>,
+    ) -> Result<(), Self::Error> {
+        T::read_or_write_block_at_offset(self, block_idx, offset, operation).await
     }
 }
 
@@ -195,12 +258,28 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for Partition<T> {
     ) -> Result<(), Self::Error> {
         assert!(
             start_block_idx
-                + usize_to_u64(operation.len()) / usize_to_u64(self.block_size().bytes())
+                + u64::try_from(operation.len()).unwrap()
+                    / block_size_bytes_u64(&self.block_size())
                 <= self.num_blocks()
         );
         let inner_block_idx = self.range.start + start_block_idx;
         self.inner()
             .read_or_write_blocks(inner_block_idx, operation)
+            .await
+    }
+}
+
+impl<T: PartialBlockIO<A>, A: Access> PartialBlockIO<A> for Partition<T> {
+    async fn read_or_write_block_at_offset(
+        &self,
+        block_idx: u64,
+        offset: usize,
+        operation: Operation<'_, A>,
+    ) -> Result<(), Self::Error> {
+        assert!(block_idx < self.num_blocks());
+        let inner_block_idx = self.range.start + block_idx;
+        self.inner()
+            .read_or_write_block_at_offset(inner_block_idx, offset, operation)
             .await
     }
 }
@@ -248,32 +327,25 @@ impl<T: BlockIO<A>, A: Access, A1: Access> BlockIO<A1> for CastAccessAdapter<T, 
     }
 }
 
-impl<T: ByteIOLayout, A> ByteIOLayout for CastAccessAdapter<T, A> {
-    type Error = T::Error;
-
-    fn size(&self) -> u64 {
-        self.inner().size()
-    }
-}
-
-impl<T: ByteIO<A>, A: Access, A1: Access> ByteIO<A1> for CastAccessAdapter<T, A> {
-    async fn read_or_write(
+impl<T: PartialBlockIO<A>, A: Access, A1: Access> PartialBlockIO<A1> for CastAccessAdapter<T, A> {
+    async fn read_or_write_block_at_offset(
         &self,
-        offset: u64,
+        block_idx: u64,
+        offset: usize,
         operation: Operation<'_, A1>,
     ) -> Result<(), Self::Error> {
         self.inner()
-            .read_or_write(offset, operation.cast_access())
+            .read_or_write_block_at_offset(block_idx, offset, operation.cast_access())
             .await
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct ByteIOAdapter<T> {
+pub struct InefficientPartialBlockIO<T> {
     inner: T,
 }
 
-impl<T> ByteIOAdapter<T> {
+impl<T> InefficientPartialBlockIO<T> {
     pub fn new(inner: T) -> Self {
         Self { inner }
     }
@@ -281,174 +353,65 @@ impl<T> ByteIOAdapter<T> {
     wrapper_methods!(T);
 }
 
-impl<T: BlockIOLayout> ByteIOLayout for ByteIOAdapter<T> {
+impl<T: BlockIOLayout> BlockIOLayout for InefficientPartialBlockIO<T> {
     type Error = T::Error;
 
-    fn size(&self) -> u64 {
-        self.inner().num_blocks() * usize_to_u64(self.inner().block_size().bytes())
-    }
-}
-
-impl<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess> ByteIO<A> for ByteIOAdapter<T> {
-    async fn read_or_write(
-        &self,
-        offset: u64,
-        operation: Operation<'_, A>,
-    ) -> Result<(), Self::Error> {
-        read_or_write_bytes(self.inner(), offset, operation).await
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct BlockIOAdapter<T, N> {
-    inner: T,
-    block_size: N,
-}
-
-impl<T, N> BlockIOAdapter<T, N> {
-    pub fn new(inner: T, block_size: N) -> Self {
-        Self { inner, block_size }
-    }
-
-    wrapper_methods!(T);
-}
-
-impl<T: ByteIOLayout, N: BlockSize + Copy> BlockIOLayout for BlockIOAdapter<T, N> {
-    type Error = T::Error;
-
-    type BlockSize = N;
+    type BlockSize = T::BlockSize;
 
     fn block_size(&self) -> Self::BlockSize {
-        self.block_size
+        self.inner().block_size()
     }
 
     fn num_blocks(&self) -> u64 {
-        self.inner().size() / usize_to_u64(self.block_size().bytes())
+        self.inner().num_blocks()
     }
 }
 
-impl<T: ByteIO<A>, A: Access, N: BlockSize + Copy> BlockIO<A> for BlockIOAdapter<T, N> {
+impl<T: BlockIO<A>, A: Access> BlockIO<A> for InefficientPartialBlockIO<T> {
     async fn read_or_write_blocks(
         &self,
         start_block_idx: u64,
         operation: Operation<'_, A>,
     ) -> Result<(), Self::Error> {
-        let start_byte_idx = start_block_idx
-            .checked_mul(usize_to_u64(self.block_size().bytes()))
-            .unwrap();
-        self.inner().read_or_write(start_byte_idx, operation).await
+        self.inner()
+            .read_or_write_blocks(start_block_idx, operation)
+            .await
     }
 }
 
-async fn read_or_write_partial_block<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess>(
-    io: &T,
-    block_idx: u64,
-    offset_into_block: usize,
-    operation: Operation<'_, A>,
-) -> Result<(), T::Error> {
-    assert!(offset_into_block + operation.len() <= io.block_size().bytes());
-    let mut block_buf = io.block_size().zeroed_block();
-    io.read_blocks(block_idx, block_buf.as_mut()).await?;
-    match operation {
-        Operation::Read { buf, .. } => {
-            buf.copy_from_slice(&block_buf.as_ref()[offset_into_block..][..buf.len()]);
+impl<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess> PartialBlockIO<A>
+    for InefficientPartialBlockIO<T>
+{
+    async fn read_or_write_block_at_offset(
+        &self,
+        block_idx: u64,
+        offset: usize,
+        operation: Operation<'_, A>,
+    ) -> Result<(), Self::Error> {
+        let io = self.inner();
+        assert!(offset + operation.len() <= io.block_size().bytes());
+        let mut block_buf = io.block_size().zeroed_block();
+        io.read_blocks(block_idx, block_buf.as_mut()).await?;
+        match operation {
+            Operation::Read { buf, .. } => {
+                buf.copy_from_slice(&block_buf.as_ref()[offset..][..buf.len()]);
+            }
+            Operation::Write { buf, witness } => {
+                block_buf.as_mut()[offset..][..buf.len()].copy_from_slice(buf);
+                io.read_or_write_blocks(
+                    block_idx,
+                    Operation::Write {
+                        buf: block_buf.as_ref(),
+                        witness,
+                    },
+                )
+                .await?;
+            }
         }
-        Operation::Write { buf, witness } => {
-            block_buf.as_mut()[offset_into_block..][..buf.len()].copy_from_slice(buf);
-            io.read_or_write_blocks(
-                block_idx,
-                Operation::Write {
-                    buf: block_buf.as_ref(),
-                    witness,
-                },
-            )
-            .await?;
-        }
+        Ok(())
     }
-    Ok(())
 }
 
-async fn read_or_write_bytes<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess>(
-    io: &T,
-    offset: u64,
-    mut operation: Operation<'_, A>,
-) -> Result<(), T::Error> {
-    let block_size = io.block_size().bytes();
-    let block_size_u64 = usize_to_u64(block_size);
-    let byte_offset_of_first_full_block = offset.next_multiple_of(block_size_u64);
-    let byte_offset_of_first_full_block_in_buf =
-        usize::try_from(byte_offset_of_first_full_block - offset).unwrap();
-    let first_full_block_idx = byte_offset_of_first_full_block / block_size_u64;
-    let num_full_blocks = (operation.len() - byte_offset_of_first_full_block_in_buf) / block_size;
-    if byte_offset_of_first_full_block > offset + usize_to_u64(operation.len()) {
-        let block_idx = first_full_block_idx - 1;
-        let offset_into_block = offset - block_idx * block_size_u64;
-        read_or_write_partial_block(
-            io,
-            block_idx,
-            offset_into_block.try_into().unwrap(),
-            operation,
-        )
-        .await?;
-    } else {
-        let (left_partial_block, mut rest) =
-            operation.split_at(byte_offset_of_first_full_block_in_buf);
-        let (full_blocks, right_partial_block) = rest.split_at(num_full_blocks * block_size);
-        future::try_join3(
-            async {
-                io.read_or_write_blocks(first_full_block_idx, full_blocks)
-                    .await
-            },
-            async {
-                if !left_partial_block.is_empty() {
-                    let block_idx = first_full_block_idx - 1;
-                    let offset_into_block = block_size - left_partial_block.len();
-                    read_or_write_partial_block(
-                        io,
-                        block_idx,
-                        offset_into_block,
-                        left_partial_block,
-                    )
-                    .await?;
-                }
-                Ok(())
-            },
-            async {
-                if !right_partial_block.is_empty() {
-                    let block_idx = first_full_block_idx + usize_to_u64(num_full_blocks);
-                    let offset_into_block = 0;
-                    read_or_write_partial_block(
-                        io,
-                        block_idx,
-                        offset_into_block,
-                        right_partial_block,
-                    )
-                    .await?;
-                }
-                Ok(())
-            },
-        )
-        .await?;
-    }
-    Ok(())
-}
-
-pub async fn read_bytes<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess>(
-    io: &T,
-    offset: u64,
-    buf: &mut [u8],
-) -> Result<(), T::Error> {
-    read_or_write_bytes(io, offset, Operation::read(buf)).await
-}
-
-pub async fn write_bytes<T: BlockIO<A, BlockSize: BlockType>, A: ReadAccess + WriteAccess>(
-    io: &T,
-    offset: u64,
-    buf: &[u8],
-) -> Result<(), T::Error> {
-    read_or_write_bytes(io, offset, Operation::write(buf)).await
-}
-
-fn usize_to_u64(n: usize) -> u64 {
-    n.try_into().unwrap()
+fn block_size_bytes_u64(block_size: &impl BlockSize) -> u64 {
+    block_size.bytes().try_into().unwrap()
 }

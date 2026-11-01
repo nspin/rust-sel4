@@ -8,6 +8,7 @@
 
 extern crate alloc;
 
+use alloc::vec;
 use alloc::vec::Vec;
 use core::cell::RefCell;
 use core::num::NonZeroUsize;
@@ -16,7 +17,7 @@ use futures::future;
 use lru::LruCache;
 
 use sel4_async_block_io::access::ReadOnly;
-use sel4_async_block_io::{BlockIO, BlockIOLayout, BlockSize, Operation};
+use sel4_async_block_io::{BlockIO, BlockIOLayout, BlockSize, Operation, PartialBlockIO};
 
 #[derive(Debug)]
 pub struct CachedBlockIO<T: BlockIOLayout> {
@@ -123,6 +124,27 @@ impl<T: BlockIO<ReadOnly>> BlockIO<ReadOnly> for CachedBlockIO<T> {
             Ok(())
         }))
         .await?;
+        Ok(())
+    }
+}
+
+impl<T: BlockIO<ReadOnly>> PartialBlockIO<ReadOnly> for CachedBlockIO<T> {
+    async fn read_or_write_block_at_offset(
+        &self,
+        block_idx: u64,
+        offset: usize,
+        operation: Operation<'_, ReadOnly>,
+    ) -> Result<(), Self::Error> {
+        let Operation::Read { buf, .. } = operation;
+        let range = offset..offset + buf.len();
+        if let Some(block) = self.lru.borrow_mut().get(&block_idx) {
+            buf.copy_from_slice(&block[range]);
+        } else {
+            let mut block = vec![0; self.block_size().bytes()];
+            self.inner().read_blocks(block_idx, &mut block).await?;
+            buf.copy_from_slice(&block[range]);
+            let _ = self.lru.borrow_mut().put(block_idx, block);
+        }
         Ok(())
     }
 }
