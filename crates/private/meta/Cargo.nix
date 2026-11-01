@@ -21,7 +21,6 @@ mk {
       sel4-async-block-io
       sel4-async-block-io-cached
       sel4-async-block-io-disk
-      sel4-async-block-io-fat
       sel4-async-io
       sel4-async-network
       sel4-async-single-threaded-executor

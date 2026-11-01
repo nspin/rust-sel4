@@ -89,7 +89,6 @@ definitely! {
     sel4_async_block_io
     sel4_async_block_io_cached
     sel4_async_block_io_disk
-    sel4_async_block_io_fat
     sel4_async_io
     sel4_async_network
     sel4_async_single_threaded_executor

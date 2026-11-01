@@ -21,7 +21,7 @@ use smoltcp::wire::{EthernetAddress, HardwareAddress};
 
 use sel4_abstract_allocator::WithAlignmentBound;
 use sel4_abstract_allocator::basic::BasicAllocator;
-use sel4_async_block_io::{BlockSize, ConstantBlockSize};
+use sel4_async_block_io::{BlockSize, ByteIOAdapter, ConstantBlockSize};
 use sel4_async_block_io_cached::CachedBlockIO;
 use sel4_async_block_io_disk::Disk;
 use sel4_async_time::Instant;
@@ -181,18 +181,17 @@ fn init() -> impl Handler {
         net_config,
         shared_block_io.clone(),
         |timers_ctx, network_ctx, spawner| async move {
-            let fs_block_io = shared_block_io.clone();
-            let fs_block_io = CachedBlockIO::new(fs_block_io.clone(), BLOCK_CACHE_SIZE_IN_BLOCKS);
-            let disk = Disk::new(fs_block_io);
+            let block_io = CachedBlockIO::new(shared_block_io.clone(), BLOCK_CACHE_SIZE_IN_BLOCKS);
+            let disk = Disk::new(block_io);
             let mbr = disk.read_mbr().await.unwrap().unwrap();
-            let fs_block_io = disk.partition_mbr(&mbr.partitions[0]);
-            let fs_block_io = Rc::new(fs_block_io);
+            let partition = disk.partition_mbr(&mbr.partitions[0]);
+            let fs_io = ByteIOAdapter::new(Rc::new(partition));
             run_server(
                 now_unix_time,
                 now_fn,
                 timers_ctx,
                 network_ctx,
-                fs_block_io,
+                fs_io,
                 spawner,
                 CERT_PEM,
                 PRIV_PEM,

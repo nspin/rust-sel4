@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-{ mk, localCrates, versions, smoltcpWith, rustlsWith }:
+{ mk, localCrates, versions, smoltcpWith, rustlsWith, fatSource }:
 
 mk {
   package.name = "microkit-http-server-example-server-core";
@@ -24,6 +24,11 @@ mk {
 
     smoltcp = smoltcpWith [];
 
+    embedded-fatfs = fatSource // {
+      default-features = false;
+      features = [ "lfn" "log"];
+    };
+
     rustls = rustlsWith [] // (localCrates.rustls or {});
 
     rustls-pemfile = { version = versions.rustls-pemfile; default-features = false; };
@@ -36,8 +41,8 @@ mk {
       sel4-async-network-rustls
       sel4-async-network-rustls-utils
       sel4-panicking-env
-      sel4-async-block-io
-      sel4-async-block-io-fat
     ;
+
+    sel4-async-block-io = localCrates.sel4-async-block-io // { features = [ "embedded-io-async" ]; };
   };
 }

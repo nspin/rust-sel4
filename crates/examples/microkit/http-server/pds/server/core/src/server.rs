@@ -11,7 +11,7 @@ use alloc::vec;
 
 use embedded_io_async::{Read, ReadExactError, Write};
 
-use sel4_async_block_io_fat as fat;
+use embedded_fatfs as fat;
 
 use crate::mime::content_type_from_name;
 

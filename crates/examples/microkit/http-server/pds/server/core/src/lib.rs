@@ -14,6 +14,7 @@ use alloc::sync::Arc;
 use alloc::vec;
 use core::time::Duration;
 
+use embedded_fatfs as fat;
 use embedded_io_async::ReadExactError;
 use futures::future::{self, LocalBoxFuture};
 use futures::task::LocalSpawnExt;
@@ -21,8 +22,10 @@ use rustls::ServerConfig;
 use rustls::pki_types::{PrivateKeyDer, UnixTime};
 use rustls::version::TLS12;
 
-use sel4_async_block_io::{BlockIO, ConstantBlockSize, access::ReadOnly};
-use sel4_async_block_io_fat as fat;
+use sel4_async_block_io::{
+    self as block_io, ByteIO, CastAccessAdapter,
+    access::{ReadAccess, ReadWrite},
+};
 use sel4_async_io::EmbeddedIOAsyncAdapter;
 use sel4_async_network::{ManagedInterface, TcpSocket, TcpSocketError};
 use sel4_async_network_rustls::{Error as AsyncRustlsError, ServerConnector};
@@ -39,20 +42,18 @@ const HTTP_PORT: u16 = 80;
 const HTTPS_PORT: u16 = 443;
 
 #[allow(clippy::too_many_arguments)] // TODO
-pub async fn run_server<
-    T: BlockIO<ReadOnly, BlockSize = ConstantBlockSize<512>> + Clone + 'static,
->(
+pub async fn run_server<A: ReadAccess + 'static, T: ByteIO<A> + Clone + 'static>(
     now_unix_time: Duration,
     now_fn: impl 'static + Send + Sync + Fn() -> Instant,
     _timers_ctx: TimerManager,
     network_ctx: ManagedInterface,
-    fs_block_io: T,
+    fs_io: T,
     spawner: LocalSpawner,
     cert_pem: &str,
     priv_pem: &str,
     max_num_simultaneous_connections: usize,
 ) -> ! {
-    let use_socket_for_http_closure: SocketUser<T> = Box::new({
+    let use_socket_for_http_closure: SocketUser<T, A> = Box::new({
         move |server, socket| {
             Box::pin(async move {
                 use_socket_for_http(server, socket)
@@ -66,7 +67,7 @@ pub async fn run_server<
 
     let tls_config = Arc::new(mk_tls_config(cert_pem, priv_pem, now_unix_time, now_fn));
 
-    let use_socket_for_https_closure: SocketUser<T> = Box::new({
+    let use_socket_for_https_closure: SocketUser<T, A> = Box::new({
         move |server, socket| {
             let tls_config = tls_config.clone();
             Box::pin(async move {
@@ -85,12 +86,12 @@ pub async fn run_server<
                 .spawn_local({
                     let network_ctx = network_ctx.clone();
                     let f = f.clone();
-                    let fs_block_io = fs_block_io.clone();
+                    let fs_io = fs_io.clone();
                     async move {
                         loop {
-                            let fs_io = fat::BufStream::<_, 512>::new(fat::BlockIOWrapper::new(
-                                fs_block_io.clone(),
-                            ));
+                            let fs_io = block_io::EmbeddedIOAsyncAdapter::<_, ReadWrite>::new(
+                                CastAccessAdapter::<_, A>::new(fs_io.clone()),
+                            );
                             let fs = fat::FileSystem::new(fs_io, fat::FsOptions::new())
                                 .await
                                 .unwrap();
@@ -107,9 +108,9 @@ pub async fn run_server<
     future::pending().await
 }
 
-type SocketUser<T> = Box<
+type SocketUser<T, A> = Box<
     dyn Fn(
-        Server<fat::BufStream<fat::BlockIOWrapper<T, ReadOnly>, 512>>,
+        Server<block_io::EmbeddedIOAsyncAdapter<CastAccessAdapter<T, A>, ReadWrite>>,
         TcpSocket,
     ) -> LocalBoxFuture<'static, ()>,
 >;

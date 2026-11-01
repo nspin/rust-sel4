@@ -47,7 +47,6 @@ mk {
       sel4-async-block-io
       sel4-async-block-io-cached
       sel4-async-block-io-disk
-      sel4-async-block-io-fat
     ;
 
     sel4-newlib = localCrates.sel4-newlib // {
