@@ -24,5 +24,5 @@ embedded-io-async = ["dep:embedded-io-async"]
 [dependencies]
 embedded-io-async = { version = "0.7.0", optional = true }
 futures = { version = "0.3.31", default-features = false }
-sel4-never-polyfill = { path = "../../../sel4-never-polyfill" }
+sel4-never-polyfill = { path = "../../sel4-never-polyfill" }
 thiserror = { version = "2.0.17", default-features = false }

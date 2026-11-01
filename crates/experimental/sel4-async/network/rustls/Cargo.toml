@@ -20,5 +20,5 @@ license = "Apache-2.0 OR ISC OR MIT"
 embedded-io-async = "0.7.0"
 log = "0.4.28"
 rustls = { version = "0.23.5", default-features = false, features = ["logging", "ring", "tls12"] }
-sel4-async-io = { path = "../../io" }
+sel4-async-io = { path = "../../../../sel4-async/io" }
 thiserror = { version = "2.0.17", default-features = false }
