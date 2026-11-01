@@ -4,8 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::ops::Range;
-use core::slice::{Chunks, ChunksMut};
+use core::slice::{Chunks, ChunksMut, SliceIndex};
 
 use thiserror::Error;
 
@@ -87,28 +86,28 @@ impl<'a, A: Access> Operation<'a, A> {
         }
     }
 
-    pub fn index(&'a mut self, index: Range<usize>) -> Self {
+    pub fn index<I: SliceIndex<[u8], Output = [u8]>>(&mut self, index: I) -> Operation<'_, A> {
         match self {
-            Self::Read { buf, witness } => Self::Read {
+            Self::Read { buf, witness } => Operation::Read {
                 buf: &mut buf[index],
                 witness: *witness,
             },
-            Self::Write { buf, witness } => Self::Write {
+            Self::Write { buf, witness } => Operation::Write {
                 buf: &buf[index],
                 witness: *witness,
             },
         }
     }
 
-    pub fn split_at(&'a mut self, mid: usize) -> (Self, Self) {
+    pub fn split_at(&mut self, mid: usize) -> (Operation<'_, A>, Operation<'_, A>) {
         match self {
             Self::Read { buf, witness } => {
                 let (left, right) = buf.split_at_mut(mid);
-                let left = Self::Read {
+                let left = Operation::Read {
                     buf: left,
                     witness: *witness,
                 };
-                let right = Self::Read {
+                let right = Operation::Read {
                     buf: right,
                     witness: *witness,
                 };
@@ -116,11 +115,11 @@ impl<'a, A: Access> Operation<'a, A> {
             }
             Self::Write { buf, witness } => {
                 let (left, right) = buf.split_at(mid);
-                let left = Self::Write {
+                let left = Operation::Write {
                     buf: left,
                     witness: *witness,
                 };
-                let right = Self::Write {
+                let right = Operation::Write {
                     buf: right,
                     witness: *witness,
                 };
@@ -129,7 +128,7 @@ impl<'a, A: Access> Operation<'a, A> {
         }
     }
 
-    pub fn chunks(&'a mut self, chunk_size: usize) -> impl Iterator<Item = Operation<'a, A>> {
+    pub fn chunks(&mut self, chunk_size: usize) -> impl Iterator<Item = Operation<'_, A>> {
         match self {
             Self::Read { buf, witness } => OperationChunks::Read {
                 it: buf.chunks_mut(chunk_size),
