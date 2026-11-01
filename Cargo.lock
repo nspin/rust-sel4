@@ -2207,7 +2207,6 @@ version = "0.1.0"
 dependencies = [
  "bytemuck",
  "gpt_disk_types",
- "num_enum",
  "sel4-async-block-io",
 ]
 

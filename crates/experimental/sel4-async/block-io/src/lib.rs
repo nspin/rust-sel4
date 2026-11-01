@@ -21,7 +21,7 @@ mod operation;
 
 pub use operation::{CastAccessError, NoReadAccess, NoWriteAccess, Operation, OperationType};
 
-use access::{Access, ReadAccess, ReadOnly, WriteAccess};
+use access::{Access, ReadAccess, WriteAccess};
 
 macro_rules! wrapper_methods {
     ($inner:path) => {
@@ -224,7 +224,7 @@ pub struct Partition<T> {
     range: Range<u64>,
 }
 
-impl<T: BlockIO<ReadOnly>> Partition<T> {
+impl<T: BlockIOLayout> Partition<T> {
     pub fn new(inner: T, range: Range<u64>) -> Self {
         assert!(range.start <= range.end);
         assert!(range.end <= inner.num_blocks());

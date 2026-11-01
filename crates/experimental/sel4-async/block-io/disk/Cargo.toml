@@ -19,5 +19,4 @@ license = "BSD-2-Clause"
 [dependencies]
 bytemuck = { version = "1.24.0", default-features = false }
 gpt_disk_types = { version = "0.16.1", features = ["bytemuck"] }
-num_enum = { version = "0.7.5", default-features = false }
 sel4-async-block-io = { path = ".." }
