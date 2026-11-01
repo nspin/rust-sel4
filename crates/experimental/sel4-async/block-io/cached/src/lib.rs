@@ -16,15 +16,15 @@ use futures::future;
 use lru::LruCache;
 
 use sel4_async_block_io::access::ReadOnly;
-use sel4_async_block_io::{BlockIO, BlockIOLayout, BlockSize, BlockType, Operation};
+use sel4_async_block_io::{BlockIO, BlockIOLayout, BlockSize, Operation};
 
 #[derive(Debug)]
-pub struct CachedBlockIO<T: BlockIOLayout<BlockSize: BlockType>> {
+pub struct CachedBlockIO<T: BlockIOLayout> {
     inner: T,
-    lru: RefCell<LruCache<u64, <T::BlockSize as BlockType>::Block>>,
+    lru: RefCell<LruCache<u64, Vec<u8>>>,
 }
 
-impl<T: BlockIOLayout<BlockSize: BlockType>> CachedBlockIO<T> {
+impl<T: BlockIOLayout> CachedBlockIO<T> {
     pub fn new(inner: T, cache_size_in_blocks: usize) -> Self {
         Self {
             inner,
@@ -47,7 +47,7 @@ impl<T: BlockIOLayout<BlockSize: BlockType>> CachedBlockIO<T> {
     }
 }
 
-impl<T: BlockIOLayout<BlockSize: BlockType>> BlockIOLayout for CachedBlockIO<T> {
+impl<T: BlockIOLayout> BlockIOLayout for CachedBlockIO<T> {
     type Error = <T as BlockIOLayout>::Error;
 
     type BlockSize = <T as BlockIOLayout>::BlockSize;
@@ -61,7 +61,7 @@ impl<T: BlockIOLayout<BlockSize: BlockType>> BlockIOLayout for CachedBlockIO<T> 
     }
 }
 
-impl<T: BlockIO<ReadOnly, BlockSize: BlockType>> BlockIO<ReadOnly> for CachedBlockIO<T> {
+impl<T: BlockIO<ReadOnly>> BlockIO<ReadOnly> for CachedBlockIO<T> {
     async fn read_or_write_blocks(
         &self,
         start_block_idx: u64,
@@ -92,7 +92,7 @@ impl<T: BlockIO<ReadOnly, BlockSize: BlockType>> BlockIO<ReadOnly> for CachedBlo
                         }
                         rest.split_off_mut(..block_size)
                             .unwrap()
-                            .copy_from_slice(block.as_ref());
+                            .copy_from_slice(block);
                     }
                     None => {
                         cur_run_start.get_or_insert(i);
@@ -118,9 +118,7 @@ impl<T: BlockIO<ReadOnly, BlockSize: BlockType>> BlockIO<ReadOnly> for CachedBlo
             let mut lru = self.lru.borrow_mut();
             for (i, block_buf) in run_buf.chunks(block_size).enumerate() {
                 let block_idx = block_idx_at_offset_from(run_start_block_idx, i);
-                let mut block = self.block_size().zeroed_block();
-                block.as_mut().copy_from_slice(block_buf);
-                let _ = lru.put(block_idx, block);
+                let _ = lru.put(block_idx, block_buf.to_vec());
             }
             Ok(())
         }))
