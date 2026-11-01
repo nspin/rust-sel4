@@ -11,7 +11,7 @@ let
   inherit (topLevel) lib pkgs;
   inherit (pkgs) build;
   inherit (build) writers linkFarm writeShellApplication this llvm python312;
-  inherit (this) sources crateUtils capdl-tool sdfgen;
+  inherit (this) sources crateUtils capdl-tool acacia;
 
   targetRootDir = toString ../../../target;
 
@@ -202,7 +202,7 @@ let
                 future six
                 aenum sortedcontainers
                 pyyaml pyelftools pyfdt
-                sdfgen
+                acacia
               ]))
             ];
             text = ''

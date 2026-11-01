@@ -6,7 +6,7 @@
 
 { runCommand
 , linkFarm
-, sdfgen
+, acacia
 , sources
 }:
 
@@ -28,7 +28,7 @@ let
 in
 runCommand "system.xml" {
   nativeBuildInputs = [
-    sdfgen
+    acacia
   ];
 } ''
   PYTHONPATH="${ukitTestUtilsSrc}:''${PYTHONPATH:-}" \

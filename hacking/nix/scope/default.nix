@@ -370,7 +370,7 @@ superCallPackage ../rust-utils {} self //
   microkitCommon = callPackage ./microkit {};
   mkMicrokit = microkitCommon.forWorld;
 
-  sdfgen = callPackage ./microkit/sdfgen.nix {};
+  acacia = callPackage ./microkit/acacia.nix {};
 
   ### worlds
 

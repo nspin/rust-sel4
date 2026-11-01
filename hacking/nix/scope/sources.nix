@@ -70,12 +70,11 @@ in rec {
       lib.hasSuffix "/target" path;
   };
 
-  sdfgen = fetchGit {
-    url = "https://github.com/au-ts/microkit_sdf_gen";
-    rev = "b8d04abec8dc9f63c16cadf6770292f45ab3c0a6"; # main
-    local = localRoot + "/microkit_sdf_gen";
-    extraFilter = path: type:
-      lib.hasSuffix "/.zig-cache" path || lib.hasSuffix "/zig-out" path || lib.hasSuffix "/result" path;
+  acacia = fetchGit rec {
+    url = "https://github.com/nspin/microkit_acacia";
+    rev = "39b854641f7b45d14863cb7e921cb53d9d3f0b3c";
+    ref = mkKeepRef rev;
+    local = localRoot + "/microkit_acacia";
   };
 
   # micropython submodule is too big for this to be worth it
@@ -87,14 +86,14 @@ in rec {
 
   sddf = fetchGit {
     url = "https://github.com/au-ts/sddf";
-    rev = "d1f5252ea64edab6087552eb4220e23c019c2fbe"; # from lionsos main
+    rev = "51c964da31b67d709c1c4511322ae053b2344225"; # main
     # ref = null;
     local = localRoot + "/lionsos/dep/sddf";
   };
 
   lionsosAttrs = {
     url = "https://github.com/au-ts/lionsos";
-    rev = "4a5656a32574049817f62054832abeae85861ff5"; # main
+    rev = "89051d0387cc970cef70857d1816e9134330120b"; # main
     # ref = null;
     local = localRoot + "/lionsos";
   };

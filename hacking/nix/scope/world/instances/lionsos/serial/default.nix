@@ -16,7 +16,7 @@
 , llvmPackages_18
 
 , sources
-, sdfgen
+, acacia
 , microkit
 , microkitCommon
 
@@ -45,7 +45,7 @@ let
 
     depsBuildBuild = [
       python312Packages.python
-      sdfgen
+      acacia
       perl
       dtc
     ];

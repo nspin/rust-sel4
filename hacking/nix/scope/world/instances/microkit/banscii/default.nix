@@ -9,7 +9,7 @@
 , linkFarm, symlinkJoin, writeText, writeScript, runCommand
 , python3Packages
 , microkit
-, sdfgen
+, acacia
 , mkTask
 , sources
 , crates
@@ -60,7 +60,7 @@ lib.fix (self: callPlatform {
     ];
     systemXML = runCommand "banscii.system" {
       nativeBuildInputs = [
-        sdfgen
+        acacia
       ];
     } ''
       python3 ${srcPath "meta.py"} \
