@@ -1193,6 +1193,8 @@ name = "meta"
 version = "0.1.0"
 dependencies = [
  "log",
+ "sddf-async-block-io",
+ "sddf-smoltcp",
  "sel4",
  "sel4-abstract-allocator",
  "sel4-abstract-ptr",
@@ -1206,6 +1208,7 @@ dependencies = [
  "sel4-async-time",
  "sel4-async-unsync",
  "sel4-bcm2835-aux-uart-driver",
+ "sel4-bookkeeping",
  "sel4-config",
  "sel4-dlmalloc",
  "sel4-driver-interfaces",
@@ -1227,10 +1230,7 @@ dependencies = [
  "sel4-root-task",
  "sel4-shared-memory",
  "sel4-shared-ring-buffer",
- "sel4-shared-ring-buffer-block-io",
  "sel4-shared-ring-buffer-block-io-types",
- "sel4-shared-ring-buffer-bookkeeping",
- "sel4-shared-ring-buffer-smoltcp",
  "sel4-sp804-driver",
  "sel4-stack",
  "sel4-sync",
@@ -1267,6 +1267,8 @@ dependencies = [
  "one-shot-mutex",
  "rcgen",
  "rtcc",
+ "sddf-async-block-io",
+ "sddf-smoltcp",
  "sel4",
  "sel4-abstract-allocator",
  "sel4-async-block-io",
@@ -1275,6 +1277,7 @@ dependencies = [
  "sel4-async-network",
  "sel4-async-single-threaded-executor",
  "sel4-async-time",
+ "sel4-bookkeeping",
  "sel4-driver-interfaces",
  "sel4-immediate-sync-once-cell",
  "sel4-logging",
@@ -1284,10 +1287,7 @@ dependencies = [
  "sel4-newlib",
  "sel4-shared-memory",
  "sel4-shared-ring-buffer",
- "sel4-shared-ring-buffer-block-io",
  "sel4-shared-ring-buffer-block-io-types",
- "sel4-shared-ring-buffer-bookkeeping",
- "sel4-shared-ring-buffer-smoltcp",
  "smoltcp",
 ]
 
@@ -2092,10 +2092,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "sddf-async-block-io"
+version = "0.1.0"
+dependencies = [
+ "async-unsync",
+ "futures",
+ "log",
+ "sel4-abstract-allocator",
+ "sel4-async-block-io",
+ "sel4-bookkeeping",
+ "sel4-shared-memory",
+ "sel4-shared-ring-buffer",
+ "sel4-shared-ring-buffer-block-io-types",
+]
+
+[[package]]
 name = "sddf-ipc-types"
 version = "0.1.0"
 dependencies = [
  "sel4-microkit-base",
+]
+
+[[package]]
+name = "sddf-smoltcp"
+version = "0.1.0"
+dependencies = [
+ "lock_api",
+ "log",
+ "one-shot-mutex",
+ "sel4-abstract-allocator",
+ "sel4-abstract-rc",
+ "sel4-bookkeeping",
+ "sel4-shared-memory",
+ "sel4-shared-ring-buffer",
+ "smoltcp",
 ]
 
 [[package]]
@@ -2281,6 +2311,13 @@ dependencies = [
 [[package]]
 name = "sel4-bitfield-ops"
 version = "0.1.0"
+
+[[package]]
+name = "sel4-bookkeeping"
+version = "0.1.0"
+dependencies = [
+ "async-unsync",
+]
 
 [[package]]
 name = "sel4-build-env"
@@ -2817,49 +2854,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "sel4-shared-ring-buffer-block-io"
-version = "0.1.0"
-dependencies = [
- "async-unsync",
- "futures",
- "log",
- "sel4-abstract-allocator",
- "sel4-async-block-io",
- "sel4-shared-memory",
- "sel4-shared-ring-buffer",
- "sel4-shared-ring-buffer-block-io-types",
- "sel4-shared-ring-buffer-bookkeeping",
-]
-
-[[package]]
 name = "sel4-shared-ring-buffer-block-io-types"
 version = "0.1.0"
 dependencies = [
  "num_enum",
  "sel4-shared-ring-buffer",
  "zerocopy",
-]
-
-[[package]]
-name = "sel4-shared-ring-buffer-bookkeeping"
-version = "0.1.0"
-dependencies = [
- "async-unsync",
-]
-
-[[package]]
-name = "sel4-shared-ring-buffer-smoltcp"
-version = "0.1.0"
-dependencies = [
- "lock_api",
- "log",
- "one-shot-mutex",
- "sel4-abstract-allocator",
- "sel4-abstract-rc",
- "sel4-shared-memory",
- "sel4-shared-ring-buffer",
- "sel4-shared-ring-buffer-bookkeeping",
- "smoltcp",
 ]
 
 [[package]]

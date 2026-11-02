@@ -19,6 +19,8 @@ use smoltcp::iface::Config;
 use smoltcp::phy::{Device, DeviceCapabilities, Medium};
 use smoltcp::wire::{EthernetAddress, HardwareAddress};
 
+use sddf_async_block_io::SharedRingBufferBlockIO;
+use sddf_smoltcp::DeviceImpl;
 use sel4_abstract_allocator::WithAlignmentBound;
 use sel4_abstract_allocator::basic::BasicAllocator;
 use sel4_async_block_io::{BlockSize, ByteIOAdapter, ConstantBlockSize};
@@ -37,8 +39,6 @@ use sel4_microkit_driver_adapters::timer::client::Client as TimerClient;
 use sel4_newlib as _;
 use sel4_shared_memory::SharedMemoryRef;
 use sel4_shared_ring_buffer::RingBuffers;
-use sel4_shared_ring_buffer_block_io::SharedRingBufferBlockIO;
-use sel4_shared_ring_buffer_smoltcp::DeviceImpl;
 
 use microkit_http_server_example_server_core::run_server;
 

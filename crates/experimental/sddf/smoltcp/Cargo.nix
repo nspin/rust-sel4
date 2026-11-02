@@ -7,7 +7,7 @@
 { mk, localCrates, versions, smoltcpWith }:
 
 mk {
-  package.name = "sel4-shared-ring-buffer-smoltcp";
+  package.name = "sddf-smoltcp";
   dependencies = {
     inherit (versions)
       log
@@ -18,7 +18,7 @@ mk {
     inherit (localCrates)
       sel4-abstract-rc
       sel4-shared-ring-buffer
-      sel4-shared-ring-buffer-bookkeeping
+      sel4-bookkeeping
       sel4-abstract-allocator
       sel4-shared-memory
     ;

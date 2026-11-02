@@ -10,7 +10,7 @@
 #
 
 [package]
-name = "sel4-shared-ring-buffer-smoltcp"
+name = "sddf-smoltcp"
 version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
@@ -22,9 +22,9 @@ log = "0.4.28"
 one-shot-mutex = "0.2.1"
 sel4-abstract-allocator = { path = "../../sel4-abstract-allocator" }
 sel4-abstract-rc = { path = "../../sel4-abstract-rc" }
+sel4-bookkeeping = { path = "../../sel4-bookkeeping" }
 sel4-shared-memory = { path = "../../../sel4-shared-memory" }
-sel4-shared-ring-buffer = { path = ".." }
-sel4-shared-ring-buffer-bookkeeping = { path = "../bookkeeping" }
+sel4-shared-ring-buffer = { path = "../../sel4-shared-ring-buffer" }
 
 [dependencies.smoltcp]
 version = "0.14.0"

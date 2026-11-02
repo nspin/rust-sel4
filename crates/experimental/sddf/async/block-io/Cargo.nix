@@ -7,7 +7,7 @@
 { mk, localCrates, versions }:
 
 mk {
-  package.name = "sel4-shared-ring-buffer-block-io";
+  package.name = "sddf-async-block-io";
   dependencies = {
     inherit (versions) log;
 
@@ -30,6 +30,6 @@ mk {
       sel4-shared-memory
     ;
 
-    sel4-shared-ring-buffer-bookkeeping = localCrates.sel4-shared-ring-buffer-bookkeeping // { features = [ "async-unsync" ]; };
+    sel4-bookkeeping = localCrates.sel4-bookkeeping // { features = [ "async-unsync" ]; };
   };
 }

@@ -95,6 +95,7 @@ definitely! {
     sel4_async_time
     sel4_async_unsync
     sel4_abstract_allocator
+    sel4_bookkeeping
     sel4_dlmalloc
     sel4_driver_interfaces
     sel4_phdrs
@@ -116,10 +117,9 @@ maybe! {
 definitely! {
     sel4_shared_memory
     sel4_shared_ring_buffer
-    sel4_shared_ring_buffer_block_io
+    sddf_async_block_io
     sel4_shared_ring_buffer_block_io_types
-    sel4_shared_ring_buffer_bookkeeping
-    sel4_shared_ring_buffer_smoltcp
+    sddf_smoltcp
     sel4_stack
     sel4_sync
 

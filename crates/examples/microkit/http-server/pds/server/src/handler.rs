@@ -15,6 +15,7 @@ use one_shot_mutex::sync::OneShotMutex;
 use smoltcp::iface::Config;
 use smoltcp::time::Instant as SmoltcpInstant;
 
+use sddf_async_block_io::SharedRingBufferBlockIO;
 use sel4_abstract_allocator::WithAlignmentBound;
 use sel4_abstract_allocator::basic::BasicAllocator;
 use sel4_async_block_io::{ConstantBlockSize, access::ReadOnly};
@@ -25,7 +26,6 @@ use sel4_driver_interfaces::timer::{Clock, DefaultTimer, Timer};
 use sel4_microkit::{ChannelSet, Handler, Infallible};
 use sel4_microkit_driver_adapters::timer::client::Client as TimerClient;
 use sel4_never_polyfill::Never;
-use sel4_shared_ring_buffer_block_io::SharedRingBufferBlockIO;
 
 use crate::DeviceImpl;
 

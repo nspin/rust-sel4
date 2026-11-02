@@ -11,12 +11,12 @@ use core::ptr::NonNull;
 use smoltcp::phy::DeviceCapabilities;
 
 use sel4_abstract_allocator::{AbstractAllocator, AbstractAllocatorAllocation};
+use sel4_bookkeeping::slot_tracker::*;
 use sel4_shared_memory::SharedMemoryRef;
 use sel4_shared_ring_buffer::{
     Descriptor, PeerMisbehaviorError as SharedRingBuffersPeerMisbehaviorError, RingBuffers,
     roles::Provide,
 };
-use sel4_shared_ring_buffer_bookkeeping::slot_tracker::*;
 
 pub(crate) struct Inner<A: AbstractAllocator> {
     dma_region: SharedMemoryRef<'static, [u8]>,

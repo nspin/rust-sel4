@@ -27,6 +27,7 @@ mk {
       sel4-async-time
       sel4-async-unsync
       sel4-abstract-allocator
+      sel4-bookkeeping
       sel4-dlmalloc
       sel4-driver-interfaces
       sel4-phdrs
@@ -39,10 +40,9 @@ mk {
       sel4-panicking
       sel4-panicking-env
       sel4-shared-ring-buffer
-      sel4-shared-ring-buffer-block-io
+      sddf-async-block-io
       sel4-shared-ring-buffer-block-io-types
-      sel4-shared-ring-buffer-bookkeeping
-      sel4-shared-ring-buffer-smoltcp
+      sddf-smoltcp
       sel4-stack
       sel4-sync
 

@@ -10,7 +10,7 @@
 #
 
 [package]
-name = "sel4-shared-ring-buffer-bookkeeping"
+name = "sel4-bookkeeping"
 version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"

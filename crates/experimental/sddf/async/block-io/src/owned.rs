@@ -10,6 +10,7 @@ use core::task::{Poll, Waker};
 
 use sel4_abstract_allocator::{AbstractAllocator, AbstractAllocatorAllocation};
 use sel4_async_block_io::{Operation, access::Access};
+use sel4_bookkeeping::{slot_set_semaphore::*, slot_tracker::*};
 use sel4_shared_memory::SharedMemoryRef;
 use sel4_shared_ring_buffer::{
     Descriptor, PeerMisbehaviorError as SharedRingBuffersPeerMisbehaviorError, RingBuffers,
@@ -18,7 +19,6 @@ use sel4_shared_ring_buffer::{
 use sel4_shared_ring_buffer_block_io_types::{
     BlockIORequest, BlockIORequestStatus, BlockIORequestType,
 };
-use sel4_shared_ring_buffer_bookkeeping::{slot_set_semaphore::*, slot_tracker::*};
 
 pub use crate::errors::{Error, ErrorOrUserError, IOError, PeerMisbehaviorError, UserError};
 

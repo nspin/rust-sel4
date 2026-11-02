@@ -38,11 +38,11 @@ mk {
       sel4-async-single-threaded-executor
       sel4-async-network
       sel4-async-time
-      sel4-shared-ring-buffer-bookkeeping
+      sel4-bookkeeping
       sel4-abstract-allocator
       sel4-shared-ring-buffer
-      sel4-shared-ring-buffer-smoltcp
-      sel4-shared-ring-buffer-block-io
+      sddf-smoltcp
+      sddf-async-block-io
       sel4-shared-ring-buffer-block-io-types
       sel4-async-block-io
       sel4-async-block-io-cached
