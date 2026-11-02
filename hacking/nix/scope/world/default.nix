@@ -60,6 +60,8 @@ self: with self;
   microkitForUserspace = microkit;
   microkitForBoot = microkit;
 
+  sddf = assert worldConfig.isMicrokit; callPackage ./sddf {};
+
   microkitDir =
     let
       inherit (worldConfig.microkitConfig) board config;
@@ -86,6 +88,8 @@ self: with self;
     then {
       SEL4_INCLUDE_DIRS = "${microkitDir}/include";
       SEL4_PLATFORM_INFO = "${microkitDir}/platform_gen.json";
+      SDDF_INCLUDE_DIRS = lib.concatStringsSep ":" sddf.includeDirs;
+      SDDF_LIB_DIRS = "${sddf}/lib";
     }
     else {
       SEL4_PREFIX = seL4ForUserspace;

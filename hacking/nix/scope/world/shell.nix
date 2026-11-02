@@ -62,15 +62,6 @@ mkShell (seL4RustEnvVars // kernelLoaderConfigEnvVars // bindgenEnvVars // miscE
 
   LIBCLANG_PATH = libclangPath;
 
-  SDDF_INCLUDE_DIRS =
-    let
-      d = sources.sddf;
-    in
-      lib.concatStringsSep ":" [
-        "${d}/include"
-        "${d}/include/microkit"
-      ];
-
   LIONSOS_INCLUDE_DIRS =
     let
       d = sources.lionsos;
