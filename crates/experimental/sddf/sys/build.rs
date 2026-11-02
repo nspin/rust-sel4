@@ -5,25 +5,30 @@
 //
 
 use std::env::{self, VarError};
+use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
 
 const SEL4_INCLUDE_DIRS_ENV: &str = "SEL4_INCLUDE_DIRS";
 const SDDF_INCLUDE_DIRS_ENV: &str = "SDDF_INCLUDE_DIRS";
+const SDDF_LIB_DIRS_ENV: &str = "SDDF_LIB_DIRS";
 
 const HEADER_CONTENTS: &str = r#"
     #include <stdint.h>
 
     #include <sddf/benchmark/bench.h>
     #include <sddf/benchmark/config.h>
-    #include <sddf/benchmark/sel4bench.h>
     #include <sddf/blk/config.h>
     #include <sddf/blk/queue.h>
+    #include <sddf/blk/storage_info.h>
     #include <sddf/gpu/events.h>
     #include <sddf/gpu/gpu.h>
     #include <sddf/gpu/queue.h>
     #include <sddf/network/config.h>
+    #include <sddf/network/constants.h>
     #include <sddf/network/queue.h>
+    #include <sddf/resources/common.h>
+    #include <sddf/resources/device.h>
     #include <sddf/serial/config.h>
     #include <sddf/serial/queue.h>
     #include <sddf/timer/client.h>
@@ -50,6 +55,9 @@ const ALLOWLIST: &[&str] = &[
     "SDDF_BLK_.*",
 
     "net_.*",
+    "NET_.*",
+    "SDDF_NET_.*",
+    "mac_addr_t",
 
     "gpu_.*",
     "GPU_.*",
@@ -78,10 +86,19 @@ fn main() {
         arch => arch,
     };
 
+    // sDDF's benchmarking support is specific to AArch64
+    let header_contents = {
+        let mut s = HEADER_CONTENTS.to_owned();
+        if target_arch == "aarch64" {
+            writeln!(s, "#include <sddf/benchmark/sel4bench.h>").unwrap();
+        }
+        s
+    };
+
     let static_fns_path = PathBuf::from(&out_dir).join("static_fns.c");
     let static_fns_with_header_path = PathBuf::from(&out_dir).join("static_fns_with_header.c");
     let static_fns_with_header_contents = format!(
-        "{HEADER_CONTENTS}\n#include \"{}\"\n",
+        "{header_contents}\n#include \"{}\"\n",
         static_fns_path.display()
     );
     fs::write(
@@ -91,7 +108,7 @@ fn main() {
     .unwrap();
 
     let mut builder = bindgen::Builder::default()
-        .header_contents("wrapper.h", HEADER_CONTENTS)
+        .header_contents("wrapper.h", &header_contents)
         .detect_include_paths(false)
         .clang_arg(format!("--target={clang_target}"))
         .clang_args(
@@ -139,6 +156,13 @@ fn main() {
         .flag("-Wno-sign-compare") // TODO
         .flag("-Wno-unused-function") // TODO
         .compile("sddf");
+
+    // After the above, which depends on these
+    for dir in get_dirs(SDDF_LIB_DIRS_ENV) {
+        println!("cargo::rustc-link-search=native={}", dir.display());
+    }
+    println!("cargo::rustc-link-lib=static=sddf_util_debug");
+    println!("cargo::rustc-link-lib=static=microkit_dbg");
 }
 
 fn get_dirs(var: &str) -> Vec<PathBuf> {
