@@ -7,6 +7,6 @@
 #![no_std]
 
 pub mod blk;
-pub mod network;
+pub mod net;
 pub mod serial;
 pub mod timer;
