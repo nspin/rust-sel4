@@ -44,6 +44,7 @@ members = [
     "crates/experimental/lionsos/sys",
     "crates/experimental/sddf",
     "crates/experimental/sddf/async/block-io",
+    "crates/experimental/sddf/async/io",
     "crates/experimental/sddf/embedded-hal-nb",
     "crates/experimental/sddf/ipc-types",
     "crates/experimental/sddf/smoltcp",
