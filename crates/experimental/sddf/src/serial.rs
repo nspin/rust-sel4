@@ -37,6 +37,7 @@ impl Role for Consumer {}
 
 pub struct QueueHandle<R: Role> {
     inner: sys::serial_queue_handle_t,
+    channel: sys::sddf_channel,
     _role: PhantomData<R>,
 }
 
@@ -57,8 +58,17 @@ impl<R: Role> QueueHandle<R> {
         }
         Self {
             inner,
+            channel: conn.id.into(),
             _role: PhantomData,
         }
+    }
+
+    pub fn notify(&self) {
+        unsafe { sys::sddf_notify(self.channel) }
+    }
+
+    pub fn channel(&self) -> usize {
+        int_to_usize(self.channel)
     }
 
     fn inner(&mut self) -> *mut sys::serial_queue_handle_t {
@@ -100,9 +110,32 @@ impl QueueHandle<Producer> {
     pub fn request_consumer_signal(&mut self) {
         unsafe { sys::serial_request_consumer_signal(self.inner()) }
     }
+
+    /// Tries `f`. If it fails, notifies the consumer so that it consumes from the queue, requests
+    /// a signal for when it has, and tries `f` again, canceling the request if that succeeds. If
+    /// both tries fail, returns `None` with the signal still requested.
+    pub fn try_or_request_signal<T>(
+        &mut self,
+        mut f: impl FnMut(&mut Self) -> Option<T>,
+    ) -> Option<T> {
+        f(self).or_else(|| {
+            self.notify();
+            self.request_consumer_signal();
+            let r = f(self)?;
+            self.cancel_consumer_signal();
+            Some(r)
+        })
+    }
 }
 
 impl QueueHandle<Consumer> {
+    pub fn signal_producer(&mut self) {
+        if self.require_consumer_signal() {
+            self.cancel_consumer_signal();
+            self.notify();
+        }
+    }
+
     pub fn length_consumer(&mut self) -> u32 {
         unsafe { sys::serial_queue_length_consumer(self.inner()) }
     }

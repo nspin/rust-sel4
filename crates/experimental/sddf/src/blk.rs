@@ -38,6 +38,7 @@ impl Role for Server {}
 
 pub struct QueueHandle<R: Role> {
     inner: sys::blk_queue_handle_t,
+    channel: sys::sddf_channel,
     _role: PhantomData<R>,
 }
 
@@ -58,8 +59,17 @@ impl<R: Role> QueueHandle<R> {
         }
         Self {
             inner,
+            channel: conn.id.into(),
             _role: PhantomData,
         }
+    }
+
+    pub fn notify(&self) {
+        unsafe { sys::sddf_notify(self.channel) }
+    }
+
+    pub fn channel(&self) -> usize {
+        int_to_usize(self.channel)
     }
 
     fn inner(&mut self) -> *mut sys::blk_queue_handle_t {
@@ -160,6 +170,14 @@ impl QueueHandle<Server> {
     pub fn is_req_plugged(&mut self) -> bool {
         unsafe { sys::blk_queue_plugged_req(self.inner()) }
     }
+}
+
+/// # Safety
+///
+/// The connection's storage information region must contain a valid `blk_storage_info_t`, shared
+/// only with a peer which follows the protocol.
+pub unsafe fn is_storage_info_ready(config: &sys::blk_client_config_t) -> bool {
+    unsafe { StorageInfo::<Client>::from_connection_resource(&config.virt) }.is_ready()
 }
 
 pub struct StorageInfo<R: Role> {

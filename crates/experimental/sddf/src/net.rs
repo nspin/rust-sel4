@@ -63,6 +63,7 @@ impl Role for Drainer {}
 
 pub struct QueueHandle<R: Role> {
     inner: sys::net_queue_handle_t,
+    channel: sys::sddf_channel,
     _role: PhantomData<R>,
 }
 
@@ -83,8 +84,17 @@ impl<R: Role> QueueHandle<R> {
         }
         Self {
             inner,
+            channel: conn.id.into(),
             _role: PhantomData,
         }
+    }
+
+    pub fn notify(&self) {
+        unsafe { sys::sddf_notify(self.channel) }
+    }
+
+    pub fn channel(&self) -> usize {
+        int_to_usize(self.channel)
     }
 
     fn inner(&mut self) -> *mut sys::net_queue_handle_t {
@@ -117,6 +127,13 @@ impl<R: Role> QueueHandle<R> {
 }
 
 impl QueueHandle<Filler> {
+    pub fn signal_active(&mut self) {
+        if self.require_signal_active() {
+            self.cancel_signal_active();
+            self.notify();
+        }
+    }
+
     pub fn is_free_empty(&mut self) -> bool {
         unsafe { sys::net_queue_empty_free(self.inner()) }
     }
@@ -141,12 +158,29 @@ impl QueueHandle<Filler> {
         unsafe { sys::net_request_signal_free(self.inner()) }
     }
 
+    pub fn dequeue_free_or_request_signal(&mut self) -> Option<BufferDescriptor> {
+        self.dequeue_free().or_else(|| {
+            self.request_signal_free();
+            // Check again, in case a buffer was enqueued before the request was visible
+            let buffer = self.dequeue_free()?;
+            self.cancel_signal_free();
+            Some(buffer)
+        })
+    }
+
     pub fn require_signal_active(&mut self) -> bool {
         unsafe { sys::net_require_signal_active(self.inner()) }
     }
 }
 
 impl QueueHandle<Drainer> {
+    pub fn signal_free(&mut self) {
+        if self.require_signal_free() {
+            self.cancel_signal_free();
+            self.notify();
+        }
+    }
+
     pub fn is_active_empty(&mut self) -> bool {
         unsafe { sys::net_queue_empty_active(self.inner()) }
     }
@@ -169,6 +203,16 @@ impl QueueHandle<Drainer> {
 
     pub fn request_signal_active(&mut self) {
         unsafe { sys::net_request_signal_active(self.inner()) }
+    }
+
+    pub fn dequeue_active_or_request_signal(&mut self) -> Option<BufferDescriptor> {
+        self.dequeue_active().or_else(|| {
+            self.request_signal_active();
+            // Check again, in case a buffer was enqueued before the request was visible
+            let buffer = self.dequeue_active()?;
+            self.cancel_signal_active();
+            Some(buffer)
+        })
     }
 
     pub fn require_signal_free(&mut self) -> bool {

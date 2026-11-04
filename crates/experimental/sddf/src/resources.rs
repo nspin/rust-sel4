@@ -46,6 +46,10 @@ impl Region {
     pub fn size(&self) -> usize {
         self.0.size.try_into().unwrap()
     }
+
+    pub fn slice(&self) -> NonNull<[u8]> {
+        NonNull::slice_from_raw_parts(self.vaddr(), self.size())
+    }
 }
 
 /// A `device_region_resource_t` whose region is a [`Region`]. Its I/O address is the address at
