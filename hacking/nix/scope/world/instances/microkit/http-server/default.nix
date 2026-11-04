@@ -6,10 +6,11 @@
 
 { lib, buildPackages
 , callPackage
-, runCommand, writeScript
+, runCommand, writeScript, linkFarm
 , fetchgit
 , perl
 , microkit
+, acacia
 
 , crates
 , globalPatchSection
@@ -75,8 +76,20 @@ let
   # diskImage = largeDiskImage;
   diskImage = smallDiskImage;
 
+  # Acacia reads the layouts of sDDF configuration structures from the DWARF of each protection
+  # domain. The configuration sections are defined in each protection domain's root crate.
+  mkPDWithConfigs = args: mkPD (args // {
+    extraProfile = crateUtils.clobber [
+      (args.extraProfile or {})
+      {
+        strip = false;
+        package.${args.rootCrate.name}.debug = true;
+      }
+    ];
+  });
+
   pds = {
-    http-server = mkPD {
+    http-server = mkPDWithConfigs {
       rootCrate = crates.microkit-http-server-example-server;
       release = true;
       # layers = [
@@ -107,39 +120,66 @@ let
       };
       # lastLayerModifications = seL4Modifications;
     };
-    pl031-driver = mkPD {
+    pl031-driver = mkPDWithConfigs {
       rootCrate = crates.microkit-http-server-example-pl031-driver;
       release = true;
     };
-    sp804-driver = mkPD {
+    sp804-driver = mkPDWithConfigs {
       rootCrate = crates.microkit-http-server-example-sp804-driver;
       release = true;
     };
-    virtio-net-driver = mkPD {
+    virtio-net-driver = mkPDWithConfigs {
       rootCrate = crates.microkit-http-server-example-virtio-net-driver;
       release = true;
     };
-    virtio-blk-driver = mkPD {
+    virtio-blk-driver = mkPDWithConfigs {
       rootCrate = crates.microkit-http-server-example-virtio-blk-driver;
       release = true;
     };
   };
 
+  generated = runCommand "http-server-system" {
+    nativeBuildInputs = [
+      acacia
+    ];
+  } ''
+    # For acacia_sddf
+    PYTHONPATH="${sources.sddf}:''${PYTHONPATH:-}" \
+      python3 ${sources.srcRoot + "/crates/examples/microkit/http-server/meta.py"} \
+        --board ${worldConfig.microkitConfig.board} \
+        --elf-dir ${linkFarm "http-server-pds-unpatched" (lib.mapAttrsToList (_: pd: {
+          name = "${pd.rootCrate.name}.elf";
+          path = pd.elf;
+        }) pds)} \
+        --out-dir $out
+  '';
+
+  patchedPDs = runCommand "http-server-pds" {
+    nativeBuildInputs = [
+      buildPackages.llvmPackages_18.llvm
+    ];
+  } ''
+    mkdir $out
+    ${lib.concatMapStrings (pd: ''
+      cp --no-preserve=mode ${pd.elf} $out/
+    '') (lib.attrValues pds)}
+    while read -r elf section blob; do
+      llvm-objcopy --update-section .$section=${generated}/$blob $out/$elf
+    done < ${generated}/patches.txt
+  '';
+
 in
 lib.fix (self: callPlatform {
   system = microkit.mkSystem {
     searchPath = [
-      "${pds.http-server}/bin"
-      "${pds.pl031-driver}/bin"
-      "${pds.sp804-driver}/bin"
-      "${pds.virtio-net-driver}/bin"
-      "${pds.virtio-blk-driver}/bin"
+      patchedPDs
     ];
-    systemXML = sources.srcRoot + "/crates/examples/microkit/http-server/http-server.system";
+    systemXML = "${generated}/http-server.system";
   };
   extraPlatformArgs = lib.optionalAttrs canSimulate {
     extraQEMUArgs = [
-      "-device" "virtio-net-device,netdev=netdev0"
+      # MAC address must match meta.py
+      "-device" "virtio-net-device,netdev=netdev0,mac=52:54:00:12:34:56"
       "-netdev" "user,id=netdev0,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443"
 
       "-device" "virtio-blk-device,drive=blkdev0"
@@ -147,7 +187,7 @@ lib.fix (self: callPlatform {
     ];
   };
 } // {
-  inherit pds;
+  inherit pds generated patchedPDs;
   inherit largeDiskImage smallDiskImage diskImage;
 } // lib.optionalAttrs canSimulate rec {
   automate =

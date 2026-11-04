@@ -6,170 +6,166 @@
 
 #![no_std]
 
-extern crate alloc;
-
-use lock_api::{Mutex, RawMutex};
-use one_shot_mutex::unsync::RawOneShotMutex;
-use smoltcp::phy::{self, Device, DeviceCapabilities};
+use heapless::Vec;
+use smoltcp::phy::{self, Device, DeviceCapabilities, Medium};
 use smoltcp::time::Instant;
+use smoltcp::wire::ETHERNET_HEADER_LEN;
 
-use sel4_abstract_allocator::AbstractAllocator;
-use sel4_abstract_rc::{AbstractRcT, RcT};
+use sddf::net::{BUFFER_SIZE, BufferDescriptor, Drainer, Filler, QueueHandle};
+use sddf::resources::Region;
+use sddf::sys::net_client_config_t;
 use sel4_shared_memory::SharedMemoryRef;
-use sel4_shared_ring_buffer::{RingBuffers, roles::Provide};
+use sel4_shared_memory::access::ReadOnly;
 
-mod inner;
+/// The IP MTU.
+///
+/// sDDF provides no means of choosing or discovering an MTU. Like sDDF's own lwIP-based clients
+/// (see `SDDF_LWIP_ETHER_MTU`), this assumes standard Ethernet.
+const IP_MTU: usize = 1500;
 
-pub use inner::{Error, PeerMisbehaviorError};
-use inner::{Inner, RxBufferIndex, TxBufferIndex};
+/// The maximum Ethernet frame size, excluding the frame check sequence. For Ethernet, this is what
+/// smoltcp calls the MTU.
+const MAX_FRAME_SIZE: usize = IP_MTU + ETHERNET_HEADER_LEN;
 
-pub struct DeviceImpl<A: AbstractAllocator, R: RawMutex = RawOneShotMutex, P: AbstractRcT = RcT> {
-    inner: P::Rc<Mutex<R, Inner<A>>>,
+const _: () = assert!(MAX_FRAME_SIZE <= BUFFER_SIZE);
+
+pub struct DeviceImpl {
+    rx: Rx,
+    tx: Tx,
 }
 
-impl<A: AbstractAllocator, R: RawMutex, P: AbstractRcT> Clone for DeviceImpl<A, R, P> {
-    fn clone(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
+// Frames are copied between shared memory and private buffers, so that smoltcp is never given
+// references to shared memory.
+
+struct Rx {
+    queue: QueueHandle<Drainer>,
+    data: SharedMemoryRef<'static, [u8], ReadOnly>,
+}
+
+struct Tx {
+    queue: QueueHandle<Filler>,
+    data: SharedMemoryRef<'static, [u8]>,
+    reserved: Option<BufferDescriptor>,
+}
+
+impl DeviceImpl {
+    /// # Safety
+    ///
+    /// The queues and data regions described by `config` must be valid and shared only with a
+    /// peer which follows the sDDF network protocol.
+    pub unsafe fn new(config: &net_client_config_t) -> Self {
+        let mut this = unsafe {
+            Self {
+                rx: Rx {
+                    queue: QueueHandle::from_connection_resource(&config.rx),
+                    data: SharedMemoryRef::new_read_only(
+                        Region::from_resource(&config.rx_data).unwrap().slice(),
+                    ),
+                },
+                tx: Tx {
+                    queue: QueueHandle::from_connection_resource(&config.tx),
+                    data: SharedMemoryRef::new(
+                        Region::from_resource(&config.tx_data).unwrap().slice(),
+                    ),
+                    reserved: None,
+                },
+            }
+        };
+        this.tx.queue.buffers_init(0);
+        this
+    }
+}
+
+impl Rx {
+    fn receive(&mut self) -> Option<Vec<u8, BUFFER_SIZE>> {
+        let mut buffer = self.queue.dequeue_active_or_request_signal()?;
+        let range = buffer.range();
+        let mut frame = Vec::new();
+        frame.resize(range.len(), 0).unwrap();
+        self.data.as_ptr().index(range).copy_into_slice(&mut frame);
+        buffer.set_length(0);
+        self.queue.enqueue_free(buffer).unwrap();
+        self.queue.signal_free();
+        Some(frame)
+    }
+}
+
+impl Tx {
+    fn reserve(&mut self) -> bool {
+        if self.reserved.is_none() {
+            self.reserved = self.queue.dequeue_free_or_request_signal();
         }
-    }
-}
-
-impl<A: AbstractAllocator, R: RawMutex, P: AbstractRcT> DeviceImpl<A, R, P> {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        raw_mutex: R,
-        dma_region: SharedMemoryRef<'static, [u8]>,
-        bounce_buffer_allocator: A,
-        rx_ring_buffers: RingBuffers<'static, Provide, fn()>,
-        tx_ring_buffers: RingBuffers<'static, Provide, fn()>,
-        num_rx_buffers: usize,
-        rx_buffer_size: usize,
-        caps: DeviceCapabilities,
-    ) -> Result<Self, Error> {
-        Ok(Self {
-            inner: P::Rc::from(Mutex::from_raw(
-                raw_mutex,
-                Inner::new(
-                    dma_region,
-                    bounce_buffer_allocator,
-                    rx_ring_buffers,
-                    tx_ring_buffers,
-                    num_rx_buffers,
-                    rx_buffer_size,
-                    caps,
-                )?,
-            )),
-        })
+        self.reserved.is_some()
     }
 
-    fn inner(&self) -> &P::Rc<Mutex<R, Inner<A>>> {
-        &self.inner
-    }
-
-    pub fn poll(&self) -> bool {
-        self.inner().lock().poll().unwrap()
-    }
-
-    pub fn can_receive(&self) -> bool {
-        self.inner().lock().can_receive()
-    }
-
-    pub fn can_transmit(&self) -> bool {
-        self.inner().lock().can_transmit()
-    }
-
-    fn new_rx_token(&self, rx_buffer: RxBufferIndex) -> RxToken<A, R, P> {
-        RxToken {
-            buffer: rx_buffer,
-            shared: self.clone(),
-        }
-    }
-
-    fn new_tx_token(&self, tx_buffer: TxBufferIndex) -> TxToken<A, R, P> {
-        TxToken {
-            buffer: tx_buffer,
-            shared: self.clone(),
-        }
-    }
-}
-
-impl<A: AbstractAllocator, R: RawMutex, P: AbstractRcT> Device for DeviceImpl<A, R, P> {
-    type RxToken<'a>
-        = RxToken<A, R, P>
-    where
-        A: 'a,
-        R: 'a,
-        P: 'a;
-    type TxToken<'a>
-        = TxToken<A, R, P>
-    where
-        A: 'a,
-        R: 'a,
-        P: 'a;
-
-    fn capabilities(&self) -> DeviceCapabilities {
-        self.inner().lock().caps().clone()
-    }
-
-    fn receive(&mut self, _timestamp: Instant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
-        self.inner()
-            .lock()
-            .receive()
-            .map(|(rx_ix, tx_ix)| (self.new_rx_token(rx_ix), self.new_tx_token(tx_ix)))
-    }
-
-    fn transmit(&mut self, _timestamp: Instant) -> Option<Self::TxToken<'_>> {
-        self.inner()
-            .lock()
-            .transmit()
-            .map(|ix| self.new_tx_token(ix))
-    }
-}
-
-pub struct RxToken<A: AbstractAllocator, R: RawMutex, P: AbstractRcT> {
-    buffer: RxBufferIndex,
-    shared: DeviceImpl<A, R, P>,
-}
-
-impl<A: AbstractAllocator, R: RawMutex, P: AbstractRcT> phy::RxToken for RxToken<A, R, P> {
-    fn consume<T, F>(self, f: F) -> T
-    where
-        F: FnOnce(&[u8]) -> T,
-    {
-        let mut ptr = self.shared.inner().lock().consume_rx_start(self.buffer);
-        let r = f(unsafe { ptr.as_mut() });
-        self.shared.inner().lock().consume_rx_finish(self.buffer);
+    fn send<T>(&mut self, len: usize, f: impl FnOnce(&mut [u8]) -> T) -> T {
+        let mut buffer = self.reserved.take().unwrap();
+        buffer.set_length(len);
+        let mut frame = Vec::<u8, BUFFER_SIZE>::new();
+        frame.resize(len, 0).unwrap();
+        let r = f(&mut frame);
+        self.data
+            .as_mut_ptr()
+            .index(buffer.range())
+            .copy_from_slice(&frame);
+        self.queue.enqueue_active(buffer).unwrap();
+        self.queue.signal_active();
         r
     }
 }
 
-impl<A: AbstractAllocator, R: RawMutex, P: AbstractRcT> Drop for RxToken<A, R, P> {
-    fn drop(&mut self) {
-        self.shared.inner().lock().drop_rx(self.buffer).unwrap()
+impl Device for DeviceImpl {
+    type RxToken<'a> = RxToken;
+    type TxToken<'a> = TxToken<'a>;
+
+    fn capabilities(&self) -> DeviceCapabilities {
+        let mut caps = DeviceCapabilities::default();
+        caps.medium = Medium::Ethernet;
+        caps.max_transmission_unit = MAX_FRAME_SIZE;
+        caps
+    }
+
+    fn receive(&mut self, _timestamp: Instant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
+        if !self.tx.reserve() {
+            return None;
+        }
+        // If nothing has been received, the reserved Tx buffer simply stays reserved
+        let frame = self.rx.receive()?;
+        Some((RxToken { frame }, TxToken { tx: &mut self.tx }))
+    }
+
+    fn transmit(&mut self, _timestamp: Instant) -> Option<Self::TxToken<'_>> {
+        if !self.tx.reserve() {
+            return None;
+        }
+        Some(TxToken { tx: &mut self.tx })
     }
 }
 
-pub struct TxToken<A: AbstractAllocator, R: RawMutex, P: AbstractRcT> {
-    buffer: TxBufferIndex,
-    shared: DeviceImpl<A, R, P>,
+pub struct RxToken {
+    frame: Vec<u8, BUFFER_SIZE>,
 }
 
-impl<A: AbstractAllocator, R: RawMutex, P: AbstractRcT> phy::TxToken for TxToken<A, R, P> {
+impl phy::RxToken for RxToken {
+    fn consume<T, F>(self, f: F) -> T
+    where
+        F: FnOnce(&[u8]) -> T,
+    {
+        f(&self.frame)
+    }
+}
+
+/// Exists only while a Tx buffer is reserved, which it takes when consumed. If it is dropped
+/// without being consumed, the buffer stays reserved for the next token.
+pub struct TxToken<'a> {
+    tx: &'a mut Tx,
+}
+
+impl phy::TxToken for TxToken<'_> {
     fn consume<T, F>(self, len: usize, f: F) -> T
     where
         F: FnOnce(&mut [u8]) -> T,
     {
-        self.shared
-            .inner()
-            .lock()
-            .consume_tx(self.buffer, len, f)
-            .unwrap()
-    }
-}
-
-impl<A: AbstractAllocator, R: RawMutex, P: AbstractRcT> Drop for TxToken<A, R, P> {
-    fn drop(&mut self) {
-        self.shared.inner().lock().drop_tx(self.buffer)
+        self.tx.send(len, f)
     }
 }

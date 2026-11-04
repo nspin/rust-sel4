@@ -18,13 +18,8 @@ license = "BSD-2-Clause"
 
 [dependencies]
 async-unsync = { version = "0.3.0", default-features = false }
-futures = { version = "0.3.31", default-features = false, features = ["async-await", "alloc"] }
-log = "0.4.28"
-sel4-abstract-allocator = { path = "../../../sel4-abstract-allocator" }
+heapless = "0.9.1"
+sddf = { path = "../.." }
 sel4-async-block-io = { path = "../../../../sel4-async/block-io" }
-sel4-bookkeeping = { path = "../../../sel4-bookkeeping", features = ["async-unsync"] }
 sel4-shared-memory = { path = "../../../../sel4-shared-memory" }
-sel4-shared-ring-buffer = { path = "../../../sel4-shared-ring-buffer" }
-
-[dependencies.sel4-shared-ring-buffer-block-io-types]
-path = "../../../sel4-shared-ring-buffer/block-io/types"
+thiserror = { version = "2.0.17", default-features = false }

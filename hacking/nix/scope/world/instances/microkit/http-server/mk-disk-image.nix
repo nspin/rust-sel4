@@ -65,7 +65,8 @@ vmTools.runInLinuxVM (runCommand "disk-image" {
   min=$(fatresize --info $partition | sed -rn 's/Min size: (.*)$/\1/p')
   min_rounded_up=$(python3 -c "print(512 * ($min // 512 + 1))")
   partition_size=$(python3 -c "print(max(64 << 20, $min_rounded_up))")
-  total_disk_size=$(expr $partition_size + 512)
+  # Round up to a multiple of the sDDF block transfer size
+  total_disk_size=$(python3 -c "print(4096 * (($partition_size + 512 + 4095) // 4096))")
 
   # NOTE
   # Somehow $partition sometimes ends up smaller than $partition_size.

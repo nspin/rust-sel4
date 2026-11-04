@@ -19,7 +19,7 @@ mk {
       sel4-shared-memory
       sel4
       sel4-immediate-sync-once-cell
-      sel4-shared-ring-buffer
+      sddf
       sel4-abstract-allocator
       sel4-virtio-hal-impl
       sel4-virtio-net

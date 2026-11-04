@@ -18,13 +18,9 @@ mk {
       sel4-shared-memory
       sel4
       sel4-immediate-sync-once-cell
-      sel4-shared-ring-buffer
-      sel4-shared-ring-buffer-block-io-types
       sel4-abstract-allocator
       sel4-virtio-hal-impl
-      sel4-virtio-blk
-      sel4-driver-interfaces
-      sel4-microkit-driver-adapters
+      sddf
     ;
   };
 }

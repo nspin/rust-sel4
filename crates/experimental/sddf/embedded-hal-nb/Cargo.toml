@@ -10,13 +10,13 @@
 #
 
 [package]
-name = "sel4-shared-ring-buffer"
+name = "sddf-embedded-hal-nb"
 version = "0.1.0"
 authors = ["Nick Spinale <nick.spinale@coliasgroup.com>"]
 edition = "2024"
 license = "BSD-2-Clause"
 
 [dependencies]
-log = "0.4.28"
-sel4-shared-memory = { path = "../../sel4-shared-memory", features = ["atomics"] }
-zerocopy = { version = "0.8.27", features = ["derive"] }
+embedded-hal-nb = "1.0"
+sddf = { path = ".." }
+thiserror = { version = "2.0.17", default-features = false }

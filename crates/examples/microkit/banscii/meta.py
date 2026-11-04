@@ -4,10 +4,26 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
+"""
+Generates the system description and sDDF configuration structures for the banscii example.
+
+The serial driver is connected directly to the assistant, without sDDF serial virtualisers.
+
+Also writes a manifest whose lines are of the form "<elf> <section> <blob>", listing the
+configuration blobs to patch into protection domain ELF files.
+"""
+
 import argparse
+import os
+import pathlib
 from typing import List
 from acacia import System, Arch, aarch64, ProtectionDomain, MemoryRegion, Channel, ConventionalIRQ
+from acacia.configstruct import ConfigStructResolver
 from dataclasses import dataclass
+
+from acacia_sddf import sDDFSerial
+from acacia_sddf.serial import SERIAL_PROTOCOL_MAGIC
+from acacia_sddf.sddf import DeviceResourcesFactory
 
 
 @dataclass
@@ -30,13 +46,21 @@ BOARDS: List[Board] = [
 ]
 
 
+DEVICE_MAGIC = 'sDDF' + chr(0x1)
+
 DEFAULT_STACK_SIZE = 0x10_000
+
+SERIAL_QUEUE_SIZE = 0x1_000
+# Must be a power of two
+SERIAL_DATA_SIZE = 0x1_000
+SERIAL_BAUD_RATE = 115200
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--board', required=True, choices=[b.name for b in BOARDS])
-    parser.add_argument('-o', required=True)
+    parser.add_argument('--elf-dir', required=True, type=pathlib.Path)
+    parser.add_argument('--out-dir', required=True, type=pathlib.Path)
     args = parser.parse_args()
     run(args)
 
@@ -56,17 +80,9 @@ def run(args):
         priority=3,
         stack_size=DEFAULT_STACK_SIZE,
     )
-    serial_driver.create_automap(
-        serial_mmio,
-        'rw',
-        setvar_vaddr='serial_register_block',
-    )
-    serial_driver.add_irq(
-        ConventionalIRQ(
-            board.serial_irq,
-            ConventionalIRQ.Trigger.LEVEL,
-            setvar_id='serial_irq_id',
-        )
+    serial_mmio_map = serial_driver.create_automap(serial_mmio, 'rw')
+    serial_irq = serial_driver.add_irq(
+        ConventionalIRQ(board.serial_irq, ConventionalIRQ.Trigger.LEVEL)
     )
 
     assistant = ProtectionDomain(
@@ -109,11 +125,41 @@ def run(args):
         setvar_size='region_out_size',
     )
 
-    Channel(
-        sdf,
-        Channel.End(serial_driver, setvar_id='assistant_channel_id'),
-        Channel.End(assistant, can_pp=True, setvar_id='serial_driver_channel_id'),
-    )
+    def serial_connection(name, producer):
+        queue = MemoryRegion(sdf, f'serial_{name}_queue', SERIAL_QUEUE_SIZE)
+        data = MemoryRegion(sdf, f'serial_{name}_data', SERIAL_DATA_SIZE)
+        channel = Channel(sdf, Channel.End(serial_driver), Channel.End(assistant))
+        return {
+            pd: sDDFSerial.serial_connection_resource_factory(
+                None,
+                pd.create_automap(queue, 'rw'),
+                pd.create_automap(data, 'rw' if pd is producer else 'r'),
+                channel.id_for_pd(pd),
+            )
+            for pd in [serial_driver, assistant]
+        }
+
+    serial_rx = serial_connection('rx', serial_driver)
+    serial_tx = serial_connection('tx', assistant)
+
+    config_structs = [
+        sDDFSerial.serial_driver_config_factory(
+            None,
+            serial_driver,
+            SERIAL_PROTOCOL_MAGIC,
+            SERIAL_BAUD_RATE,
+            1,
+            serial_tx[serial_driver],
+            serial_rx[serial_driver],
+        ),
+        sDDFSerial.serial_client_config_factory(
+            None,
+            assistant,
+            SERIAL_PROTOCOL_MAGIC,
+            serial_tx[assistant],
+            serial_rx[assistant],
+        ),
+    ]
 
     Channel(
         sdf,
@@ -121,7 +167,27 @@ def run(args):
         Channel.End(artist, setvar_id='assistant_channel_id'),
     )
 
-    sdf.write_xml_file(args.o)
+    args.out_dir = args.out_dir.resolve()
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    sdf.write_xml_file(args.out_dir / 'banscii.system')
+
+    config_structs.append(DeviceResourcesFactory(
+        DEVICE_MAGIC,
+        [(serial_mmio_map, 0)],
+        [serial_irq],
+        serial_driver.prog_image,
+    ))
+
+    # Acacia reads the layouts of configuration structures from the DWARF of the ELF files
+    os.chdir(args.elf_dir)
+    resolver = ConfigStructResolver(args.out_dir)
+    resolver.add_structs(config_structs)
+    resolver.resolve_and_create_all()
+
+    with open(args.out_dir / 'patches.txt', 'w') as f:
+        for s in config_structs:
+            blob = f'{s.target_file.removesuffix(".elf")}_{s.section_name}.data'
+            f.write(f'{s.target_file} {s.section_name} {blob}\n')
 
 
 if __name__ == '__main__':

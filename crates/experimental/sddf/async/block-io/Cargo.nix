@@ -9,27 +9,14 @@
 mk {
   package.name = "sddf-async-block-io";
   dependencies = {
-    inherit (versions) log;
-
-    futures = {
-      version = versions.futures;
-      default-features = false;
-      features = [
-        "async-await"
-        "alloc"
-      ];
-    };
-
+    inherit (versions) heapless;
     async-unsync = { version = versions.async-unsync; default-features = false; };
+    thiserror = { version = versions.thiserror; default-features = false; };
 
     inherit (localCrates)
-      sel4-shared-ring-buffer
-      sel4-shared-ring-buffer-block-io-types
-      sel4-abstract-allocator
+      sddf
       sel4-async-block-io
       sel4-shared-memory
     ;
-
-    sel4-bookkeeping = localCrates.sel4-bookkeeping // { features = [ "async-unsync" ]; };
   };
 }

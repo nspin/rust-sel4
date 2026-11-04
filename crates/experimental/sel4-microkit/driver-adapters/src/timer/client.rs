@@ -4,78 +4,44 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+use core::convert::Infallible;
 use core::time::Duration;
 
-use sel4_driver_interfaces::timer::{Clock, ErrorType, NumTimers, Timers};
-use sel4_microkit::Channel;
-use sel4_microkit_simple_ipc as simple_ipc;
+use sddf::timer::Client as SddfClient;
+use sel4_driver_interfaces::timer::{Clock, ErrorType, Timer};
 
-use super::message_types::*;
-
+/// See [`sddf::timer::Client`] for requirements on the protection domain.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Client {
-    channel: Channel,
+    inner: SddfClient,
 }
 
 impl Client {
-    pub fn new(channel: Channel) -> Self {
-        Client { channel }
-    }
-
-    fn request(&self, req: Request) -> Result<SuccessResponse, Error> {
-        simple_ipc::call::<_, Response>(self.channel, req)
-            .map_err(|_| Error::InvalidResponse)?
-            .map_err(Error::ErrorResponse)
+    pub fn new(inner: SddfClient) -> Self {
+        Self { inner }
     }
 }
 
 impl ErrorType for Client {
-    type Error = Error;
+    type Error = Infallible;
 }
 
 impl Clock for Client {
     fn get_time(&mut self) -> Result<Duration, Self::Error> {
-        match self.request(Request::GetTime)? {
-            SuccessResponse::GetTime(v) => Ok(v),
-            _ => Err(Error::UnexpectedResponse),
-        }
+        Ok(Duration::from_nanos(self.inner.time_now()))
     }
 }
 
-impl Timers for Client {
-    type TimerLayout = NumTimers;
-
-    type Timer = usize;
-
-    fn timer_layout(&mut self) -> Result<Self::TimerLayout, Self::Error> {
-        match self.request(Request::NumTimers)? {
-            SuccessResponse::NumTimers(v) => Ok(NumTimers(v)),
-            _ => Err(Error::UnexpectedResponse),
-        }
+impl Timer for Client {
+    fn set_timeout(&mut self, relative: Duration) -> Result<(), Self::Error> {
+        self.inner
+            .set_timeout(relative.as_nanos().try_into().unwrap_or(u64::MAX));
+        Ok(())
     }
 
-    fn set_timeout_on(
-        &mut self,
-        timer: Self::Timer,
-        relative: Duration,
-    ) -> Result<(), Self::Error> {
-        match self.request(Request::SetTimeout { timer, relative })? {
-            SuccessResponse::SetTimeout => Ok(()),
-            _ => Err(Error::UnexpectedResponse),
-        }
+    /// The sDDF timer protocol does not support clearing timeouts, so this is a no-op. The client
+    /// may receive a spurious notification.
+    fn clear_timeout(&mut self) -> Result<(), Self::Error> {
+        Ok(())
     }
-
-    fn clear_timeout_on(&mut self, timer: Self::Timer) -> Result<(), Self::Error> {
-        match self.request(Request::ClearTimeout { timer })? {
-            SuccessResponse::ClearTimeout => Ok(()),
-            _ => Err(Error::UnexpectedResponse),
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum Error {
-    ErrorResponse(ErrorResponse),
-    InvalidResponse,
-    UnexpectedResponse,
 }

@@ -9,17 +9,10 @@
 mk {
   package.name = "sddf-smoltcp";
   dependencies = {
-    inherit (versions)
-      log
-      lock_api
-      one-shot-mutex
-    ;
+    inherit (versions) heapless;
     smoltcp = smoltcpWith [];
     inherit (localCrates)
-      sel4-abstract-rc
-      sel4-shared-ring-buffer
-      sel4-bookkeeping
-      sel4-abstract-allocator
+      sddf
       sel4-shared-memory
     ;
   };

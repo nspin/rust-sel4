@@ -13,6 +13,7 @@ mk {
       sel4-pl031-driver
       sel4-microkit
       sel4-microkit-driver-adapters
+      sddf
     ;
   };
 }

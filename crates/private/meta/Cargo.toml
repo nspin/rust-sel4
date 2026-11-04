@@ -22,8 +22,6 @@ sel4-root-task = ["dep:sel4-root-task"]
 
 [dependencies]
 log = "0.4.28"
-sddf-async-block-io = { path = "../../experimental/sddf/async/block-io" }
-sddf-smoltcp = { path = "../../experimental/sddf/smoltcp" }
 sel4 = { path = "../../sel4" }
 sel4-abstract-allocator = { path = "../../experimental/sel4-abstract-allocator" }
 sel4-abstract-ptr = { path = "../../sel4-abstract-ptr" }
@@ -56,7 +54,6 @@ sel4-pl011-driver = { path = "../../drivers/pl011" }
 sel4-pl031-driver = { path = "../../drivers/pl031" }
 sel4-root-task = { path = "../../sel4-root-task", features = ["full"], optional = true }
 sel4-shared-memory = { path = "../../sel4-shared-memory", features = ["atomics"] }
-sel4-shared-ring-buffer = { path = "../../experimental/sel4-shared-ring-buffer" }
 sel4-sp804-driver = { path = "../../drivers/sp804" }
 sel4-stack = { path = "../../sel4-stack" }
 sel4-sync = { path = "../../sel4-sync" }
@@ -64,9 +61,6 @@ sel4-sys = { path = "../../sel4/sys" }
 sel4-virtio-blk = { path = "../../drivers/virtio/blk" }
 sel4-virtio-hal-impl = { path = "../../drivers/virtio/hal-impl" }
 sel4-virtio-net = { path = "../../drivers/virtio/net" }
-
-[dependencies.sel4-shared-ring-buffer-block-io-types]
-path = "../../experimental/sel4-shared-ring-buffer/block-io/types"
 
 [target."cfg(not(target_arch = \"x86_64\"))".dependencies]
 sel4-platform-info = { path = "../../sel4-platform-info", optional = true }

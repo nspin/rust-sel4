@@ -15,13 +15,12 @@ use core::fmt::Write;
 use core::mem;
 use core::str;
 
-use embedded_hal_nb::serial::{self, Read as _, Write as _};
+use embedded_hal_nb::nb;
+use embedded_hal_nb::serial::{Read as _, Write as _};
 
+use sddf_embedded_hal_nb::serial::Client as SerialClient;
 use sel4_microkit::{
     Channel, ChannelSet, Handler, Infallible, memory_region_symbol, protection_domain, var,
-};
-use sel4_microkit_driver_adapters::serial::client::{
-    Client as SerialClient, Error as SerialClientError,
 };
 use sel4_microkit_simple_ipc as simple_ipc;
 use sel4_shared_memory::{
@@ -36,7 +35,10 @@ const MAX_SUBJECT_LEN: usize = 16;
 
 #[protection_domain(heap_size = 0x10000)]
 fn init() -> impl Handler {
-    let serial_driver = Channel::new(*var!(serial_driver_channel_id: usize = usize::MAX));
+    let serial_config = sddf::config!(".serial_client_config", sddf::sys::serial_client_config_t);
+    let serial_client = unsafe { SerialClient::new(&serial_config) };
+    let serial_rx = Channel::new(serial_client.rx_channel().unwrap());
+    let serial_tx = Channel::new(serial_client.tx_channel());
     let artist = Channel::new(*var!(artist_channel_id: usize = usize::MAX));
 
     let region_in_size = *var!(region_in_size: usize = 0);
@@ -54,8 +56,9 @@ fn init() -> impl Handler {
     };
 
     let mut this = HandlerImpl {
-        serial_client: SerialClient::new(serial_driver),
-        serial_driver,
+        serial_client,
+        serial_rx,
+        serial_tx,
         artist,
         region_in,
         region_out,
@@ -63,13 +66,15 @@ fn init() -> impl Handler {
     };
 
     this.prompt();
+    this.flush();
 
     this
 }
 
 struct HandlerImpl {
     serial_client: SerialClient,
-    serial_driver: Channel,
+    serial_rx: Channel,
+    serial_tx: Channel,
     artist: Channel,
     region_in: SharedMemoryRef<'static, [u8], ReadOnly>,
     region_out: SharedMemoryRef<'static, [u8], ReadWrite>,
@@ -80,7 +85,14 @@ impl Handler for HandlerImpl {
     type Error = Infallible;
 
     fn notified(&mut self, channels: ChannelSet) -> Result<(), Self::Error> {
-        if channels.contains(self.serial_driver) {
+        let mut handled = false;
+        if channels.contains(self.serial_tx) {
+            // The driver has consumed from the Tx queue. Writes do not wait for this, so there is
+            // nothing to do.
+            handled = true;
+        }
+        if channels.contains(self.serial_rx) {
+            handled = true;
             while let Ok(b) = self.serial_client.read() {
                 if let b'\n' | b'\r' = b {
                     self.newline();
@@ -92,18 +104,18 @@ impl Handler for HandlerImpl {
                     let c = char::from(b);
                     if c.is_ascii() && !c.is_ascii_control() {
                         if self.buffer.len() == MAX_SUBJECT_LEN {
-                            writeln!(self.writer(), "\n(char limit reached)").unwrap();
+                            writeln!(self.serial_client, "\n(char limit reached)").unwrap();
                             self.try_create();
                             self.prompt();
                         }
-                        self.serial_client.write(b).unwrap();
+                        nb::block!(self.serial_client.write(b)).unwrap();
                         self.buffer.push(b);
                     }
                 }
             }
-        } else {
-            unreachable!()
         }
+        assert!(handled, "unexpected channels: {}", channels.display());
+        self.flush();
         Ok(())
     }
 }
@@ -117,7 +129,7 @@ impl HandlerImpl {
                 self.create(subject);
             }
             Err(_) => {
-                writeln!(self.writer(), "error: input is not valid utf-8").unwrap();
+                writeln!(self.serial_client, "error: input is not valid utf-8").unwrap();
             }
         };
         self.buffer.clear();
@@ -171,30 +183,30 @@ impl HandlerImpl {
             for col in 0..width {
                 let i = row * width + col;
                 let b = pixel_data[i];
-                self.serial_client.write(b).unwrap();
+                nb::block!(self.serial_client.write(b)).unwrap();
             }
             self.newline();
         }
 
         self.newline();
 
-        writeln!(self.writer(), "Signature:").unwrap();
+        writeln!(self.serial_client, "Signature:").unwrap();
         for line in signature.chunks(32) {
-            writeln!(self.writer(), "{}", hex::encode(line)).unwrap();
+            writeln!(self.serial_client, "{}", hex::encode(line)).unwrap();
         }
 
         self.newline();
     }
 
     fn prompt(&mut self) {
-        write!(self.writer(), "banscii> ").unwrap();
+        write!(self.serial_client, "banscii> ").unwrap();
     }
 
     fn newline(&mut self) {
-        writeln!(self.writer()).unwrap();
+        writeln!(self.serial_client).unwrap();
     }
 
-    fn writer(&mut self) -> &mut dyn serial::Write<Error = SerialClientError> {
-        &mut self.serial_client as &mut dyn serial::Write<Error = SerialClientError>
+    fn flush(&mut self) {
+        nb::block!(self.serial_client.flush()).unwrap();
     }
 }

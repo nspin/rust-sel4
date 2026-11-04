@@ -10,6 +10,7 @@ mk {
   package.name = "banscii-serial-driver";
   dependencies = {
     inherit (localCrates)
+      sddf
       sel4-microkit
       sel4-microkit-driver-adapters
     ;

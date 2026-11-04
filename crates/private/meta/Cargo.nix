@@ -39,10 +39,6 @@ mk {
       sel4-one-ref-cell
       sel4-panicking
       sel4-panicking-env
-      sel4-shared-ring-buffer
-      sddf-async-block-io
-      sel4-shared-ring-buffer-block-io-types
-      sddf-smoltcp
       sel4-stack
       sel4-sync
 

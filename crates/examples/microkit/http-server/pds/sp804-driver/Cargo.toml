@@ -17,7 +17,7 @@ edition = "2024"
 license = "BSD-2-Clause"
 
 [dependencies]
-sel4-driver-interfaces = { path = "../../../../../experimental/sel4-driver-interfaces" }
+sddf = { path = "../../../../../experimental/sddf" }
 sel4-microkit = { path = "../../../../../sel4-microkit" }
 sel4-sp804-driver = { path = "../../../../../drivers/sp804" }
 

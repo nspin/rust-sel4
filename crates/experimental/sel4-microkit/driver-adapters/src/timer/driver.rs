@@ -4,54 +4,69 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+//! Each client may have one outstanding timeout. Clients are identified by the channels on which
+//! they make protected procedure calls.
+
 use core::convert::Infallible;
+use core::time::Duration;
 
+use sddf::resources::DeviceResources;
+use sddf::timer::{GET_TIME, SET_TIMEOUT};
 use sel4_driver_interfaces::HandleInterrupt;
-use sel4_driver_interfaces::timer::{NumTimers, Timers};
-use sel4_microkit::{Channel, ChannelSet, Handler, MessageInfo};
-use sel4_microkit_simple_ipc as simple_ipc;
+use sel4_driver_interfaces::timer::Timer;
+use sel4_microkit::{Channel, ChannelSet, Handler, MessageInfo, get_mr, set_mr};
 
-use super::message_types::*;
+const MAX_CHANNELS: usize = 64;
 
 #[derive(Clone, Debug)]
 pub struct HandlerImpl<Driver> {
     driver: Driver,
-    timer: Channel,
-    client: Channel,
-    num_timers: usize,
+    irq: Channel,
+    timeouts: [Option<Duration>; MAX_CHANNELS],
 }
 
-impl<Driver: Timers<TimerLayout = NumTimers>> HandlerImpl<Driver> {
-    pub fn new(mut driver: Driver, timer: Channel, client: Channel) -> Result<Self, Driver::Error> {
-        let num_timers = driver.timer_layout()?.0;
-        Ok(Self {
+impl<Driver: Timer> HandlerImpl<Driver> {
+    /// The device's IRQ must be the first in `resources`.
+    pub fn new(driver: Driver, resources: &DeviceResources) -> Self {
+        Self {
             driver,
-            timer,
-            client,
-            num_timers,
-        })
+            irq: Channel::new(resources.irq(0)),
+            timeouts: [None; MAX_CHANNELS],
+        }
     }
 
-    fn guard_timer(&self, timer: usize) -> Result<(), ErrorResponse> {
-        if timer < self.num_timers {
-            Ok(())
-        } else {
-            Err(ErrorResponse::TimerOutOfBounds)
+    fn now(&mut self) -> Duration {
+        self.driver.get_time().unwrap()
+    }
+
+    fn process_timeouts(&mut self) {
+        let now = self.now();
+        let mut next = None;
+        for (i, timeout) in self.timeouts.iter_mut().enumerate() {
+            if let Some(t) = *timeout {
+                if t <= now {
+                    Channel::new(i).notify();
+                    *timeout = None;
+                } else {
+                    next = Some(next.map_or(t, |next: Duration| next.min(t)));
+                }
+            }
+        }
+        match next {
+            Some(t) => self.driver.set_timeout(t - now).unwrap(),
+            None => self.driver.clear_timeout().unwrap(),
         }
     }
 }
 
-impl<Driver> Handler for HandlerImpl<Driver>
-where
-    Driver: Timers<TimerLayout = NumTimers, Timer = usize> + HandleInterrupt,
-{
+impl<Driver: Timer + HandleInterrupt> Handler for HandlerImpl<Driver> {
     type Error = Infallible;
 
     fn notified(&mut self, channels: ChannelSet) -> Result<(), Self::Error> {
-        if channels.contains(self.timer) {
+        if channels.contains(self.irq) {
             self.driver.handle_interrupt();
-            self.timer.irq_ack().unwrap();
-            self.client.notify();
+            self.irq.irq_ack().unwrap();
+            self.process_timeouts();
         }
         Ok(())
     }
@@ -61,41 +76,21 @@ where
         channel: Channel,
         msg_info: MessageInfo,
     ) -> Result<MessageInfo, Self::Error> {
-        if channel == self.client {
-            Ok(match simple_ipc::try_recv::<Request>(msg_info) {
-                Ok(req) => {
-                    let resp = match req {
-                        Request::GetTime => self
-                            .driver
-                            .get_time()
-                            .map(SuccessResponse::GetTime)
-                            .map_err(|_| ErrorResponse::Unspecified),
-                        Request::NumTimers => self
-                            .driver
-                            .timer_layout()
-                            .map(|NumTimers(n)| SuccessResponse::NumTimers(n))
-                            .map_err(|_| ErrorResponse::Unspecified),
-                        Request::SetTimeout { timer, relative } => {
-                            self.guard_timer(timer).and_then(|_| {
-                                self.driver
-                                    .set_timeout_on(timer, relative)
-                                    .map(|_| SuccessResponse::SetTimeout)
-                                    .map_err(|_| ErrorResponse::Unspecified)
-                            })
-                        }
-                        Request::ClearTimeout { timer } => self.guard_timer(timer).and_then(|_| {
-                            self.driver
-                                .clear_timeout_on(timer)
-                                .map(|_| SuccessResponse::ClearTimeout)
-                                .map_err(|_| ErrorResponse::Unspecified)
-                        }),
-                    };
-                    simple_ipc::send(resp)
-                }
-                Err(_) => simple_ipc::send_unspecified_error(),
-            })
-        } else {
-            panic!("unexpected channel: {channel:?}");
-        }
+        Ok(match u32::try_from(msg_info.label()) {
+            Ok(GET_TIME) => {
+                let now = self.now().as_nanos().try_into().unwrap();
+                set_mr(0, now);
+                MessageInfo::new(0, 1)
+            }
+            Ok(SET_TIMEOUT) if msg_info.count() >= 1 => {
+                #[allow(clippy::useless_conversion)]
+                let relative = Duration::from_nanos(get_mr(0).try_into().unwrap());
+                let deadline = self.now().saturating_add(relative);
+                self.timeouts[channel.index()] = Some(deadline);
+                self.process_timeouts();
+                MessageInfo::new(0, 0)
+            }
+            _ => panic!("unexpected request on channel {channel:?}: {msg_info:?}"),
+        })
     }
 }

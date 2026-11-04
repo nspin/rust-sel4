@@ -23,10 +23,11 @@
 //!   notification-based mutexes.
 //! - [`sel4_logging`]: [`Log`](log::Log) implementation for the [`log`] crate.
 //! - [`sel4_shared_memory`]: Abstractions for interacting with data in shared memory.
-//! - [`sel4_shared_ring_buffer`] and `sel4_shared_ring_buffer_*`: Implementation of shared data structures used in the [seL4 Device
-//!   Driver Framework](https://github.com/au-ts/sddf).
+//! - `sddf` and `sddf_*`: Bindings to and adapters for the [seL4 Device Driver
+//!   Framework](https://github.com/au-ts/sddf). These crates are only available for Microkit
+//!   protection domains.
 //! - `sel4_async_*`: Crates for leveraging async Rust in seL4 userspace.
-//! - `sel4_*_driver`: Crates implementing drivers for use with `sel4_shared_ring_buffer_*` and the orthogonal [`sel4_driver_interfaces`].
+//! - `sel4_*_driver`: Crates implementing drivers for use with the orthogonal [`sel4_driver_interfaces`].
 //! - ...and many more, including lower-level crates for implementing additional runtimes.
 //!
 //! ### Runtime crates
@@ -116,10 +117,6 @@ maybe! {
 
 definitely! {
     sel4_shared_memory
-    sel4_shared_ring_buffer
-    sddf_async_block_io
-    sel4_shared_ring_buffer_block_io_types
-    sddf_smoltcp
     sel4_stack
     sel4_sync
 

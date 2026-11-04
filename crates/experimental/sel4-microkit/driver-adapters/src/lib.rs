@@ -7,7 +7,6 @@
 
 #![no_std]
 
-pub mod block;
 pub mod net;
 pub mod rtc;
 pub mod serial;

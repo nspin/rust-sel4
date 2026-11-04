@@ -205,8 +205,9 @@ dependencies = [
  "banscii-assistant-core",
  "embedded-hal-nb",
  "hex",
+ "sddf",
+ "sddf-embedded-hal-nb",
  "sel4-microkit",
- "sel4-microkit-driver-adapters",
  "sel4-microkit-simple-ipc",
  "sel4-shared-memory",
 ]
@@ -233,6 +234,7 @@ dependencies = [
 name = "banscii-serial-driver"
 version = "0.1.0"
 dependencies = [
+ "sddf",
  "sel4-microkit",
  "sel4-microkit-driver-adapters",
  "sel4-pl011-driver",
@@ -1193,8 +1195,6 @@ name = "meta"
 version = "0.1.0"
 dependencies = [
  "log",
- "sddf-async-block-io",
- "sddf-smoltcp",
  "sel4",
  "sel4-abstract-allocator",
  "sel4-abstract-ptr",
@@ -1229,8 +1229,6 @@ dependencies = [
  "sel4-reset",
  "sel4-root-task",
  "sel4-shared-memory",
- "sel4-shared-ring-buffer",
- "sel4-shared-ring-buffer-block-io-types",
  "sel4-sp804-driver",
  "sel4-stack",
  "sel4-sync",
@@ -1251,6 +1249,7 @@ dependencies = [
 name = "microkit-http-server-example-pl031-driver"
 version = "0.1.0"
 dependencies = [
+ "sddf",
  "sel4-microkit",
  "sel4-microkit-driver-adapters",
  "sel4-pl031-driver",
@@ -1267,17 +1266,16 @@ dependencies = [
  "one-shot-mutex",
  "rcgen",
  "rtcc",
+ "sddf",
  "sddf-async-block-io",
  "sddf-smoltcp",
  "sel4",
- "sel4-abstract-allocator",
  "sel4-async-block-io",
  "sel4-async-block-io-cached",
  "sel4-async-block-io-disk",
  "sel4-async-network",
  "sel4-async-single-threaded-executor",
  "sel4-async-time",
- "sel4-bookkeeping",
  "sel4-driver-interfaces",
  "sel4-immediate-sync-once-cell",
  "sel4-logging",
@@ -1285,9 +1283,6 @@ dependencies = [
  "sel4-microkit-driver-adapters",
  "sel4-never-polyfill",
  "sel4-newlib",
- "sel4-shared-memory",
- "sel4-shared-ring-buffer",
- "sel4-shared-ring-buffer-block-io-types",
  "smoltcp",
 ]
 
@@ -1318,7 +1313,7 @@ dependencies = [
 name = "microkit-http-server-example-sp804-driver"
 version = "0.1.0"
 dependencies = [
- "sel4-driver-interfaces",
+ "sddf",
  "sel4-microkit",
  "sel4-microkit-driver-adapters",
  "sel4-sp804-driver",
@@ -1329,16 +1324,12 @@ name = "microkit-http-server-example-virtio-blk-driver"
 version = "0.1.0"
 dependencies = [
  "log",
+ "sddf",
  "sel4",
  "sel4-abstract-allocator",
- "sel4-driver-interfaces",
  "sel4-immediate-sync-once-cell",
  "sel4-microkit",
- "sel4-microkit-driver-adapters",
  "sel4-shared-memory",
- "sel4-shared-ring-buffer",
- "sel4-shared-ring-buffer-block-io-types",
- "sel4-virtio-blk",
  "sel4-virtio-hal-impl",
  "virtio-drivers",
 ]
@@ -1348,13 +1339,13 @@ name = "microkit-http-server-example-virtio-net-driver"
 version = "0.1.0"
 dependencies = [
  "log",
+ "sddf",
  "sel4",
  "sel4-abstract-allocator",
  "sel4-immediate-sync-once-cell",
  "sel4-microkit",
  "sel4-microkit-driver-adapters",
  "sel4-shared-memory",
- "sel4-shared-ring-buffer",
  "sel4-virtio-hal-impl",
  "sel4-virtio-net",
  "virtio-drivers",
@@ -2096,14 +2087,20 @@ name = "sddf-async-block-io"
 version = "0.1.0"
 dependencies = [
  "async-unsync",
- "futures",
- "log",
- "sel4-abstract-allocator",
+ "heapless",
+ "sddf",
  "sel4-async-block-io",
- "sel4-bookkeeping",
  "sel4-shared-memory",
- "sel4-shared-ring-buffer",
- "sel4-shared-ring-buffer-block-io-types",
+ "thiserror",
+]
+
+[[package]]
+name = "sddf-embedded-hal-nb"
+version = "0.1.0"
+dependencies = [
+ "embedded-hal-nb",
+ "sddf",
+ "thiserror",
 ]
 
 [[package]]
@@ -2117,14 +2114,9 @@ dependencies = [
 name = "sddf-smoltcp"
 version = "0.1.0"
 dependencies = [
- "lock_api",
- "log",
- "one-shot-mutex",
- "sel4-abstract-allocator",
- "sel4-abstract-rc",
- "sel4-bookkeeping",
+ "heapless",
+ "sddf",
  "sel4-shared-memory",
- "sel4-shared-ring-buffer",
  "smoltcp",
 ]
 
@@ -2569,15 +2561,13 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "embedded-hal-nb",
- "heapless",
  "log",
  "rtcc",
- "sel4-abstract-allocator",
+ "sddf",
  "sel4-driver-interfaces",
  "sel4-microkit",
  "sel4-microkit-simple-ipc",
  "sel4-shared-memory",
- "sel4-shared-ring-buffer",
  "serde",
  "smoltcp",
 ]
@@ -2841,24 +2831,6 @@ version = "0.1.0"
 dependencies = [
  "rustversion",
  "sel4-abstract-ptr",
- "zerocopy",
-]
-
-[[package]]
-name = "sel4-shared-ring-buffer"
-version = "0.1.0"
-dependencies = [
- "log",
- "sel4-shared-memory",
- "zerocopy",
-]
-
-[[package]]
-name = "sel4-shared-ring-buffer-block-io-types"
-version = "0.1.0"
-dependencies = [
- "num_enum",
- "sel4-shared-ring-buffer",
  "zerocopy",
 ]
 

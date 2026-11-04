@@ -17,14 +17,9 @@ edition = "2024"
 license = "BSD-2-Clause"
 
 [dependencies]
-lock_api = "0.4.14"
-log = "0.4.28"
-one-shot-mutex = "0.2.1"
-sel4-abstract-allocator = { path = "../../sel4-abstract-allocator" }
-sel4-abstract-rc = { path = "../../sel4-abstract-rc" }
-sel4-bookkeeping = { path = "../../sel4-bookkeeping" }
+heapless = "0.9.1"
+sddf = { path = ".." }
 sel4-shared-memory = { path = "../../../sel4-shared-memory" }
-sel4-shared-ring-buffer = { path = "../../sel4-shared-ring-buffer" }
 
 [dependencies.smoltcp]
 version = "0.14.0"

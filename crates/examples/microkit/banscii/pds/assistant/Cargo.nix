@@ -12,8 +12,9 @@ mk {
     inherit (versions) embedded-hal-nb;
     hex = { version = versions.hex; default-features = false; features = [ "alloc" ]; };
     inherit (localCrates)
+      sddf
+      sddf-embedded-hal-nb
       sel4-microkit-simple-ipc
-      sel4-microkit-driver-adapters
       sel4-shared-memory
       banscii-assistant-core
       banscii-artist-interface-types

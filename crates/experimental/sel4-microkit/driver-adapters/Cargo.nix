@@ -14,7 +14,7 @@ mk {
     "Ben Hamlin <hamlinb@galois.com>"
   ];
   dependencies = {
-    inherit (versions) log embedded-hal-nb heapless rtcc;
+    inherit (versions) log embedded-hal-nb rtcc;
     serde = serdeWith [];
     smoltcp = smoltcpWith [];
     chrono = { version = versions.chrono; default-features = false; features = [ "serde" ]; };
@@ -23,9 +23,8 @@ mk {
       sel4-driver-interfaces
       sel4-microkit
       sel4-microkit-simple-ipc
-      sel4-shared-ring-buffer
+      sddf
       sel4-shared-memory
-      sel4-abstract-allocator
     ;
   });
   features = {

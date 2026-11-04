@@ -9,40 +9,86 @@ use core::convert::Infallible;
 
 use embedded_hal_nb::nb;
 use embedded_hal_nb::serial;
-use heapless::Deque;
 
+use sddf::resources::DeviceResources;
+use sddf::serial::{Consumer, Producer, QueueHandle};
+use sddf::sys::serial_driver_config_t;
 use sel4_driver_interfaces::HandleInterrupt;
-use sel4_microkit::{Channel, ChannelSet, Handler, MessageInfo};
-use sel4_microkit_simple_ipc as simple_ipc;
+use sel4_microkit::{Channel, ChannelSet, Handler};
 
-use super::message_types::*;
-
-/// Handle messages using an implementor of [serial::Read<u8>] and [serial::Write<u8>].
-#[derive(Clone, Debug)]
-pub struct HandlerImpl<Driver, const READ_BUF_SIZE: usize = 256> {
-    /// Driver implementing [serial::Read<u8>] and [serial::Write<u8>].
+pub struct HandlerImpl<Driver> {
     driver: Driver,
-    /// Channel for this component.
-    serial: Channel,
-    /// Channel for client component.
-    client: Channel,
-    /// Read buffer.
-    buffer: Deque<u8, READ_BUF_SIZE>,
-    /// Whether to notify client.
-    notify: bool,
+    device_channel: Channel,
+    rx: Option<QueueHandle<Producer>>,
+    tx: QueueHandle<Consumer>,
 }
 
-impl<Driver, const READ_BUF_SIZE: usize> HandlerImpl<Driver, READ_BUF_SIZE>
+impl<Driver> HandlerImpl<Driver>
 where
     Driver: serial::Read<u8> + serial::Write<u8> + HandleInterrupt,
 {
-    pub fn new(driver: Driver, serial: Channel, client: Channel) -> Self {
+    /// The device's IRQ must be the first in `resources`.
+    ///
+    /// # Safety
+    ///
+    /// The queues and data regions described by `config` must be valid and shared only with a
+    /// peer which follows the sDDF serial protocol.
+    pub unsafe fn new(
+        driver: Driver,
+        resources: &DeviceResources,
+        config: &serial_driver_config_t,
+    ) -> Self {
+        let device_channel = Channel::new(resources.irq(0));
+        let rx = config
+            .rx_enabled
+            .then(|| unsafe { QueueHandle::from_connection_resource(&config.rx) });
+        let tx = unsafe { QueueHandle::from_connection_resource(&config.tx) };
         Self {
             driver,
-            serial,
-            client,
-            buffer: Deque::new(),
-            notify: true,
+            device_channel,
+            rx,
+            tx,
+        }
+    }
+
+    fn rx_return(&mut self) {
+        let Some(queue) = &mut self.rx else {
+            return;
+        };
+        let mut enqueued = false;
+        // While the queue is full, received characters wait in the device
+        while queue
+            .try_or_request_signal(|queue| (queue.free() > 0).then_some(()))
+            .is_some()
+        {
+            match self.driver.read() {
+                Ok(c) => {
+                    assert!(queue.enqueue(c));
+                    enqueued = true;
+                }
+                Err(nb::Error::WouldBlock) => break,
+                Err(nb::Error::Other(err)) => {
+                    log::debug!("read error: {err:?}");
+                    break;
+                }
+            }
+        }
+        if enqueued {
+            queue.notify();
+        }
+    }
+
+    fn tx_provide(&mut self) {
+        let queue = &mut self.tx;
+        let mut transferred = false;
+        while let Some(c) = queue.dequeue() {
+            if let Err(err) = nb::block!(self.driver.write(c)) {
+                log::debug!("write error: {err:?}");
+            }
+            transferred = true;
+        }
+        if transferred {
+            queue.signal_producer();
         }
     }
 }
@@ -54,62 +100,25 @@ where
     type Error = Infallible;
 
     fn notified(&mut self, channels: ChannelSet) -> Result<(), Self::Error> {
-        if channels.contains(self.serial) {
-            while !self.buffer.is_full() {
-                match self.driver.read() {
-                    Ok(v) => {
-                        self.buffer.push_back(v).unwrap();
-                    }
-                    Err(err) => {
-                        if let nb::Error::Other(err) = err {
-                            // TODO somehow inform the client
-                            log::debug!("read error: {err:?}")
-                        }
-                        break;
-                    }
-                }
-            }
+        let mut handled = false;
+        if channels.contains(self.device_channel) {
+            self.rx_return();
             self.driver.handle_interrupt();
-            self.serial.irq_ack().unwrap();
-            if self.notify {
-                self.client.notify();
-                self.notify = false;
-            }
-        } else {
-            panic!("unexpected channels: {}", channels.display());
+            self.device_channel.irq_ack().unwrap();
+            handled = true;
         }
+        if let Some(queue) = &self.rx
+            && channels.contains(Channel::new(queue.channel()))
+        {
+            // The client has made space in a full queue
+            self.rx_return();
+            handled = true;
+        }
+        if channels.contains(Channel::new(self.tx.channel())) {
+            self.tx_provide();
+            handled = true;
+        }
+        assert!(handled, "unexpected channels: {}", channels.display());
         Ok(())
-    }
-
-    fn protected(
-        &mut self,
-        channel: Channel,
-        msg_info: MessageInfo,
-    ) -> Result<MessageInfo, Self::Error> {
-        if channel == self.client {
-            Ok(match simple_ipc::try_recv::<Request>(msg_info) {
-                Ok(req) => {
-                    let resp = match req {
-                        Request::Read => {
-                            let v = self.buffer.pop_front();
-                            if v.is_some() {
-                                self.notify = true;
-                            }
-                            Ok(SuccessResponse::Read(v.into()))
-                        }
-                        Request::Write(c) => NonBlocking::from_nb_result(self.driver.write(c))
-                            .map(SuccessResponse::Write)
-                            .map_err(|_| ErrorResponse::WriteError),
-                        Request::Flush => NonBlocking::from_nb_result(self.driver.flush())
-                            .map(SuccessResponse::Flush)
-                            .map_err(|_| ErrorResponse::FlushError),
-                    };
-                    simple_ipc::send(resp)
-                }
-                Err(_) => simple_ipc::send_unspecified_error(),
-            })
-        } else {
-            panic!("unexpected channel: {channel:?}");
-        }
     }
 }
