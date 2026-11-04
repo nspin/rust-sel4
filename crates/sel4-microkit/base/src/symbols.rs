@@ -109,15 +109,15 @@ macro_rules! var {
 #[macro_export]
 macro_rules! memory_region_symbol {
     ($(#[$attrs:meta])* $symbol:ident: *mut [$ty:ty], n = $n:expr, bytes = $bytes:expr $(,)?) => {{
-        assert!($bytes == $n * core::mem::size_of::<$ty>());
+        assert!($bytes == $n * $crate::_private::size_of::<$ty>());
         $crate::memory_region_symbol!($(#[$attrs])* $symbol: *mut $ty, n = $n)
     }};
     ($(#[$attrs:meta])* $symbol:ident: *mut $ty:ty, bytes = $bytes:expr $(,)?) => {{
-        assert!($bytes == core::mem::size_of::<$ty>());
+        assert!($bytes == $crate::_private::size_of::<$ty>());
         $crate::memory_region_symbol!($(#[$attrs])* $symbol: *mut $ty)
     }};
     ($(#[$attrs:meta])* $symbol:ident: *mut [$ty:ty], n = $n:expr $(,)?) => {{
-        core::ptr::NonNull::slice_from_raw_parts(
+        $crate::_private::NonNull::slice_from_raw_parts(
             $crate::memory_region_symbol!(
                 $(#[$attrs])* $symbol: *mut $ty
             ),
@@ -125,7 +125,7 @@ macro_rules! memory_region_symbol {
         )
     }};
     ($(#[$attrs:meta])* $symbol:ident: *mut $ty:ty $(,)?) => {{
-        core::ptr::NonNull::new(
+        $crate::_private::NonNull::new(
             *$crate::var!($(#[$attrs])* $symbol: usize = 0) as *mut $ty
         ).unwrap_or_else(|| {
             panic!("{} is null", stringify!($symbol))

@@ -33,5 +33,8 @@ pub use symbols::{pd_is_passive, pd_name};
 // For macros
 #[doc(hidden)]
 pub mod _private {
+    pub use core::mem::size_of;
+    pub use core::ptr::NonNull;
+
     pub use sel4_immutable_cell::ImmutableCell;
 }
