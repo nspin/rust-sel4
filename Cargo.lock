@@ -1208,7 +1208,6 @@ dependencies = [
  "sel4-async-time",
  "sel4-async-unsync",
  "sel4-bcm2835-aux-uart-driver",
- "sel4-bookkeeping",
  "sel4-config",
  "sel4-dlmalloc",
  "sel4-driver-interfaces",
@@ -1233,7 +1232,6 @@ dependencies = [
  "sel4-stack",
  "sel4-sync",
  "sel4-sys",
- "sel4-virtio-blk",
  "sel4-virtio-hal-impl",
  "sel4-virtio-net",
 ]
@@ -2113,13 +2111,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sddf-ipc-types"
-version = "0.1.0"
-dependencies = [
- "sel4-microkit-base",
-]
-
-[[package]]
 name = "sddf-smoltcp"
 version = "0.1.0"
 dependencies = [
@@ -2314,13 +2305,6 @@ name = "sel4-bitfield-ops"
 version = "0.1.0"
 
 [[package]]
-name = "sel4-bookkeeping"
-version = "0.1.0"
-dependencies = [
- "async-unsync",
-]
-
-[[package]]
 name = "sel4-build-env"
 version = "0.1.0"
 
@@ -2422,13 +2406,6 @@ dependencies = [
 [[package]]
 name = "sel4-driver-interfaces"
 version = "0.1.0"
-dependencies = [
- "embedded-hal-nb",
- "heapless",
- "lock_api",
- "rtcc",
- "serde",
-]
 
 [[package]]
 name = "sel4-generate-target-specs"
@@ -3010,15 +2987,6 @@ name = "sel4-test-sentinels-wrapper"
 version = "0.1.0"
 dependencies = [
  "anyhow",
-]
-
-[[package]]
-name = "sel4-virtio-blk"
-version = "0.1.0"
-dependencies = [
- "log",
- "sel4-driver-interfaces",
- "virtio-drivers",
 ]
 
 [[package]]

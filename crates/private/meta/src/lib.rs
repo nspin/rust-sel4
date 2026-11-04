@@ -96,7 +96,6 @@ definitely! {
     sel4_async_time
     sel4_async_unsync
     sel4_abstract_allocator
-    sel4_bookkeeping
     sel4_dlmalloc
     sel4_driver_interfaces
     sel4_phdrs
@@ -125,7 +124,6 @@ definitely! {
     sel4_pl031_driver
     sel4_sp804_driver
     sel4_virtio_net
-    sel4_virtio_blk
     sel4_virtio_hal_impl
 }
 

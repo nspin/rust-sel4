@@ -35,7 +35,6 @@ sel4-async-single-threaded-executor = { path = "../../sel4-async/single-threaded
 sel4-async-time = { path = "../../sel4-async/time" }
 sel4-async-unsync = { path = "../../sel4-async/unsync" }
 sel4-bcm2835-aux-uart-driver = { path = "../../drivers/bcm2835-aux-uart" }
-sel4-bookkeeping = { path = "../../experimental/sel4-bookkeeping" }
 sel4-config = { path = "../../sel4/config" }
 sel4-dlmalloc = { path = "../../sel4-dlmalloc" }
 sel4-driver-interfaces = { path = "../../experimental/sel4-driver-interfaces" }
@@ -58,7 +57,6 @@ sel4-sp804-driver = { path = "../../drivers/sp804" }
 sel4-stack = { path = "../../sel4-stack" }
 sel4-sync = { path = "../../sel4-sync" }
 sel4-sys = { path = "../../sel4/sys" }
-sel4-virtio-blk = { path = "../../drivers/virtio/blk" }
 sel4-virtio-hal-impl = { path = "../../drivers/virtio/hal-impl" }
 sel4-virtio-net = { path = "../../drivers/virtio/net" }
 

@@ -27,7 +27,6 @@ mk {
       sel4-async-time
       sel4-async-unsync
       sel4-abstract-allocator
-      sel4-bookkeeping
       sel4-dlmalloc
       sel4-driver-interfaces
       sel4-phdrs
@@ -46,7 +45,6 @@ mk {
       sel4-pl011-driver
       sel4-pl031-driver
       sel4-sp804-driver
-      sel4-virtio-blk
       sel4-virtio-hal-impl
       sel4-virtio-net
     ;
