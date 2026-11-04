@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::mem;
 use core::ops::Range;
 use core::slice;
 
@@ -51,7 +50,7 @@ impl seL4_IPCBuffer {
         unsafe {
             slice::from_raw_parts_mut(
                 msg.as_mut_ptr().cast::<u8>(),
-                msg.len() * mem::size_of::<seL4_Word>(),
+                msg.len() * size_of::<seL4_Word>(),
             )
         }
     }

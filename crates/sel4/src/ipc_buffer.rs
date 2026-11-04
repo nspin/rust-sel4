@@ -5,7 +5,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::mem;
 use core::slice;
 
 #[sel4_cfg(KERNEL_INVOCATION_REPORT_ERROR_IPC)]
@@ -35,14 +34,14 @@ impl IpcBuffer {
     pub fn msg_bytes(&self) -> &[u8] {
         let msg = &self.inner().msg;
         let msg_ptr = msg as *const Word;
-        let size = mem::size_of_val(msg);
+        let size = size_of_val(msg);
         unsafe { slice::from_raw_parts(msg_ptr.cast(), size) }
     }
 
     pub fn msg_bytes_mut(&mut self) -> &mut [u8] {
         let msg = &mut self.inner_mut().msg;
         let msg_ptr = msg as *mut Word;
-        let size = mem::size_of_val(msg);
+        let size = size_of_val(msg);
         unsafe { slice::from_raw_parts_mut(msg_ptr.cast(), size) }
     }
 
@@ -79,8 +78,8 @@ impl IpcBuffer {
 
     #[sel4_cfg(KERNEL_INVOCATION_REPORT_ERROR_IPC)]
     pub fn debug_error_bytes(&self) -> &[u8] {
-        let start = u32_into_usize(sys::DEBUG_MESSAGE_START) * mem::size_of::<Word>();
-        let len = u32_into_usize(sys::DEBUG_MESSAGE_MAXLEN) * mem::size_of::<Word>();
+        let start = u32_into_usize(sys::DEBUG_MESSAGE_START) * size_of::<Word>();
+        let len = u32_into_usize(sys::DEBUG_MESSAGE_MAXLEN) * size_of::<Word>();
         let all_bytes = &self.msg_bytes()[start..][..len];
         let n = all_bytes.iter().take_while(|b| **b != 0).count();
         &all_bytes[..n]

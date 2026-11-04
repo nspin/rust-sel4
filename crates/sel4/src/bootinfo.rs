@@ -7,7 +7,6 @@
 
 #![allow(clippy::useless_conversion)]
 
-use core::mem;
 use core::ops::{Deref, Range};
 use core::slice;
 
@@ -158,7 +157,7 @@ impl BootInfoExtra<'_> {
 
     pub fn content(&self) -> &[u8] {
         let content_with_header = self.content_with_header();
-        &content_with_header[mem::size_of::<sys::seL4_BootInfoHeader>()..]
+        &content_with_header[size_of::<sys::seL4_BootInfoHeader>()..]
     }
 }
 
@@ -218,8 +217,8 @@ impl<'a> Iterator for BootInfoExtraIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         while self.cursor < self.bootinfo.extra_slice().len() {
             let header = {
-                let mut it = self.bootinfo.extra_slice()[self.cursor..]
-                    .chunks(mem::size_of::<sys::seL4_Word>());
+                let mut it =
+                    self.bootinfo.extra_slice()[self.cursor..].chunks(size_of::<sys::seL4_Word>());
                 let mut munch_word =
                     || sys::seL4_Word::from_ne_bytes(it.next().unwrap().try_into().unwrap());
                 let id = munch_word();

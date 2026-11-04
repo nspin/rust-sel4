@@ -4,8 +4,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
-use core::mem;
-
 use gpt_disk_types::{MasterBootRecord, MbrPartitionRecord};
 
 use sel4_async_block_io::{
@@ -24,7 +22,7 @@ impl<T> Disk<T> {
     where
         T: PartialBlockIO<A>,
     {
-        let mut buf = [0; mem::size_of::<MasterBootRecord>()];
+        let mut buf = [0; size_of::<MasterBootRecord>()];
         read_bytes(&self.io, 0, &mut buf[..]).await?;
         let mbr = *bytemuck::from_bytes::<MasterBootRecord>(&buf[..]);
         Ok(match mbr.signature {

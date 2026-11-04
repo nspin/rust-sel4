@@ -7,7 +7,6 @@
 #![no_std]
 
 use core::marker::PhantomData;
-use core::mem;
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, Range, Shl, Shr};
 
 pub trait UnsignedPrimInt:
@@ -23,7 +22,7 @@ pub trait UnsignedPrimInt:
     + Shr<usize, Output = Self>
     + From<bool> // HACK for generic 0 and 1
 {
-    const NUM_BITS: usize = mem::size_of::<Self>() * 8;
+    const NUM_BITS: usize = size_of::<Self>() * 8;
 
     fn zero() -> Self {
         false.into()

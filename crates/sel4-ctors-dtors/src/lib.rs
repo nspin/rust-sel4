@@ -12,7 +12,6 @@
 #![feature(linkage)]
 
 use core::fmt;
-use core::mem;
 use core::ptr;
 use core::slice;
 
@@ -61,13 +60,13 @@ unsafe fn run_array(
     section_name: &'static str,
 ) -> Result<(), Error> {
     if start_addr != end_addr {
-        if !start_addr.is_multiple_of(mem::size_of::<ArrayEntry>())
-            || !end_addr.is_multiple_of(mem::size_of::<ArrayEntry>())
+        if !start_addr.is_multiple_of(size_of::<ArrayEntry>())
+            || !end_addr.is_multiple_of(size_of::<ArrayEntry>())
         {
             return Err(Error::Misaligned { section_name });
         }
 
-        let len = (end_addr - start_addr) / mem::size_of::<ArrayEntry>();
+        let len = (end_addr - start_addr) / size_of::<ArrayEntry>();
         let array = unsafe { slice::from_raw_parts(start_addr as *const ArrayEntry, len) };
         for entry in array {
             (entry)();

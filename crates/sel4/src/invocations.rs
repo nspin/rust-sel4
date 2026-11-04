@@ -6,8 +6,6 @@
 
 #![allow(clippy::useless_conversion)]
 
-use core::mem;
-
 use crate::{
     AbsoluteCPtr, CNodeCapData, CPtr, CapRights, Error, InvocationContext, ObjectBlueprint, Result,
     UserContext, Word, cap::*, sys,
@@ -44,8 +42,7 @@ impl<C: InvocationContext> Untyped<C> {
     }
 }
 
-const USER_CONTEXT_MAX_REG_COUNT: usize =
-    mem::size_of::<sys::seL4_UserContext>() / mem::size_of::<Word>();
+const USER_CONTEXT_MAX_REG_COUNT: usize = size_of::<sys::seL4_UserContext>() / size_of::<Word>();
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TcbFlagsBuilder(Word);

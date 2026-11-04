@@ -18,7 +18,6 @@
 #![no_std]
 
 use core::alloc::Layout;
-use core::mem;
 use core::ptr;
 use core::slice;
 
@@ -113,7 +112,7 @@ impl TlsImage {
             .unwrap(); // TODO return error
         if cfg!(target_arch = "x86_64") {
             let thread_pointer_slice = &mut reservation
-                [reservation_layout.thread_pointer_offset()..][..mem::size_of::<usize>()];
+                [reservation_layout.thread_pointer_offset()..][..size_of::<usize>()];
             thread_pointer_slice.copy_from_slice(&thread_pointer.to_ne_bytes());
         }
         thread_pointer
@@ -165,7 +164,7 @@ pub struct TlsReservationLayout {
 impl TlsReservationLayout {
     fn from_segment_layout(segment_layout: Layout) -> Self {
         if cfg!(any(target_arch = "arm", target_arch = "aarch64")) {
-            let tcb_size = 2 * mem::size_of::<usize>();
+            let tcb_size = 2 * size_of::<usize>();
             let tcb_layout = Layout::from_size_align(tcb_size, tcb_size).unwrap();
             let (footprint, segment_offset) = tcb_layout.extend(segment_layout).unwrap();
             Self {
@@ -181,8 +180,7 @@ impl TlsReservationLayout {
             }
         } else if cfg!(target_arch = "x86_64") {
             let tcb_layout =
-                Layout::from_size_align(2 * mem::size_of::<usize>(), mem::size_of::<usize>())
-                    .unwrap(); // could probably get away with just 1x word size for size (keeping 2x word size alignment)
+                Layout::from_size_align(2 * size_of::<usize>(), size_of::<usize>()).unwrap(); // could probably get away with just 1x word size for size (keeping 2x word size alignment)
             let (footprint, thread_pointer_offset) = segment_layout.extend(tcb_layout).unwrap();
             Self {
                 footprint,
