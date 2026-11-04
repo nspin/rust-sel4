@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //
 
+use core::num::NonZero;
+
 #[cfg(feature = "alloc")]
 use alloc::vec;
 #[cfg(feature = "alloc")]
@@ -36,19 +38,20 @@ impl<const N: usize> BlockType for ConstantBlockSize<N> {
     }
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct RuntimeBlockSize {
-    bits: usize,
+    bytes: NonZero<usize>,
 }
 
 impl RuntimeBlockSize {
-    pub fn new(bits: usize) -> Self {
-        Self { bits }
+    pub const fn new(bytes: NonZero<usize>) -> Self {
+        Self { bytes }
     }
 }
 
 impl BlockSize for RuntimeBlockSize {
     fn bytes(&self) -> usize {
-        1 << self.bits
+        self.bytes.get()
     }
 }
 

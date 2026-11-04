@@ -73,6 +73,15 @@ pub trait BlockIO<A: Access>: BlockIOLayout {
         operation: Operation<'_, A>,
     ) -> Result<(), Self::Error>;
 
+    /// Completes once every write which completed before this call is durable.
+    ///
+    /// The default implementation does nothing, which is correct for implementations whose writes
+    /// are durable once they complete.
+    #[allow(async_fn_in_trait)]
+    async fn flush(&self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
     #[allow(async_fn_in_trait)]
     async fn read_blocks(&self, start_block_idx: u64, buf: &mut [u8]) -> Result<(), Self::Error>
     where
@@ -167,6 +176,10 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for &T {
     ) -> Result<(), <&T as BlockIOLayout>::Error> {
         T::read_or_write_blocks(self, start_block_idx, operation).await
     }
+
+    async fn flush(&self) -> Result<(), <&T as BlockIOLayout>::Error> {
+        T::flush(self).await
+    }
 }
 
 impl<T: PartialBlockIO<A>, A: Access> PartialBlockIO<A> for &T {
@@ -203,6 +216,10 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for Rc<T> {
         operation: Operation<'_, A>,
     ) -> Result<(), Self::Error> {
         T::read_or_write_blocks(self, start_block_idx, operation).await
+    }
+
+    async fn flush(&self) -> Result<(), Self::Error> {
+        T::flush(self).await
     }
 }
 
@@ -267,6 +284,10 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for Partition<T> {
             .read_or_write_blocks(inner_block_idx, operation)
             .await
     }
+
+    async fn flush(&self) -> Result<(), Self::Error> {
+        self.inner().flush().await
+    }
 }
 
 impl<T: PartialBlockIO<A>, A: Access> PartialBlockIO<A> for Partition<T> {
@@ -325,6 +346,10 @@ impl<T: BlockIO<A>, A: Access, A1: Access> BlockIO<A1> for CastAccessAdapter<T, 
             .read_or_write_blocks(start_block_idx, operation.cast_access())
             .await
     }
+
+    async fn flush(&self) -> Result<(), Self::Error> {
+        self.inner().flush().await
+    }
 }
 
 impl<T: PartialBlockIO<A>, A: Access, A1: Access> PartialBlockIO<A1> for CastAccessAdapter<T, A> {
@@ -376,6 +401,10 @@ impl<T: BlockIO<A>, A: Access> BlockIO<A> for InefficientPartialBlockIO<T> {
         self.inner()
             .read_or_write_blocks(start_block_idx, operation)
             .await
+    }
+
+    async fn flush(&self) -> Result<(), Self::Error> {
+        self.inner().flush().await
     }
 }
 
