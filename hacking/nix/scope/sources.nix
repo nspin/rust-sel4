@@ -72,7 +72,7 @@ in rec {
 
   acacia = fetchGit rec {
     url = "https://github.com/nspin/microkit_acacia";
-    rev = "39b854641f7b45d14863cb7e921cb53d9d3f0b3c";
+    rev = "f11d2fae4e2ea4037024e256256d721ece65ee0e";
     ref = mkKeepRef rev;
     local = localRoot + "/microkit_acacia";
   };

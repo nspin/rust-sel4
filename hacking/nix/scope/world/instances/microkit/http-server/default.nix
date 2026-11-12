@@ -11,6 +11,7 @@
 , perl
 , microkit
 , acacia
+, llvm
 
 , crates
 , globalPatchSection
@@ -140,6 +141,7 @@ let
 
   generated = runCommand "http-server-system" {
     nativeBuildInputs = [
+      llvm
       acacia
     ];
   } ''
