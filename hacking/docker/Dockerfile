@@ -64,7 +64,7 @@ RUN curl -sSf -L https://nixos.org/nix/install | \
 RUN set -eux; \
     export USER=$(whoami); \
     . ~/.nix-profile/etc/profile.d/nix.sh; \
-    nix-channel --add https://nixos.org/channels/nixos-23.11 nixpkgs; \
+    nix-channel --add https://nixos.org/channels/nixos-26.05 nixpkgs; \
     nix-channel --update; \
     nix-env -i nix-bash-completions; \
     nix-channel --remove nixpkgs; \
