@@ -1,0 +1,16 @@
+Test with:
+
+```
+cd hacking/docker
+make run && make exec
+nix-build -A worlds.microkit.default.instances.microkit.examples.http-server.automate && ./result
+```
+
+Grep for `XXX REPRO` to find relevant snippets.
+
+Clean up with:
+
+```
+cd hacking/docker
+make rm-volume
+```

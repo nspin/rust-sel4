@@ -74,7 +74,11 @@ in rec {
     url = "https://github.com/nspin/microkit_acacia";
     rev = "f11d2fae4e2ea4037024e256256d721ece65ee0e";
     ref = mkKeepRef rev;
-    local = localRoot + "/microkit_acacia";
+    # XXX REPRO
+    # See the above lines for the commit I'm using.
+    # To use local checkout of microkit_acacia, uncomment the following two lines.
+    # local = ../../../../path/to/local/checkout/of/microkit_acacia;
+    # useLocal = true;
   };
 
   # micropython submodule is too big for this to be worth it
